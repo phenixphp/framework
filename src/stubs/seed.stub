@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+use Phenix\Database\Seed;
+
+class {name} extends Seed
+{
+    public function run(): void
+    {
+        // ..
+    }
+}
