@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Providers;
 
+use League\Container\Argument\ResolvableArgument;
 use Phenix\Database\Connections\ConnectionFactory;
 use Phenix\Database\Console\MakeMigration;
 use Phenix\Database\Console\MakeSeeder;
@@ -14,7 +15,6 @@ use Phenix\Database\Constants\Connections;
 use Phenix\Database\Constants\Drivers;
 use Phenix\Database\QueryBuilder;
 use Phenix\Facades\Config;
-use League\Container\Argument\ResolvableArgument;
 
 class DatabaseServiceProvider extends ServiceProvider
 {

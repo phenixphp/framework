@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\WelcomeController;
-use App\Http\Middleware\AcceptJsonResponses;
 use Phenix\Constants\HttpMethods;
+use Phenix\Http\Middlewares\AcceptJsonResponses;
 use Phenix\Routing\Route;
+use Tests\Unit\Routing\WelcomeController;
 use Tests\Util\AssertRoute;
 
 it('adds get routes successfully', function (string $method, HttpMethods $httpMethod) {
@@ -54,6 +54,8 @@ it('adds get routes with many params successfully', function () {
 });
 
 it('can call a class callable method', function () {
+    $this->app->register(WelcomeController::class);
+
     $router = new Route();
 
     $router->get('/users/{user}/posts/{post}', [WelcomeController::class, 'index'])

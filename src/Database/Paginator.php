@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use League\Uri\Components\Query;
+use League\Uri\Http;
 use Phenix\Contracts\Arrayable;
 use Phenix\Data\Collection;
 use Phenix\Util\URL;
-use League\Uri\Components\Query;
-use League\Uri\Http;
 
 class Paginator implements Arrayable
 {

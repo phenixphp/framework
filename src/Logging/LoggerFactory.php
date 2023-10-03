@@ -7,12 +7,12 @@ namespace Phenix\Logging;
 use Amp\ByteStream;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
-use Phenix\Contracts\Makeable;
-use Phenix\Exceptions\RuntimeError;
-use Phenix\Facades\File;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
+use Phenix\Contracts\Makeable;
+use Phenix\Exceptions\RuntimeError;
+use Phenix\Facades\File;
 
 class LoggerFactory implements Makeable
 {
@@ -41,7 +41,7 @@ class LoggerFactory implements Makeable
 
     private static function fileHandler(): StreamHandler
     {
-        $file = File::openFile(base_path('storage/framework/logs/phenix.log'), 'a');
+        $file = File::openFile(base_path('storage/framework/logs/phenix.log'));
 
         $logHandler = new StreamHandler($file);
         $logHandler->pushProcessor(new PsrLogMessageProcessor());

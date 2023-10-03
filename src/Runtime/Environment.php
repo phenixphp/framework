@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace Phenix\Runtime;
 
-use Phenix\AppProxy;
 use Dotenv\Dotenv;
 
 class Environment
 {
-    public static function load(): void
+    public static function load(string|null $env = null): void
     {
-        $name = null;
+        $base = '.env';
+        $env = $env ? "{$base}.{$env}" : $base;
 
-        if (AppProxy::testingModeEnabled() && file_exists(base_path('.env.testing'))) {
-            $name = '.env.testing';
+        if (file_exists($env)) {
+            Dotenv::createImmutable(base_path(), $env)->load();
         }
-
-        Dotenv::createImmutable(base_path(), $name)->load();
     }
 }

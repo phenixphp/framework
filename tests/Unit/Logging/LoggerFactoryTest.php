@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Amp\Log\ConsoleFormatter;
+use Monolog\Formatter\LineFormatter;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Logging\LoggerFactory;
-use Monolog\Formatter\LineFormatter;
 
 it('makes all supported logger channels', function (string $channel, string $formatter) {
     $logger = LoggerFactory::make($channel);

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\QueryGenerator;
-use Phenix\Database\Subquery;
-
 use function Pest\Faker\faker;
+
+use Phenix\Database\QueryGenerator;
+
+use Phenix\Database\Subquery;
 
 it('generates insert into statement', function () {
     $query = new QueryGenerator();

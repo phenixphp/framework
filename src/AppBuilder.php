@@ -10,11 +10,11 @@ use Phenix\Runtime\Environment;
 
 class AppBuilder implements Buildable
 {
-    public static function build(): AppContract
+    public static function build(string|null $path = null, string|null $env = null): AppContract
     {
-        $app = new App(dirname(__DIR__));
+        $app = new App($path ?? dirname(__DIR__));
 
-        Environment::load();
+        Environment::load($env);
 
         $app->setup();
 

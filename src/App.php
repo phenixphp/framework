@@ -9,22 +9,20 @@ use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Socket;
+use League\Container\Container;
+use League\Uri\Uri;
+use Monolog\Logger;
 use Phenix\Console\Phenix;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
-use League\Container\Container;
-use League\Uri\Uri;
-use Monolog\Logger;
 
 class App implements AppContract, Makeable
 {
     private static string $path;
     private static Container $container;
-    private static string|null $logginChannel = null;
-
     private Router $router;
     private Logger $logger;
     private SocketHttpServer $server;
@@ -54,7 +52,7 @@ class App implements AppContract, Makeable
         }
 
         /** @var string $channel */
-        $channel = self::$logginChannel ?? Config::get('logging.default');
+        $channel = Config::get('logging.default', 'file');
 
         $this->logger = LoggerFactory::make($channel);
 
@@ -98,14 +96,14 @@ class App implements AppContract, Makeable
         return self::$path;
     }
 
-    public static function setLoggingChannel(string $channel): void
-    {
-        self::$logginChannel = $channel;
-    }
-
     public function swap(string $key, object $concrete): void
     {
         self::$container->extend($key)->setConcrete($concrete);
+    }
+
+    public function register(string $key, mixed $contrete = null)
+    {
+        self::$container->add($key, $contrete);
     }
 
     public function disableSignalTrapping(): void

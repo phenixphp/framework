@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use League\Uri\Http;
 use Phenix\Data\Collection;
 use Phenix\Database\Paginator;
 use Phenix\Util\URL;
-use League\Uri\Http;
 
 it('calculates pagination data', function () {
     $uri = Http::new(URL::build('users', ['page' => 1, 'per_page' => 15]));

@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Amp\Sql\QueryError;
+use League\Uri\Http;
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
 use Phenix\Facades\DB;
 use Phenix\Util\URL;
-use League\Uri\Http;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;

@@ -38,9 +38,9 @@ class Config
         return new self($settings);
     }
 
-    public function get(string $key): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
-        return $this->settings->get($key);
+        return $this->settings->get($key) ?? $default;
     }
 
     public function set(string $key, mixed $value): void

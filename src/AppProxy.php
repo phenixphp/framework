@@ -8,17 +8,17 @@ use Phenix\Contracts\App as AppContract;
 
 class AppProxy implements AppContract
 {
-    private static bool $testingMode = false;
+    private bool $testingMode;
 
     public function __construct(
         private App $app
     ) {
-        // ..
+        $this->testingMode = false;
     }
 
     public function run(): void
     {
-        if (self::$testingMode) {
+        if ($this->testingMode) {
             $this->app->disableSignalTrapping();
         }
 
@@ -35,13 +35,15 @@ class AppProxy implements AppContract
         $this->app->swap($key, $concrete);
     }
 
-    public static function enableTestingMode(): void
+    public function register(string $key, mixed $concrete = null): void
     {
-        self::$testingMode = true;
+        $this->app->register($key, $concrete);
     }
 
-    public static function testingModeEnabled(): bool
+    public function enableTestingMode(): self
     {
-        return self::$testingMode;
+        $this->testingMode = true;
+
+        return $this;
     }
 }

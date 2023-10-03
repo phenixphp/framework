@@ -6,6 +6,7 @@ namespace Tests;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Phenix\App;
+use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -13,17 +14,17 @@ use Symfony\Component\Console\Tester\CommandTester;
 class TestCase extends AsyncTestCase
 {
     protected ?AppProxy $app;
+    protected string $appDir;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        App::setLoggingChannel('file');
-
         if (! isset($this->app)) {
-            AppProxy::enableTestingMode();
+            $this->prepareAppDir();
 
-            $this->app = require __DIR__ . '/../src/bootstrap.php';
+            $this->app = AppBuilder::build($this->appDir);
+            $this->app->enableTestingMode();
         }
     }
 
@@ -43,5 +44,10 @@ class TestCase extends AsyncTestCase
         $commandTester->execute($arguments);
 
         return $commandTester;
+    }
+
+    private function prepareAppDir(): void
+    {
+        $this->appDir = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'application';
     }
 }

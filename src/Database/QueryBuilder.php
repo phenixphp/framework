@@ -7,13 +7,13 @@ namespace Phenix\Database;
 use Amp\Sql\Common\ConnectionPool;
 use Amp\Sql\QueryError;
 use Amp\Sql\TransactionError;
+use League\Uri\Components\Query;
+use League\Uri\Http;
 use Phenix\App;
 use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Connections;
-use League\Uri\Components\Query;
-use League\Uri\Http;
 
 class QueryBuilder extends QueryBase
 {
