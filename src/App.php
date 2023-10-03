@@ -45,7 +45,7 @@ class App implements AppContract, Makeable
         )->setShared(true);
 
         /** @var array $providers */
-        $providers = Config::get('app.providers');
+        $providers = Config::get('app.providers', []);
 
         foreach ($providers as $provider) {
             self::$container->addServiceProvider(new $provider());
