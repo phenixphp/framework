@@ -44,7 +44,7 @@ class LoggerFactory implements Makeable
     {
         $path = Config::get('logging.path');
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             File::put($path, '');
         }
 
