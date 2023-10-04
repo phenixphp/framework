@@ -382,3 +382,16 @@ it('generates query to select first row', function () {
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
 });
+
+it('generates query to select all columns of table without column selection', function () {
+    $query = new QueryGenerator();
+
+    $sql = $query->table('users')->get();
+
+    expect($sql)->toBeArray();
+
+    [$dml, $params] = $sql;
+
+    expect($dml)->toBe('SELECT * FROM users');
+    expect($params)->toBeEmpty($params);
+});

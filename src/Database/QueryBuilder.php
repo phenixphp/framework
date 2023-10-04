@@ -13,6 +13,7 @@ use Phenix\App;
 use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
+use Phenix\Database\Constants\Actions;
 use Phenix\Database\Constants\Connections;
 
 class QueryBuilder extends QueryBase
@@ -55,6 +56,8 @@ class QueryBuilder extends QueryBase
      */
     public function get(): Collection
     {
+        $this->action = Actions::SELECT;
+
         [$dml, $params] = $this->toSql();
 
         $result = $this->connection->prepare($dml)
@@ -74,6 +77,8 @@ class QueryBuilder extends QueryBase
      */
     public function first(): array
     {
+        $this->action = Actions::SELECT;
+
         $this->limit(1);
 
         return $this->get()->first();
@@ -81,6 +86,8 @@ class QueryBuilder extends QueryBase
 
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
+        $this->action = Actions::SELECT;
+
         $query = Query::fromUri($uri);
 
         $currentPage = filter_var($query->get('page') ?? $defaultPage, FILTER_SANITIZE_NUMBER_INT);
@@ -100,6 +107,8 @@ class QueryBuilder extends QueryBase
 
     public function count(string $column = '*'): int
     {
+        $this->action = Actions::SELECT;
+
         $this->countRows($column);
 
         [$dml, $params] = $this->toSql();
@@ -115,12 +124,10 @@ class QueryBuilder extends QueryBase
 
     public function insert(array $data): bool
     {
-        $this->insertRows($data);
-
-        [$dml, $params] = $this->toSql();
+        [$dml, $params] = $this->insertRows($data)->toSql();
 
         try {
-            $this->connection->prepare($dml)->execute($params)->fetchRow();
+            $this->connection->prepare($dml)->execute($params);
 
             return true;
         } catch (QueryError|TransactionError) {
@@ -130,6 +137,8 @@ class QueryBuilder extends QueryBase
 
     public function exists(): bool
     {
+        $this->action = Actions::SELECT;
+
         $this->existsRows();
 
         [$dml, $params] = $this->toSql();

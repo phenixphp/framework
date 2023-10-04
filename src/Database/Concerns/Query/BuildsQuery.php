@@ -234,6 +234,8 @@ trait BuildsQuery
 
     protected function buildSelectQuery(): string
     {
+        $this->columns = empty($this->columns) ? ['*'] : $this->columns;
+
         $query = [
             'SELECT',
             $this->prepareColumns($this->columns),
