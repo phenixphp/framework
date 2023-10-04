@@ -12,6 +12,7 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Phenix\Contracts\Makeable;
 use Phenix\Exceptions\RuntimeError;
+use Phenix\Facades\Config;
 use Phenix\Facades\File;
 
 class LoggerFactory implements Makeable
@@ -41,7 +42,13 @@ class LoggerFactory implements Makeable
 
     private static function fileHandler(): StreamHandler
     {
-        $file = File::openFile(base_path('storage/framework/logs/phenix.log'));
+        $path = Config::get('logging.path');
+
+        if (!File::exists($path)) {
+            File::put($path, '');
+        }
+
+        $file = File::openFile($path, 'a');
 
         $logHandler = new StreamHandler($file);
         $logHandler->pushProcessor(new PsrLogMessageProcessor());
