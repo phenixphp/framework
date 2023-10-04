@@ -9,8 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      LOG_CHANNEL: stream
 
     steps:
       - name: Checkout code
