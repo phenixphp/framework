@@ -18,7 +18,7 @@ class Response
     /**
      * @param array<string|int, array|string|int|bool> $content
      */
-    public function json(Arrayable|array $content, int $status = HttpStatus::OK): ServerResponse
+    public function json(Arrayable|array $content = [], int $status = HttpStatus::OK): ServerResponse
     {
         if ($content instanceof Arrayable) {
             $content = $content->toArray();
