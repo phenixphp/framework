@@ -17,7 +17,6 @@ it('generates query to select a record by date', function (
 
     $sql = $query->table('users')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -46,7 +45,6 @@ it('generates query to select a record by condition or by date', function (
     $sql = $query->table('users')
         ->whereFalse('active')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -73,7 +71,6 @@ it('generates query to select a record by month', function (
 
     $sql = $query->table('users')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -102,7 +99,6 @@ it('generates query to select a record by condition or by month', function (
     $sql = $query->table('users')
         ->whereFalse('active')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -130,7 +126,6 @@ it('generates query to select a record by year', function (
 
     $sql = $query->table('users')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -159,7 +154,6 @@ it('generates query to select a record by condition or by year', function (
     $sql = $query->table('users')
         ->whereFalse('active')
         ->{$method}('created_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();

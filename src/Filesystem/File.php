@@ -6,10 +6,9 @@ namespace Phenix\Filesystem;
 
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
+use Phenix\Contracts\Filesystem\File as FileContract;
 
 use function Amp\File\filesystem;
-
-use Phenix\Contracts\Filesystem\File as FileContract;
 
 class File implements FileContract
 {

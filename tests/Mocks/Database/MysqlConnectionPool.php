@@ -12,6 +12,7 @@ use Amp\Sql\SqlConfig;
 use Amp\Sql\SqlConnector;
 use Amp\Sql\Statement;
 use Amp\Sql\Transaction;
+use Closure;
 use Mockery;
 use Tests\Mocks\Database\Result as FakeResult;
 use Tests\Mocks\Database\Statement as FakeStatement;
@@ -59,23 +60,23 @@ class MysqlConnectionPool extends ConnectionPool
         return new FakeStatement($this->fakeResult);
     }
 
-    protected function createStatement(Statement $statement, \Closure $release): Statement
+    protected function createStatement(Statement $statement, Closure $release): Statement
     {
         return $statement;
     }
 
-    protected function createResult(Result $result, \Closure $release): Result
+    protected function createResult(Result $result, Closure $release): Result
     {
         return $result;
     }
 
-    protected function createStatementPool(string $sql, \Closure $prepare): Statement
+    protected function createStatementPool(string $sql, Closure $prepare): Statement
     {
         return new FakeStatement($this->fakeResult);
 
     }
 
-    protected function createTransaction(Transaction $transaction, \Closure $release): Transaction
+    protected function createTransaction(Transaction $transaction, Closure $release): Transaction
     {
         return $transaction;
     }

@@ -13,7 +13,6 @@ it('generates query to select a record by column', function () {
 
     $sql = $query->table('users')
         ->whereEqual('id', 1)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -31,7 +30,6 @@ it('generates query to select a record using many clause', function () {
         ->whereEqual('username', 'john')
         ->whereEqual('email', 'john@mail.com')
         ->whereEqual('document', 123456)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -52,7 +50,6 @@ it('generates query to select using comparison clause', function (
 
     $sql = $query->table('users')
         ->{$method}($column, $value)
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -87,7 +84,6 @@ it('generates query using in and not in operators', function (string $method, st
 
     $sql = $query->table('users')
         ->{$method}('id', [1, 2, 3])
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -108,7 +104,6 @@ it('generates query using in and not in operators with subquery', function (stri
                 ->from('users')
                 ->whereGreatherThanOrEqual('created_at', date('Y-m-d'));
         })
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -130,7 +125,6 @@ it('generates query to select null or not null columns', function (string $metho
 
     $sql = $query->table('users')
         ->{$method}('verified_at')
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -150,7 +144,6 @@ it('generates query to select by column or null or not null columns', function (
     $sql = $query->table('users')
         ->whereGreatherThan('created_at', $date)
         ->{$method}('verified_at')
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -167,7 +160,6 @@ it('generates query to select boolean columns', function (string $method, string
 
     $sql = $query->table('users')
         ->{$method}('enabled')
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -187,7 +179,6 @@ it('generates query to select by column or boolean column', function (string $me
     $sql = $query->table('users')
         ->whereGreatherThan('created_at', $date)
         ->{$method}('enabled')
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -208,7 +199,6 @@ it('generates query using logical connectors', function () {
         ->whereNotNull('verified_at')
         ->whereGreatherThan('created_at', $date)
         ->orWhereLessThan('updated_at', $date)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -228,7 +218,6 @@ it('generates query using the or operator between the and operators', function (
         ->whereGreatherThan('created_at', $date)
         ->orWhereLessThan('updated_at', $date)
         ->whereNotNull('verified_at')
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -258,7 +247,6 @@ it('generates queries using logical connectors', function (
     $sql = $query->table('users')
         ->whereNotNull('verified_at')
         ->{$method}($column, $value)
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -284,7 +272,6 @@ it('generates query to select between columns', function (string $method, string
 
     $sql = $query->table('users')
         ->{$method}('age', [20, 30])
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -306,7 +293,6 @@ it('generates query to select by column or between columns', function (string $m
     $sql = $query->table('users')
         ->whereGreatherThan('created_at', $date)
         ->{$method}('updated_at', [$startDate, $endDate])
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;
@@ -322,7 +308,6 @@ it('generates a column-ordered query', function (array|string $column, string $o
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->orderBy($column, Order::from($order))
         ->get();
 
@@ -349,7 +334,6 @@ it('generates a column-ordered query using select-case', function () {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->orderBy($case, Order::ASC)
         ->get();
 
@@ -364,7 +348,6 @@ it('generates a limited query', function (array|string $column, string $order) {
 
     $sql = $query->table('users')
         ->whereEqual('id', 1)
-        ->selectAllColumns()
         ->orderBy($column, Order::from($order))
         ->limit(1)
         ->get();
@@ -388,10 +371,8 @@ it('generates a query with a exists subquery in where clause', function (string 
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->{$method}(function (Subquery $query) {
             $query->table('user_role')
-                ->selectAllColumns()
                 ->whereEqual('user_id', 1)
                 ->whereEqual('role_id', 9)
                 ->limit(1);
@@ -417,11 +398,9 @@ it('generates a query to select by column or when exists or not exists subquery'
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->whereTrue('is_admin')
         ->{$method}(function (Subquery $query) {
             $query->table('user_role')
-                ->selectAllColumns()
                 ->whereEqual('user_id', 1)
                 ->limit(1);
         })
@@ -450,7 +429,6 @@ it('generates query to select using comparison clause with subqueries and functi
         ->{$method}($column, function (Subquery $subquery) {
             $subquery->select([Functions::max('price')])->from('products');
         })
-        ->selectAllColumns()
         ->get();
 
     [$dml, $params] = $sql;

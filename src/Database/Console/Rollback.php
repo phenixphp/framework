@@ -120,7 +120,7 @@ EOT
      * Get Target from Date
      *
      * @param string $date The date to convert to a target.
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      * @return string The target
      */
     public function getTargetFromDate(string $date): string
