@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Util;
+namespace Phenix\Testing;
 
 use Mockery as MockeryBase;
 use Mockery\MockInterface;

@@ -11,12 +11,6 @@
 |
 */
 
-use Amp\Http\Client\HttpClientBuilder;
-use Amp\Http\Client\Request;
-use Phenix\Constants\HttpMethods;
-use Phenix\Util\URL;
-use Tests\Util\TestResponse;
-
 uses(Tests\TestCase::class)->in('Unit');
 uses(Tests\TestCase::class)->in('Feature');
 
@@ -45,52 +39,3 @@ expect()->extend('toBeOne', function () {
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
-
-function call(
-    HttpMethods $method,
-    string $path,
-    array $parameters = [],
-    array|string|null $body = null,
-    array $headers = []
-): TestResponse {
-    $request = new Request(URL::build($path, $parameters), $method->value);
-
-    if (! empty($headers)) {
-        $request->setHeaders($headers);
-    }
-
-    if (! empty($body)) {
-        $body = \is_array($body) ? json_encode($body) : $body;
-
-        $request->setBody($body);
-    }
-
-    $client = HttpClientBuilder::buildDefault();
-
-    return new TestResponse($client->request($request));
-}
-
-function get(string $path, array $parameters = [], array $headers = []): TestResponse
-{
-    return call(method: HttpMethods::GET, path: $path, parameters: $parameters, headers: $headers);
-}
-
-function post(string $path, array|string|null $body, array $parameters = [], array $headers = []): TestResponse
-{
-    return call(HttpMethods::POST, $path, $parameters, $body, $headers);
-}
-
-function put(string $path, array|string|null $body, array $parameters = [], array $headers = []): TestResponse
-{
-    return call(HttpMethods::PUT, $path, $parameters, $body, $headers);
-}
-
-function patch(string $path, array|string|null $body, array $parameters = [], array $headers = []): TestResponse
-{
-    return call(HttpMethods::PATCH, $path, $parameters, $body, $headers);
-}
-
-function delete(string $path, array $parameters = [], array $headers = []): TestResponse
-{
-    return call(method: HttpMethods::DELETE, path: $path, parameters: $parameters, headers: $headers);
-}
