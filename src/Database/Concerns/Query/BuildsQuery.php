@@ -16,6 +16,12 @@ use Phenix\Database\Subquery;
 use Phenix\Database\Value;
 use Phenix\Util\Arr;
 
+use function array_is_list;
+use function array_keys;
+use function array_unique;
+use function array_values;
+use function ksort;
+
 trait BuildsQuery
 {
     public function table(string $table): self
@@ -29,6 +35,7 @@ trait BuildsQuery
     {
         if ($table instanceof Closure) {
             $builder = new Subquery();
+            $builder->selectAllColumns();
 
             $table($builder);
 
@@ -93,6 +100,7 @@ trait BuildsQuery
     public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): self
     {
         $builder = new Subquery();
+        $builder->selectAllColumns();
 
         $subquery($builder);
 
@@ -197,7 +205,7 @@ trait BuildsQuery
 
     public function exists(): self
     {
-        $this->action = Actions::SELECT_EXISTS;
+        $this->action = Actions::EXISTS;
 
         $this->columns = [Operators::EXISTS->value];
 
@@ -206,7 +214,7 @@ trait BuildsQuery
 
     public function doesntExist(): self
     {
-        $this->action = Actions::SELECT_EXISTS;
+        $this->action = Actions::EXISTS;
 
         $this->columns = [Operators::NOT_EXISTS->value];
 
@@ -220,7 +228,7 @@ trait BuildsQuery
     {
         $sql = match ($this->action) {
             Actions::SELECT => $this->buildSelectQuery(),
-            Actions::SELECT_EXISTS => $this->buildSelectExistsQuery(),
+            Actions::EXISTS => $this->buildExistsQuery(),
             Actions::INSERT => $this->buildInsertSentence(),
             Actions::UPDATE => $this->buildUpdateSentence(),
             Actions::DELETE => $this->buildDeleteSentence(),
@@ -234,6 +242,8 @@ trait BuildsQuery
 
     protected function buildSelectQuery(): string
     {
+        $this->columns = empty($this->columns) ? ['*'] : $this->columns;
+
         $query = [
             'SELECT',
             $this->prepareColumns($this->columns),
@@ -271,7 +281,7 @@ trait BuildsQuery
         return Arr::implodeDeeply($query);
     }
 
-    protected function buildSelectExistsQuery(): string
+    protected function buildExistsQuery(): string
     {
         $query = ['SELECT'];
         $query[] = $this->columns[0];
@@ -290,7 +300,7 @@ trait BuildsQuery
 
     private function prepareDataToInsert(array $data): void
     {
-        if (\array_is_list($data)) {
+        if (array_is_list($data)) {
             foreach ($data as $record) {
                 $this->prepareDataToInsert($record);
             }
@@ -298,11 +308,11 @@ trait BuildsQuery
             return;
         }
 
-        \ksort($data);
+        ksort($data);
 
-        $this->columns = \array_unique([...$this->columns, ...\array_keys($data)]);
+        $this->columns = array_unique([...$this->columns, ...array_keys($data)]);
 
-        $this->arguments = \array_merge($this->arguments, \array_values($data));
+        $this->arguments = \array_merge($this->arguments, array_values($data));
 
         $this->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
     }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use function Pest\Faker\faker;
-
 use Phenix\Database\QueryGenerator;
+
+use function Pest\Faker\faker;
 
 it('generates update statement', function () {
     $query = new QueryGenerator();

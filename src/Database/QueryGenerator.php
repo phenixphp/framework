@@ -7,6 +7,7 @@ namespace Phenix\Database;
 use Closure;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
+use Phenix\Database\Constants\Actions;
 
 class QueryGenerator extends QueryBase
 {
@@ -55,26 +56,36 @@ class QueryGenerator extends QueryBase
 
     public function count(string $column = '*'): array
     {
+        $this->action = Actions::SELECT;
+
         return $this->countRows($column)->toSql();
     }
 
     public function exists(): array
     {
+        $this->action = Actions::EXISTS;
+
         return $this->existsRows()->toSql();
     }
 
     public function doesntExist(): array
     {
+        $this->action = Actions::EXISTS;
+
         return $this->doesntExistRows()->toSql();
     }
 
     public function get(): array
     {
+        $this->action = Actions::SELECT;
+
         return $this->toSql();
     }
 
     public function first(): array
     {
+        $this->action = Actions::SELECT;
+
         return $this->limit(1)->toSql();
     }
 }

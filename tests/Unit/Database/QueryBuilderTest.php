@@ -284,3 +284,22 @@ it('fails on record deletion', function () {
 
     expect($result)->toBeFalse();
 });
+
+it('gets all records from database without select columns', function () {
+    $data = [['id' => 1, 'name' => 'John Doe']];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($data)),
+        );
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->from('users')->get();
+
+    expect($result->toArray())->toBe($data);
+});
