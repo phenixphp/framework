@@ -63,14 +63,14 @@ class QueryGenerator extends QueryBase
 
     public function exists(): array
     {
-        $this->action = Actions::SELECT;
+        $this->action = Actions::EXISTS;
 
         return $this->existsRows()->toSql();
     }
 
     public function doesntExist(): array
     {
-        $this->action = Actions::SELECT;
+        $this->action = Actions::EXISTS;
 
         return $this->doesntExistRows()->toSql();
     }

@@ -197,7 +197,7 @@ trait BuildsQuery
 
     public function exists(): self
     {
-        $this->action = Actions::SELECT_EXISTS;
+        $this->action = Actions::EXISTS;
 
         $this->columns = [Operators::EXISTS->value];
 
@@ -206,7 +206,7 @@ trait BuildsQuery
 
     public function doesntExist(): self
     {
-        $this->action = Actions::SELECT_EXISTS;
+        $this->action = Actions::EXISTS;
 
         $this->columns = [Operators::NOT_EXISTS->value];
 
@@ -220,7 +220,7 @@ trait BuildsQuery
     {
         $sql = match ($this->action) {
             Actions::SELECT => $this->buildSelectQuery(),
-            Actions::SELECT_EXISTS => $this->buildSelectExistsQuery(),
+            Actions::EXISTS => $this->buildExistsQuery(),
             Actions::INSERT => $this->buildInsertSentence(),
             Actions::UPDATE => $this->buildUpdateSentence(),
             Actions::DELETE => $this->buildDeleteSentence(),
@@ -273,7 +273,7 @@ trait BuildsQuery
         return Arr::implodeDeeply($query);
     }
 
-    protected function buildSelectExistsQuery(): string
+    protected function buildExistsQuery(): string
     {
         $query = ['SELECT'];
         $query[] = $this->columns[0];

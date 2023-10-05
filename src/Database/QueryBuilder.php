@@ -137,7 +137,7 @@ class QueryBuilder extends QueryBase
 
     public function exists(): bool
     {
-        $this->action = Actions::SELECT;
+        $this->action = Actions::EXISTS;
 
         $this->existsRows();
 
