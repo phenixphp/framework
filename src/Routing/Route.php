@@ -10,6 +10,8 @@ use Phenix\App;
 use Phenix\Constants\HttpMethods;
 use Phenix\Contracts\Arrayable;
 
+use function is_array;
+
 class Route implements Arrayable
 {
     private array $collection;
@@ -126,7 +128,7 @@ class Route implements Arrayable
      */
     private function callable(Closure|array $handler): ClosureRequestHandler
     {
-        if (\is_array($handler)) {
+        if (is_array($handler)) {
             [$controller, $method] = $handler;
 
             $controller = App::make($controller);

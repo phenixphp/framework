@@ -16,6 +16,12 @@ use Phenix\Database\Subquery;
 use Phenix\Database\Value;
 use Phenix\Util\Arr;
 
+use function array_is_list;
+use function array_keys;
+use function array_unique;
+use function array_values;
+use function ksort;
+
 trait BuildsQuery
 {
     public function table(string $table): self
@@ -294,7 +300,7 @@ trait BuildsQuery
 
     private function prepareDataToInsert(array $data): void
     {
-        if (\array_is_list($data)) {
+        if (array_is_list($data)) {
             foreach ($data as $record) {
                 $this->prepareDataToInsert($record);
             }
@@ -302,11 +308,11 @@ trait BuildsQuery
             return;
         }
 
-        \ksort($data);
+        ksort($data);
 
-        $this->columns = \array_unique([...$this->columns, ...\array_keys($data)]);
+        $this->columns = array_unique([...$this->columns, ...array_keys($data)]);
 
-        $this->arguments = \array_merge($this->arguments, \array_values($data));
+        $this->arguments = \array_merge($this->arguments, array_values($data));
 
         $this->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
     }

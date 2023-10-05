@@ -13,6 +13,8 @@ use Phenix\Database\Constants\Operators;
 use Phenix\Database\Constants\SQL;
 use Phenix\Util\Arr;
 
+use function is_array;
+
 abstract class Clause implements Builder
 {
     use HasWhereClause;
@@ -66,7 +68,7 @@ abstract class Clause implements Builder
         array|string|int $value,
         LogicalOperators $logicalConnector = LogicalOperators::AND
     ): void {
-        $placeholders = \is_array($value)
+        $placeholders = is_array($value)
             ? array_fill(0, count($value), SQL::PLACEHOLDER->value)
             : SQL::PLACEHOLDER->value;
 
@@ -91,7 +93,7 @@ abstract class Clause implements Builder
                 return match (true) {
                     $value instanceof Operators => $value->value,
                     $value instanceof LogicalOperators => $value->value,
-                    \is_array($value) => '(' . Arr::implodeDeeply($value, ', ') . ')',
+                    is_array($value) => '(' . Arr::implodeDeeply($value, ', ') . ')',
                     default => $value,
                 };
             }, $clause);

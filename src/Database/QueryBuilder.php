@@ -16,6 +16,8 @@ use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Actions;
 use Phenix\Database\Constants\Connections;
 
+use function is_string;
+
 class QueryBuilder extends QueryBase
 {
     use BuildsQuery {
@@ -42,7 +44,7 @@ class QueryBuilder extends QueryBase
 
     public function connection(ConnectionPool|string $connection): self
     {
-        if (\is_string($connection)) {
+        if (is_string($connection)) {
             $connection = App::make(Connections::name($connection));
         }
 
