@@ -14,7 +14,6 @@ it('generates query to select all columns of table', function () {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->get();
 
     expect($sql)->toBeArray();
@@ -28,8 +27,7 @@ it('generates query to select all columns of table', function () {
 it('generates query to select all columns from table', function () {
     $query = new QueryGenerator();
 
-    $sql = $query->selectAllColumns()
-        ->from('users')
+    $sql = $query->from('users')
         ->get();
 
     expect($sql)->toBeArray();
@@ -89,8 +87,7 @@ it('selects field from subquery', function () {
     $date = date('Y-m-d');
     $sql = $query->select(['id', 'name', 'email'])
         ->from(function (Subquery $subquery) use ($date) {
-            $subquery->selectAllColumns()
-                ->from('users')
+            $subquery->from('users')
                 ->whereEqual('verified_at', $date);
         })
         ->get();
@@ -371,7 +368,6 @@ it('generates query to select first row', function () {
     $query = new QueryGenerator();
 
     $sql = $query->from('products')
-        ->selectAllColumns()
         ->whereEqual('id', 1)
         ->first();
 

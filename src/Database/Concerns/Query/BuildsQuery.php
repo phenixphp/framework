@@ -29,6 +29,7 @@ trait BuildsQuery
     {
         if ($table instanceof Closure) {
             $builder = new Subquery();
+            $builder->selectAllColumns();
 
             $table($builder);
 
@@ -93,6 +94,7 @@ trait BuildsQuery
     public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): self
     {
         $builder = new Subquery();
+        $builder->selectAllColumns();
 
         $subquery($builder);
 

@@ -47,6 +47,7 @@ abstract class Clause implements Builder
         LogicalOperators $logicalConnector = LogicalOperators::AND
     ): void {
         $builder = new Subquery();
+        $builder->select(['*']);
 
         $subquery($builder);
 

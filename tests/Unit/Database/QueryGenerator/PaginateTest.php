@@ -8,7 +8,6 @@ it('generates offset pagination query', function () {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->page()
         ->get();
 
@@ -22,7 +21,6 @@ it('generates offset pagination query with indicate page', function () {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->page(3)
         ->get();
 
@@ -36,7 +34,6 @@ it('overwrites limit when pagination is called', function () {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
-        ->selectAllColumns()
         ->limit(5)
         ->page(2)
         ->get();
