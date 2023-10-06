@@ -17,7 +17,7 @@ afterEach(function () {
     $this->app->stop();
 });
 
-it('can assert responses', function () {
+it('can send requests to server', function () {
     $this->get('/')
         ->assertOk()
         ->assertBodyContains('Hello');
