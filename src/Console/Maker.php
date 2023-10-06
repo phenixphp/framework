@@ -43,7 +43,7 @@ abstract class Maker extends Command
             return Command::SUCCESS;
         }
 
-        $stub = File::get(base_path("src/stubs/{$this->stub()}"));
+        $stub = $this->getStubContent();
         $stub = str_replace(self::SEARCH, [$namespace, $className], $stub);
 
         File::put($filePath, $stub);
@@ -91,5 +91,14 @@ abstract class Maker extends Command
     protected function getCustomFileName(): string|null
     {
         return null;
+    }
+
+    protected function getStubContent(): string
+    {
+        $path = dirname(__DIR__)
+            . DIRECTORY_SEPARATOR . 'stubs'
+            . DIRECTORY_SEPARATOR . $this->stub();
+
+        return File::get($path);
     }
 }
