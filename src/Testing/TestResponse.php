@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Util;
+namespace Phenix\Testing;
 
 use Amp\Http\Client\Response;
 use Amp\Http\HttpStatus;
@@ -19,6 +19,13 @@ class TestResponse
     public function assertOk(): self
     {
         expect($this->response->getStatus())->toBe(HttpStatus::OK);
+
+        return $this;
+    }
+
+    public function assertNotFound(): self
+    {
+        expect($this->response->getStatus())->toBe(HttpStatus::NOT_FOUND);
 
         return $this;
     }
