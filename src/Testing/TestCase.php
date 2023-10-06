@@ -26,7 +26,7 @@ abstract class TestCase extends AsyncTestCase
         parent::setUp();
 
         if (! isset($this->app)) {
-            $this->app = AppBuilder::build($this->getAppDir());
+            $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
             $this->app->enableTestingMode();
         }
     }
@@ -47,5 +47,10 @@ abstract class TestCase extends AsyncTestCase
         $commandTester->execute($arguments);
 
         return $commandTester;
+    }
+
+    protected function getEnvFile(): string|null
+    {
+        return null;
     }
 }
