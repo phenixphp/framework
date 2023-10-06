@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Util;
+namespace Phenix\Testing;
 
 class Mock
 {

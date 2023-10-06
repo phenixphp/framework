@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.3.x
 
-## [v0.3.0 (2023-10-05)](https://github.com/phenixphp/framework/compare/main...0.3.0)
+## [v0.3.1 (2023-10-05)](https://github.com/phenixphp/framework/compare/0.3.0...0.3.1)
+
+### Changed
+- Test utilities moved to framework. ([#4](https://github.com/phenixphp/framework/pull/4))
+
+## v0.3.0 (2023-10-05)
 
 ### Changed
 - The query builder `selectAllColumns` method now is optional. ([#1](https://github.com/phenixphp/framework/pull/1))

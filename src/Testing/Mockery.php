@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Util;
+namespace Phenix\Testing;
 
 use Mockery as MockeryBase;
 use Mockery\MockInterface;
@@ -44,7 +44,7 @@ class Mockery extends MockeryBase
     public function expect(callable ...$methods)
     {
         foreach ($methods as $method => $expectation) {
-            /* @phpstan-ignore-next-line */
+            /** @phpstan-ignore-next-line */
             $method = $this->mock
                 ->shouldReceive((string) $method)
                 ->atLeast()
@@ -63,7 +63,6 @@ class Mockery extends MockeryBase
      */
     public function __call(string $method, array $arguments): mixed
     {
-        /* @phpstan-ignore-next-line */
         return $this->mock->{$method}(...$arguments);
     }
 }

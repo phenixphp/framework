@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Contracts\Filesystem\File;
-use Tests\Util\Mock;
+use Phenix\Testing\Mock;
 
 it('creates test successfully', function () {
     $mock = Mock::of(File::class)->expect(
