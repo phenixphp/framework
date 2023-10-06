@@ -13,6 +13,7 @@ it('responds plain text', function () {
 
     expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
     expect($serverResponse->getBody()->read())->toBe('Hello world!');
+    expect($serverResponse->getHeader('Content-Type'))->toBe('text/plain');
 });
 
 it('responds json data from plain array', function () {
@@ -24,6 +25,7 @@ it('responds json data from plain array', function () {
 
     expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
     expect($serverResponse->getBody()->read())->toContain(json_encode($data));
+    expect($serverResponse->getHeader('Content-Type'))->toBe('application/json');
 });
 
 it('responds json data from arrayable', function () {
