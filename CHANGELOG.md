@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.3.x
 
+## [v0.3.6 (2023-10-07)](https://github.com/phenixphp/framework/compare/0.3.5...0.3.6)
+
+### Added
+- HTTP utility to handle request attributes. ([#19](https://github.com/phenixphp/framework/pull/19))
+
+
 ## [v0.3.5 (2023-10-06)](https://github.com/phenixphp/framework/compare/0.3.4...0.3.5)
 
 ### Fixed
