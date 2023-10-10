@@ -10,10 +10,20 @@ use Phenix\Util\NamespaceResolver;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    public function boot(): void
+    public function provides(string $id): bool
+    {
+        $this->provided = [Route::class];
+
+        return $this->isProvided($id);
+    }
+
+    public function register(): void
     {
         $this->bind(Route::class)->setShared(true);
+    }
 
+    public function boot(): void
+    {
         $this->registerControllers();
         $this->loadRoutes();
     }
