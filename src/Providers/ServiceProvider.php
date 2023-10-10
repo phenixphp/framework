@@ -33,8 +33,6 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
 
     public function bind(string $key, mixed $concrete = null): DefinitionInterface
     {
-        $this->provided[] = $key;
-
         return $this->getContainer()->add($key, $concrete);
     }
 
