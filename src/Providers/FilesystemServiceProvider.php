@@ -10,7 +10,14 @@ use Phenix\Filesystem\Storage;
 
 class FilesystemServiceProvider extends ServiceProvider
 {
-    public function boot(): void
+    public function provides(string $id): bool
+    {
+        $this->provided = [Storage::class, FileContract::class];
+
+        return $this->isProvided($id);
+    }
+
+    public function register(): void
     {
         $this->bind(Storage::class);
         $this->bind(FileContract::class, File::class);

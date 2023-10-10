@@ -18,7 +18,7 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
 
     public function provides(string $id): bool
     {
-        return in_array($id, $this->provided, true);
+        return $this->isProvided($id);
     }
 
     public function register(): void
@@ -33,9 +33,12 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
 
     public function bind(string $key, mixed $concrete = null): DefinitionInterface
     {
-        $this->provided[] = $key;
-
         return $this->getContainer()->add($key, $concrete);
+    }
+
+    protected function isProvided(string $id): bool
+    {
+        return in_array($id, $this->provided, true);
     }
 
     protected function commands(array|string $commands): void
