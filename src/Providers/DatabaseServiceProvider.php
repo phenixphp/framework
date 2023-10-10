@@ -27,7 +27,7 @@ class DatabaseServiceProvider extends ServiceProvider
             Connections::name('postgresql'),
         ];
 
-        return parent::provides($id);
+        return $this->isProvided($id);
     }
 
     public function register(): void
