@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.3.x
 
+## [v0.3.8 (2023-10-10)](https://github.com/phenixphp/framework/compare/0.3.7...0.3.8)
+
+### Fixed
+- Load router on booting. ([#27](https://github.com/phenixphp/framework/pull/27))
+
 ## [v0.3.7 (2023-10-10)](https://github.com/phenixphp/framework/compare/0.3.6...0.3.7)
 
 ### Added
