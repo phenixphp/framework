@@ -8,8 +8,8 @@ enum Operators: string
 {
     case EQUAL = '=';
     case DISTINCT = '!=';
-    case GREATHER_THAN = '>';
-    case GREATHER_THAN_OR_EQUAL = '>=';
+    case GREATER_THAN = '>';
+    case GREATER_THAN_OR_EQUAL = '>=';
     case LESS_THAN = '<';
     case LESS_THAN_OR_EQUAL = '<=';
     case IN = 'IN';

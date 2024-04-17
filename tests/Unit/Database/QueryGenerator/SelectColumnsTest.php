@@ -21,7 +21,7 @@ it('generates query to select all columns of table', function () {
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });
 
 it('generates query to select all columns from table', function () {
@@ -35,7 +35,7 @@ it('generates query to select all columns from table', function () {
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });
 
 it('generates a query using sql functions', function (string $function, string $column, string $rawFunction) {
@@ -195,8 +195,8 @@ it('generates query with select-cases using comparisons', function (
 })->with([
     ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operators::EQUAL->value],
     ['whenDistinct', ['price', 100, 'expensive'], 'cheap', Operators::DISTINCT->value],
-    ['whenGreatherThan', ['price', 100, 'expensive'], 'cheap', Operators::GREATHER_THAN->value],
-    ['whenGreatherThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operators::GREATER_THAN->value],
+    ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operators::GREATER_THAN_OR_EQUAL->value],
     ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operators::LESS_THAN->value],
     ['whenLessThanOrEqual', ['price', 100, 'cheap'], 'expensive', Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -245,7 +245,7 @@ it('generates query with select-cases with multiple conditions and string values
 
     $case = Functions::case()
         ->whenNull('created_at', Value::from('inactive'))
-        ->whenGreatherThan('created_at', Value::from($date), Value::from('new user'))
+        ->whenGreaterThan('created_at', Value::from($date), Value::from('new user'))
         ->defaultResult(Value::from('old user'))
         ->as('status');
 
@@ -273,7 +273,7 @@ it('generates query with select-cases without default value', function () {
 
     $case = Functions::case()
         ->whenNull('created_at', Value::from('inactive'))
-        ->whenGreatherThan('created_at', Value::from($date), Value::from('new user'))
+        ->whenGreaterThan('created_at', Value::from($date), Value::from('new user'))
         ->as('status');
 
     $sql = $query->select([
@@ -297,7 +297,7 @@ it('generates query with select-case using functions', function () {
     $query = new QueryGenerator();
 
     $case = Functions::case()
-        ->whenGreatherThanOrEqual(Functions::avg('price'), 4, Value::from('expensive'))
+        ->whenGreaterThanOrEqual(Functions::avg('price'), 4, Value::from('expensive'))
         ->defaultResult(Value::from('cheap'))
         ->as('message');
 
@@ -389,5 +389,5 @@ it('generates query to select all columns of table without column selection', fu
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });

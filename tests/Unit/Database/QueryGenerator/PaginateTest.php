@@ -14,7 +14,7 @@ it('generates offset pagination query', function () {
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 0');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });
 
 it('generates offset pagination query with indicate page', function () {
@@ -27,7 +27,7 @@ it('generates offset pagination query with indicate page', function () {
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 30');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });
 
 it('overwrites limit when pagination is called', function () {
@@ -41,5 +41,5 @@ it('overwrites limit when pagination is called', function () {
     [$dml, $params] = $sql;
 
     expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 15');
-    expect($params)->toBeEmpty($params);
+    expect($params)->toBeEmpty();
 });
