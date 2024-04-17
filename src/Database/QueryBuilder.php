@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Amp\Sql\Common\SqlCommonConnectionPool;
-use Amp\Sql\QueryError;
-use Amp\Sql\TransactionError;
+use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlTransactionError;
 use League\Uri\Components\Query;
 use League\Uri\Http;
 use Phenix\App;
@@ -14,7 +14,6 @@ use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Actions;
-
 use Phenix\Database\Constants\Connections;
 
 use function is_string;
@@ -133,7 +132,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }
@@ -166,7 +165,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }
@@ -181,7 +180,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }

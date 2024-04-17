@@ -90,20 +90,18 @@ it('insert records', function () {
 });
 
 it('fails on insert records', function () {
-    expect(function () {
-        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-        $connection->expects($this->any())
-            ->method('prepare')
-            ->willThrowException(new SqlQueryError('Duplicate name'));
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Duplicate name'));
 
-        $query = new QueryBuilder();
-        $query->connection($connection);
+    $query = new QueryBuilder();
+    $query->connection($connection);
 
-        $result = $query->table('users')->insert(['name' => 'Tony']);
+    $result = $query->table('users')->insert(['name' => 'Tony']);
 
-        expect($result)->toBeFalsy();
-    })->toThrow(SqlQueryError::class);
+    expect($result)->toBeFalsy();
 });
 
 it('throws any error on insert records', function () {
@@ -136,22 +134,20 @@ it('updates records', function () {
 });
 
 it('fails on record update', function () {
-    expect(function () {
-        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-        $connection->expects($this->any())
-            ->method('prepare')
-            ->willThrowException(new SqlQueryError('Duplicate name'));
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Duplicate name'));
 
-        $query = new QueryBuilder();
-        $query->connection($connection);
+    $query = new QueryBuilder();
+    $query->connection($connection);
 
-        $result = $query->from('users')
-            ->whereEqual('id', 1)
-            ->update(['name' => 'Tony']);
+    $result = $query->from('users')
+        ->whereEqual('id', 1)
+        ->update(['name' => 'Tony']);
 
-        expect($result)->toBeFalse();
-    })->toThrow(SqlQueryError::class);
+    expect($result)->toBeFalse();
 });
 
 it('counts all database records', function () {
@@ -273,23 +269,20 @@ it('deletes records', function () {
 });
 
 it('fails on record deletion', function () {
-    expect(function () {
-        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-        $connection->expects($this->any())
-            ->method('prepare')
-            ->willThrowException(new SqlQueryError('Constraint integrity'));
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Constraint integrity'));
 
-        $query = new QueryBuilder();
-        $query->connection($connection);
+    $query = new QueryBuilder();
+    $query->connection($connection);
 
-        $result = $query->table('users')
-            ->whereEqual('email', 'john.doe@email.com')
-            ->delete();
+    $result = $query->table('users')
+        ->whereEqual('email', 'john.doe@email.com')
+        ->delete();
 
-        expect($result)->toBeFalse();
-    })->toThrow(SqlQueryError::class);
-
+    expect($result)->toBeFalse();
 });
 
 it('gets all records from database without select columns', function () {
