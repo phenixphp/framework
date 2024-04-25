@@ -26,6 +26,7 @@
         "amphp/file": "^v3.0.0",
         "amphp/http-client": "^v5.0.1",
         "amphp/http-server": "^v3.2.0",
+        "amphp/http-server-form-parser": "^2.0",
         "amphp/http-server-router": "^v2.0.0",
         "amphp/log": "^v2.0.0",
         "amphp/mysql": "^v3.0.0",
