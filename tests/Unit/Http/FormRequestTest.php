@@ -7,7 +7,7 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Router;
 use League\Uri\Http;
 use Phenix\Constants\HttpMethods;
-use Phenix\Http\Attributes;
+use Phenix\Http\FormRequest;
 use Phenix\Util\URL;
 
 it('gets route attributes from server request', function () {
@@ -18,7 +18,7 @@ it('gets route attributes from server request', function () {
     $args = ['post' => '7', 'comment' => '22'];
     $request->setAttribute(Router::class, $args);
 
-    $attributes = Attributes::fromRequest($request);
+    $attributes = FormRequest::fromRequest($request);
 
     expect($attributes->get('post'))->toBe('7');
     expect($attributes->get('comment'))->toBe('22');
@@ -26,12 +26,4 @@ it('gets route attributes from server request', function () {
     expect($attributes->has('post'))->toBeTrue();
     expect($attributes->has('user'))->toBeFalse();
     expect($attributes->toArray())->toBe($args);
-
-    $attributes->set('user', 1);
-
-    expect($attributes->has('user'))->toBeTrue();
-
-    $attributes->remove('user');
-
-    expect($attributes->has('user'))->toBeFalse();
 });

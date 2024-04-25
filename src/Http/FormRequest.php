@@ -8,7 +8,7 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Router;
 use Phenix\Contracts\Arrayable;
 
-class Attributes implements Arrayable
+class FormRequest implements Arrayable
 {
     public function __construct(protected array $parameters)
     {
