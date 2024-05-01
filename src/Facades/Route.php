@@ -16,6 +16,8 @@ use Phenix\Runtime\Facade;
  * @method static \Phenix\Routing\RouteGroupBuilder name(string $name)
  * @method static \Phenix\Routing\RouteGroupBuilder prefix(string $prefix)
  * @method static \Phenix\Routing\RouteGroupBuilder middleware(array|string $middleware)
+ *
+ * @see \Phenix\Routing\Route
  */
 class Route extends Facade
 {
