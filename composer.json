@@ -35,10 +35,12 @@
         "fakerphp/faker": "^1.23",
         "league/container": "^4.2",
         "nesbot/carbon": "^3.0",
+        "phenixphp/http-cors": "^0.1.0",
         "phenixphp/validation": "^0.1",
         "ramsey/collection": "^2.0",
         "robmorgan/phinx": "^0.15.2",
         "symfony/console": "^6.1",
+        "symfony/var-dumper": "^7.0",
         "vlucas/phpdotenv": "^5.4"
     },
     "require-dev": {
@@ -56,8 +58,7 @@
         "phpstan/phpstan": "^1.9",
         "phpstan/phpstan-deprecation-rules": "^1.1",
         "phpstan/phpstan-phpunit": "^1.3",
-        "phpunit/phpunit": "^9.5",
-        "symfony/var-dumper": "^6.1"
+        "phpunit/phpunit": "^9.5"
     },
     "config": {
         "optimize-autoloader": true,
