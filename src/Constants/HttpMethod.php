@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Constants;
 
-enum HttpMethods: string
+enum HttpMethod: string
 {
     case HEAD = 'HEAD';
     case GET = 'GET';

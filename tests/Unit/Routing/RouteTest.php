@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Phenix\Constants\HttpMethods;
+use Phenix\Constants\HttpMethod;
 use Phenix\Http\Middlewares\AcceptJsonResponses;
 use Phenix\Routing\Route;
 use Tests\Unit\Routing\WelcomeController;
 use Tests\Util\AssertRoute;
 
-it('adds get routes successfully', function (string $method, HttpMethods $httpMethod) {
+it('adds get routes successfully', function (string $method, HttpMethod $httpMethod) {
     $router = new Route();
 
     $router->{$method}('/', fn () => 'Hello')
@@ -22,11 +22,11 @@ it('adds get routes successfully', function (string $method, HttpMethods $httpMe
         ->nameIs('awesome')
         ->hasMiddlewares([AcceptJsonResponses::class]);
 })->with([
-    ['get', HttpMethods::GET],
-    ['post', HttpMethods::POST],
-    ['put', HttpMethods::PUT],
-    ['patch', HttpMethods::PATCH],
-    ['delete', HttpMethods::DELETE],
+    ['get', HttpMethod::GET],
+    ['post', HttpMethod::POST],
+    ['put', HttpMethod::PUT],
+    ['patch', HttpMethod::PATCH],
+    ['delete', HttpMethod::DELETE],
 ]);
 
 it('adds get routes with params successfully', function () {
@@ -36,7 +36,7 @@ it('adds get routes with params successfully', function () {
         ->name('users.show');
 
     AssertRoute::from($router)
-        ->methodIs(HttpMethods::GET)
+        ->methodIs(HttpMethod::GET)
         ->nameIs('users.show')
         ->containsParameters(['user']);
 });
@@ -48,7 +48,7 @@ it('adds get routes with many params successfully', function () {
         ->name('users.posts.show');
 
     AssertRoute::from($router)
-        ->methodIs(HttpMethods::GET)
+        ->methodIs(HttpMethod::GET)
         ->nameIs('users.posts.show')
         ->containsParameters(['user', 'post']);
 });
@@ -62,7 +62,7 @@ it('can call a class callable method', function () {
         ->name('users.posts.show');
 
     AssertRoute::from($router)
-        ->methodIs(HttpMethods::GET)
+        ->methodIs(HttpMethod::GET)
         ->nameIs('users.posts.show')
         ->containsParameters(['user', 'post']);
 });
@@ -101,31 +101,31 @@ it('can add nested route groups', function () {
 
     $expected = [
         [
-            'method' => HttpMethods::GET,
+            'method' => HttpMethod::GET,
             'path' => '/admin/users',
             'middlewares' => [AcceptJsonResponses::class],
             'name' => 'admin.users.index',
         ],
         [
-            'method' => HttpMethods::GET,
+            'method' => HttpMethod::GET,
             'path' => '/admin/users/{user}',
             'middlewares' => [AcceptJsonResponses::class],
             'name' => 'admin.users.show',
         ],
         [
-            'method' => HttpMethods::GET,
+            'method' => HttpMethod::GET,
             'path' => '/admin/accounting/invoices',
             'middlewares' => [AcceptJsonResponses::class],
             'name' => 'admin.accounting.invoices.index',
         ],
         [
-            'method' => HttpMethods::GET,
+            'method' => HttpMethod::GET,
             'path' => '/admin/accounting/payments/pending',
             'middlewares' => [AcceptJsonResponses::class],
             'name' => 'admin.accounting.payments.pending.index',
         ],
         [
-            'method' => HttpMethods::GET,
+            'method' => HttpMethod::GET,
             'path' => '/products',
             'middlewares' => [AcceptJsonResponses::class],
             'name' => 'products.index',
@@ -155,7 +155,7 @@ it('can create route group from group method', function () {
     ->prefix('admin');
 
     AssertRoute::from($router)
-        ->methodIs(HttpMethods::GET)
+        ->methodIs(HttpMethod::GET)
         ->nameIs('admin.users.index')
         ->pathIs('/admin/users');
 });
