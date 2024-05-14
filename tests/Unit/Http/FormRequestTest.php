@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Amp\Http\Server\Driver\Client;
-use Amp\Http\Server\Request;
-use Amp\Http\Server\Router;
 use League\Uri\Http;
-use Phenix\Constants\HttpMethod;
-use Phenix\Http\FormRequest;
 use Phenix\Util\URL;
+use Amp\Http\Server\Router;
+use Amp\Http\Server\Request;
+use Phenix\Constants\HttpMethod;
+use Amp\Http\Server\Driver\Client;
+use Phenix\Http\Requests\FormRequest;
 
 it('gets route attributes from server request', function () {
     $client = $this->createMock(Client::class);
@@ -20,18 +20,10 @@ it('gets route attributes from server request', function () {
 
     $attributes = FormRequest::fromRequest($request);
 
-    expect($attributes->get('post'))->toBe('7');
-    expect($attributes->get('comment'))->toBe('22');
-    expect($attributes->integer('post'))->toBe(7);
-    expect($attributes->has('post'))->toBeTrue();
-    expect($attributes->has('user'))->toBeFalse();
-    expect($attributes->toArray())->toBe($args);
-
-    $attributes->set('user', 1);
-
-    expect($attributes->has('user'))->toBeTrue();
-
-    $attributes->remove('user');
-
-    expect($attributes->has('user'))->toBeFalse();
+    expect($attributes->route('post'))->toBe('7');
+    expect($attributes->route('comment'))->toBe('22');
+    expect($attributes->route()->integer('post'))->toBe(7);
+    expect($attributes->route()->has('post'))->toBeTrue();
+    expect($attributes->route()->has('user'))->toBeFalse();
+    expect($attributes->route()->toArray())->toBe($args);
 });
