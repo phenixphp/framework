@@ -49,4 +49,16 @@ class TestResponse
 
         return $this;
     }
+
+    public function assertHeaderContains(array $needles): self
+    {
+        $needles = (array) $needles;
+
+        foreach ($needles as $header => $value) {
+            expect($this->response->getHeader($header))->not->toBeNull();
+            expect($this->response->getHeader($header))->toBe($value);
+        }
+
+        return $this;
+    }
 }

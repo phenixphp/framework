@@ -84,4 +84,13 @@ trait InteractWithResponses
             headers: $headers
         );
     }
+
+    public function options(
+        string $path,
+        array|string|null $body = null,
+        array $parameters = [],
+        array $headers = []
+    ): TestResponse {
+        return $this->call(HttpMethod::OPTIONS, $path, $parameters, $body, $headers);
+    }
 }

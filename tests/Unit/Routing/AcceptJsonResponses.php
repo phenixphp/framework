@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Tests\Unit\Routing;
 
 use Amp\Http\HttpStatus;
 use Amp\Http\Server\Middleware;

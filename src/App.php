@@ -6,6 +6,7 @@ namespace Phenix;
 
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\Middleware;
+use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Socket;
@@ -23,7 +24,7 @@ class App implements AppContract, Makeable
 {
     private static string $path;
     private static Container $container;
-    private Router $router;
+    private RequestHandler $router;
     private Logger $logger;
     private SocketHttpServer $server;
     private bool $signalTrapping = true;
@@ -101,9 +102,9 @@ class App implements AppContract, Makeable
         self::$container->extend($key)->setConcrete($concrete);
     }
 
-    public function register(string $key, mixed $contrete = null)
+    public function register(string $key, mixed $concrete = null)
     {
-        self::$container->add($key, $contrete);
+        self::$container->add($key, $concrete);
     }
 
     public function disableSignalTrapping(): void
@@ -113,7 +114,7 @@ class App implements AppContract, Makeable
 
     private function setRouter(): void
     {
-        $this->router = new Router($this->server, $this->logger, $this->errorHandler);
+        $router = new Router($this->server, $this->logger, $this->errorHandler);
 
         /** @var array $routes */
         $routes = self::$container->get(Route::getKeyName())->toArray();
@@ -121,7 +122,7 @@ class App implements AppContract, Makeable
         foreach ($routes as $route) {
             [$method, $path, $closure, $middlewares] = $route;
 
-            $this->router->addRoute(
+            $router->addRoute(
                 $method->value,
                 $path,
                 Middleware\stackMiddleware($closure, ...$middlewares)
@@ -131,8 +132,13 @@ class App implements AppContract, Makeable
         /** @var array $middlewares */
         $middlewares = Config::get('app.middlewares');
 
-        foreach ($middlewares as $middleware) {
-            $this->router->addMiddleware(new $middleware());
+        foreach ($middlewares['router'] as $middleware) {
+            $router->addMiddleware(new $middleware());
         }
+
+        /** @var array<int, Middleware> $globalMiddlewares */
+        $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
+
+        $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
 }

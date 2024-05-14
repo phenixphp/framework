@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Phenix\Constants\HttpMethod;
-use Phenix\Http\Middlewares\AcceptJsonResponses;
 use Phenix\Routing\Route;
+use Tests\Unit\Routing\AcceptJsonResponses;
 use Tests\Unit\Routing\WelcomeController;
 use Tests\Util\AssertRoute;
 

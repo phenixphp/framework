@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Middlewares;
 
-use Phenix\Facades\Config;
-use Cspray\Labrador\Http\Cors\CorsMiddleware;
 use Cspray\Labrador\Http\Cors\ArrayConfiguration;
+use Cspray\Labrador\Http\Cors\CorsMiddleware;
 use Cspray\Labrador\Http\Cors\SimpleConfigurationLoader;
+use Phenix\Configurations\Cors;
 
-class CorsHandler extends CorsMiddleware
+class HandleCors extends CorsMiddleware
 {
     public function __construct()
     {
-        /** @var array $cors */
-        $cors = Config::get('cors');
+        $cors = Cors::build();
 
-        $config = new ArrayConfiguration($cors);
+        $config = new ArrayConfiguration($cors->toArray());
         $loader = new SimpleConfigurationLoader($config);
 
         parent::__construct($loader);
