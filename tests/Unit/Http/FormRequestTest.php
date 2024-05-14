@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use League\Uri\Http;
-use Phenix\Util\URL;
-use Amp\Http\Server\Router;
-use Amp\Http\Server\Request;
-use Phenix\Constants\HttpMethod;
 use Amp\Http\Server\Driver\Client;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Router;
+use League\Uri\Http;
+use Phenix\Constants\HttpMethod;
 use Phenix\Http\Requests\FormRequest;
+use Phenix\Util\URL;
 
 it('gets route attributes from server request', function () {
     $client = $this->createMock(Client::class);
