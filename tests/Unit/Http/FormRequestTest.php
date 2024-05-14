@@ -26,4 +26,12 @@ it('gets route attributes from server request', function () {
     expect($attributes->has('post'))->toBeTrue();
     expect($attributes->has('user'))->toBeFalse();
     expect($attributes->toArray())->toBe($args);
+
+    $attributes->set('user', 1);
+
+    expect($attributes->has('user'))->toBeTrue();
+
+    $attributes->remove('user');
+
+    expect($attributes->has('user'))->toBeFalse();
 });
