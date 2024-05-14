@@ -6,7 +6,7 @@ namespace Phenix\Testing\Concerns;
 
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
-use Phenix\Constants\HttpMethods;
+use Phenix\Constants\HttpMethod;
 use Phenix\Testing\TestResponse;
 use Phenix\Util\URL;
 
@@ -15,7 +15,7 @@ use function is_array;
 trait InteractWithResponses
 {
     public function call(
-        HttpMethods $method,
+        HttpMethod $method,
         string $path,
         array $parameters = [],
         array|string|null $body = null,
@@ -41,7 +41,7 @@ trait InteractWithResponses
     public function get(string $path, array $parameters = [], array $headers = []): TestResponse
     {
         return $this->call(
-            method: HttpMethods::GET,
+            method: HttpMethod::GET,
             path: $path,
             parameters: $parameters,
             headers: $headers
@@ -54,7 +54,7 @@ trait InteractWithResponses
         array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethods::POST, $path, $parameters, $body, $headers);
+        return $this->call(HttpMethod::POST, $path, $parameters, $body, $headers);
     }
 
     public function put(
@@ -63,7 +63,7 @@ trait InteractWithResponses
         array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethods::PUT, $path, $parameters, $body, $headers);
+        return $this->call(HttpMethod::PUT, $path, $parameters, $body, $headers);
     }
 
     public function patch(
@@ -72,16 +72,25 @@ trait InteractWithResponses
         array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethods::PATCH, $path, $parameters, $body, $headers);
+        return $this->call(HttpMethod::PATCH, $path, $parameters, $body, $headers);
     }
 
     public function delete(string $path, array $parameters = [], array $headers = []): TestResponse
     {
         return $this->call(
-            method: HttpMethods::DELETE,
+            method: HttpMethod::DELETE,
             path: $path,
             parameters: $parameters,
             headers: $headers
         );
+    }
+
+    public function options(
+        string $path,
+        array|string|null $body = null,
+        array $parameters = [],
+        array $headers = []
+    ): TestResponse {
+        return $this->call(HttpMethod::OPTIONS, $path, $parameters, $body, $headers);
     }
 }

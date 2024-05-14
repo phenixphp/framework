@@ -21,7 +21,7 @@ it('generates a query using having clause', function () {
         })
         ->groupBy('products.category_id')
         ->having(function (Having $having): void {
-            $having->whereGreatherThan('identifiers', 5);
+            $having->whereGreaterThan('identifiers', 5);
         })
         ->get();
 
@@ -50,8 +50,8 @@ it('generates a query using having with many clauses', function () {
         })
         ->groupBy('products.category_id')
         ->having(function (Having $having): void {
-            $having->whereGreatherThan('identifiers', 5)
-                ->whereGreatherThan('products.category_id', 10);
+            $having->whereGreaterThan('identifiers', 5)
+                ->whereGreaterThan('products.category_id', 10);
         })
         ->get();
 

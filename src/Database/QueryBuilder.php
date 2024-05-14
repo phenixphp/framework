@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Amp\Sql\Common\ConnectionPool;
-use Amp\Sql\QueryError;
-use Amp\Sql\TransactionError;
+use Amp\Sql\Common\SqlCommonConnectionPool;
+use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlTransactionError;
 use League\Uri\Components\Query;
 use League\Uri\Http;
 use Phenix\App;
@@ -33,7 +33,7 @@ class QueryBuilder extends QueryBase
     }
     use HasJoinClause;
 
-    protected ConnectionPool $connection;
+    protected SqlCommonConnectionPool $connection;
 
     public function __construct()
     {
@@ -42,7 +42,7 @@ class QueryBuilder extends QueryBase
         $this->connection = App::make(Connections::default());
     }
 
-    public function connection(ConnectionPool|string $connection): self
+    public function connection(SqlCommonConnectionPool|string $connection): self
     {
         if (is_string($connection)) {
             $connection = App::make(Connections::name($connection));
@@ -132,7 +132,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }
@@ -165,7 +165,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }
@@ -180,7 +180,7 @@ class QueryBuilder extends QueryBase
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (QueryError|TransactionError) {
+        } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }
     }

@@ -7,7 +7,12 @@ return [
     'env' => env('APP_ENV', fn () => 'local'),
     'url' => env('APP_URL', fn () => 'http://127.0.0.1'),
     'port' => env('APP_PORT', fn () => 1337),
-    'middlewares' => [],
+    'middlewares' => [
+        'global' => [
+            \Phenix\Http\Middlewares\HandleCors::class,
+        ],
+        'router' => [],
+    ],
     'providers' => [
         \Phenix\Providers\CommandsServiceProvider::class,
         \Phenix\Providers\RouteServiceProvider::class,

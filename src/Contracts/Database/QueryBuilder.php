@@ -6,5 +6,4 @@ namespace Phenix\Contracts\Database;
 
 interface QueryBuilder
 {
-    public function select(array $fields): self;
 }

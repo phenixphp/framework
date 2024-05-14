@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Amp\Sql\QueryError;
+use Amp\Sql\SqlQueryError;
 use League\Uri\Http;
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Paginator;
@@ -94,7 +94,7 @@ it('fails on insert records', function () {
 
     $connection->expects($this->any())
         ->method('prepare')
-        ->willThrowException(new QueryError('Duplicate name'));
+        ->willThrowException(new SqlQueryError('Duplicate name'));
 
     $query = new QueryBuilder();
     $query->connection($connection);
@@ -138,7 +138,7 @@ it('fails on record update', function () {
 
     $connection->expects($this->any())
         ->method('prepare')
-        ->willThrowException(new QueryError('Duplicate name'));
+        ->willThrowException(new SqlQueryError('Duplicate name'));
 
     $query = new QueryBuilder();
     $query->connection($connection);
@@ -273,7 +273,7 @@ it('fails on record deletion', function () {
 
     $connection->expects($this->any())
         ->method('prepare')
-        ->willThrowException(new QueryError('Constraint integrity'));
+        ->willThrowException(new SqlQueryError('Constraint integrity'));
 
     $query = new QueryBuilder();
     $query->connection($connection);
