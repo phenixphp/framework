@@ -8,7 +8,7 @@ use Phenix\Facades\Config;
 
 class Cors extends Configuration
 {
-    public readonly array $origins;
+    public readonly array|string $origins;
     public readonly array $allowedMethods;
     public readonly int $maxAge;
     public readonly array $allowedHeaders;
@@ -17,7 +17,7 @@ class Cors extends Configuration
 
     public function __construct(array $config)
     {
-        $this->origins = (array) $config['origins'];
+        $this->origins = $config['origins'];
         $this->allowedMethods = $config['allowed_methods'];
         $this->maxAge = $config['max_age'];
         $this->allowedHeaders = $config['allowed_headers'];
@@ -25,8 +25,20 @@ class Cors extends Configuration
         $this->allowCredentials = $config['allow_credentials'];
     }
 
-    public static function build(): static
+    public static function build(): self
     {
-        return new static(Config::get('cors'));
+        return new self(Config::get('cors'));
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'origins' => (array) $this->origins,
+            'allowed_methods' => $this->allowedMethods,
+            'max_age' => $this->maxAge,
+            'allowed_headers' => $this->allowedHeaders,
+            'exposable_headers' => $this->exposableHeaders,
+            'allow_credentials' => $this->allowCredentials,
+        ];
     }
 }
