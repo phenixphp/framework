@@ -18,12 +18,25 @@ it('gets route attributes from server request', function () {
     $args = ['post' => '7', 'comment' => '22'];
     $request->setAttribute(Router::class, $args);
 
-    $attributes = FormRequest::fromRequest($request);
+    $formRequest = FormRequest::fromRequest($request);
 
-    expect($attributes->route('post'))->toBe('7');
-    expect($attributes->route('comment'))->toBe('22');
-    expect($attributes->route()->integer('post'))->toBe(7);
-    expect($attributes->route()->has('post'))->toBeTrue();
-    expect($attributes->route()->has('user'))->toBeFalse();
-    expect($attributes->route()->toArray())->toBe($args);
+    expect($formRequest->route('post'))->toBe('7');
+    expect($formRequest->route('comment'))->toBe('22');
+    expect($formRequest->route()->integer('post'))->toBe(7);
+    expect($formRequest->route()->has('post'))->toBeTrue();
+    expect($formRequest->route()->has('user'))->toBeFalse();
+    expect($formRequest->route()->toArray())->toBe($args);
+});
+
+it('gets query parameters from server request', function () {
+    $client = $this->createMock(Client::class);
+    $uri = Http::new(URL::build('posts?page=1&per_page=15&status[]=active&status[]=inactive&object[one]=1&object[two]=2'));
+    $request = new Request($client, HttpMethod::GET->value, $uri);
+
+    $formRequest = FormRequest::fromRequest($request);
+
+    expect($formRequest->query('page'))->toBe('1');
+    expect($formRequest->query('per_page'))->toBe('15');
+    expect($formRequest->query('status'))->toBe(['active', 'inactive']);
+    expect($formRequest->query('object'))->toBe(['one' => '1', 'two' => '2']);
 });
