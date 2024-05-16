@@ -40,3 +40,20 @@ it('gets query parameters from server request', function () {
     expect($formRequest->query('status'))->toBe(['active', 'inactive']);
     expect($formRequest->query('object'))->toBe(['one' => '1', 'two' => '2']);
 });
+
+it('can decode JSON body', function () {
+    $client = $this->createMock(Client::class);
+
+    $body = ['title' => 'Article title','content' => 'Article content'];
+    $uri = Http::new(URL::build('posts'));
+
+    $request = new Request($client, HttpMethod::POST->value, $uri);
+    $request->setHeader('content-type', 'application/json');
+    $request->setBody(json_encode($body));
+
+    $formRequest = FormRequest::fromRequest($request);
+
+    expect($formRequest->body('title'))->toBe($body['title']);
+    expect($formRequest->body('content'))->toBe($body['content']);
+    expect($formRequest->body()->toArray())->toBe($body);
+});
