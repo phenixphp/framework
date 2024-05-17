@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Testing\Concerns;
 
+use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
 use Phenix\Constants\HttpMethod;
@@ -18,17 +19,20 @@ trait InteractWithResponses
         HttpMethod $method,
         string $path,
         array $parameters = [],
-        array|string|null $body = null,
+        Form|array|string|null $body = null,
         array $headers = []
     ): TestResponse {
         $request = new Request(URL::build($path, $parameters), $method->value);
 
-        if (! empty($headers)) {
+        if ($headers) {
             $request->setHeaders($headers);
         }
 
-        if (! empty($body)) {
-            $body = is_array($body) ? json_encode($body) : $body;
+        if ($body) {
+            $body = match (true) {
+                is_array($body) => json_encode($body),
+                default => $body,
+            };
 
             $request->setBody($body);
         }
@@ -50,7 +54,7 @@ trait InteractWithResponses
 
     public function post(
         string $path,
-        array|string|null $body = null,
+        Form|array|string|null $body = null,
         array $parameters = [],
         array $headers = []
     ): TestResponse {
@@ -59,7 +63,7 @@ trait InteractWithResponses
 
     public function put(
         string $path,
-        array|string|null $body = null,
+        Form|array|string|null $body = null,
         array $parameters = [],
         array $headers = []
     ): TestResponse {
@@ -68,7 +72,7 @@ trait InteractWithResponses
 
     public function patch(
         string $path,
-        array|string|null $body = null,
+        Form|array|string|null $body = null,
         array $parameters = [],
         array $headers = []
     ): TestResponse {
