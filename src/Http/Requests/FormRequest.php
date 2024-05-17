@@ -67,6 +67,6 @@ class FormRequest implements Arrayable
 
     public function toArray(): array
     {
-        return [];
+        return $this->body->toArray();
     }
 }

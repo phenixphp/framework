@@ -9,6 +9,7 @@ use Amp\Http\Server\FormParser\Form;
 use Amp\Http\Server\Request;
 use Phenix\Contracts\Http\Requests\BodyParser;
 
+use function is_array;
 use function is_null;
 use function is_numeric;
 
@@ -48,11 +49,11 @@ class FormParser implements BodyParser
 
     public function integer(string $key): int|null
     {
-        if (! $this->has($key)) {
+        $value = $this->get($key);
+
+        if (! $value) {
             return null;
         }
-
-        $value = $this->get($key);
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -74,6 +75,20 @@ class FormParser implements BodyParser
 
     public function toArray(): array
     {
-        return [];
+        return [
+            ...$this->prepare($this->form->getValues()),
+            ...$this->prepare($this->form->getFiles()),
+        ];
+    }
+
+    private function prepare(array $data): array
+    {
+        return array_map(function (array|string|int|null $value) {
+            if (is_array($value) && count($value) === 1) {
+                return array_pop($value);
+            }
+
+            return $value;
+        }, $data);
     }
 }

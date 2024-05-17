@@ -37,6 +37,7 @@ it('gets query parameters from server request', function () {
 
     expect($formRequest->query('page'))->toBe('1');
     expect($formRequest->query('per_page'))->toBe('15');
+    expect($formRequest->query()->get('per_page'))->toBe('15');
     expect($formRequest->query('status'))->toBe(['active', 'inactive']);
     expect($formRequest->query('object'))->toBe(['one' => '1', 'two' => '2']);
 });
@@ -44,7 +45,12 @@ it('gets query parameters from server request', function () {
 it('can decode JSON body', function () {
     $client = $this->createMock(Client::class);
 
-    $body = ['title' => 'Article title','content' => 'Article content'];
+    $body = [
+        'title' => 'Article title',
+        'content' => 'Article content',
+        'rate' => 10,
+    ];
+
     $uri = Http::new(URL::build('posts'));
 
     $request = new Request($client, HttpMethod::POST->value, $uri);
@@ -53,7 +59,16 @@ it('can decode JSON body', function () {
 
     $formRequest = FormRequest::fromRequest($request);
 
+    expect($formRequest->body()->has('title'))->toBeTruthy();
+    expect($formRequest->body()->get('title'))->toBe($body['title']);
     expect($formRequest->body('title'))->toBe($body['title']);
     expect($formRequest->body('content'))->toBe($body['content']);
+    expect($formRequest->body()->integer('content'))->toBeNull();
+    expect($formRequest->body()->integer('rate'))->toBe(10);
+    expect($formRequest->body()->integer('other'))->toBeNull();
+    expect($formRequest->body()->hasFile('file'))->toBeFalsy();
+    expect($formRequest->body()->getFile('file'))->toBeNull();
+    expect($formRequest->body()->files())->toHaveCount(0);
+    expect($formRequest->body()->integer('other'))->toBeNull();
     expect($formRequest->body()->toArray())->toBe($body);
 });
