@@ -16,6 +16,11 @@ class TestResponse
         $this->body = $response->getBody()->buffer();
     }
 
+    public function getBody(): string
+    {
+        return $this->body;
+    }
+
     public function assertOk(): self
     {
         expect($this->response->getStatus())->toBe(HttpStatus::OK);
@@ -33,6 +38,13 @@ class TestResponse
     public function assertNotAcceptable(): self
     {
         expect($this->response->getStatus())->toBe(HttpStatus::NOT_ACCEPTABLE);
+
+        return $this;
+    }
+
+    public function assertUnprocessableEntity(): self
+    {
+        expect($this->response->getStatus())->toBe(HttpStatus::UNPROCESSABLE_ENTITY);
 
         return $this;
     }

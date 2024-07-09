@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
-use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Closure;
 use Phenix\App;
 use Phenix\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
+use Phenix\Http\Requests\ClosureRequestHandler;
 
 use function is_array;
 

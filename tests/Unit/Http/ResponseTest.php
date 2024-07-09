@@ -9,7 +9,7 @@ use Phenix\Http\Response;
 it('responds plain text', function () {
     $response = new Response();
 
-    $serverResponse = $response->plain('Hello world!');
+    $serverResponse = $response->plain('Hello world!')->send();
 
     expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
     expect($serverResponse->getBody()->read())->toBe('Hello world!');
@@ -21,7 +21,7 @@ it('responds json data from plain array', function () {
 
     $response = new Response();
 
-    $serverResponse = $response->json($data);
+    $serverResponse = $response->json($data)->send();
 
     expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
     expect($serverResponse->getBody()->read())->toContain(json_encode($data));
@@ -36,7 +36,7 @@ it('responds json data from arrayable', function () {
 
     $response = new Response();
 
-    $serverResponse = $response->json($collection);
+    $serverResponse = $response->json($collection)->send();
 
     expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
     expect($serverResponse->getBody()->read())->toContain(json_encode($data));

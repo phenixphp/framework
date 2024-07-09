@@ -15,7 +15,7 @@ class AcceptJsonResponses implements Middleware
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
         if ($this->acceptHtml($request)) {
-            return response()->json([], HttpStatus::NOT_ACCEPTABLE);
+            return response()->json([], HttpStatus::NOT_ACCEPTABLE)->send();
         }
 
         return $next->handleRequest($request);
