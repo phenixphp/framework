@@ -2,29 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
-
 use Phenix\Facades\Route;
-use Phenix\Http\FormRequest;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
-use Phenix\Validation\Types\Email;
-use Phenix\Validation\Types\Str;
+use Tests\Feature\Requests\StoreUserRequest;
 
 afterEach(function () {
     $this->app->stop();
 });
-
-class StoreUserRequest extends FormRequest
-{
-    public function rules(): array
-    {
-        return [
-            'name' => Str::required()->max(10),
-            'email' => Email::required(),
-        ];
-    }
-}
 
 it('validates requests using custom form request', function () {
     $data = [
