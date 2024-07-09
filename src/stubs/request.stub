@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Http\FormRequest;
+
+class {name} extends FormRequest
+{
+    protected function rules(): array
+    {
+        return [];
+    }
+}
