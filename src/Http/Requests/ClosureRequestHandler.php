@@ -12,6 +12,7 @@ use Closure;
 use Phenix\Http\FormRequest;
 use Phenix\Http\Request;
 use ReflectionFunction;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 class ClosureRequestHandler implements RequestHandler
@@ -25,14 +26,14 @@ class ClosureRequestHandler implements RequestHandler
     {
         $formRequest = $this->resolveFormRequest($request);
 
-        if ($formRequest::class === Request::class) {
-            return ($this->closure)($formRequest)->send();
-        }
+        if ($formRequest instanceof FormRequest) {
+            if (! $formRequest->isValid()) {
+                return response()
+                    ->json($formRequest->errors(), HttpStatus::UNPROCESSABLE_ENTITY)
+                    ->send();
+            }
 
-        if (! $formRequest->isValid()) {
-            return response()
-                ->json($formRequest->errors(), HttpStatus::UNPROCESSABLE_ENTITY)
-                ->send();
+            return ($this->closure)($formRequest)->send();
         }
 
         return ($this->closure)($formRequest)->send();
@@ -46,16 +47,17 @@ class ClosureRequestHandler implements RequestHandler
         $parameter = $reflector->getParameters()[0] ?? null;
 
         if (! $parameter) {
-            return Request::new($request);
+            return new Request($request);
         }
 
-        /** @var string|class-string $class */
-        $class = $parameter->getType()->getName();
+        /** @var ReflectionNamedType|null $type */
+        $type = $parameter->getType();
+        $className = $type?->getName();
 
-        if (is_subclass_of($class, FormRequest::class)) {
-            return $class::new($request);
+        if ($className && is_subclass_of($className, FormRequest::class)) {
+            return new $className($request);
         }
 
-        return Request::new($request);
+        return new Request($request);
     }
 }

@@ -18,7 +18,7 @@ it('gets route attributes from server request', function () {
     $args = ['post' => '7', 'comment' => '22'];
     $request->setAttribute(Router::class, $args);
 
-    $formRequest = Request::new($request);
+    $formRequest = new Request($request);
 
     expect($formRequest->route('post'))->toBe('7');
     expect($formRequest->route('comment'))->toBe('22');
@@ -33,7 +33,7 @@ it('gets query parameters from server request', function () {
     $uri = Http::new(URL::build('posts?page=1&per_page=15&status[]=active&status[]=inactive&object[one]=1&object[two]=2'));
     $request = new ServerRequest($client, HttpMethod::GET->value, $uri);
 
-    $formRequest = Request::new($request);
+    $formRequest = new Request($request);
 
     expect($formRequest->query('page'))->toBe('1');
     expect($formRequest->query('per_page'))->toBe('15');
@@ -57,7 +57,7 @@ it('can decode JSON body', function () {
     $request->setHeader('content-type', 'application/json');
     $request->setBody(json_encode($body));
 
-    $formRequest = Request::new($request);
+    $formRequest = new Request($request);
 
     expect($formRequest->body()->has('title'))->toBeTruthy();
     expect($formRequest->body()->get('title'))->toBe($body['title']);

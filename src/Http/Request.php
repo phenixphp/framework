@@ -48,11 +48,6 @@ class Request implements Arrayable
         };
     }
 
-    public static function new(ServerRequest $request): static
-    {
-        return new static($request);
-    }
-
     public function getClient(): Client
     {
         return $this->request->getClient();
