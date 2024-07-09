@@ -6,6 +6,7 @@ namespace Phenix\Providers;
 
 use Phenix\Console\Commands\MakeController;
 use Phenix\Console\Commands\MakeMiddleware;
+use Phenix\Console\Commands\MakeRequest;
 use Phenix\Console\Commands\MakeServiceProvider;
 use Phenix\Console\Commands\MakeTest;
 
@@ -15,6 +16,7 @@ class CommandsServiceProvider extends ServiceProvider
     {
         $this->commands([
             MakeTest::class,
+            MakeRequest::class,
             MakeController::class,
             MakeMiddleware::class,
             MakeServiceProvider::class,
