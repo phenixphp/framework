@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests\Concerns;
 
-use function is_array;
-
 trait HasQueryParameters
 {
     public function setQueryParameter(string $key, array|string|null $value): void

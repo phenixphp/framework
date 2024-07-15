@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
+use Amp\Future;
+use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\Driver\Client;
 use Amp\Http\Server\Request as ServerRequest;
+use Amp\Http\Server\RequestBody;
 use Amp\Http\Server\Router;
+use Amp\Http\Server\Trailers;
 use League\Uri\Http;
 use Phenix\Constants\HttpMethod;
 use Phenix\Http\Request;
 use Phenix\Util\URL;
+use Psr\Http\Message\UriInterface;
 
 it('gets route attributes from server request', function () {
     $client = $this->createMock(Client::class);
@@ -97,6 +102,30 @@ it('gets query parameters from server request', function () {
         'content-type' => 'text/plain',
         'accept' => 'application/json',
     ]);
+
+    expect($formRequest->isIdempotent())->toBeTrue();
+    expect($formRequest->getUri())->toBeInstanceOf(UriInterface::class);
+    expect($formRequest->getMethod())->toBe(HttpMethod::GET->value);
+
+    $future = Future::complete(['fooHeader' => 'barValue']);
+
+    $trailers = new Trailers($future, ['fooHeader']);
+
+    $formRequest->setTrailers($trailers);
+
+    expect($formRequest->getTrailers())->toBeInstanceOf(Trailers::class);
+
+    $formRequest->removeTrailers();
+
+    expect($formRequest->getTrailers())->toBeNull();
+
+    $formRequest->setCookie(new RequestCookie('test', 'cookie_value'));
+
+    expect($formRequest->getCookie('test'))->toBeInstanceOf(RequestCookie::class);
+
+    $formRequest->setBody('{"key":"value"}');
+
+    expect($formRequest->getBody())->toBeInstanceOf(RequestBody::class);
 });
 
 it('can decode JSON body', function () {
