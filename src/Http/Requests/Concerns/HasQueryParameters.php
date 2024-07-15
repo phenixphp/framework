@@ -59,7 +59,7 @@ trait HasQueryParameters
                 $values = $parameters[$key] ?? [];
                 $parameters[$key] = [...$values, ...$value];
             } else {
-                $parameters[$key] = is_array($value) ? $value[0] : $value;
+                $parameters[$key] = $value[0];
             }
         }
 
@@ -81,7 +81,7 @@ trait HasQueryParameters
 
         return [
             str_replace($matches[0], '', $key),
-            [$childKey => is_array($value) ? $value[0] : $value],
+            [$childKey => $value[0]],
         ];
     }
 }
