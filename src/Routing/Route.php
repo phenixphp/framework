@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
-use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Closure;
 use Phenix\App;
 use Phenix\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
+use Phenix\Http\FormRequest;
+use Phenix\Http\Request;
+use Phenix\Http\Requests\ClosureRequestHandler;
+use ReflectionFunction;
+use ReflectionNamedType;
+use ReflectionParameter;
 
 use function is_array;
 
@@ -136,6 +141,24 @@ class Route implements Arrayable
             $handler = $controller->{$method}(...);
         }
 
-        return new ClosureRequestHandler($handler);
+        return new ClosureRequestHandler($handler, $this->resolveClosureParam($handler));
+    }
+
+    private function resolveClosureParam(Closure $closure): string
+    {
+        $reflector = new ReflectionFunction($closure);
+
+        /** @var ReflectionParameter|null $parameter */
+        $parameter = $reflector->getParameters()[0] ?? null;
+
+        if (! $parameter) {
+            return Request::class;
+        }
+
+        /** @var ReflectionNamedType|null $type */
+        $type = $parameter->getType();
+        $className = $type?->getName();
+
+        return ($className && is_subclass_of($className, FormRequest::class)) ? $className : Request::class;
     }
 }

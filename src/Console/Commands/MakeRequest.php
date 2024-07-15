@@ -4,34 +4,34 @@ declare(strict_types=1);
 
 namespace Phenix\Console\Commands;
 
-class MakeMiddleware extends CommonMaker
+class MakeRequest extends CommonMaker
 {
     /**
      * @var string
      *
      * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
      */
-    protected static $defaultName = 'make:middleware';
+    protected static $defaultName = 'make:request';
 
     /**
      * @var string
      *
      * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
      */
-    protected static $defaultDescription = 'Creates a new middleware.';
+    protected static $defaultDescription = 'Creates a new form request.';
 
     protected function outputDirectory(): string
     {
-        return 'app'. DIRECTORY_SEPARATOR . 'Http' . DIRECTORY_SEPARATOR . 'Middleware';
+        return 'app'. DIRECTORY_SEPARATOR . 'Http' . DIRECTORY_SEPARATOR . 'Requests';
     }
 
     protected function stub(): string
     {
-        return 'middleware.stub';
+        return 'request.stub';
     }
 
     protected function commonName(): string
     {
-        return 'Middleware';
+        return 'Request';
     }
 }

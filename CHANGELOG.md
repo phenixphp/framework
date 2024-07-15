@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Basic validation layer using form request. ([#32](https://github.com/phenixphp/framework/pull/32))
+
 # Release Notes for 0.3.x
 
 ## [v0.3.8 (2023-10-10)](https://github.com/phenixphp/framework/compare/0.3.7...0.3.8)

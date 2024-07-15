@@ -4,39 +4,61 @@ declare(strict_types=1);
 
 namespace Phenix\Http;
 
-use Amp\Http\HttpStatus;
+use Amp\ByteStream\ReadableStream;
 use Amp\Http\Server\Response as ServerResponse;
+use Amp\Http\Server\Trailers;
+use Phenix\Constants\HttpStatus;
 use Phenix\Contracts\Arrayable;
 
 class Response
 {
-    public function plain(string $content, int $status = HttpStatus::OK, array $headers = []): ServerResponse
+    protected ReadableStream|string $body;
+    protected HttpStatus $status;
+    protected array $headers;
+    protected Trailers|null $trailers;
+
+    public function __construct()
     {
-        return new ServerResponse(
-            $status,
-            [...['content-type' => 'text/plain'], ...$headers],
-            $content
-        );
+        $this->body = '';
+        $this->status = HttpStatus::OK;
+        $this->trailers = null;
+    }
+
+    public function plain(string $content, HttpStatus $status = HttpStatus::OK, array $headers = []): self
+    {
+        $this->body = $content;
+        $this->status = $status;
+        $this->headers = [...['content-type' => 'text/plain'], ...$headers];
+
+        return $this;
     }
 
     /**
-     * @param array<string|int, array|string|int|bool> $content
+     * @param Arrayable|array<string|int, array|string|int|bool> $content
      */
     public function json(
         Arrayable|array $content = [],
-        int $status = HttpStatus::OK,
+        HttpStatus $status = HttpStatus::OK,
         array $headers = []
-    ): ServerResponse {
+    ): self {
         if ($content instanceof Arrayable) {
             $content = $content->toArray();
         }
 
-        $body = json_encode(['data' => $content]);
+        $this->body = json_encode(['data' => $content]);
+        $this->status = $status;
+        $this->headers = [...['content-type' => 'application/json'], ...$headers];
 
+        return $this;
+    }
+
+    public function send(): ServerResponse
+    {
         return new ServerResponse(
-            $status,
-            [...['content-type' => 'application/json'], ...$headers],
-            $body . PHP_EOL
+            $this->status->value,
+            $this->headers,
+            $this->body,
+            $this->trailers
         );
     }
 }
