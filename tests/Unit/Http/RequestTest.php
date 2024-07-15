@@ -40,6 +40,63 @@ it('gets query parameters from server request', function () {
     expect($formRequest->query()->get('per_page'))->toBe('15');
     expect($formRequest->query('status'))->toBe(['active', 'inactive']);
     expect($formRequest->query('object'))->toBe(['one' => '1', 'two' => '2']);
+    expect($formRequest->hasQueryParameter('page'))->toBeTrue();
+    expect($formRequest->getQueryParameters())->toBe([
+        'page' => '1',
+        'per_page' => '15',
+        'status' => ['active', 'inactive'],
+        'object' => [
+            'one' => '1',
+            'two' => '2',
+        ],
+    ]);
+
+    $formRequest->setQueryParameter('set', '1');
+
+    expect($formRequest->getQueryParameter('set'))->toBe('1');
+
+    $formRequest->addQueryParameter('add', '2');
+
+    expect($formRequest->getQueryParameter('add'))->toBe('2');
+
+    $formRequest->setQueryParameters(['collection' => 'value']);
+
+    expect($formRequest->getQueryParameter('collection'))->toBe('value');
+
+    $formRequest->replaceQueryParameters(['collection' => 'new value']);
+
+    expect($formRequest->getQueryParameter('collection'))->toBe('new value');
+
+    $formRequest->removeQueryParameter('collection');
+
+    expect($formRequest->hasQueryParameter('collection'))->toBeFalse();
+
+    $formRequest->setQueryParameter('new_key', 'value');
+
+    expect($formRequest->removeQuery())->toBeNull();
+
+    $formRequest->setHeader('Content-Type', 'application/json');
+
+    expect($formRequest->getHeader('Content-Type'))->toBe('application/json');
+
+    $formRequest->removeHeader('Content-Type');
+
+    expect($formRequest->hasHeader('Content-Type'))->toBeFalse();
+
+    $formRequest->setHeaders(['Content-Type' => 'application/json']);
+
+    expect($formRequest->getHeader('Content-Type'))->toBe('application/json');
+
+    $formRequest->addHeader('Accept', 'application/json');
+
+    expect($formRequest->hasHeader('Accept'))->toBeTrue();
+
+    $formRequest->replaceHeaders(['content-type' => 'text/plain']);
+
+    expect($formRequest->getHeaders())->toBe([
+        'content-type' => 'text/plain',
+        'accept' => 'application/json',
+    ]);
 });
 
 it('can decode JSON body', function () {

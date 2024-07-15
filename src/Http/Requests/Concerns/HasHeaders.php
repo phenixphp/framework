@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests\Concerns;
 
+use Phenix\Util\Arr;
+
+use function is_string;
+
 trait HasHeaders
 {
     public function setHeaders(array $headers): void
@@ -13,7 +17,9 @@ trait HasHeaders
 
     public function getHeaders(): array
     {
-        return $this->request->getHeaders();
+        return Arr::map($this->request->getHeaders(), function (array|string $value) {
+            return is_string($value) ? $value : $value[0];
+        });
     }
 
     public function setHeader(string $name, array|string $value): void

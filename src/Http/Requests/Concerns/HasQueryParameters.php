@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests\Concerns;
 
+use function is_array;
+
 trait HasQueryParameters
 {
     public function setQueryParameter(string $key, array|string|null $value): void
@@ -48,6 +50,38 @@ trait HasQueryParameters
 
     public function getQueryParameters(): array
     {
-        return $this->request->getQueryParameters();
+        $parameters = [];
+
+        foreach ($this->request->getQueryParameters() as $key => $value) {
+            if (str_contains($key, '[')) {
+                [$key, $value] = $this->parseParameterArray($key, $value);
+
+                $values = $parameters[$key] ?? [];
+                $parameters[$key] = [...$values, ...$value];
+            } else {
+                $parameters[$key] = is_array($value) ? $value[0] : $value;
+            }
+        }
+
+        return $parameters;
+    }
+
+    private function parseParameterArray(string $key, array $value): array
+    {
+        if (str_contains($key, '[]')) {
+            return [
+                str_replace('[]', '', $key),
+                $value,
+            ];
+        }
+
+        preg_match('/\[([a-zA-Z]+)\]/', $key, $matches);
+
+        $childKey = $matches[1];
+
+        return [
+            str_replace($matches[0], '', $key),
+            [$childKey => is_array($value) ? $value[0] : $value],
+        ];
     }
 }
