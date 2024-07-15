@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Console\Commands;
 
-use Phenix\Console\Maker;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
-
-class MakeMiddleware extends Maker
+class MakeMiddleware extends CommonMaker
 {
     /**
      * @var string
@@ -23,15 +19,6 @@ class MakeMiddleware extends Maker
      * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
      */
     protected static $defaultDescription = 'Creates a new middleware.';
-
-    protected function configure(): void
-    {
-        $this->setHelp('This command allows you to create a new middleware.');
-
-        $this->addArgument('name', InputArgument::REQUIRED, 'The middleware name');
-
-        $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create middleware');
-    }
 
     protected function outputDirectory(): string
     {
