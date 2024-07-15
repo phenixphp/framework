@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Phenix\Http;
 
 use Amp\ByteStream\ReadableStream;
-use Amp\Http\HttpStatus;
 use Amp\Http\Server\Response as ServerResponse;
 use Amp\Http\Server\Trailers;
+use Phenix\Constants\HttpStatus;
 use Phenix\Contracts\Arrayable;
 
 class Response
 {
     protected ReadableStream|string $body;
-    protected int $status;
+    protected HttpStatus $status;
     protected array $headers;
     protected Trailers|null $trailers;
 
@@ -24,7 +24,7 @@ class Response
         $this->trailers = null;
     }
 
-    public function plain(string $content, int $status = HttpStatus::OK, array $headers = []): self
+    public function plain(string $content, HttpStatus $status = HttpStatus::OK, array $headers = []): self
     {
         $this->body = $content;
         $this->status = $status;
@@ -38,7 +38,7 @@ class Response
      */
     public function json(
         Arrayable|array $content = [],
-        int $status = HttpStatus::OK,
+        HttpStatus $status = HttpStatus::OK,
         array $headers = []
     ): self {
         if ($content instanceof Arrayable) {
@@ -55,7 +55,7 @@ class Response
     public function send(): ServerResponse
     {
         return new ServerResponse(
-            $this->status,
+            $this->status->value,
             $this->headers,
             $this->body,
             $this->trailers

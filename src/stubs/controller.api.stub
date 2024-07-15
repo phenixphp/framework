@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace {namespace};
 
+use Phenix\Constants\HttpStatus;
+use Phenix\Http\Controller;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
-use Amp\Http\HttpStatus;
-use Phenix\Http\Controller;
 
 class {name} extends Controller
 {

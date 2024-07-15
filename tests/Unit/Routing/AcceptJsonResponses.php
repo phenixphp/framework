@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Routing;
 
-use Amp\Http\HttpStatus;
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
+use Phenix\Constants\HttpStatus;
 
 class AcceptJsonResponses implements Middleware
 {

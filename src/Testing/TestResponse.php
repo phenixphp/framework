@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Testing;
 
 use Amp\Http\Client\Response;
-use Amp\Http\HttpStatus;
+use Phenix\Constants\HttpStatus;
 
 class TestResponse
 {
@@ -23,28 +23,28 @@ class TestResponse
 
     public function assertOk(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::OK);
+        expect($this->response->getStatus())->toBe(HttpStatus::OK->value);
 
         return $this;
     }
 
     public function assertNotFound(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::NOT_FOUND);
+        expect($this->response->getStatus())->toBe(HttpStatus::NOT_FOUND->value);
 
         return $this;
     }
 
     public function assertNotAcceptable(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::NOT_ACCEPTABLE);
+        expect($this->response->getStatus())->toBe(HttpStatus::NOT_ACCEPTABLE->value);
 
         return $this;
     }
 
     public function assertUnprocessableEntity(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::UNPROCESSABLE_ENTITY);
+        expect($this->response->getStatus())->toBe(HttpStatus::UNPROCESSABLE_ENTITY->value);
 
         return $this;
     }
