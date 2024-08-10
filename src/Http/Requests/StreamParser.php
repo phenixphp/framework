@@ -58,7 +58,7 @@ class StreamParser extends BodyParser
 
     public function integer(string $key): int|null
     {
-        $value = $this->data[$key];
+        $value = $this->data[$key] ?? null;
 
         if (! $value) {
             return null;
@@ -79,7 +79,7 @@ class StreamParser extends BodyParser
 
     public function files(): array
     {
-        return $this->toArray();
+        return $this->files;
     }
 
     public function toArray(): array

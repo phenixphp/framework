@@ -76,7 +76,9 @@ it('can decode x-www-form-urlencode body', function () {
 it('can decode multipart form data body', function () {
     Route::post('/files', function (Request $request) {
         expect($request->body()->has('description'))->toBeTruthy();
+        expect($request->body()->has('file'))->toBeTruthy();
         expect($request->body()->hasFile('file'))->toBeTruthy();
+        expect($request->body()->get('file'))->toBeInstanceOf(BufferedFile::class);
         expect($request->body()->getFile('file'))->toBeInstanceOf(BufferedFile::class);
         expect($request->body()->files())->toHaveCount(1);
         expect($request->toArray())->toHaveCount(3);
