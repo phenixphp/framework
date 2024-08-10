@@ -7,13 +7,12 @@ namespace Phenix\Http\Requests;
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\FormParser\Form;
 use Amp\Http\Server\Request;
-use Phenix\Contracts\Http\Requests\BodyParser;
 
 use function is_array;
 use function is_null;
 use function is_numeric;
 
-class FormParser implements BodyParser
+class FormParser extends BodyParser
 {
     private Form|null $form;
 
@@ -22,7 +21,7 @@ class FormParser implements BodyParser
         $this->form = null;
     }
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request, array $options = []): self
     {
         $parser = new self();
         $parser->parse($request);
@@ -30,21 +29,18 @@ class FormParser implements BodyParser
         return $parser;
     }
 
-    public function parse(Request $request): self
-    {
-        $this->form = Form::fromRequest($request);
-
-        return $this;
-    }
-
     public function get(string $key, array|string|int|null $default = null): BufferedFile|array|string|int|null
     {
+        if ($this->hasFile($key)) {
+            return $this->getFile($key, $default);
+        }
+
         return $this->form->getValue($key) ?? $default;
     }
 
     public function has(string $key): bool
     {
-        return ! is_null($this->form->getValue($key));
+        return $this->form->hasFile($key) || ! is_null($this->form->getValue($key));
     }
 
     public function integer(string $key): int|null
@@ -79,6 +75,13 @@ class FormParser implements BodyParser
             ...$this->prepare($this->form->getValues()),
             ...$this->prepare($this->form->getFiles()),
         ];
+    }
+
+    protected function parse(Request $request): self
+    {
+        $this->form = Form::fromRequest($request);
+
+        return $this;
     }
 
     private function prepare(array $data): array

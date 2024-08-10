@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Http;
 
 use Amp\ByteStream\ReadableStream;
-use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\Driver\Client;
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\Request as ServerRequest;
@@ -14,18 +13,22 @@ use Amp\Http\Server\Router;
 use Amp\Http\Server\Trailers;
 use League\Uri\Components\Query;
 use Phenix\Constants\ContentType;
+use Phenix\Constants\RequestMode;
 use Phenix\Contracts\Arrayable;
 use Phenix\Contracts\Http\Requests\BodyParser;
+use Phenix\Http\Requests\Concerns\HasCookies;
 use Phenix\Http\Requests\Concerns\HasHeaders;
 use Phenix\Http\Requests\Concerns\HasQueryParameters;
 use Phenix\Http\Requests\FormParser;
 use Phenix\Http\Requests\JsonParser;
 use Phenix\Http\Requests\RouteAttributes;
+use Phenix\Http\Requests\StreamParser;
 use Psr\Http\Message\UriInterface;
 
 class Request implements Arrayable
 {
     use HasHeaders;
+    use HasCookies;
     use HasQueryParameters;
 
     protected readonly BodyParser $body;
@@ -42,10 +45,7 @@ class Request implements Arrayable
 
         $this->query = Query::fromUri($request->getUri());
         $this->attributes = new RouteAttributes($attributes);
-        $this->body = match (ContentType::fromValue($request->getHeader('content-type'))) {
-            ContentType::JSON => JsonParser::fromRequest($request),
-            default => FormParser::fromRequest($request),
-        };
+        $this->body = $this->getParser();
     }
 
     public function getClient(): Client
@@ -66,26 +66,6 @@ class Request implements Arrayable
     public function setBody(ReadableStream|string $body): void
     {
         $this->request->setBody($body);
-    }
-
-    public function getCookies(): array
-    {
-        return $this->request->getCookies();
-    }
-
-    public function getCookie(string $name): RequestCookie|null
-    {
-        return $this->request->getCookie($name);
-    }
-
-    public function setCookie(RequestCookie $cookie): void
-    {
-        $this->request->setCookie($cookie);
-    }
-
-    public function removeCookie(string $name): void
-    {
-        $this->request->removeCookie($name);
     }
 
     public function getTrailers(): Trailers|null
@@ -148,5 +128,27 @@ class Request implements Arrayable
     public function toArray(): array
     {
         return $this->body->toArray();
+    }
+
+    protected function mode(): RequestMode
+    {
+        return RequestMode::BUFFERED;
+    }
+
+    protected function getParser(): BodyParser
+    {
+        $contentType = ContentType::fromValue($this->request->getHeader('content-type'));
+
+        if ($contentType === ContentType::JSON) {
+            return JsonParser::fromRequest($this->request);
+        }
+
+        if ($this->mode() === RequestMode::STREAMED) {
+            return StreamParser::fromRequest($this->request, [
+                'body_size_limit' => 120 * 1024 * 1024,
+            ]);
+        }
+
+        return FormParser::fromRequest($this->request);
     }
 }

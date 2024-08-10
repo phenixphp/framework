@@ -6,11 +6,10 @@ namespace Phenix\Http\Requests;
 
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\Request;
-use Phenix\Contracts\Http\Requests\BodyParser;
 
 use function is_numeric;
 
-class JsonParser implements BodyParser
+class JsonParser extends BodyParser
 {
     private array $body;
 
@@ -19,23 +18,9 @@ class JsonParser implements BodyParser
         $this->body = [];
     }
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request, array $options = []): self
     {
-        $parser = new self();
-        $parser->parse($request);
-
-        return $parser;
-    }
-
-    public function parse(Request $request): self
-    {
-        $body = json_decode($request->getBody()->read(), true);
-
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $this->body = $body;
-        }
-
-        return $this;
+        return (new self())->parse($request);
     }
 
     public function get(string $key, array|string|int|null $default = null): array|string|int|null
@@ -77,5 +62,16 @@ class JsonParser implements BodyParser
     public function toArray(): array
     {
         return $this->body;
+    }
+
+    protected function parse(Request $request): self
+    {
+        $body = json_decode($request->getBody()->read(), true);
+
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $this->body = $body;
+        }
+
+        return $this;
     }
 }
