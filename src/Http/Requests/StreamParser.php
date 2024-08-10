@@ -9,16 +9,10 @@ use Amp\Http\Server\FormParser\StreamedField;
 use Amp\Http\Server\FormParser\StreamingFormParser;
 use Amp\Http\Server\Request;
 use Amp\Pipeline\ConcurrentIterator;
-use Amp\Pipeline\Internal\ConcurrentQueueIterator;
 
 class StreamParser extends BodyParser
 {
     protected StreamingFormParser $parser;
-
-    /**
-     * @var ConcurrentQueueIterator<int, StreamedField>
-     */
-    protected ConcurrentQueueIterator $body;
     protected array $files;
     protected array $data;
 
