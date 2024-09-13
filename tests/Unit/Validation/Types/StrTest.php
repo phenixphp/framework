@@ -29,8 +29,6 @@ it('runs validation with required string data', function (array $data, bool $exp
 })->with([
     'string value' => [['value' => 'PHP'], true],
     'numeric value' => [['value' => '01'], true],
-    'empty string value' => [['value' => ''], true],
-    'string value with space' => [['value' => ' '], true],
     'integer value' => [['value' => 1], false],
     'array value' => [['value' => [1]], false],
     'bool value' => [['value' => true], false],

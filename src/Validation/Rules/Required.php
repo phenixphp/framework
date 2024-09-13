@@ -17,13 +17,15 @@ class Required extends Requirement
     {
         $value = $this->getValue();
 
-        if ($value === null) {
+        if (is_null($value)) {
             return false;
+        } elseif (is_string($value) && trim($value) === '') {
+            return false;
+        } elseif (is_countable($value) && count($value) < 1) {
+            return false;
+        } else {
+            return true;
         }
-
-        return (is_string($value) && ! empty(trim($value)))
-            || (is_countable($value) && count($value) > 0)
-            || (is_scalar($value) || is_object($value));
     }
 
     public function skip(): bool
