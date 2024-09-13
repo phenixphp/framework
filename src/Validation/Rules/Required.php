@@ -6,8 +6,6 @@ namespace Phenix\Validation\Rules;
 
 use function count;
 use function is_countable;
-use function is_object;
-use function is_scalar;
 use function is_string;
 use function trim;
 
