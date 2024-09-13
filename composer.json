@@ -20,7 +20,7 @@
         "email": "contacto@omarbarbosa.com"
     }],
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-pcntl": "*",
         "adbario/php-dot-notation": "^3.1",
         "amphp/file": "^v3.0.0",
@@ -41,7 +41,7 @@
         "robmorgan/phinx": "^0.15.2",
         "symfony/console": "^6.1",
         "symfony/uid": "^7.1",
-        "symfony/var-dumper": "^6.0",
+        "symfony/var-dumper": "^7.0",
         "vlucas/phpdotenv": "^5.4"
     },
     "require-dev": {
