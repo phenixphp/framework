@@ -9,6 +9,7 @@ use Phenix\Validation\Contracts\Rule as RuleContract;
 
 use function is_array;
 
+/** @phpstan-consistent-constructor */
 abstract class Rule implements RuleContract
 {
     protected string $field;

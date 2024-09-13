@@ -6,18 +6,18 @@ namespace Phenix\Validation;
 
 use Adbar\Dot;
 use ArrayIterator;
-use function is_null;
-use function in_array;
-use function array_filter;
-use function array_unique;
 use Phenix\Contracts\Arrayable;
 use Phenix\Validation\Contracts\Rule;
-
 use Phenix\Validation\Contracts\Type;
+use Phenix\Validation\Exceptions\InvalidData;
+use Phenix\Validation\Rules\Requirement;
 use Phenix\Validation\Types\Collection;
 use Phenix\Validation\Types\Dictionary;
-use Phenix\Validation\Rules\Requirement;
-use Phenix\Validation\Exceptions\InvalidData;
+
+use function array_filter;
+use function array_unique;
+use function in_array;
+use function is_null;
 
 class Validator
 {
@@ -198,7 +198,7 @@ class Validator
                 $validated->set($key, []);
             } elseif ($this->data->has($key)) {
                 $validated->set($key, $this->data->get($key));
-            } elseif (! $this->data->has($key) && $type->isRequired()) {
+            } elseif ($this->data->has($key) === false && $type->isRequired()) {
                 $validated->set($key, null);
             }
         }

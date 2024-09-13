@@ -12,6 +12,7 @@ use Phenix\Validation\Rules\Required;
 use Phenix\Validation\Rules\Requirement;
 use Phenix\Validation\Rules\TypeRule;
 
+/** @phpstan-consistent-constructor */
 abstract class Type implements TypeContract
 {
     protected TypeRule $type;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Rules\Dates;
 
-use DateTime;
+use DateTimeImmutable;
 use Phenix\Validation\Rules\IsString;
 use Throwable;
 
@@ -17,9 +17,9 @@ class IsDate extends IsString
         $value = $this->getValue();
 
         try {
-            $dateTime = new DateTime($value);
+            $dateTime = new DateTimeImmutable($value);
 
-            return is_string($value) && $dateTime;
+            return is_string($value) && $dateTime->getLastErrors() === false;
         } catch (Throwable) {
             return false;
         }
