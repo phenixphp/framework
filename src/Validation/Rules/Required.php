@@ -16,14 +16,16 @@ class Required extends Requirement
         $value = $this->getValue();
 
         if (is_null($value)) {
-            return false;
-        } elseif (is_string($value) && trim($value) === '') {
-            return false;
-        } elseif (is_countable($value) && count($value) < 1) {
-            return false;
+            $passes = false;
+        } elseif (is_string($value)) {
+            $passes = trim($value) !== '';
+        } elseif (is_countable($value)) {
+            $passes = count($value) > 0;
         } else {
-            return true;
+            $passes = true;
         }
+
+        return $passes;
     }
 
     public function skip(): bool
