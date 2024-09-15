@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Phenix\Util\Str;
 use Phenix\Validation\Rules\Ulid;
 use Phenix\Validation\Rules\Uuid;
 use Phenix\Validation\Types\Uid;
-use Phenix\Validation\Util\Str;
 
 it('runs validation to check if string is a valid UUID', function (array $data, bool $expected) {
     $rules = Uid::required()->uuid()->toArray();

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Util\Date as Dates;
 use Phenix\Validation\Rules\Dates\After;
 use Phenix\Validation\Rules\Dates\AfterOrEqual;
 use Phenix\Validation\Rules\Dates\AfterOrEqualTo;
@@ -14,7 +15,6 @@ use Phenix\Validation\Rules\Dates\Equal;
 use Phenix\Validation\Rules\Dates\Format;
 use Phenix\Validation\Rules\Dates\IsDate;
 use Phenix\Validation\Types\Date;
-use Phenix\Validation\Util\Date as Dates;
 
 it('runs validation to check received date', function (
     array $data,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Rules;
 
-use Phenix\Validation\Util\Str;
+use Phenix\Util\Str;
 
 class Uuid extends Rule
 {

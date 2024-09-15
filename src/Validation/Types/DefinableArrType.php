@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Types;
 
-use Phenix\Validation\Util\Arr;
+use Phenix\Util\Arr;
 
 abstract class DefinableArrType extends ArrType
 {

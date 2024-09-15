@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Validation\Util;
+namespace Phenix\Util;
 
 use Carbon\Carbon;
 

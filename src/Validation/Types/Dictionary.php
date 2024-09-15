@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Types;
 
+use Phenix\Util\Arr;
 use Phenix\Validation\Exceptions\InvalidDictionaryDefinition;
 use Phenix\Validation\Rules\IsDictionary;
 use Phenix\Validation\Rules\TypeRule;
-use Phenix\Validation\Util\Arr;
 
 class Dictionary extends DefinableArrType
 {
@@ -23,7 +23,7 @@ class Dictionary extends DefinableArrType
 
     protected function isValidDefinition(array $definition): bool
     {
-        return ! array_is_list($definition)
+        return ! array_is_list(array: $definition)
             && Arr::every($definition, fn ($value, $key) => is_string($key) && $value instanceof Scalar);
     }
 }

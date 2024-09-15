@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Validation\Rules\Dates;
 
 use DateTimeInterface;
+use Phenix\Util\Date;
 use Phenix\Validation\Rules\Rule;
-use Phenix\Validation\Util\Date;
 
 class Equal extends Rule
 {

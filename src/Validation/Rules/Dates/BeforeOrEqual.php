@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Rules\Dates;
 
-use Phenix\Validation\Util\Date;
+use Phenix\Util\Date;
 
 class BeforeOrEqual extends Before
 {

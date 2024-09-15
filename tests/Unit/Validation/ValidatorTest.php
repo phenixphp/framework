@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Util\Date as Dates;
 use Phenix\Validation\Exceptions\InvalidCollectionDefinition;
 use Phenix\Validation\Exceptions\InvalidData;
 use Phenix\Validation\Exceptions\InvalidDictionaryDefinition;
@@ -14,7 +15,6 @@ use Phenix\Validation\Types\Collection;
 use Phenix\Validation\Types\Date;
 use Phenix\Validation\Types\Dictionary;
 use Phenix\Validation\Types\Str;
-use Phenix\Validation\Util\Date as Dates;
 use Phenix\Validation\Validator;
 
 it('runs successfully validation with scalar data', function () {
