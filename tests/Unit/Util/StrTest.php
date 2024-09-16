@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-use Phenix\Util\Directory;
+use Phenix\Util\Str;
+use Symfony\Component\Uid\Ulid;
+use Symfony\Component\Uid\UuidV4;
 
-it('can list nested directories', function () {
-    $directories = Directory::all(dirname(__FILE__, 3) . '/fixtures/application');
+it('creates universal identifiers', function () {
+    $uuid = Str::uuid();
+    $ulid = Str::ulid();
 
-    expect($directories)->toBeArray();
-    expect($directories)->toBeGreaterThan(3);
+    expect($uuid)->toBeInstanceOf(UuidV4::class);
+    expect($ulid)->toBeInstanceOf(Ulid::class);
 });

@@ -34,6 +34,38 @@ it('runs successfully validation with scalar data', function () {
     ]);
 });
 
+it('runs successfully validation using corresponding fails method', function () {
+    $validator = new Validator();
+
+    $validator->setRules([
+        'name' => Str::required(),
+    ]);
+    $validator->setData([
+        'name' => 'John',
+        'last_name' => 'Doe',
+    ]);
+
+    expect($validator->fails())->toBeFalsy();
+    expect($validator->validated())->toBe([
+        'name' => 'John',
+    ]);
+});
+
+it('returns validated data directly', function () {
+    $validator = new Validator();
+
+    $validator->setRules([
+        'name' => Str::required(),
+    ]);
+    $validator->setData([
+        'name' => 'John',
+    ]);
+
+    expect($validator->validate())->toBe([
+        'name' => 'John',
+    ]);
+});
+
 it('runs failed validation with scalar data', function () {
     $validator = new Validator();
 
