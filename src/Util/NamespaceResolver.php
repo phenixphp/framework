@@ -6,7 +6,7 @@ namespace Phenix\Util;
 
 use Phenix\App;
 
-class NamespaceResolver
+class NamespaceResolver extends Utility
 {
     public static function parse(string $path): string
     {

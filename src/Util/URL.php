@@ -6,7 +6,7 @@ namespace Phenix\Util;
 
 use Phenix\Facades\Config;
 
-class URL
+class URL extends Utility
 {
     public static function build(string $path, array $parameters = []): string
     {

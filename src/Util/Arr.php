@@ -10,7 +10,7 @@ use function array_filter;
 use function implode;
 use function is_array;
 
-class Arr
+class Arr extends Utility
 {
     /**
      * @param array<int, mixed> $data
@@ -36,5 +36,16 @@ class Arr
         $values = array_map($closure, array_values($data), $keys);
 
         return array_combine($keys, $values);
+    }
+
+    public static function every(array $definition, Closure $closure): bool
+    {
+        foreach ($definition as $key => $value) {
+            if (! $closure($value, $key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
