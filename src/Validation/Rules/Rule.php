@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Validation\Rules;
 
 use Adbar\Dot;
+use Amp\Http\Server\FormParser\BufferedFile;
 use Phenix\Validation\Contracts\Rule as RuleContract;
 
 use function is_array;
@@ -41,7 +42,7 @@ abstract class Rule implements RuleContract
         return $this;
     }
 
-    protected function getValue(): array|string|int|float|bool|null
+    protected function getValue(): BufferedFile|array|string|int|float|bool|null
     {
         return $this->data->get($this->field);
     }
