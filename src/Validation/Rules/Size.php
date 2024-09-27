@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Validation\Rules;
 
+use Amp\Http\Server\FormParser\BufferedFile;
 use Countable;
 
 use function gettype;
@@ -35,12 +36,14 @@ class Size extends Rule
         };
     }
 
-    private function resolveCountableObject(object $value): int
+    private function resolveCountableObject(object $value): float|int
     {
         $count = 0;
 
         if ($value instanceof Countable) {
             $count = $value->count();
+        } elseif ($value instanceof BufferedFile) {
+            $count = round(strlen($value->getContents()) / 1024, 3);
         }
 
         return $count;
