@@ -11,7 +11,7 @@ use Phenix\Validation\Rules\Numbers\DigitsBetween;
 use Phenix\Validation\Rules\Numbers\IsNumeric;
 use Phenix\Validation\Rules\TypeRule;
 
-class Numeric extends Scalar
+class Numeric extends QueryableScalar
 {
     protected function defineType(): TypeRule
     {

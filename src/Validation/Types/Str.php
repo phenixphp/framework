@@ -17,7 +17,7 @@ use Phenix\Validation\Rules\Size;
 use Phenix\Validation\Rules\StartsWith;
 use Phenix\Validation\Rules\TypeRule;
 
-class Str extends Scalar
+class Str extends QueryableScalar
 {
     protected function defineType(): TypeRule
     {
