@@ -22,7 +22,7 @@ class File extends Type
      * Minimum size limit in kilobytes.
      *
      * @param float|int $limit
-     * @return File
+     * @return static
      */
     public function min(float|int $limit): static
     {
@@ -35,7 +35,7 @@ class File extends Type
      * Maximum size limit in kilobytes.
      *
      * @param float|int $limit
-     * @return File
+     * @return static
      */
     public function max(float|int $limit): static
     {
@@ -47,8 +47,8 @@ class File extends Type
     /**
      * Size limit in kilobytes.
      *
-     * @param float|int $limit
-     * @return File
+     * @param float|int $size
+     * @return static
      */
     public function size(float|int $size): static
     {
