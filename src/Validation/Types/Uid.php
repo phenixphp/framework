@@ -11,14 +11,14 @@ class Uid extends Str
 {
     public function uuid(): self
     {
-        $this->rules['uuid'] = Uuid::new();
+        $this->rules['uid'] = Uuid::new();
 
         return $this;
     }
 
     public function ulid(): self
     {
-        $this->rules['ulid'] = Ulid::new();
+        $this->rules['uid'] = Ulid::new();
 
         return $this;
     }
