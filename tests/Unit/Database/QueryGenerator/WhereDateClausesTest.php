@@ -28,8 +28,8 @@ it('generates query to select a record by date', function (
 })->with([
     ['whereDateEqual', Carbon::now(), Carbon::now()->format('Y-m-d'), Operators::EQUAL->value],
     ['whereDateEqual', date('Y-m-d'), date('Y-m-d'), Operators::EQUAL->value],
-    ['whereDateGreatherThan', date('Y-m-d'), date('Y-m-d'), Operators::GREATHER_THAN->value],
-    ['whereDateGreatherThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whereDateGreaterThan', date('Y-m-d'), date('Y-m-d'), Operators::GREATER_THAN->value],
+    ['whereDateGreaterThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['whereDateLessThan', date('Y-m-d'), date('Y-m-d'), Operators::LESS_THAN->value],
     ['whereDateLessThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -55,8 +55,8 @@ it('generates query to select a record by condition or by date', function (
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereDateEqual', date('Y-m-d'), date('Y-m-d'), Operators::EQUAL->value],
-    ['orWhereDateGreatherThan', date('Y-m-d'), date('Y-m-d'), Operators::GREATHER_THAN->value],
-    ['orWhereDateGreatherThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['orWhereDateGreaterThan', date('Y-m-d'), date('Y-m-d'), Operators::GREATER_THAN->value],
+    ['orWhereDateGreaterThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['orWhereDateLessThan', date('Y-m-d'), date('Y-m-d'), Operators::LESS_THAN->value],
     ['orWhereDateLessThanOrEqual', date('Y-m-d'), date('Y-m-d'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -82,8 +82,8 @@ it('generates query to select a record by month', function (
 })->with([
     ['whereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operators::EQUAL->value],
     ['whereMonthEqual', date('m'), date('m'), Operators::EQUAL->value],
-    ['whereMonthGreatherThan', date('m'), date('m'), Operators::GREATHER_THAN->value],
-    ['whereMonthGreatherThanOrEqual', date('m'), date('m'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whereMonthGreaterThan', date('m'), date('m'), Operators::GREATER_THAN->value],
+    ['whereMonthGreaterThanOrEqual', date('m'), date('m'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['whereMonthLessThan', date('m'), date('m'), Operators::LESS_THAN->value],
     ['whereMonthLessThanOrEqual', date('m'), date('m'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -110,8 +110,8 @@ it('generates query to select a record by condition or by month', function (
 })->with([
     ['orWhereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operators::EQUAL->value],
     ['orWhereMonthEqual', date('m'), date('m'), Operators::EQUAL->value],
-    ['orWhereMonthGreatherThan', date('m'), date('m'), Operators::GREATHER_THAN->value],
-    ['orWhereMonthGreatherThanOrEqual', date('m'), date('m'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['orWhereMonthGreaterThan', date('m'), date('m'), Operators::GREATER_THAN->value],
+    ['orWhereMonthGreaterThanOrEqual', date('m'), date('m'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['orWhereMonthLessThan', date('m'), date('m'), Operators::LESS_THAN->value],
     ['orWhereMonthLessThanOrEqual', date('m'), date('m'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -137,8 +137,8 @@ it('generates query to select a record by year', function (
 })->with([
     ['whereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operators::EQUAL->value],
     ['whereYearEqual', date('Y'), date('Y'), Operators::EQUAL->value],
-    ['whereYearGreatherThan', date('Y'), date('Y'), Operators::GREATHER_THAN->value],
-    ['whereYearGreatherThanOrEqual', date('Y'), date('Y'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whereYearGreaterThan', date('Y'), date('Y'), Operators::GREATER_THAN->value],
+    ['whereYearGreaterThanOrEqual', date('Y'), date('Y'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['whereYearLessThan', date('Y'), date('Y'), Operators::LESS_THAN->value],
     ['whereYearLessThanOrEqual', date('Y'), date('Y'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -165,8 +165,8 @@ it('generates query to select a record by condition or by year', function (
 })->with([
     ['orWhereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operators::EQUAL->value],
     ['orWhereYearEqual', date('Y'), date('Y'), Operators::EQUAL->value],
-    ['orWhereYearGreatherThan', date('Y'), date('Y'), Operators::GREATHER_THAN->value],
-    ['orWhereYearGreatherThanOrEqual', date('Y'), date('Y'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['orWhereYearGreaterThan', date('Y'), date('Y'), Operators::GREATER_THAN->value],
+    ['orWhereYearGreaterThanOrEqual', date('Y'), date('Y'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['orWhereYearLessThan', date('Y'), date('Y'), Operators::LESS_THAN->value],
     ['orWhereYearLessThanOrEqual', date('Y'), date('Y'), Operators::LESS_THAN_OR_EQUAL->value],
 ]);

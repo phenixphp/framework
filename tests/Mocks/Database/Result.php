@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mocks\Database;
 
-use Amp\Sql\Result as SqlResult;
+use Amp\Sql\SqlResult;
 use ArrayIterator;
 use IteratorAggregate;
 use Traversable;

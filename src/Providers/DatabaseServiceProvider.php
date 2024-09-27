@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Providers;
 
-use League\Container\Argument\ResolvableArgument;
 use Phenix\Database\Connections\ConnectionFactory;
 use Phenix\Database\Console\MakeMigration;
 use Phenix\Database\Console\MakeSeeder;
@@ -61,9 +60,9 @@ class DatabaseServiceProvider extends ServiceProvider
 
         $callback = ConnectionFactory::make($driver, $settings);
 
-        $this->bind(Connections::name('default'), new ResolvableArgument(Connections::name($defaultConnection)));
+        $this->bind(Connections::name('default'), $callback);
 
-        $this->bind(Connections::name($defaultConnection), $callback);
+        $this->bind(Connections::name($defaultConnection), $callback());
 
         $this->commands([
             MakeMigration::class,

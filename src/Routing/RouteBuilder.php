@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Routing;
 
 use Amp\Http\Server\Middleware;
-use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
-use Phenix\Constants\HttpMethods;
+use Phenix\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
+use Phenix\Http\Requests\ClosureRequestHandler;
 
 class RouteBuilder implements Arrayable
 {
@@ -26,7 +26,7 @@ class RouteBuilder implements Arrayable
     protected array $middlewares = [];
 
     public function __construct(
-        protected HttpMethods $method,
+        protected HttpMethod $method,
         protected string $path,
         protected ClosureRequestHandler $closure,
         string|null $name = null,

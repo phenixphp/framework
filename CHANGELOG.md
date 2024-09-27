@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# Release Notes for 0.4.x
+
+## [v0.4.0 (2024-09-27)](https://github.com/phenixphp/framework/compare/0.3.8...0.4.0)
+
+### Added
+- Basic validation layer using form request. ([#32](https://github.com/phenixphp/framework/pull/32))
+- Stream form parser. ([#33](https://github.com/phenixphp/framework/pull/33))
+- Move validation layer to framework. ([#34](https://github.com/phenixphp/framework/pull/34))
+- File validation. ([#35](https://github.com/phenixphp/framework/pull/35))
+- Database validations (unique, exists). ([#36](https://github.com/phenixphp/framework/pull/36))
+
 # Release Notes for 0.3.x
 
 ## [v0.3.8 (2023-10-10)](https://github.com/phenixphp/framework/compare/0.3.7...0.3.8)

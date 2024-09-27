@@ -6,7 +6,7 @@ use Faker\Generator;
 use Phenix\Database\Seed;
 
 it('verifies faker instance in seed class', function () {
-    $seeder = new class extends Seed {};
+    $seeder = new class () extends Seed {};
 
     $reflection = new ReflectionClass($seeder);
 

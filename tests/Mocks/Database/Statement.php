@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Mocks\Database;
 
-use Amp\Sql\Result;
-use Amp\Sql\Statement as SqlStatement;
+use Amp\Sql\SqlResult;
+use Amp\Sql\SqlStatement;
 use Closure;
 use Tests\Mocks\Database\Result as FakeResult;
 
@@ -16,7 +16,7 @@ class Statement implements SqlStatement
         // ..
     }
 
-    public function execute(array $params = []): Result
+    public function execute(array $params = []): SqlResult
     {
         return $this->fakeResult;
     }

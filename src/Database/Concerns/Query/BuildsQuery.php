@@ -24,14 +24,14 @@ use function ksort;
 
 trait BuildsQuery
 {
-    public function table(string $table): self
+    public function table(string $table): static
     {
         $this->table = $table;
 
         return $this;
     }
 
-    public function from(Closure|string $table): self
+    public function from(Closure|string $table): static
     {
         if ($table instanceof Closure) {
             $builder = new Subquery();
@@ -52,7 +52,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function select(array $columns): self
+    public function select(array $columns): static
     {
         $this->action = Actions::SELECT;
 
@@ -61,14 +61,14 @@ trait BuildsQuery
         return $this;
     }
 
-    public function selectAllColumns(): self
+    public function selectAllColumns(): static
     {
         $this->select(['*']);
 
         return $this;
     }
 
-    public function insert(array $data): self
+    public function insert(array $data): static
     {
         $this->action = Actions::INSERT;
 
@@ -77,7 +77,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function insertOrIgnore(array $values): self
+    public function insertOrIgnore(array $values): static
     {
         $this->ignore = true;
 
@@ -86,7 +86,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function upsert(array $values, array $columns): self
+    public function upsert(array $values, array $columns): static
     {
         $this->action = Actions::INSERT;
 
@@ -97,7 +97,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): self
+    public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): static
     {
         $builder = new Subquery();
         $builder->selectAllColumns();
@@ -119,7 +119,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function update(array $values): self
+    public function update(array $values): static
     {
         $this->action = Actions::UPDATE;
 
@@ -128,7 +128,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function delete(): self
+    public function delete(): static
     {
         $this->action = Actions::DELETE;
 
@@ -147,7 +147,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function having(Closure $clause): self
+    public function having(Closure $clause): static
     {
         $having = new Having();
 
@@ -174,14 +174,14 @@ trait BuildsQuery
         return $this;
     }
 
-    public function limit(int $number): self
+    public function limit(int $number): static
     {
         $this->limit = [Operators::LIMIT->value, abs($number)];
 
         return $this;
     }
 
-    public function page(int $page = 1, int $perPage = 15): self
+    public function page(int $page = 1, int $perPage = 15): static
     {
         $this->limit($perPage);
 
@@ -194,7 +194,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function count(string $column = '*'): self
+    public function count(string $column = '*'): static
     {
         $this->action = Actions::SELECT;
 
@@ -203,7 +203,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function exists(): self
+    public function exists(): static
     {
         $this->action = Actions::EXISTS;
 
@@ -212,7 +212,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function doesntExist(): self
+    public function doesntExist(): static
     {
         $this->action = Actions::EXISTS;
 

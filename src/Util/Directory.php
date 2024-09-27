@@ -9,7 +9,7 @@ use function file_exists;
 use function glob;
 use function is_dir;
 
-class Directory
+class Directory extends Utility
 {
     /**
      * @return array<int, string>

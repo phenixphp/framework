@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Tests\Unit\Routing;
 
-use Amp\Http\HttpStatus;
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
+use Phenix\Constants\HttpStatus;
 
 class AcceptJsonResponses implements Middleware
 {
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
         if ($this->acceptHtml($request)) {
-            return response()->json([], HttpStatus::NOT_ACCEPTABLE);
+            return response()->json([], HttpStatus::NOT_ACCEPTABLE)->send();
         }
 
         return $next->handleRequest($request);

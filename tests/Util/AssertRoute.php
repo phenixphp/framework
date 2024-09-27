@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Util;
 
-use Phenix\Constants\HttpMethods;
+use Phenix\Constants\HttpMethod;
 use Phenix\Routing\Route;
 
 class AssertRoute
@@ -23,7 +23,7 @@ class AssertRoute
         return new self($route);
     }
 
-    public function methodIs(HttpMethods $method): self
+    public function methodIs(HttpMethod $method): self
     {
         expect($this->route[0])->toBe($method);
 

@@ -43,11 +43,11 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenGreatherThan(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenGreaterThan(Functions|string $column, Value|string|int $value, Value|string $result): self
     {
         $this->pushCase(
             $column,
-            Operators::GREATHER_THAN,
+            Operators::GREATER_THAN,
             $result,
             $value
         );
@@ -55,14 +55,14 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenGreatherThanOrEqual(
+    public function whenGreaterThanOrEqual(
         Functions|string $column,
         Value|string|int $value,
         Value|string $result
     ): self {
         $this->pushCase(
             $column,
-            Operators::GREATHER_THAN_OR_EQUAL,
+            Operators::GREATER_THAN_OR_EQUAL,
             $result,
             $value
         );

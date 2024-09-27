@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Tests\Mocks\Database;
 
 use Amp\Mysql\MysqlConfig;
-use Amp\Sql\Common\ConnectionPool;
-use Amp\Sql\ConnectionException;
-use Amp\Sql\Result;
+use Amp\Sql\Common\SqlCommonConnectionPool;
 use Amp\Sql\SqlConfig;
 use Amp\Sql\SqlConnector;
-use Amp\Sql\Statement;
-use Amp\Sql\Transaction;
+use Amp\Sql\SqlException;
+use Amp\Sql\SqlResult;
+use Amp\Sql\SqlStatement;
+use Amp\Sql\SqlTransaction;
 use Closure;
 use Mockery;
 use Tests\Mocks\Database\Result as FakeResult;
 use Tests\Mocks\Database\Statement as FakeStatement;
 use Throwable;
 
-class MysqlConnectionPool extends ConnectionPool
+class MysqlConnectionPool extends SqlCommonConnectionPool
 {
     protected FakeResult $fakeResult;
     protected Throwable|null $fakeError = null;
@@ -46,12 +46,12 @@ class MysqlConnectionPool extends ConnectionPool
 
     public function throwDatabaseException(Throwable|null $error = null): self
     {
-        $this->fakeError = $error ?? new ConnectionException('Fail trying database connection');
+        $this->fakeError = $error ?? new SqlException('Fail trying database connection');
 
         return $this;
     }
 
-    public function prepare(string $sql): Statement
+    public function prepare(string $sql): SqlStatement
     {
         if (isset($this->fakeError)) {
             throw $this->fakeError;
@@ -60,23 +60,23 @@ class MysqlConnectionPool extends ConnectionPool
         return new FakeStatement($this->fakeResult);
     }
 
-    protected function createStatement(Statement $statement, Closure $release): Statement
+    protected function createStatement(SqlStatement $statement, Closure $release): SqlStatement
     {
         return $statement;
     }
 
-    protected function createResult(Result $result, Closure $release): Result
+    protected function createResult(SqlResult $result, Closure $release): SqlResult
     {
         return $result;
     }
 
-    protected function createStatementPool(string $sql, Closure $prepare): Statement
+    protected function createStatementPool(string $sql, Closure $prepare): SqlStatement
     {
         return new FakeStatement($this->fakeResult);
 
     }
 
-    protected function createTransaction(Transaction $transaction, Closure $release): Transaction
+    protected function createTransaction(SqlTransaction $transaction, Closure $release): SqlTransaction
     {
         return $transaction;
     }

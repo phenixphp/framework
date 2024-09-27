@@ -58,8 +58,8 @@ it('generates query to select using comparison clause', function (
     expect($params)->toBe([$value]);
 })->with([
     ['whereDistinct', 'id', Operators::DISTINCT->value, 1],
-    ['whereGreatherThan', 'id', Operators::GREATHER_THAN->value, 1],
-    ['whereGreatherThanOrEqual', 'id', Operators::GREATHER_THAN_OR_EQUAL->value, 1],
+    ['whereGreaterThan', 'id', Operators::GREATER_THAN->value, 1],
+    ['whereGreaterThanOrEqual', 'id', Operators::GREATER_THAN_OR_EQUAL->value, 1],
     ['whereLessThan', 'id', Operators::LESS_THAN->value, 1],
     ['whereLessThanOrEqual', 'id', Operators::LESS_THAN_OR_EQUAL->value, 1],
 ]);
@@ -102,7 +102,7 @@ it('generates query using in and not in operators with subquery', function (stri
         ->{$method}('id', function (Subquery $query) {
             $query->select(['id'])
                 ->from('users')
-                ->whereGreatherThanOrEqual('created_at', date('Y-m-d'));
+                ->whereGreaterThanOrEqual('created_at', date('Y-m-d'));
         })
         ->get();
 
@@ -142,7 +142,7 @@ it('generates query to select by column or null or not null columns', function (
     $date = date('Y-m-d');
 
     $sql = $query->table('users')
-        ->whereGreatherThan('created_at', $date)
+        ->whereGreaterThan('created_at', $date)
         ->{$method}('verified_at')
         ->get();
 
@@ -177,7 +177,7 @@ it('generates query to select by column or boolean column', function (string $me
     $date = date('Y-m-d');
 
     $sql = $query->table('users')
-        ->whereGreatherThan('created_at', $date)
+        ->whereGreaterThan('created_at', $date)
         ->{$method}('enabled')
         ->get();
 
@@ -197,7 +197,7 @@ it('generates query using logical connectors', function () {
 
     $sql = $query->table('users')
         ->whereNotNull('verified_at')
-        ->whereGreatherThan('created_at', $date)
+        ->whereGreaterThan('created_at', $date)
         ->orWhereLessThan('updated_at', $date)
         ->get();
 
@@ -215,7 +215,7 @@ it('generates query using the or operator between the and operators', function (
     $date = date('Y-m-d');
 
     $sql = $query->table('users')
-        ->whereGreatherThan('created_at', $date)
+        ->whereGreaterThan('created_at', $date)
         ->orWhereLessThan('updated_at', $date)
         ->whereNotNull('verified_at')
         ->get();
@@ -259,8 +259,8 @@ it('generates queries using logical connectors', function (
     ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operators::LESS_THAN->value],
     ['orWhereEqual', 'updated_at', date('Y-m-d'), Operators::EQUAL->value],
     ['orWhereDistinct', 'updated_at', date('Y-m-d'), Operators::DISTINCT->value],
-    ['orWhereGreatherThan', 'updated_at', date('Y-m-d'), Operators::GREATHER_THAN->value],
-    ['orWhereGreatherThanOrEqual', 'updated_at', date('Y-m-d'), Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['orWhereGreaterThan', 'updated_at', date('Y-m-d'), Operators::GREATER_THAN->value],
+    ['orWhereGreaterThanOrEqual', 'updated_at', date('Y-m-d'), Operators::GREATER_THAN_OR_EQUAL->value],
     ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operators::LESS_THAN->value],
     ['orWhereLessThanOrEqual', 'updated_at', date('Y-m-d'), Operators::LESS_THAN_OR_EQUAL->value],
     ['orWhereIn', 'status', ['enabled', 'verified'], Operators::IN->value],
@@ -291,7 +291,7 @@ it('generates query to select by column or between columns', function (string $m
     $endDate = date('Y-m-d');
 
     $sql = $query->table('users')
-        ->whereGreatherThan('created_at', $date)
+        ->whereGreaterThan('created_at', $date)
         ->{$method}('updated_at', [$startDate, $endDate])
         ->get();
 
@@ -441,8 +441,8 @@ it('generates query to select using comparison clause with subqueries and functi
 })->with([
     ['whereEqual', 'price', Operators::EQUAL->value],
     ['whereDistinct', 'price', Operators::DISTINCT->value],
-    ['whereGreatherThan', 'price', Operators::GREATHER_THAN->value],
-    ['whereGreatherThanOrEqual', 'price', Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whereGreaterThan', 'price', Operators::GREATER_THAN->value],
+    ['whereGreaterThanOrEqual', 'price', Operators::GREATER_THAN_OR_EQUAL->value],
     ['whereLessThan', 'price', Operators::LESS_THAN->value],
     ['whereLessThanOrEqual', 'price', Operators::LESS_THAN_OR_EQUAL->value],
 ]);
@@ -458,7 +458,7 @@ it('generates query using comparison clause with subqueries and any, all, some o
         ->{$method}('id', function (Subquery $subquery) {
             $subquery->select(['product_id'])
                 ->from('orders')
-                ->whereGreatherThan('quantity', 10);
+                ->whereGreaterThan('quantity', 10);
         })
         ->select(['description'])
         ->get();
@@ -473,22 +473,22 @@ it('generates query using comparison clause with subqueries and any, all, some o
 })->with([
     ['whereAnyEqual', Operators::EQUAL->value, Operators::ANY->value],
     ['whereAnyDistinct', Operators::DISTINCT->value, Operators::ANY->value],
-    ['whereAnyGreatherThan', Operators::GREATHER_THAN->value, Operators::ANY->value],
-    ['whereAnyGreatherThanOrEqual', Operators::GREATHER_THAN_OR_EQUAL->value, Operators::ANY->value],
+    ['whereAnyGreaterThan', Operators::GREATER_THAN->value, Operators::ANY->value],
+    ['whereAnyGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::ANY->value],
     ['whereAnyLessThan', Operators::LESS_THAN->value, Operators::ANY->value],
     ['whereAnyLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::ANY->value],
 
     ['whereAllEqual', Operators::EQUAL->value, Operators::ALL->value],
     ['whereAllDistinct', Operators::DISTINCT->value, Operators::ALL->value],
-    ['whereAllGreatherThan', Operators::GREATHER_THAN->value, Operators::ALL->value],
-    ['whereAllGreatherThanOrEqual', Operators::GREATHER_THAN_OR_EQUAL->value, Operators::ALL->value],
+    ['whereAllGreaterThan', Operators::GREATER_THAN->value, Operators::ALL->value],
+    ['whereAllGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::ALL->value],
     ['whereAllLessThan', Operators::LESS_THAN->value, Operators::ALL->value],
     ['whereAllLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::ALL->value],
 
     ['whereSomeEqual', Operators::EQUAL->value, Operators::SOME->value],
     ['whereSomeDistinct', Operators::DISTINCT->value, Operators::SOME->value],
-    ['whereSomeGreatherThan', Operators::GREATHER_THAN->value, Operators::SOME->value],
-    ['whereSomeGreatherThanOrEqual', Operators::GREATHER_THAN_OR_EQUAL->value, Operators::SOME->value],
+    ['whereSomeGreaterThan', Operators::GREATER_THAN->value, Operators::SOME->value],
+    ['whereSomeGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::SOME->value],
     ['whereSomeLessThan', Operators::LESS_THAN->value, Operators::SOME->value],
     ['whereSomeLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::SOME->value],
 ]);
@@ -517,8 +517,8 @@ it('generates query with row subquery', function (string $method, string $operat
 })->with([
     ['whereRowEqual', Operators::EQUAL->value],
     ['whereRowDistinct', Operators::DISTINCT->value],
-    ['whereRowGreatherThan', Operators::GREATHER_THAN->value],
-    ['whereRowGreatherThanOrEqual', Operators::GREATHER_THAN_OR_EQUAL->value],
+    ['whereRowGreaterThan', Operators::GREATER_THAN->value],
+    ['whereRowGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value],
     ['whereRowLessThan', Operators::LESS_THAN->value],
     ['whereRowLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value],
     ['whereRowIn', Operators::IN->value],
