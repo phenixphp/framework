@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Models;
 
 use Phenix\Contracts\Database\ModelProperty;
+use Phenix\Database\Models\Collections\DatabaseModelCollection;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use ReflectionAttribute;
 use ReflectionObject;
@@ -45,6 +46,11 @@ abstract class DatabaseModel
     public function getPropertyBindings(): array
     {
         return $this->propertyBindings ??= $this->buildPropertyBindings();
+    }
+
+    public function newCollection(): DatabaseModelCollection
+    {
+        return new DatabaseModelCollection($this::class);
     }
 
     abstract protected static function table(): string;

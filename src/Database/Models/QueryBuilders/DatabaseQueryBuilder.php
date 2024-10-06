@@ -58,7 +58,7 @@ class DatabaseQueryBuilder extends QueryBuilder
         $result = $this->connection->prepare($dml)
             ->execute($params);
 
-        $collection = new Collection(DatabaseModel::class);
+        $collection = $this->model->newCollection();
         $propertyBindings = $this->model->getPropertyBindings();
 
         foreach ($result as $row) {

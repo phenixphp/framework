@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Database\Constants\Connections;
+use Phenix\Database\Models\Collections\DatabaseModelCollection;
 use Phenix\Facades\Route;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
@@ -39,6 +40,9 @@ it('creates models with query builders successfully', function () {
     Route::post('/users', function (Request $request) use ($data): Response {
         $users = User::query()->selectAllColumns()->get();
 
+        expect($users)->toBeInstanceOf(DatabaseModelCollection::class);
+        expect($users->first())->toBeInstanceOf(User::class);
+
         /** @var User $user */
         $user = $users->first();
 
@@ -46,8 +50,9 @@ it('creates models with query builders successfully', function () {
         expect($user->name)->toBe($data[0]['name']);
         expect($user->email)->toBe($data[0]['email']);
         expect($user->createdAt)->toBeInstanceOf(Date::class);
+        expect($user->updatedAt)->toBeNull();
 
-        return response()->plain('Ok');
+        return response()->json($users);
     });
 
     $this->app->run();

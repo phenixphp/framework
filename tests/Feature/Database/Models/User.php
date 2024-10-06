@@ -25,7 +25,7 @@ class User extends DatabaseModel
     public Date $createdAt;
 
     #[Column(name: 'updated_at')]
-    public Date|null $updatedAt;
+    public Date|null $updatedAt = null;
 
     public static function table(): string
     {
