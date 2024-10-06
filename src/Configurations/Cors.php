@@ -8,12 +8,12 @@ use Phenix\Facades\Config;
 
 class Cors extends Configuration
 {
-    public readonly array|string $origins;
-    public readonly array $allowedMethods;
-    public readonly int $maxAge;
-    public readonly array $allowedHeaders;
-    public readonly array $exposableHeaders;
-    public readonly bool $allowCredentials;
+    protected array|string $origins;
+    protected array $allowedMethods;
+    protected int $maxAge;
+    protected array $allowedHeaders;
+    protected array $exposableHeaders;
+    protected bool $allowCredentials;
 
     public function __construct(array $config)
     {
