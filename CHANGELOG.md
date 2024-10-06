@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.4.0 (2024-09-27)](https://github.com/phenixphp/framework/compare/0.3.8...0.4.0)
 
 ### Added
+- Integrate CORS middleware. ([#30](https://github.com/phenixphp/framework/pull/30))
+- Add basic form request. ([#31](https://github.com/phenixphp/framework/pull/31))
 - Basic validation layer using form request. ([#32](https://github.com/phenixphp/framework/pull/32))
 - Stream form parser. ([#33](https://github.com/phenixphp/framework/pull/33))
 - Move validation layer to framework. ([#34](https://github.com/phenixphp/framework/pull/34))
