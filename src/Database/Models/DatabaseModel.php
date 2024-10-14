@@ -43,8 +43,6 @@ abstract class DatabaseModel implements Arrayable
 
     abstract protected static function table(): string;
 
-    abstract protected static function newQueryBuilder(): DatabaseQueryBuilder;
-
     public static function query(): DatabaseQueryBuilder
     {
         $queryBuilder = static::newQueryBuilder();
@@ -111,6 +109,11 @@ abstract class DatabaseModel implements Arrayable
     public function toJson(): string
     {
         return json_encode($this->toArray());
+    }
+
+    protected static function newQueryBuilder(): DatabaseQueryBuilder
+    {
+        return new DatabaseQueryBuilder();
     }
 
     protected function buildPropertyBindings(): array

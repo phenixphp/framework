@@ -7,7 +7,6 @@ namespace Tests\Feature\Database\Models;
 use Phenix\Database\Models\Attributes\Column;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\DatabaseModel;
-use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Util\Date;
 
 class User extends DatabaseModel
@@ -30,10 +29,5 @@ class User extends DatabaseModel
     public static function table(): string
     {
         return 'users';
-    }
-
-    protected static function newQueryBuilder(): DatabaseQueryBuilder
-    {
-        return new UserQuery();
     }
 }

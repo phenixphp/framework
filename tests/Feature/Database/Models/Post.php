@@ -9,7 +9,6 @@ use Phenix\Database\Models\Attributes\Column;
 use Phenix\Database\Models\Attributes\ForeignKey;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\DatabaseModel;
-use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Util\Date;
 
 class Post extends DatabaseModel
@@ -38,10 +37,5 @@ class Post extends DatabaseModel
     public static function table(): string
     {
         return 'posts';
-    }
-
-    protected static function newQueryBuilder(): DatabaseQueryBuilder
-    {
-        return new PostQuery();
     }
 }
