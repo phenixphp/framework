@@ -26,6 +26,8 @@ abstract class DatabaseModel implements Arrayable
 {
     protected string $table;
 
+    protected ModelProperty|null $modelKey;
+
     /**
      * @var array<int, ModelProperty>|null
      */
@@ -36,6 +38,7 @@ abstract class DatabaseModel implements Arrayable
     public function __construct()
     {
         $this->table = static::table();
+        $this->modelKey = null;
         $this->queryBuilder = null;
         $this->propertyBindings = null;
         $this->relationshipBindings = null;
@@ -79,12 +82,13 @@ abstract class DatabaseModel implements Arrayable
 
     public function getKey(): string|int
     {
-        /** @var ModelProperty $key */
-        $key = Arr::first($this->propertyBindings, function (ModelProperty $property): bool {
-            return $property->getAttribute() instanceof Id;
-        });
+        if (!$this->modelKey) {
+            $this->modelKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
+                return $property->getAttribute() instanceof Id;
+            });
+        }
 
-        return $this->{$key->getName()};
+        return $this->{$this->modelKey->getName()};
     }
 
     public function toArray(): array
