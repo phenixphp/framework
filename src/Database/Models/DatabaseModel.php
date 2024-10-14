@@ -4,58 +4,114 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models;
 
-use Phenix\Contracts\Database\ModelProperty;
-use Phenix\Database\Models\Collections\DatabaseModelCollection;
+use Phenix\Contracts\Arrayable;
+use Phenix\Database\Models\Attributes\BelongsTo;
+use Phenix\Database\Models\Attributes\Id;
+use Phenix\Database\Models\Attributes\ModelAttribute;
+use Phenix\Database\Models\Properties\BelongsToProperty;
+use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
+use Phenix\Exceptions\Database\ModelPropertyException;
+use Phenix\Util\Arr;
+use Phenix\Util\Date;
 use ReflectionAttribute;
 use ReflectionObject;
+use ReflectionProperty;
 
 use function array_filter;
 use function array_map;
 use function array_shift;
 
-abstract class DatabaseModel
+abstract class DatabaseModel implements Arrayable
 {
-    private string $table;
+    protected string $table;
 
     /**
-     * @var array<int, DatabaseModelProperty>|null
+     * @var array<int, ModelProperty>|null
      */
-    private array|null $propertyBindings;
+    protected array|null $propertyBindings = null;
+    protected array|null $relationshipBindings = null;
     protected DatabaseQueryBuilder|null $queryBuilder;
 
     public function __construct()
     {
         $this->table = static::table();
-        $this->propertyBindings = null;
         $this->queryBuilder = null;
+        $this->propertyBindings = null;
+        $this->relationshipBindings = null;
     }
+
+    abstract protected static function table(): string;
+
+    abstract protected static function newQueryBuilder(): DatabaseQueryBuilder;
 
     public static function query(): DatabaseQueryBuilder
     {
         $queryBuilder = static::newQueryBuilder();
         $queryBuilder->setModel(new static());
-        $queryBuilder->table(static::table());
 
         return $queryBuilder;
     }
 
     /**
-     * @return array<int, DatabaseModelProperty>
+     * @return array<int, ModelProperty>
      */
     public function getPropertyBindings(): array
     {
         return $this->propertyBindings ??= $this->buildPropertyBindings();
     }
 
-    public function newCollection(): DatabaseModelCollection
+    /**
+     * @return array<string, array<int, ModelProperty>>
+     */
+    public function getRelationshipBindings()
     {
-        return new DatabaseModelCollection($this::class);
+        return $this->relationshipBindings ??= $this->buildRelationshipBindings();
     }
 
-    abstract protected static function table(): string;
+    public function newCollection(): Collection
+    {
+        return new Collection($this::class);
+    }
 
-    abstract protected static function newQueryBuilder(): DatabaseQueryBuilder;
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
+    public function getKey(): string|int
+    {
+        /** @var ModelProperty $key */
+        $key = Arr::first($this->propertyBindings, function (ModelProperty $property): bool {
+            return $property->getAttribute() instanceof Id;
+        });
+
+        return $this->{$key->getName()};
+    }
+
+    public function toArray(): array
+    {
+        $data = [];
+
+        foreach ($this->propertyBindings as $property) {
+            $value = $this->{$property->getName()};
+
+            if ($value instanceof Arrayable) {
+                $value = $value->toArray();
+            } elseif ($value instanceof Date) {
+                $value = $value->toIso8601String();
+            }
+
+            $data[$property->getName()] = $value;
+        }
+
+        return $data;
+    }
+
+    public function toJson(): string
+    {
+        return json_encode($this->toArray());
+    }
 
     protected function buildPropertyBindings(): array
     {
@@ -68,8 +124,8 @@ abstract class DatabaseModel
                 return $attr->newInstance();
             }, $property->getAttributes());
 
-            /** @var array<int, ModelProperty> $attributes */
-            $attributes = array_filter($attributes, fn (object $attr) => $attr instanceof ModelProperty);
+            /** @var array<int, ModelAttribute> $attributes */
+            $attributes = array_filter($attributes, fn (object $attr) => $attr instanceof ModelAttribute);
 
             if (empty($attributes)) {
                 continue;
@@ -78,16 +134,47 @@ abstract class DatabaseModel
             $attribute = array_shift($attributes);
             $columnName = $attribute->getColumnName() ?? $property->getName();
 
-            $bindings[$columnName] = new DatabaseModelProperty(
-                $property->getName(),
-                (string) $property->getType(),
-                class_exists((string) $property->getType()),
-                $attribute,
-                $property->isInitialized($this) ? $property->getValue($this) : null
-            );
+            $bindings[$columnName] = $this->buildModelProperty($attribute, $property);
         }
 
         return $bindings;
+    }
+
+    protected function buildRelationshipBindings(): array
+    {
+        $relationships = [];
+
+        foreach ($this->getPropertyBindings() as $property) {
+            if ($property instanceof BelongsToProperty) {
+                $foreignKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $modelProperty) use ($property): bool {
+                    return $property->getAttribute()->foreignKey === $modelProperty->getName();
+                });
+
+                if (! $foreignKey) {
+                    throw new ModelPropertyException("Foreign key not found for {$property->getName()} relationship.");
+                }
+
+                $relationships[$property->getName()] = [$property, $foreignKey];
+            }
+        }
+
+        return $relationships;
+    }
+
+    protected function buildModelProperty(ModelAttribute $attribute, ReflectionProperty $property): ModelProperty
+    {
+        $arguments = [
+            $property->getName(),
+            (string) $property->getType(),
+            class_exists((string) $property->getType()),
+            $attribute,
+            $property->isInitialized($this) ? $property->getValue($this) : null,
+        ];
+
+        return match($attribute::class) {
+            BelongsTo::class => new BelongsToProperty(...$arguments),
+            default => new ModelProperty(...$arguments),
+        };
     }
 
     // Relationships

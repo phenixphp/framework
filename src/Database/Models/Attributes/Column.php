@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Models\Properties;
+namespace Phenix\Database\Models\Attributes;
 
 use Attribute;
-use Phenix\Contracts\Database\ModelProperty;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-readonly class Column implements ModelProperty
+readonly class Column extends ModelAttribute
 {
     public function __construct(
-        public string|null $name = null,
+        public string|null $name = null
     ) {
     }
 

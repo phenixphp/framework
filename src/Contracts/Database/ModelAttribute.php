@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Contracts\Database;
 
-interface ModelProperty
+interface ModelAttribute
 {
     public function getColumnName(): string|null;
 }

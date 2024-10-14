@@ -48,4 +48,23 @@ class Arr extends Utility
 
         return true;
     }
+
+    public static function first(array $data, Closure|null $closure = null, mixed $default = null): mixed
+    {
+        if ($closure) {
+            foreach ($data as $key => $value) {
+                if ($closure($value, $key)) {
+                    return $value;
+                }
+            }
+
+            return $default;
+        }
+
+        if (array_is_list($data)) {
+            return $data[0] ?? $default;
+        }
+
+        return array_values($data)[0] ?? $default;
+    }
 }
