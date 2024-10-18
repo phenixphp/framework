@@ -9,6 +9,7 @@ use Closure;
 use function array_filter;
 use function implode;
 use function is_array;
+use function is_null;
 
 class Arr extends Utility
 {
@@ -66,5 +67,17 @@ class Arr extends Utility
         }
 
         return array_values($data)[0] ?? $default;
+    }
+
+    /**
+     * Laravel team credits
+     */
+    public static function wrap(mixed $value): array
+    {
+        if (is_null($value)) {
+            return [];
+        }
+
+        return is_array($value) ? $value : [$value];
     }
 }

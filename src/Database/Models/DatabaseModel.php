@@ -6,9 +6,11 @@ namespace Phenix\Database\Models;
 
 use Phenix\Contracts\Arrayable;
 use Phenix\Database\Models\Attributes\BelongsTo;
+use Phenix\Database\Models\Attributes\HasMany;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
 use Phenix\Database\Models\Properties\BelongsToProperty;
+use Phenix\Database\Models\Properties\HasManyProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Exceptions\Database\ModelPropertyException;
@@ -96,15 +98,19 @@ abstract class DatabaseModel implements Arrayable
         $data = [];
 
         foreach ($this->propertyBindings as $property) {
-            $value = $this->{$property->getName()};
+            $propertyName = $property->getName();
 
-            if ($value instanceof Arrayable) {
-                $value = $value->toArray();
-            } elseif ($value instanceof Date) {
-                $value = $value->toIso8601String();
+            $value = isset($this->{$propertyName}) ? $this->{$propertyName} : null;
+
+            if ($value || $property->isNullable()) {
+                if ($value instanceof Arrayable) {
+                    $value = $value->toArray();
+                } elseif ($value instanceof Date) {
+                    $value = $value->toIso8601String();
+                }
+
+                $data[$propertyName] = $value;
             }
-
-            $data[$property->getName()] = $value;
         }
 
         return $data;
@@ -153,15 +159,9 @@ abstract class DatabaseModel implements Arrayable
 
         foreach ($this->getPropertyBindings() as $property) {
             if ($property instanceof BelongsToProperty) {
-                $foreignKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $modelProperty) use ($property): bool {
-                    return $property->getAttribute()->foreignKey === $modelProperty->getName();
-                });
-
-                if (! $foreignKey) {
-                    throw new ModelPropertyException("Foreign key not found for {$property->getName()} relationship.");
-                }
-
-                $relationships[$property->getName()] = [$property, $foreignKey];
+                $relationships[$property->getName()] = $this->buildBelongsToRelationship($property);
+            } elseif ($property instanceof HasManyProperty) {
+                $relationships[$property->getName()] = Arr::wrap($property);
             }
         }
 
@@ -180,8 +180,22 @@ abstract class DatabaseModel implements Arrayable
 
         return match($attribute::class) {
             BelongsTo::class => new BelongsToProperty(...$arguments),
+            HasMany::class => new HasManyProperty(...$arguments),
             default => new ModelProperty(...$arguments),
         };
+    }
+
+    protected function buildBelongsToRelationship(BelongsToProperty $property): array
+    {
+        $foreignKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $modelProperty) use ($property): bool {
+            return $property->getAttribute()->foreignProperty === $modelProperty->getName();
+        });
+
+        if (! $foreignKey) {
+            throw new ModelPropertyException("Foreign key not found for {$property->getName()} relationship.");
+        }
+
+        return [$property, $foreignKey];
     }
 
     // Relationships

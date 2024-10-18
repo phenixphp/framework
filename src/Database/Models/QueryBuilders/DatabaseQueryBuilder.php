@@ -17,10 +17,12 @@ use Phenix\Database\Constants\Connections;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Properties\BelongsToProperty;
+use Phenix\Database\Models\Properties\HasManyProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBase;
 use Phenix\Exceptions\Database\ModelPropertyException;
+use Phenix\Util\Arr;
 
 use function array_key_exists;
 use function is_string;
@@ -217,7 +219,9 @@ class DatabaseQueryBuilder extends QueryBase
             $collection->add($this->mapToModel($row));
         }
 
-        $this->resolveRelationships($collection);
+        if (!$collection->isEmpty()) {
+            $this->resolveRelationships($collection);
+        }
 
         return $collection;
     }
@@ -264,6 +268,8 @@ class DatabaseQueryBuilder extends QueryBase
 
             if ($relationship instanceof BelongsToProperty) {
                 $this->resolveBelongsToRelationship(...[$collection, $relationship, ...$relationshipBinding]);
+            } elseif ($relationship instanceof HasManyProperty) {
+                $this->resolveHasManyRelationship($collection, $relationship);
             }
         }
     }
@@ -274,7 +280,7 @@ class DatabaseQueryBuilder extends QueryBase
         ModelProperty $foreignKeyProperty
     ): void {
         /** @var Collection<int, DatabaseModel> $records */
-        $records = $belongsToProperty->getType()::query()
+        $records = $belongsToProperty->query()
             ->selectAllColumns()
             ->whereIn($foreignKeyProperty->getAttribute()->getColumnName(), $models->modelKeys())
             ->get();
@@ -288,5 +294,37 @@ class DatabaseQueryBuilder extends QueryBase
 
             return $model;
         });
+    }
+
+    /**
+     * @param Collection<int, DatabaseModel> $models
+     * @param HasManyProperty $hasManyProperty
+     */
+    protected function resolveHasManyRelationship(
+        Collection $models,
+        HasManyProperty $hasManyProperty,
+    ): void {
+        /** @var Collection<int, DatabaseModel> $children */
+        $children = $hasManyProperty->query()
+            ->selectAllColumns()
+            ->whereIn($hasManyProperty->getAttribute()->foreignKey, $models->modelKeys())
+            ->get();
+
+        if (!$children->isEmpty()) {
+            /** @var ModelProperty $chaperoneProperty */
+            $chaperoneProperty = Arr::first($children->first()->getPropertyBindings(), function (ModelProperty $property): bool {
+                return $this->model::class === $property->getType();
+            });
+
+            $models->map(function (DatabaseModel $model) use ($children, $hasManyProperty, $chaperoneProperty): DatabaseModel {
+                $model->{$hasManyProperty->getName()} = $children->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
+                    $childModel->{$chaperoneProperty->getName()} = clone $model;
+
+                    return $childModel;
+                });
+
+                return $model;
+            });
+        }
     }
 }

@@ -10,7 +10,24 @@ class Collection extends DataCollection
 {
     public function modelKeys(): array
     {
-        return $this->map(fn (DatabaseModel $model) => $model->getKey())
-            ->toArray();
+        return $this->reduce(function (array $carry, DatabaseModel $model): array {
+            $carry[] = $model->getKey();
+
+            return $carry;
+        }, []);
+    }
+
+    public function map(callable $callback): self
+    {
+        return new self(get_class($this->first()), array_map($callback, $this->data));
+    }
+
+    public function toArray(): array
+    {
+        return $this->reduce(function (array $carry, DatabaseModel $model): array {
+            $carry[] = $model->toArray();
+
+            return $carry;
+        }, []);
     }
 }

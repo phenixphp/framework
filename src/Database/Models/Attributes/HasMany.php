@@ -7,11 +7,16 @@ namespace Phenix\Database\Models\Attributes;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-readonly class BelongsTo extends Column
+readonly class HasMany extends Column
 {
     public function __construct(
-        public string $foreignProperty,
-        public string|null $name = null,
+        public string $model,
+        public string $foreignKey
     ) {
+    }
+
+    public function getColumnName(): string|null
+    {
+        return null;
     }
 }

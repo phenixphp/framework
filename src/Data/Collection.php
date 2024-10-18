@@ -8,6 +8,8 @@ use Phenix\Contracts\Arrayable;
 use Ramsey\Collection\Collection as GenericCollection;
 use SplFixedArray;
 
+use function array_key_first;
+
 class Collection extends GenericCollection implements Arrayable
 {
     public static function fromArray(array $data): self
@@ -20,5 +22,16 @@ class Collection extends GenericCollection implements Arrayable
         }
 
         return $collection;
+    }
+
+    public function first(): mixed
+    {
+        $firstIndex = array_key_first($this->data);
+
+        if ($firstIndex === null) {
+            return null;
+        }
+
+        return $this->data[$firstIndex];
     }
 }
