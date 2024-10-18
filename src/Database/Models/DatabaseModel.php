@@ -84,7 +84,7 @@ abstract class DatabaseModel implements Arrayable
 
     public function getKey(): string|int
     {
-        if (!$this->modelKey) {
+        if (! $this->modelKey) {
             $this->modelKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
                 return $property->getAttribute() instanceof Id;
             });

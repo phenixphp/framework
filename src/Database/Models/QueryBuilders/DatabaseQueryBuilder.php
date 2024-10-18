@@ -219,7 +219,7 @@ class DatabaseQueryBuilder extends QueryBase
             $collection->add($this->mapToModel($row));
         }
 
-        if (!$collection->isEmpty()) {
+        if (! $collection->isEmpty()) {
             $this->resolveRelationships($collection);
         }
 
@@ -310,7 +310,7 @@ class DatabaseQueryBuilder extends QueryBase
             ->whereIn($hasManyProperty->getAttribute()->foreignKey, $models->modelKeys())
             ->get();
 
-        if (!$children->isEmpty()) {
+        if (! $children->isEmpty()) {
             /** @var ModelProperty $chaperoneProperty */
             $chaperoneProperty = Arr::first($children->first()->getPropertyBindings(), function (ModelProperty $property): bool {
                 return $this->model::class === $property->getType();

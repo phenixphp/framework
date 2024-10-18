@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Phenix\Util\Date;
-use Phenix\Http\Request;
+use Phenix\Database\Constants\Connections;
+use Phenix\Database\Models\Collection;
 use Phenix\Facades\Route;
+use Phenix\Http\Request;
 use Phenix\Http\Response;
-use function Pest\Faker\faker;
+use Phenix\Util\Date;
+use Tests\Feature\Database\Models\Post;
+use Tests\Feature\Database\Models\Product;
+use Tests\Feature\Database\Models\User;
+use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Phenix\Database\Models\Collection;
-use Tests\Feature\Database\Models\Post;
-use Tests\Feature\Database\Models\User;
-use Phenix\Database\Constants\Connections;
 
-use Tests\Feature\Database\Models\Product;
-use Tests\Mocks\Database\MysqlConnectionPool;
+use function Pest\Faker\faker;
 
 afterEach(function () {
     $this->app->stop();
@@ -193,4 +193,3 @@ it('loads the relationship when the model has many child models', function () {
     $this->get('/users/' . $userData['id'])
         ->assertOk();
 });
-
