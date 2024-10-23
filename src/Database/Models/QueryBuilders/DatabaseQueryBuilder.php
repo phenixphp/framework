@@ -16,12 +16,13 @@ use Phenix\Database\Constants\Actions;
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
-use Phenix\Database\Models\Properties\BelongsToProperty;
-use Phenix\Database\Models\Properties\HasManyProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
+use Phenix\Database\Models\Relationships\BelongsTo;
+use Phenix\Database\Models\Relationships\HasMany;
+use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBase;
-use Phenix\Exceptions\Database\ModelPropertyException;
+use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Arr;
 
 use function array_key_exists;
@@ -47,7 +48,7 @@ class DatabaseQueryBuilder extends QueryBase
     protected DatabaseModel $model;
 
     /**
-     * @var array<int, array<ModelProperty>>
+     * @var array<int, Relationship>
      */
     protected array $relationships;
 
@@ -192,7 +193,7 @@ class DatabaseQueryBuilder extends QueryBase
             $relationship = $modelRelationships[$relationshipName] ?? null;
 
             if (! $relationship) {
-                throw new ModelPropertyException("Undefined relationship {$relationshipName} for " . $this->model::class);
+                throw new ModelException("Undefined relationship {$relationshipName} for " . $this->model::class);
             }
 
             $this->relationships[] = $relationship;
@@ -254,7 +255,7 @@ class DatabaseQueryBuilder extends QueryBase
 
                 $model->{$property->getName()} = $property->isInstantiable() ? $property->resolveInstance($value) : $value;
             } else {
-                throw new ModelPropertyException("Unknown column '{$columnName}' for model " . $model::class);
+                throw new ModelException("Unknown column '{$columnName}' for model " . $model::class);
             }
         }
 
@@ -263,12 +264,10 @@ class DatabaseQueryBuilder extends QueryBase
 
     protected function resolveRelationships(Collection $collection): void
     {
-        foreach ($this->relationships as $relationshipBinding) {
-            $relationship = array_shift($relationshipBinding);
-
-            if ($relationship instanceof BelongsToProperty) {
-                $this->resolveBelongsToRelationship(...[$collection, $relationship, ...$relationshipBinding]);
-            } elseif ($relationship instanceof HasManyProperty) {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship instanceof BelongsTo) {
+                $this->resolveBelongsToRelationship(...[$collection, $relationship]);
+            } elseif ($relationship instanceof HasMany) {
                 $this->resolveHasManyRelationship($collection, $relationship);
             }
         }
@@ -276,19 +275,18 @@ class DatabaseQueryBuilder extends QueryBase
 
     protected function resolveBelongsToRelationship(
         Collection $models,
-        BelongsToProperty $belongsToProperty,
-        ModelProperty $foreignKeyProperty
+        BelongsTo $relationship
     ): void {
         /** @var Collection<int, DatabaseModel> $records */
-        $records = $belongsToProperty->query()
+        $records = $relationship->query()
             ->selectAllColumns()
-            ->whereIn($foreignKeyProperty->getAttribute()->getColumnName(), $models->modelKeys())
+            ->whereIn($relationship->getForeignKey()->getAttribute()->getColumnName(), $models->modelKeys())
             ->get();
 
-        $models->map(function (DatabaseModel $model) use ($records, $belongsToProperty): DatabaseModel {
+        $models->map(function (DatabaseModel $model) use ($records, $relationship): DatabaseModel {
             foreach ($records as $record) {
                 if ($record->getKey() === $model->getKey()) {
-                    $model->{$belongsToProperty->getName()} = $record;
+                    $model->{$relationship->getProperty()->getName()} = $record;
                 }
             }
 
@@ -298,16 +296,16 @@ class DatabaseQueryBuilder extends QueryBase
 
     /**
      * @param Collection<int, DatabaseModel> $models
-     * @param HasManyProperty $hasManyProperty
+     * @param HasMany $relationship
      */
     protected function resolveHasManyRelationship(
         Collection $models,
-        HasManyProperty $hasManyProperty,
+        HasMany $relationship,
     ): void {
         /** @var Collection<int, DatabaseModel> $children */
-        $children = $hasManyProperty->query()
+        $children = $relationship->query()
             ->selectAllColumns()
-            ->whereIn($hasManyProperty->getAttribute()->foreignKey, $models->modelKeys())
+            ->whereIn($relationship->getProperty()->getAttribute()->foreignKey, $models->modelKeys())
             ->get();
 
         if (! $children->isEmpty()) {
@@ -316,8 +314,8 @@ class DatabaseQueryBuilder extends QueryBase
                 return $this->model::class === $property->getType();
             });
 
-            $models->map(function (DatabaseModel $model) use ($children, $hasManyProperty, $chaperoneProperty): DatabaseModel {
-                $model->{$hasManyProperty->getName()} = $children->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
+            $models->map(function (DatabaseModel $model) use ($children, $relationship, $chaperoneProperty): DatabaseModel {
+                $model->{$relationship->getProperty()->getName()} = $children->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
                     $childModel->{$chaperoneProperty->getName()} = clone $model;
 
                     return $childModel;

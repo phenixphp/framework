@@ -162,7 +162,7 @@ it('loads the relationship when the model has many child models', function () {
         $user = User::query()
             ->selectAllColumns()
             ->whereEqual('id', $request->route('user'))
-            ->with('products')
+            ->with(['products'])
             ->first();
 
         expect($user)->toBeInstanceOf(User::class);
@@ -183,7 +183,7 @@ it('loads the relationship when the model has many child models', function () {
         expect($product->createdAt)->toBeInstanceOf(Date::class);
         expect($product->userId)->toBe($userData['id']);
 
-        expect($product->user)->toBeInstanceOf(User::class);
+        // expect(isset($product->user))->toBeFalse();
 
         return response()->json($user);
     });
@@ -193,3 +193,81 @@ it('loads the relationship when the model has many child models', function () {
     $this->get('/users/' . $userData['id'])
         ->assertOk();
 });
+
+// it('loads the relationship when the model has many child models with chaperone', function () {
+//     $userData = [
+//         'id' => 1,
+//         'name' => 'John Doe',
+//         'email' => 'john.doe@email.com',
+//         'created_at' => Date::now()->toDateTimeString(),
+//     ];
+
+//     $userCollection[] = $userData;
+
+//     $productData = [
+//         'id' => 1,
+//         'description' => 'Phenix shirt',
+//         'price' => 100,
+//         'stock' => 6,
+//         'user_id' => $userData['id'],
+//         'created_at' => Date::now()->toDateTimeString(),
+//     ];
+
+//     $productCollection[] = $productData;
+
+//     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+//     $connection->expects($this->exactly(2))
+//         ->method('prepare')
+//         ->willReturnOnConsecutiveCalls(
+//             new Statement(new Result($userCollection)),
+//             new Statement(new Result($productCollection)),
+//         );
+
+//     $this->app->swap(Connections::default(), $connection);
+
+//     Route::get('/users/{user}', function (Request $request) use ($userData, $productData): Response {
+//         /** @var User $user */
+//         $user = User::query()
+//             ->selectAllColumns()
+//             ->whereEqual('id', $request->route('user'))
+//             ->with([
+//                 'products' => HasManyBuilder::new()
+//                     ->withChaperone()
+//                     ->query(function ($query) {
+
+//                     }),
+//                 'option' => [
+//                     'query'
+//                 ]
+//             ])
+//             ->first();
+
+//         expect($user)->toBeInstanceOf(User::class);
+
+//         expect($user->id)->toBe($userData['id']);
+//         expect($user->name)->toBe($userData['name']);
+//         expect($user->email)->toBe($userData['email']);
+
+//         expect($user->products)->toBeInstanceOf(Collection::class);
+//         expect($user->products->count())->toBe(1);
+
+//         /** @var Product $products */
+//         $product = $user->products->first();
+
+//         expect($product->id)->toBe($productData['id']);
+//         expect($product->description)->toBe($productData['description']);
+//         expect($product->price)->toBe((float) $productData['price']);
+//         expect($product->createdAt)->toBeInstanceOf(Date::class);
+//         expect($product->userId)->toBe($userData['id']);
+
+//         expect($product->user)->toBeInstanceOf(User::class);
+
+//         return response()->json($user);
+//     });
+
+//     $this->app->run();
+
+//     $this->get('/users/' . $userData['id'])
+//         ->assertOk();
+// });

@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Phenix\Database\Models;
 
 use Phenix\Contracts\Arrayable;
-use Phenix\Database\Models\Attributes\BelongsTo;
-use Phenix\Database\Models\Attributes\HasMany;
+use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
+use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
 use Phenix\Database\Models\Properties\BelongsToProperty;
 use Phenix\Database\Models\Properties\HasManyProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
-use Phenix\Exceptions\Database\ModelPropertyException;
+use Phenix\Database\Models\Relationships\BelongsTo;
+use Phenix\Database\Models\Relationships\HasMany;
+use Phenix\Database\Models\Relationships\Relationship;
+use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 use ReflectionAttribute;
@@ -65,7 +68,7 @@ abstract class DatabaseModel implements Arrayable
     }
 
     /**
-     * @return array<string, array<int, ModelProperty>>
+     * @return array<string, array<int, Relationship>>
      */
     public function getRelationshipBindings()
     {
@@ -161,7 +164,7 @@ abstract class DatabaseModel implements Arrayable
             if ($property instanceof BelongsToProperty) {
                 $relationships[$property->getName()] = $this->buildBelongsToRelationship($property);
             } elseif ($property instanceof HasManyProperty) {
-                $relationships[$property->getName()] = Arr::wrap($property);
+                $relationships[$property->getName()] = new HasMany($property);
             }
         }
 
@@ -179,23 +182,23 @@ abstract class DatabaseModel implements Arrayable
         ];
 
         return match($attribute::class) {
-            BelongsTo::class => new BelongsToProperty(...$arguments),
-            HasMany::class => new HasManyProperty(...$arguments),
+            BelongsToAttribute::class => new BelongsToProperty(...$arguments),
+            HasManyAttribute::class => new HasManyProperty(...$arguments),
             default => new ModelProperty(...$arguments),
         };
     }
 
-    protected function buildBelongsToRelationship(BelongsToProperty $property): array
+    protected function buildBelongsToRelationship(BelongsToProperty $property): BelongsTo
     {
         $foreignKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $modelProperty) use ($property): bool {
             return $property->getAttribute()->foreignProperty === $modelProperty->getName();
         });
 
         if (! $foreignKey) {
-            throw new ModelPropertyException("Foreign key not found for {$property->getName()} relationship.");
+            throw new ModelException("Foreign key not found for {$property->getName()} relationship.");
         }
 
-        return [$property, $foreignKey];
+        return new BelongsTo($property, $foreignKey);
     }
 
     // Relationships

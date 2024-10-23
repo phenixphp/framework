@@ -6,7 +6,7 @@ namespace Phenix\Exceptions\Database;
 
 use Exception;
 
-class ModelPropertyException extends Exception
+class ModelException extends Exception
 {
     // ..
 }
