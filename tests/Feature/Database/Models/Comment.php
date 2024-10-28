@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Database\Models;
 
+use Phenix\Database\Models\Attributes\BelongsTo;
 use Phenix\Database\Models\Attributes\Column;
-use Phenix\Database\Models\Attributes\HasMany;
+use Phenix\Database\Models\Attributes\ForeignKey;
 use Phenix\Database\Models\Attributes\Id;
-use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Util\Date;
 
-class User extends DatabaseModel
+class Comment extends DatabaseModel
 {
     #[Id]
     public int $id;
 
     #[Column]
-    public string $name;
+    public string $content;
 
-    #[Column]
-    public string $email;
+    #[ForeignKey(name: 'user_id')]
+    public int $userId;
 
     #[Column(name: 'created_at')]
     public Date $createdAt;
@@ -28,14 +28,11 @@ class User extends DatabaseModel
     #[Column(name: 'updated_at')]
     public Date|null $updatedAt = null;
 
-    #[HasMany(model: Product::class, foreignKey: 'user_id')]
-    public Collection $products;
-
-    #[HasMany(model: Comment::class, foreignKey: 'user_id', chaperone: true)]
-    public Collection $comments;
+    #[BelongsTo('userId')]
+    public User $user;
 
     public static function table(): string
     {
-        return 'users';
+        return 'comments';
     }
 }

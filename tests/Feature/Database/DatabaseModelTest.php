@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Connections;
-use Phenix\Database\Models\Collection;
 use Phenix\Util\Date;
-use Tests\Feature\Database\Models\Post;
-use Tests\Feature\Database\Models\Product;
-use Tests\Feature\Database\Models\User;
-use Tests\Mocks\Database\MysqlConnectionPool;
+use function Pest\Faker\faker;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
+use Phenix\Database\Models\Collection;
+use Tests\Feature\Database\Models\Post;
+use Tests\Feature\Database\Models\User;
+use Phenix\Database\Constants\Connections;
+use Tests\Feature\Database\Models\Comment;
 
-use function Pest\Faker\faker;
+use Tests\Feature\Database\Models\Product;
+use Tests\Mocks\Database\MysqlConnectionPool;
 
 it('creates models with query builders successfully', function () {
     $data = [
@@ -100,7 +101,7 @@ it('loads the relationship when the model belongs to a parent model', function (
     expect($post->user->email)->toBe($userData['email']);
 });
 
-it('loads the relationship when the model has many child models', function () {
+it('loads the relationship when the model has many child models without chaperone', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -158,4 +159,62 @@ it('loads the relationship when the model has many child models', function () {
     expect($product->userId)->toBe($userData['id']);
 
     expect(isset($product->user))->toBeFalse();
+});
+
+it('loads the relationship when the model has many child models with chaperone', function () {
+    $userData = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $userCollection[] = $userData;
+
+    $commentData = [
+        'id' => 1,
+        'content' => 'PHP is awesome',
+        'user_id' => $userData['id'],
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $commentCollection[] = $commentData;
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($userCollection)),
+            new Statement(new Result($commentCollection)),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var User $user */
+    $user = User::query()
+        ->selectAllColumns()
+        ->whereEqual('id', 1)
+        ->with(['comments'])
+        ->first();
+
+    expect($user)->toBeInstanceOf(User::class);
+
+    expect($user->id)->toBe($userData['id']);
+    expect($user->name)->toBe($userData['name']);
+    expect($user->email)->toBe($userData['email']);
+
+    expect($user->comments)->toBeInstanceOf(Collection::class);
+    expect($user->comments->count())->toBe(1);
+
+    /** @var Comment $comments */
+    $comment = $user->comments->first();
+
+    expect($comment->id)->toBe($commentData['id']);
+    expect($comment->content)->toBe($commentData['content']);
+    expect($comment->createdAt)->toBeInstanceOf(Date::class);
+    expect($comment->userId)->toBe($userData['id']);
+
+    expect(isset($comment->user))->toBeTrue();
+    expect($comment->user->id)->toBe($userData['id']);
 });
