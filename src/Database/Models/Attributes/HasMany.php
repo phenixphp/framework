@@ -11,7 +11,8 @@ readonly class HasMany extends Column
 {
     public function __construct(
         public string $model,
-        public string $foreignKey
+        public string $foreignKey,
+        public bool $chaperone = false,
     ) {
     }
 

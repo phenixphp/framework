@@ -315,11 +315,17 @@ class DatabaseQueryBuilder extends QueryBase
             });
 
             $models->map(function (DatabaseModel $model) use ($children, $relationship, $chaperoneProperty): DatabaseModel {
-                $model->{$relationship->getProperty()->getName()} = $children->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
-                    $childModel->{$chaperoneProperty->getName()} = clone $model;
+                $records = $children->filter(fn (DatabaseModel $record) => $model->getKey() === $record->getKey());
 
-                    return $childModel;
-                });
+                if ($relationship->getProperty()->getAttribute()->chaperone) {
+                    $model->{$relationship->getProperty()->getName()} = $records->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
+                        $childModel->{$chaperoneProperty->getName()} = clone $model;
+
+                        return $childModel;
+                    });
+                } else {
+                    $model->{$relationship->getProperty()->getName()} = $records;
+                }
 
                 return $model;
             });
