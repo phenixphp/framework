@@ -7,6 +7,7 @@ namespace Phenix\Database\Models\QueryBuilders;
 use Amp\Sql\Common\SqlCommonConnectionPool;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransactionError;
+use Closure;
 use League\Uri\Components\Query;
 use League\Uri\Http;
 use Phenix\App;
@@ -189,14 +190,22 @@ class DatabaseQueryBuilder extends QueryBase
 
         $modelRelationships = $this->model->getRelationshipBindings();
 
-        foreach ($relationships as $relationshipName) {
+        foreach ($relationships as $key => $value) {
+            if ($value instanceof Closure) {
+                $relationshipName = $key;
+                $closure = $value;
+            } else {
+                $relationshipName = $value;
+                $closure = null;
+            }
+
             $relationship = $modelRelationships[$relationshipName] ?? null;
 
             if (! $relationship) {
                 throw new ModelException("Undefined relationship {$relationshipName} for " . $this->model::class);
             }
 
-            $this->relationships[] = $relationship;
+            $this->relationships[] = [$relationship, $closure];
         }
 
         return $this;
@@ -208,6 +217,7 @@ class DatabaseQueryBuilder extends QueryBase
     public function get(): Collection
     {
         $this->action = Actions::SELECT;
+        $this->columns = empty($this->columns) ? ['*'] : $this->columns;
 
         [$dml, $params] = $this->toSql();
 
@@ -264,18 +274,24 @@ class DatabaseQueryBuilder extends QueryBase
 
     protected function resolveRelationships(Collection $collection): void
     {
-        foreach ($this->relationships as $relationship) {
+        foreach ($this->relationships as [$relationship, $closure]) {
             if ($relationship instanceof BelongsTo) {
-                $this->resolveBelongsToRelationship(...[$collection, $relationship]);
+                $this->resolveBelongsToRelationship($collection, $relationship, $closure);
             } elseif ($relationship instanceof HasMany) {
-                $this->resolveHasManyRelationship($collection, $relationship);
+                $this->resolveHasManyRelationship($collection, $relationship, $closure);
             }
         }
     }
 
+    /**
+     * @param Collection<int, DatabaseModel> $models
+     * @param BelongsTo $relationship
+     * @param Closure|null $closure
+     */
     protected function resolveBelongsToRelationship(
         Collection $models,
-        BelongsTo $relationship
+        BelongsTo $relationship,
+        Closure|null $closure = null
     ): void {
         /** @var Collection<int, DatabaseModel> $records */
         $records = $relationship->query()
@@ -301,10 +317,14 @@ class DatabaseQueryBuilder extends QueryBase
     protected function resolveHasManyRelationship(
         Collection $models,
         HasMany $relationship,
+        Closure|null $closure = null
     ): void {
+        if ($closure) {
+            $closure($relationship);
+        }
+
         /** @var Collection<int, DatabaseModel> $children */
         $children = $relationship->query()
-            ->selectAllColumns()
             ->whereIn($relationship->getProperty()->getAttribute()->foreignKey, $models->modelKeys())
             ->get();
 
@@ -317,7 +337,7 @@ class DatabaseQueryBuilder extends QueryBase
             $models->map(function (DatabaseModel $model) use ($children, $relationship, $chaperoneProperty): DatabaseModel {
                 $records = $children->filter(fn (DatabaseModel $record) => $model->getKey() === $record->getKey());
 
-                if ($relationship->getProperty()->getAttribute()->chaperone) {
+                if ($relationship->getProperty()->getAttribute()->chaperone || $relationship->assignChaperone()) {
                     $model->{$relationship->getProperty()->getName()} = $records->map(function (DatabaseModel $childModel) use ($model, $chaperoneProperty): DatabaseModel {
                         $childModel->{$chaperoneProperty->getName()} = clone $model;
 

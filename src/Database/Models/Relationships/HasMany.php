@@ -12,6 +12,7 @@ class HasMany extends Relationship
     public function __construct(
         protected HasManyProperty $property,
     ) {
+        $this->queryBuilder = null;
     }
 
     protected function initQueryBuilder(): DatabaseQueryBuilder

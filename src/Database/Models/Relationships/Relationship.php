@@ -8,7 +8,7 @@ use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 
 abstract class Relationship
 {
-    protected DatabaseQueryBuilder|null $queryBuilder;
+    protected DatabaseQueryBuilder|null $queryBuilder = null;
     protected bool $chaperone = false;
 
     abstract protected function initQueryBuilder(): DatabaseQueryBuilder;

@@ -10,6 +10,7 @@ use Phenix\Database\Models\Collection;
 use Tests\Feature\Database\Models\Post;
 use Tests\Feature\Database\Models\User;
 use Phenix\Database\Constants\Connections;
+use Phenix\Database\Models\Relationships\HasMany;
 use Tests\Feature\Database\Models\Comment;
 
 use Tests\Feature\Database\Models\Product;
@@ -161,7 +162,72 @@ it('loads the relationship when the model has many child models without chaperon
     expect(isset($product->user))->toBeFalse();
 });
 
-it('loads the relationship when the model has many child models with chaperone', function () {
+it('loads the relationship when the model has many child models loading chaperone from relationship method', function () {
+    $userData = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $userCollection[] = $userData;
+
+    $productData = [
+        'id' => 1,
+        'description' => 'Phenix shirt',
+        'price' => 100,
+        'stock' => 6,
+        'user_id' => $userData['id'],
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $productCollection[] = $productData;
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($userCollection)),
+            new Statement(new Result($productCollection)),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var User $user */
+    $user = User::query()
+        ->selectAllColumns()
+        ->whereEqual('id', 1)
+        ->with([
+            'products' => function (HasMany $hasMany): void {
+                $hasMany->withChaperone();
+            },
+        ])
+        ->first();
+
+    expect($user)->toBeInstanceOf(User::class);
+
+    expect($user->id)->toBe($userData['id']);
+    expect($user->name)->toBe($userData['name']);
+    expect($user->email)->toBe($userData['email']);
+
+    expect($user->products)->toBeInstanceOf(Collection::class);
+    expect($user->products->count())->toBe(1);
+
+    /** @var Product $products */
+    $product = $user->products->first();
+
+    expect($product->id)->toBe($productData['id']);
+    expect($product->description)->toBe($productData['description']);
+    expect($product->price)->toBe((float) $productData['price']);
+    expect($product->createdAt)->toBeInstanceOf(Date::class);
+    expect($product->userId)->toBe($userData['id']);
+
+    expect(isset($product->user))->toBeTrue();
+    expect($product->user->id)->toBe($userData['id']);
+});
+
+it('loads the relationship when the model has many child models loading chaperone by default', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
