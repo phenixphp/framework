@@ -196,7 +196,7 @@ class DatabaseQueryBuilder extends QueryBase
                 $closure = $value;
             } else {
                 $relationshipName = $value;
-                $closure = null;
+                $closure = fn ($builder) => $builder->query();
             }
 
             $relationship = $modelRelationships[$relationshipName] ?? null;
@@ -293,9 +293,10 @@ class DatabaseQueryBuilder extends QueryBase
         BelongsTo $relationship,
         Closure|null $closure = null
     ): void {
+        $closure($relationship);
+
         /** @var Collection<int, DatabaseModel> $records */
         $records = $relationship->query()
-            ->selectAllColumns()
             ->whereIn($relationship->getForeignKey()->getAttribute()->getColumnName(), $models->modelKeys())
             ->get();
 
@@ -319,9 +320,7 @@ class DatabaseQueryBuilder extends QueryBase
         HasMany $relationship,
         Closure|null $closure = null
     ): void {
-        if ($closure) {
-            $closure($relationship);
-        }
+        $closure($relationship);
 
         /** @var Collection<int, DatabaseModel> $children */
         $children = $relationship->query()
