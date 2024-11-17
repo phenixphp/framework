@@ -160,6 +160,24 @@ it('generates query with column alias', function () {
     expect($params)->toBeEmpty();
 });
 
+it('generates query with many column alias', function () {
+    $query = new QueryGenerator();
+
+    $sql = $query->select([
+            'id' => 'model_id',
+            'name' => 'full_name',
+        ])
+        ->from('users')
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT id AS model_id, name AS full_name FROM users";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBeEmpty();
+});
+
 it('generates query with select-cases using comparisons', function (
     string $method,
     array $data,
