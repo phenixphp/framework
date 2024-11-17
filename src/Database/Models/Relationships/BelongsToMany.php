@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models\Relationships;
 
-use Phenix\Database\Models\Properties\HasManyProperty;
+use Phenix\Database\Models\Properties\BelongsToManyProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 
-class HasMany extends BelongsToRelationship
+class BelongsToMany extends Relationship
 {
     public function __construct(
-        protected HasManyProperty $property,
+        protected BelongsToManyProperty $property,
     ) {
         $this->queryBuilder = null;
     }
@@ -20,7 +20,7 @@ class HasMany extends BelongsToRelationship
         return $this->property->query();
     }
 
-    public function getProperty(): HasManyProperty
+    public function getProperty(): BelongsToManyProperty
     {
         return $this->property;
     }

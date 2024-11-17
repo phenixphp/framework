@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-use Phenix\Util\Date;
-use function Pest\Faker\faker;
-use Tests\Mocks\Database\Result;
-use Tests\Mocks\Database\Statement;
-use Phenix\Database\Models\Collection;
-use Tests\Feature\Database\Models\Post;
-use Tests\Feature\Database\Models\User;
 use Phenix\Database\Constants\Connections;
+use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\HasMany;
+use Phenix\Util\Date;
 use Tests\Feature\Database\Models\Comment;
-
+use Tests\Feature\Database\Models\Invoice;
+use Tests\Feature\Database\Models\Post;
 use Tests\Feature\Database\Models\Product;
+use Tests\Feature\Database\Models\User;
 use Tests\Mocks\Database\MysqlConnectionPool;
+use Tests\Mocks\Database\Result;
+use Tests\Mocks\Database\Statement;
+
+use function Pest\Faker\faker;
 
 it('creates models with query builders successfully', function () {
     $data = [
@@ -52,7 +53,7 @@ it('creates models with query builders successfully', function () {
     expect($user->updatedAt)->toBeNull();
 });
 
-it('loads the relationship when the model belongs to a parent model', function () {
+it('loads relationship when the model belongs to a parent model', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -103,7 +104,7 @@ it('loads the relationship when the model belongs to a parent model', function (
     expect($post->user->email)->toBe($userData['email']);
 });
 
-it('loads the relationship when the model belongs to a parent model with column selection', function () {
+it('loads relationship when the model belongs to a parent model with column selection', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -138,7 +139,7 @@ it('loads the relationship when the model belongs to a parent model with column 
             'user' => function (BelongsTo $belongsTo) {
                 $belongsTo->query()
                     ->select(['id', 'name']);
-            }
+            },
         ])
         ->first();
 
@@ -157,7 +158,7 @@ it('loads the relationship when the model belongs to a parent model with column 
     expect(isset($post->user->email))->toBeFalse();
 });
 
-it('loads the relationship when the model has many child models without chaperone', function () {
+it('loads relationship when the model has many child models without chaperone', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -217,7 +218,7 @@ it('loads the relationship when the model has many child models without chaperon
     expect(isset($product->user))->toBeFalse();
 });
 
-it('loads the relationship when the model has many child models loading chaperone from relationship method', function () {
+it('loads relationship when the model has many child models loading chaperone from relationship method', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -282,7 +283,7 @@ it('loads the relationship when the model has many child models loading chaperon
     expect($product->user->id)->toBe($userData['id']);
 });
 
-it('loads the relationship when the model has many child models loading chaperone by default', function () {
+it('loads relationship when the model has many child models loading chaperone by default', function () {
     $userData = [
         'id' => 1,
         'name' => 'John Doe',
@@ -338,4 +339,63 @@ it('loads the relationship when the model has many child models loading chaperon
 
     expect(isset($comment->user))->toBeTrue();
     expect($comment->user->id)->toBe($userData['id']);
+});
+
+it('loads relationship when the model belongs to many models', function () {
+    $invoiceData = [
+        'id' => 20,
+        'reference' => '1234',
+        'value' => 100.0,
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $invoiceCollection[] = $invoiceData;
+
+    $productData = [
+        'id' => 122,
+        'description' => 'PHP Plush',
+        'price' => 50.0,
+        'created_at' => Date::now()->toDateTimeString(),
+        'pivot_product_id' => 122,
+        'pivot_invoice_id' => 20,
+    ];
+
+    $productCollection[] = $productData;
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($invoiceCollection)),
+            new Statement(new Result($productCollection)),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var Collection<Invoice> $invoices */
+    $invoices = Invoice::query()
+        ->with(['products'])
+        ->get();
+
+    expect($invoices)->toBeInstanceOf(Collection::class);
+    expect($invoices->count())->toBe(1);
+
+    expect($invoices->first()->id)->toBe($invoiceData['id']);
+    expect($invoices->first()->reference)->toBe($invoiceData['reference']);
+    expect($invoices->first()->value)->toBe($invoiceData['value']);
+
+    expect($invoices->first()->products)->toBeInstanceOf(Collection::class);
+    expect($invoices->first()->products->count())->toBe(1);
+
+    /** @var Product $product */
+    $product = $invoices->first()->products->first();
+
+    expect($product->id)->toBe($productData['id']);
+    expect($product->description)->toBe($productData['description']);
+    expect($product->price)->toBe($productData['price']);
+    expect($product->createdAt)->toBeInstanceOf(Date::class);
+    expect($product->pivot)->toBeInstanceOf(stdClass::class);
+    expect($product->pivot->product_id)->toBe(122);
+    expect($product->pivot->invoice_id)->toBe(20);
 });

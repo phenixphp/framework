@@ -8,7 +8,7 @@ use Phenix\Database\Models\Properties\BelongsToProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 
-class BelongsTo extends Relationship
+class BelongsTo extends BelongsToRelationship
 {
     public function __construct(
         protected BelongsToProperty $property,

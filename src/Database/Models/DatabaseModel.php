@@ -6,14 +6,17 @@ namespace Phenix\Database\Models;
 
 use Phenix\Contracts\Arrayable;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
+use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
 use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
+use Phenix\Database\Models\Properties\BelongsToManyProperty;
 use Phenix\Database\Models\Properties\BelongsToProperty;
 use Phenix\Database\Models\Properties\HasManyProperty;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Database\Models\Relationships\BelongsTo;
+use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Exceptions\Database\ModelException;
@@ -22,6 +25,7 @@ use Phenix\Util\Date;
 use ReflectionAttribute;
 use ReflectionObject;
 use ReflectionProperty;
+use stdClass;
 
 use function array_filter;
 use function array_map;
@@ -32,6 +36,8 @@ abstract class DatabaseModel implements Arrayable
     protected string $table;
 
     protected ModelProperty|null $modelKey;
+
+    public stdClass $pivot;
 
     /**
      * @var array<int, ModelProperty>|null
@@ -47,6 +53,7 @@ abstract class DatabaseModel implements Arrayable
         $this->queryBuilder = null;
         $this->propertyBindings = null;
         $this->relationshipBindings = null;
+        $this->pivot = new stdClass();
     }
 
     abstract protected static function table(): string;
@@ -87,13 +94,14 @@ abstract class DatabaseModel implements Arrayable
 
     public function getKey(): string|int
     {
-        if (! $this->modelKey) {
-            $this->modelKey = Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
-                return $property->getAttribute() instanceof Id;
-            });
-        }
+        return $this->{$this->getModelKeyName()};
+    }
 
-        return $this->{$this->modelKey->getName()};
+    public function getModelKeyName(): string
+    {
+        $this->modelKey ??= $this->findModelKey();
+
+        return $this->modelKey->getName();
     }
 
     public function toArray(): array
@@ -165,6 +173,8 @@ abstract class DatabaseModel implements Arrayable
                 $relationships[$property->getName()] = $this->buildBelongsToRelationship($property);
             } elseif ($property instanceof HasManyProperty) {
                 $relationships[$property->getName()] = new HasMany($property);
+            } elseif ($property instanceof BelongsToManyProperty) {
+                $relationships[$property->getName()] = new BelongsToMany($property);
             }
         }
 
@@ -184,6 +194,7 @@ abstract class DatabaseModel implements Arrayable
         return match($attribute::class) {
             BelongsToAttribute::class => new BelongsToProperty(...$arguments),
             HasManyAttribute::class => new HasManyProperty(...$arguments),
+            BelongsToManyAttribute::class => new BelongsToManyProperty(...$arguments),
             default => new ModelProperty(...$arguments),
         };
     }
@@ -199,6 +210,13 @@ abstract class DatabaseModel implements Arrayable
         }
 
         return new BelongsTo($property, $foreignKey);
+    }
+
+    protected function findModelKey(): ModelProperty
+    {
+        return Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
+            return $property->getAttribute() instanceof Id;
+        });
     }
 
     // Relationships

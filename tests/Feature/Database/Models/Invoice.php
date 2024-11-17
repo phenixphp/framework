@@ -13,19 +13,16 @@ use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Util\Date;
 
-class Product extends DatabaseModel
+class Invoice extends DatabaseModel
 {
     #[Id]
     public int $id;
 
     #[Column]
-    public string $description;
+    public string $reference;
 
     #[Column]
-    public float $price;
-
-    #[Column]
-    public int $stock;
+    public float $value;
 
     #[ForeignKey(name: 'user_id')]
     public int $userId;
@@ -41,11 +38,11 @@ class Product extends DatabaseModel
 
     #[BelongsToMany(
         table: 'invoice_product',
-        foreignKey: 'product_id',
-        relatedModel: Invoice::class,
-        relatedForeignKey: 'invoice_id'
+        foreignKey: 'invoice_id',
+        relatedModel: Product::class,
+        relatedForeignKey: 'product_id'
     )]
-    public Collection $invoices;
+    public Collection $products;
 
     public static function table(): string
     {

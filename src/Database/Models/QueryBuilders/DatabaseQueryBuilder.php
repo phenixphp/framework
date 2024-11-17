@@ -15,10 +15,12 @@ use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Actions;
 use Phenix\Database\Constants\Connections;
+use Phenix\Database\Join;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\Relationships\BelongsTo;
+use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Paginator;
@@ -249,7 +251,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param array<int, mixed> $row
+     * @param array<int|string, mixed> $row
      * @return DatabaseModel
      */
     protected function mapToModel(array $row): DatabaseModel
@@ -264,6 +266,10 @@ class DatabaseQueryBuilder extends QueryBase
                 $property = $propertyBindings[$columnName];
 
                 $model->{$property->getName()} = $property->isInstantiable() ? $property->resolveInstance($value) : $value;
+            } elseif (str_starts_with($columnName, 'pivot_')) {
+                $columnName = str_replace('pivot_', '', $columnName);
+
+                $model->pivot->{$columnName} = $value;
             } else {
                 throw new ModelException("Unknown column '{$columnName}' for model " . $model::class);
             }
@@ -279,6 +285,8 @@ class DatabaseQueryBuilder extends QueryBase
                 $this->resolveBelongsToRelationship($collection, $relationship, $closure);
             } elseif ($relationship instanceof HasMany) {
                 $this->resolveHasManyRelationship($collection, $relationship, $closure);
+            } elseif ($relationship instanceof BelongsToMany) {
+                $this->resolveBelongsToManyRelationship($collection, $relationship, $closure);
             }
         }
     }
@@ -291,7 +299,7 @@ class DatabaseQueryBuilder extends QueryBase
     protected function resolveBelongsToRelationship(
         Collection $models,
         BelongsTo $relationship,
-        Closure|null $closure = null
+        Closure $closure
     ): void {
         $closure($relationship);
 
@@ -318,7 +326,7 @@ class DatabaseQueryBuilder extends QueryBase
     protected function resolveHasManyRelationship(
         Collection $models,
         HasMany $relationship,
-        Closure|null $closure = null
+        Closure $closure
     ): void {
         $closure($relationship);
 
@@ -349,5 +357,43 @@ class DatabaseQueryBuilder extends QueryBase
                 return $model;
             });
         }
+    }
+
+    /**
+     * @param Collection<int, DatabaseModel> $models
+     * @param BelongsToMany $relationship
+     */
+    protected function resolveBelongsToManyRelationship(
+        Collection $models,
+        BelongsToMany $relationship,
+        Closure $closure
+    ): void {
+        $closure($relationship);
+
+        $attr = $relationship->getProperty()->getAttribute();
+
+        /** @var Collection<int, DatabaseModel> $related */
+        $related = $relationship->query()
+            ->select([
+                $attr->relatedModel::table() . '.*',
+                "{$attr->table}.{$attr->foreignKey}" => "pivot_{$attr->foreignKey}",
+                "{$attr->table}.{$attr->relatedForeignKey}" => "pivot_{$attr->relatedForeignKey}",
+            ])
+            ->innerJoin($attr->table, function (Join $join) use ($attr): void {
+                $join->onEqual(
+                    $this->model->getTable() . '.' . $this->model->getModelKeyName(),
+                    $attr->table . '.' . $attr->relatedForeignKey
+                );
+            })
+            ->whereIn("{$attr->table}.{$attr->foreignKey}", $models->modelKeys())
+            ->get();
+
+        $models->map(function (DatabaseModel $model) use ($relationship, $attr, $related): DatabaseModel {
+            $records = $related->filter(fn (DatabaseModel $record): bool => $model->getKey() === $record->pivot->{$attr->foreignKey});
+
+            $model->{$relationship->getProperty()->getName()} = $records;
+
+            return $model;
+        });
     }
 }
