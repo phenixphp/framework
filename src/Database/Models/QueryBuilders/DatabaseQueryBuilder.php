@@ -245,9 +245,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         $this->limit(1);
 
-        $record = $this->get()->first();
-
-        return $record;
+        return $this->get()->first();
     }
 
     /**
@@ -374,15 +372,11 @@ class DatabaseQueryBuilder extends QueryBase
 
         /** @var Collection<int, DatabaseModel> $related */
         $related = $relationship->query()
-            ->select([
-                $attr->relatedModel::table() . '.*',
-                "{$attr->table}.{$attr->foreignKey}" => "pivot_{$attr->foreignKey}",
-                "{$attr->table}.{$attr->relatedForeignKey}" => "pivot_{$attr->relatedForeignKey}",
-            ])
+            ->select($relationship->getColumns())
             ->innerJoin($attr->table, function (Join $join) use ($attr): void {
                 $join->onEqual(
-                    $this->model->getTable() . '.' . $this->model->getModelKeyName(),
-                    $attr->table . '.' . $attr->relatedForeignKey
+                    "{$this->model->getTable()}.{$this->model->getModelKeyName()}",
+                    "{$attr->table}.{$attr->relatedForeignKey}"
                 );
             })
             ->whereIn("{$attr->table}.{$attr->foreignKey}", $models->modelKeys())

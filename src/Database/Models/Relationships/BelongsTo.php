@@ -16,11 +16,6 @@ class BelongsTo extends BelongsToRelationship
     ) {
     }
 
-    protected function initQueryBuilder(): DatabaseQueryBuilder
-    {
-        return $this->property->query();
-    }
-
     public function getProperty(): BelongsToProperty
     {
         return $this->property;
@@ -29,5 +24,10 @@ class BelongsTo extends BelongsToRelationship
     public function getForeignKey(): ModelProperty
     {
         return $this->foreignKey;
+    }
+
+    protected function initQueryBuilder(): DatabaseQueryBuilder
+    {
+        return $this->property->query();
     }
 }

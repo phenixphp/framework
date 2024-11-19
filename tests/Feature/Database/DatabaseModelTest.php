@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\Relationships\BelongsTo;
+use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Util\Date;
 use Tests\Feature\Database\Models\Comment;
@@ -398,4 +399,71 @@ it('loads relationship when the model belongs to many models', function () {
     expect($product->pivot)->toBeInstanceOf(stdClass::class);
     expect($product->pivot->product_id)->toBe(122);
     expect($product->pivot->invoice_id)->toBe(20);
+});
+
+it('loads relationship when the model belongs to many models with pivot columns', function () {
+    $invoiceData = [
+        'id' => 20,
+        'reference' => '1234',
+        'value' => 100.0,
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $invoiceCollection[] = $invoiceData;
+
+    $productData = [
+        'id' => 122,
+        'description' => 'PHP Plush',
+        'price' => 50.0,
+        'created_at' => Date::now()->toDateTimeString(),
+        'pivot_product_id' => 122,
+        'pivot_invoice_id' => 20,
+        'pivot_quantity' => 2,
+        'pivot_value' => 100.0,
+    ];
+
+    $productCollection[] = $productData;
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($invoiceCollection)),
+            new Statement(new Result($productCollection)),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var Collection<Invoice> $invoices */
+    $invoices = Invoice::query()
+        ->with([
+            'products' => function (BelongsToMany $relation) {
+                $relation->withPivot(['quantity', 'value']);
+            },
+        ])
+        ->get();
+
+    expect($invoices)->toBeInstanceOf(Collection::class);
+    expect($invoices->count())->toBe(1);
+
+    expect($invoices->first()->id)->toBe($invoiceData['id']);
+    expect($invoices->first()->reference)->toBe($invoiceData['reference']);
+    expect($invoices->first()->value)->toBe($invoiceData['value']);
+
+    expect($invoices->first()->products)->toBeInstanceOf(Collection::class);
+    expect($invoices->first()->products->count())->toBe(1);
+
+    /** @var Product $product */
+    $product = $invoices->first()->products->first();
+
+    expect($product->id)->toBe($productData['id']);
+    expect($product->description)->toBe($productData['description']);
+    expect($product->price)->toBe($productData['price']);
+    expect($product->createdAt)->toBeInstanceOf(Date::class);
+    expect($product->pivot)->toBeInstanceOf(stdClass::class);
+    expect($product->pivot->product_id)->toBe(122);
+    expect($product->pivot->invoice_id)->toBe(20);
+    expect($product->pivot->quantity)->toBe(2);
+    expect($product->pivot->value)->toBe(100.0);
 });

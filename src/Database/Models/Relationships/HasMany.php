@@ -15,13 +15,13 @@ class HasMany extends BelongsToRelationship
         $this->queryBuilder = null;
     }
 
-    protected function initQueryBuilder(): DatabaseQueryBuilder
-    {
-        return $this->property->query();
-    }
-
     public function getProperty(): HasManyProperty
     {
         return $this->property;
+    }
+
+    protected function initQueryBuilder(): DatabaseQueryBuilder
+    {
+        return $this->property->query();
     }
 }
