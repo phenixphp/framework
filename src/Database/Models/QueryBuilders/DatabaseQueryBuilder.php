@@ -76,6 +76,15 @@ class DatabaseQueryBuilder extends QueryBase
         return $this;
     }
 
+    public function addSelect(array $columns): static
+    {
+        $this->action = Actions::SELECT;
+
+        $this->columns = array_merge($this->columns, $columns);
+
+        return $this;
+    }
+
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
         $this->action = Actions::SELECT;
@@ -372,7 +381,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         /** @var Collection<int, DatabaseModel> $related */
         $related = $relationship->query()
-            ->select($relationship->getColumns())
+            ->addSelect($relationship->getColumns())
             ->innerJoin($attr->table, function (Join $join) use ($attr): void {
                 $join->onEqual(
                     "{$this->model->getTable()}.{$this->model->getModelKeyName()}",
