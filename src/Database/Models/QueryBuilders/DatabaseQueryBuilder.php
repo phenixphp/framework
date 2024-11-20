@@ -30,6 +30,7 @@ use Phenix\Util\Arr;
 
 use function array_key_exists;
 use function is_string;
+use function str_contains;
 
 class DatabaseQueryBuilder extends QueryBase
 {
@@ -206,8 +207,9 @@ class DatabaseQueryBuilder extends QueryBase
                 $relationshipName = $key;
                 $closure = $value;
             } else {
-                $relationshipName = $value;
-                $closure = fn ($builder) => $builder->query();
+                [$relationshipName, $columns] = $this->parseRelationship($value);
+
+                $closure = fn ($builder) => $builder->query()->select($columns);
             }
 
             $relationship = $modelRelationships[$relationshipName] ?? null;
@@ -220,6 +222,19 @@ class DatabaseQueryBuilder extends QueryBase
         }
 
         return $this;
+    }
+
+    protected function parseRelationship(string $relationshipName): array
+    {
+        if (str_contains($relationshipName, ':')) {
+            [$relation, $columns] = explode(':', $relationshipName);
+
+            $columns = explode(',', $columns);
+
+            return [$relation, $columns];
+        }
+
+        return [$relationshipName, ['*']];
     }
 
     /**
