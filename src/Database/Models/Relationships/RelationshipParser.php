@@ -19,7 +19,7 @@ class RelationshipParser implements Arrayable
 
     public function parse(): self
     {
-        $this->mappedRelationships = $this->parseRelations($this->relationships);
+        $this->mappedRelationships = $this->parseRelations();
 
         return $this;
     }
@@ -29,11 +29,11 @@ class RelationshipParser implements Arrayable
         return $this->mappedRelationships;
     }
 
-    protected function parseRelations(array $unpreparedRelations, string|null $parent = null): array
+    protected function parseRelations(string|null $parent = null): array
     {
         $relations = [];
 
-        foreach ($unpreparedRelations as $key => $value) {
+        foreach ($this->relationships as $key => $value) {
             [$name, $data] = $this->parseRelation($key, $value);
 
             $relations[$name] = $data;
@@ -77,11 +77,18 @@ class RelationshipParser implements Arrayable
         $relations = explode('.', $relationshipKey);
 
         $name = array_shift($relations);
+        $columns = ['*'];
+
+        if (str_contains($name, ':')) {
+            [$name, $columns] = explode(':', $name);
+
+            $columns = explode(',', $columns);
+        }
 
         return [
             $name,
             implode('.', $relations),
-            $closure instanceof Closure ? $closure : ['*'],
+            $closure instanceof Closure ? $closure : $columns,
         ];
     }
 }
