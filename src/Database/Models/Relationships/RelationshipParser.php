@@ -29,7 +29,7 @@ class RelationshipParser implements Arrayable
         return $this->mappedRelationships;
     }
 
-    protected function parseRelations(string|null $parent = null): array
+    protected function parseRelations(): array
     {
         $relations = [];
 
