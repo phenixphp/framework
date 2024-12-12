@@ -8,6 +8,7 @@ use Phenix\Database\Models\Attributes\BelongsTo;
 use Phenix\Database\Models\Attributes\BelongsToMany;
 use Phenix\Database\Models\Attributes\Column;
 use Phenix\Database\Models\Attributes\ForeignKey;
+use Phenix\Database\Models\Attributes\HasMany;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
@@ -38,6 +39,9 @@ class Product extends DatabaseModel
 
     #[BelongsTo('userId')]
     public User $user;
+
+    #[HasMany(model: Comment::class, foreignKey: 'product_id')]
+    public Collection $comments;
 
     #[BelongsToMany(
         table: 'invoice_product',

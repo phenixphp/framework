@@ -22,6 +22,10 @@ class Comment extends DatabaseModel
     #[ForeignKey(name: 'user_id')]
     public int $userId;
 
+
+    #[ForeignKey(name: 'product_id')]
+    public int $productId;
+
     #[Column(name: 'created_at')]
     public Date $createdAt;
 
@@ -30,6 +34,9 @@ class Comment extends DatabaseModel
 
     #[BelongsTo('userId')]
     public User $user;
+
+    #[BelongsTo('productId')]
+    public Product $product;
 
     public static function table(): string
     {

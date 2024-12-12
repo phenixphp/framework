@@ -6,6 +6,7 @@ namespace Phenix\Database\Models\Relationships;
 
 use Closure;
 use Phenix\Contracts\Arrayable;
+use Phenix\Util\Arr;
 
 class RelationshipParser implements Arrayable
 {
@@ -43,25 +44,24 @@ class RelationshipParser implements Arrayable
                 $relationKey = $value;
             }
 
-            $current = &$relations;
-
             $keys = explode('.', $relationKey);
+            $relationName = array_shift($keys);
 
-            foreach ($keys as $relationName) {
-                if (!isset($current[$relationName])) {
-                    if (str_contains($relationName, ':')) {
-                        [$relationName, $columns] = explode(':', $relationName);
+            if (str_contains($relationName, ':')) {
+                [$relationName, $columns] = explode(':', $relationName);
 
-                        $columns = explode(',', $columns);
-                    }
+                $columns = explode(',', $columns);
+            }
 
-                    $current[$relationName] = [
-                        'columns' => $columns,
-                        'relationships' => [],
-                    ];
-                }
+            $keys = empty($keys) ? [] : Arr::wrap(implode('.', $keys));
 
-                $current = &$current[$relationName]['relationships'];
+            if (isset($relations[$relationName])) {
+                $relations[$relationName]['relationships'] = array_merge($relations[$relationName]['relationships'], $keys);
+            } else {
+                $relations[$relationName] = [
+                    'columns' => $columns,
+                    'relationships' => $keys,
+                ];
             }
         }
 

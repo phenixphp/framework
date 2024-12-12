@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Models\Collection;
+use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
@@ -582,4 +583,65 @@ it('loads relationship when the model belongs to many models with column selecti
     expect($product->pivot->invoice_id)->toBe(20);
     expect($product->pivot->quantity)->toBe(2);
     expect($product->pivot->value)->toBe(100.0);
+});
+
+it('loads nested relationship using dot notation', function () {
+    $userData = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $productData = [
+        'id' => 1,
+        'description' => 'Phenix shirt',
+        'price' => 100,
+        'stock' => 6,
+        'user_id' => $userData['id'],
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $commentData = [
+        'id' => 1,
+        'content' => 'PHP is awesome',
+        'product_id' => $productData['id'],
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(3))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$commentData])),
+            new Statement(new Result([$productData])),
+            new Statement(new Result([$userData])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var Comment $comment */
+    $comment = Comment::query()
+        ->with([
+            'product:id,description,price,stock,user_id,created_at',
+            'product.user:id,name,email,created_at',
+        ])
+        ->first();
+
+    expect($comment)->toBeInstanceOf(DatabaseModel::class);
+
+    expect($comment->id)->toBe($commentData['id']);
+    expect($comment->content)->toBe($commentData['content']);
+    expect($comment->createdAt)->toBeInstanceOf(Date::class);
+    expect($comment->productId)->toBe($productData['id']);
+
+    expect($comment->product)->toBeInstanceOf(DatabaseModel::class);
+    expect($comment->product->id)->toBe($productData['id']);
+    expect($comment->product->description)->toBe($productData['description']);
+
+    expect($comment->product->user)->toBeInstanceOf(DatabaseModel::class);
+    expect($comment->product->user->id)->toBe($userData['id']);
+    expect($comment->product->user->name)->toBe($userData['name']);
+    expect($comment->product->user->email)->toBe($userData['email']);
 });

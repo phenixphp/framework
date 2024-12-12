@@ -23,14 +23,15 @@ use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
+use Phenix\Database\Models\Relationships\RelationshipParser;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBase;
 use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Arr;
 
 use function array_key_exists;
+use function is_array;
 use function is_string;
-use function str_contains;
 
 class DatabaseQueryBuilder extends QueryBase
 {
@@ -198,19 +199,17 @@ class DatabaseQueryBuilder extends QueryBase
 
     public function with(array|string $relationships): self
     {
-        $relationships = (array) $relationships;
-
         $modelRelationships = $this->model->getRelationshipBindings();
 
-        foreach ($relationships as $key => $value) {
-            if ($value instanceof Closure) {
-                $relationshipName = $key;
-                $closure = $value;
-            } else {
-                [$relationshipName, $columns] = $this->parseRelationship($value);
+        $relationshipParser = new RelationshipParser((array) $relationships);
+        $relationshipParser->parse();
 
-                $closure = fn ($builder) => $builder->query()->select($columns);
-            }
+        foreach ($relationshipParser->toArray() as $relationshipName => $relationshipData) {
+            ['columns' => $columns, 'relationships' => $relations] = $relationshipData;
+
+            $closure = is_array($columns)
+                ? fn ($builder) => $builder->query()->select($columns)->with($relations)
+                : $columns;
 
             $relationship = $modelRelationships[$relationshipName] ?? null;
 
@@ -222,19 +221,6 @@ class DatabaseQueryBuilder extends QueryBase
         }
 
         return $this;
-    }
-
-    protected function parseRelationship(string $relationshipName): array
-    {
-        if (str_contains($relationshipName, ':')) {
-            [$relation, $columns] = explode(':', $relationshipName);
-
-            $columns = explode(',', $columns);
-
-            return [$relation, $columns];
-        }
-
-        return [$relationshipName, ['*']];
     }
 
     /**
