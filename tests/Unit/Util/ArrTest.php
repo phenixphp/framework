@@ -18,6 +18,7 @@ it('can get a value from an array', function () {
     expect(Arr::get($array, 'address.city'))->toBe('New York');
     expect(Arr::get($array, 'nonexistent_key'))->toBeNull();
     expect(Arr::get($array, 'nonexistent_key.dotted'))->toBeNull();
+    expect(Arr::get($array, null))->toBe($array);
 });
 
 it('can set a value in an array', function () {
@@ -38,7 +39,7 @@ it('can check if an array has a key', function () {
     expect(Arr::has($array, 'name'))->toBeTrue();
     expect(Arr::has($array, 'nonexistent_key'))->toBeFalse();
     expect(Arr::has($array, []))->toBeFalse();
-    expect(Arr::get($array, 'address.city'))->toBeTrue();
+    expect(Arr::has($array, 'address.city'))->toBeTrue();
 
 });
 
@@ -78,5 +79,45 @@ it('can wrap a value in an array', function () {
     expect(Arr::wrap(['John']))->toBe(['John']);
     expect(Arr::wrap(null))->toBe([]);
     expect(Arr::wrap(['name' => 'John']))->toBe(['name' => 'John']);
+});
+
+it('can check if a key exists in an array', function () {
+    $array = ['name' => 'John', 'age' => 30];
+
+    expect(Arr::exists($array, 'name'))->toBeTrue();
+    expect(Arr::exists($array, 'nonexistent_key'))->toBeFalse();
+    expect(Arr::exists($array, 'age'))->toBeTrue();
+
+    $arrClass = new class implements ArrayAccess {
+        private $container = [];
+
+        public function offsetSet($offset, $value): void
+        {
+            if ($offset === null) {
+                $this->container[] = $value;
+            } else {
+                $this->container[$offset] = $value;
+            }
+        }
+
+        public function offsetExists($offset): bool
+        {
+            return isset($this->container[$offset]);
+        }
+
+        public function offsetUnset($offset): void
+        {
+            unset($this->container[$offset]);
+        }
+
+        public function offsetGet($offset): string|null
+        {
+            return isset($this->container[$offset]) ? $this->container[$offset] : null;
+        }
+    };
+
+    $arrClass['name'] = 'John';
+
+    expect(Arr::exists($arrClass, 'name'))->toBeTrue();
 });
 

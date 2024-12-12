@@ -162,10 +162,6 @@ class Arr extends Utility
             return $array->offsetExists($key);
         }
 
-        if (is_int($key)) {
-            $key = (string) $key;
-        }
-
         return array_key_exists($key, $array);
     }
 
