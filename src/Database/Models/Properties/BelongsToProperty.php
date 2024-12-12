@@ -7,6 +7,9 @@ namespace Phenix\Database\Models\Properties;
 use Phenix\Database\Models\Attributes\BelongsTo;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 
+/**
+ * @property BelongsTo $attribute
+ */
 class BelongsToProperty extends ModelProperty
 {
     public function getAttribute(): BelongsTo

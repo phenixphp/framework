@@ -7,6 +7,9 @@ namespace Phenix\Database\Models\Properties;
 use Phenix\Database\Models\Attributes\HasMany;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 
+/**
+ * @property HasMany $attribute
+ */
 class HasManyProperty extends ModelProperty
 {
     public function getAttribute(): HasMany

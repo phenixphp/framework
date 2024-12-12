@@ -7,6 +7,7 @@ namespace Phenix\Database\Models;
 use Phenix\Contracts\Arrayable;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
 use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
+use Phenix\Database\Models\Attributes\Column;
 use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
@@ -149,7 +150,7 @@ abstract class DatabaseModel implements Arrayable
                 return $attr->newInstance();
             }, $property->getAttributes());
 
-            /** @var array<int, ModelAttribute> $attributes */
+            /** @var array<int, ModelAttribute&Column> $attributes */
             $attributes = array_filter($attributes, fn (object $attr) => $attr instanceof ModelAttribute);
 
             if (empty($attributes)) {
@@ -182,7 +183,7 @@ abstract class DatabaseModel implements Arrayable
         return $relationships;
     }
 
-    protected function buildModelProperty(ModelAttribute $attribute, ReflectionProperty $property): ModelProperty
+    protected function buildModelProperty(ModelAttribute&Column $attribute, ReflectionProperty $property): ModelProperty
     {
         $arguments = [
             $property->getName(),

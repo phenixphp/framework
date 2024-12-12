@@ -18,7 +18,6 @@ use function array_values;
 use function explode;
 use function implode;
 use function is_array;
-use function is_float;
 use function is_null;
 use function str_contains;
 
@@ -184,7 +183,7 @@ class Arr extends Utility
                 $result = $array;
             } elseif (static::exists($array, $key)) {
                 $result = $array[$key];
-            } elseif (!str_contains($key, '.')) {
+            } elseif (! str_contains($key, '.')) {
                 $result = $array[$key] ?? value($default);
             } else {
                 foreach (explode('.', $key) as $segment) {
@@ -193,6 +192,7 @@ class Arr extends Utility
                         $result = $array;
                     } else {
                         $result = value($default);
+
                         break;
                     }
                 }

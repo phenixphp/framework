@@ -9,7 +9,7 @@ use Phenix\Util\Date;
 
 use function is_null;
 
-class ModelProperty
+class ModelProperty implements ModelPropertyInterface
 {
     public function __construct(
         protected string $name,
