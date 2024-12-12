@@ -302,7 +302,7 @@ class DatabaseQueryBuilder extends QueryBase
     /**
      * @param Collection<int, DatabaseModel> $models
      * @param BelongsTo $relationship
-     * @param Closure|null $closure
+     * @param Closure $closure
      */
     protected function resolveBelongsToRelationship(
         Collection $models,
@@ -330,6 +330,7 @@ class DatabaseQueryBuilder extends QueryBase
     /**
      * @param Collection<int, DatabaseModel> $models
      * @param HasMany $relationship
+     * @param Closure $closure
      */
     protected function resolveHasManyRelationship(
         Collection $models,
@@ -370,6 +371,7 @@ class DatabaseQueryBuilder extends QueryBase
     /**
      * @param Collection<int, DatabaseModel> $models
      * @param BelongsToMany $relationship
+     * @param Closure $closure
      */
     protected function resolveBelongsToManyRelationship(
         Collection $models,
