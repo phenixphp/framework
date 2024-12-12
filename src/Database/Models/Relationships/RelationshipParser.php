@@ -34,61 +34,37 @@ class RelationshipParser implements Arrayable
         $relations = [];
 
         foreach ($this->relationships as $key => $value) {
-            [$name, $data] = $this->parseRelation($key, $value);
+            $columns = ['*'];
 
-            $relations[$name] = $data;
+            if ($value instanceof Closure) {
+                $relationKey = $key;
+                $columns = $value;
+            } else {
+                $relationKey = $value;
+            }
+
+            $current = &$relations;
+
+            $keys = explode('.', $relationKey);
+
+            foreach ($keys as $relationName) {
+                if (!isset($current[$relationName])) {
+                    if (str_contains($relationName, ':')) {
+                        [$relationName, $columns] = explode(':', $relationName);
+
+                        $columns = explode(',', $columns);
+                    }
+
+                    $current[$relationName] = [
+                        'columns' => $columns,
+                        'relationships' => [],
+                    ];
+                }
+
+                $current = &$current[$relationName]['relationships'];
+            }
         }
 
         return $relations;
-    }
-
-    protected function parseRelation(int|string $key, Closure|string|null $value = null, string|null $parent = null): array
-    {
-        $columns = null;
-
-        if ($value instanceof Closure) {
-            $relationKey = $key;
-            $columns = $value;
-        } else {
-            $relationKey = $value;
-        }
-
-        $relationships = [];
-
-        [$name, $relation, $columns] = $this->parseKey($relationKey, $columns);
-
-        if ($relation) {
-            [$nextRelationName, $data] = $this->parseRelation(0, $relation);
-
-            $relationships[$nextRelationName] = $data;
-        }
-
-        return [
-            $name,
-            [
-                'columns' => $columns,
-                'relationships' => $relationships,
-            ],
-        ];
-    }
-
-    protected function parseKey(string $relationshipKey, Closure|null $closure): array
-    {
-        $relations = explode('.', $relationshipKey);
-
-        $name = array_shift($relations);
-        $columns = ['*'];
-
-        if (str_contains($name, ':')) {
-            [$name, $columns] = explode(':', $name);
-
-            $columns = explode(',', $columns);
-        }
-
-        return [
-            $name,
-            implode('.', $relations),
-            $closure instanceof Closure ? $closure : $columns,
-        ];
     }
 }

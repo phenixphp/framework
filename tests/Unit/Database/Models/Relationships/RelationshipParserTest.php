@@ -89,8 +89,6 @@ it('parse relationships with dot notation in nested level', function () {
 
     $parser->parse();
 
-    dump($parser->toArray());
-
     expect($parser->toArray())->toBe([
         'user' => [
             'columns' => ['*'],
@@ -100,6 +98,35 @@ it('parse relationships with dot notation in nested level', function () {
                     'relationships' => [
                         'account' => [
                             'columns' => ['*'],
+                            'relationships' => [],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ]);
+});
+
+it('parse relationships with dot notation in nested level with column selection', function () {
+    $parser = new RelationshipParser([
+        'user:id,name,company_id',
+        'user.company:id,name,account_id',
+        'user.company.account:id,name',
+    ]);
+
+    $parser->parse();
+
+    dump($parser->toArray());
+
+    expect($parser->toArray())->toBe([
+        'user' => [
+            'columns' => ['id', 'name', 'company_id'],
+            'relationships' => [
+                'company' => [
+                    'columns' => ['id', 'name', 'account_id'],
+                    'relationships' => [
+                        'account' => [
+                            'columns' => ['id', 'name'],
                             'relationships' => [],
                         ],
                     ],
