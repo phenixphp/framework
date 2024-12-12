@@ -7,10 +7,20 @@ namespace Phenix\Util;
 use ArrayAccess;
 use Closure;
 
+use function array_combine;
 use function array_filter;
+use function array_is_list;
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_shift;
+use function array_values;
+use function explode;
 use function implode;
 use function is_array;
+use function is_float;
 use function is_null;
+use function str_contains;
 
 /**
  * Laravel team credits
