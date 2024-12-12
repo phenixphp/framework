@@ -31,6 +31,7 @@ use function array_filter;
 use function array_map;
 use function array_shift;
 
+/** @phpstan-consistent-constructor */
 abstract class DatabaseModel implements Arrayable
 {
     protected string $table;
