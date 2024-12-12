@@ -6,8 +6,16 @@ namespace Phenix\Database\Models;
 
 use Phenix\Data\Collection as DataCollection;
 
+/**
+ * @implements array<array-key, DatabaseModel>
+ */
 class Collection extends DataCollection
 {
+    public function __construct(array $data = [])
+    {
+        parent::__construct(DatabaseModel::class, $data);
+    }
+
     public function modelKeys(): array
     {
         return $this->reduce(function (array $carry, DatabaseModel $model): array {
@@ -19,7 +27,7 @@ class Collection extends DataCollection
 
     public function map(callable $callback): self
     {
-        return new self(get_class($this->first()), array_map($callback, $this->data));
+        return new self(array_map($callback, $this->data));
     }
 
     public function toArray(): array

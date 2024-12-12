@@ -86,7 +86,7 @@ abstract class DatabaseModel implements Arrayable
 
     public function newCollection(): Collection
     {
-        return new Collection($this::class);
+        return new Collection();
     }
 
     public function getTable(): string
@@ -110,7 +110,7 @@ abstract class DatabaseModel implements Arrayable
     {
         $data = [];
 
-        foreach ($this->propertyBindings as $property) {
+        foreach ($this->getPropertyBindings() as $property) {
             $propertyName = $property->getName();
 
             $value = isset($this->{$propertyName}) ? $this->{$propertyName} : null;
