@@ -27,9 +27,19 @@ it('can set a value in an array', function () {
 });
 
 it('can check if an array has a key', function () {
-    $array = ['name' => 'John', 'age' => 30];
+    $array = [
+        'name' => 'John',
+        'age' => 30,
+        'address' => [
+            'city' => 'New York',
+            'zip' => '10001'
+        ]
+    ];
     expect(Arr::has($array, 'name'))->toBeTrue();
     expect(Arr::has($array, 'nonexistent_key'))->toBeFalse();
+    expect(Arr::has($array, []))->toBeFalse();
+    expect(Arr::get($array, 'address.city'))->toBeTrue();
+
 });
 
 it('can undot an array', function () {
@@ -50,5 +60,23 @@ it('can undot an array', function () {
         ]
     ];
     expect(Arr::undot($array))->toBe($expected);
+});
+
+it('can get the first value from an array', function () {
+    $array = [10, 20, 30, 40];
+    expect(Arr::first($array))->toBe(10);
+
+    $array = ['name' => 'John', 'age' => 30];
+    expect(Arr::first($array))->toBe('John');
+
+    $array = [];
+    expect(Arr::first($array))->toBeNull();
+});
+
+it('can wrap a value in an array', function () {
+    expect(Arr::wrap('John'))->toBe(['John']);
+    expect(Arr::wrap(['John']))->toBe(['John']);
+    expect(Arr::wrap(null))->toBe([]);
+    expect(Arr::wrap(['name' => 'John']))->toBe(['name' => 'John']);
 });
 
