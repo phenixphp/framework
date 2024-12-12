@@ -218,11 +218,4 @@ abstract class DatabaseModel implements Arrayable
             return $property->getAttribute() instanceof Id;
         });
     }
-
-    // Relationships
-
-    // API: save, delete, update, updateOr, first, alone, firstOr, get, cursor, paginate
-    // Static API: Create, find, findOr
-
-    // Model config feature
 }
