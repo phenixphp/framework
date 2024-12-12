@@ -6,9 +6,6 @@ namespace Phenix\Database\Models;
 
 use Phenix\Data\Collection as DataCollection;
 
-/**
- * @implements array<array-key, DatabaseModel>
- */
 class Collection extends DataCollection
 {
     public function __construct(array $data = [])
