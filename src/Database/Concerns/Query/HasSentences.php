@@ -25,9 +25,9 @@ trait HasSentences
         $perPage = filter_var($query->get('per_page') ?? $defaultPerPage, FILTER_SANITIZE_NUMBER_INT);
         $perPage = $perPage === false ? $defaultPerPage : $perPage;
 
-        $total = (new self())->connection($this->connection)
-            ->from($this->table)
-            ->count();
+        $countQuery = clone $this;
+
+        $total = $countQuery->count();
 
         $data = $this->page((int) $currentPage, (int) $perPage)->get();
 
