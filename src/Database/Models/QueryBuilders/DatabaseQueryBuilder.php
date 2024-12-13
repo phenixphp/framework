@@ -313,7 +313,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         /** @var Collection<int, DatabaseModel> $records */
         $records = $relationship->query()
-            ->whereIn($relationship->getForeignKey()->getAttribute()->getColumnName(), $models->modelKeys())
+            ->whereIn($relationship->getForeignKey()->getColumnName(), $models->modelKeys())
             ->get();
 
         $models->map(function (DatabaseModel $model) use ($records, $relationship): DatabaseModel {
