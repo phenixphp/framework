@@ -37,3 +37,10 @@ if (! function_exists('env')) {
         return $default instanceof Closure ? $default() : $default;
     }
 }
+
+if (! function_exists('value')) {
+    function value($value, ...$args)
+    {
+        return $value instanceof Closure ? $value(...$args) : $value;
+    }
+}
