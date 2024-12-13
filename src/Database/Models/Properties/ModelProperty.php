@@ -24,7 +24,7 @@ class ModelProperty implements ModelPropertyInterface
     {
         $value ??= $this->value;
 
-        return match ($this->type) {
+        return match ($this->normalizedType()) {
             Date::class => $this->resolveDate($value),
             default => $this->resolveType($value),
         };
@@ -80,6 +80,17 @@ class ModelProperty implements ModelPropertyInterface
             return null;
         }
 
-        return new $this->type($value);
+        $type = $this->normalizedType();
+
+        return new $type($value);
+    }
+
+    private function normalizedType(): string
+    {
+        if (str_starts_with($this->type, '?')) {
+            return substr($this->type, 1);
+        }
+
+        return $this->type;
     }
 }
