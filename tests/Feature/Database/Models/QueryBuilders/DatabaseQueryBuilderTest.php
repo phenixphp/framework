@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Tests\Feature\Database\Models\User;
 use Phenix\Database\Constants\Connections;
-use Tests\Mocks\Database\MysqlConnectionPool;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
+use Tests\Feature\Database\Models\User;
+use Tests\Mocks\Database\MysqlConnectionPool;
 
 it('sets custom connection for database query builder', function () {
     $data = [

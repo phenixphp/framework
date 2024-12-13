@@ -10,8 +10,8 @@ it('can get a value from an array', function () {
         'age' => 30,
         'address' => [
             'city' => 'New York',
-            'zip' => '10001'
-        ]
+            'zip' => '10001',
+        ],
     ];
     expect(Arr::get($array, 'name'))->toBe('John');
     expect(Arr::get($array, 'age'))->toBe(30);
@@ -33,8 +33,8 @@ it('can check if an array has a key', function () {
         'age' => 30,
         'address' => [
             'city' => 'New York',
-            'zip' => '10001'
-        ]
+            'zip' => '10001',
+        ],
     ];
     expect(Arr::has($array, 'name'))->toBeTrue();
     expect(Arr::has($array, 'nonexistent_key'))->toBeFalse();
@@ -48,17 +48,17 @@ it('can undot an array', function () {
         'user.name' => 'John',
         'user.age' => 30,
         'address.city' => 'New York',
-        'address.zip' => '10001'
+        'address.zip' => '10001',
     ];
     $expected = [
         'user' => [
             'name' => 'John',
-            'age' => 30
+            'age' => 30,
         ],
         'address' => [
             'city' => 'New York',
-            'zip' => '10001'
-        ]
+            'zip' => '10001',
+        ],
     ];
     expect(Arr::undot($array))->toBe($expected);
 });
@@ -88,7 +88,7 @@ it('can check if a key exists in an array', function () {
     expect(Arr::exists($array, 'nonexistent_key'))->toBeFalse();
     expect(Arr::exists($array, 'age'))->toBeTrue();
 
-    $arrClass = new class implements ArrayAccess {
+    $arrClass = new class () implements ArrayAccess {
         private $container = [];
 
         public function offsetSet($offset, $value): void
@@ -120,4 +120,3 @@ it('can check if a key exists in an array', function () {
 
     expect(Arr::exists($arrClass, 'name'))->toBeTrue();
 });
-

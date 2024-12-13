@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Phenix\Database\Models\Collection;
-use Tests\Feature\Database\Models\Product;
 use Phenix\Util\Date;
+use Tests\Feature\Database\Models\Product;
 
 it('can convert a collection of DatabaseModels to an array', function () {
     $product1 = new Product();
@@ -45,7 +45,7 @@ it('can convert a collection of DatabaseModels to an array', function () {
             'userId' => 2,
             'createdAt' => '2023-01-03T00:00:00+00:00',
             'updatedAt' => '2023-01-04T00:00:00+00:00',
-        ]
+        ],
     ];
 
     expect($collection->toArray())->toBe($expected);

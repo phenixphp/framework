@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Phenix\Database\Models\Attributes\Column;
-use Tests\Unit\Database\Models\Properties\Json;
 use Phenix\Database\Models\Properties\ModelProperty;
+use Tests\Unit\Database\Models\Properties\Json;
 
 it('resolves property instance', function () {
     $property = new ModelProperty(
