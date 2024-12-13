@@ -8,6 +8,7 @@ use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
+use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Date;
 use Tests\Feature\Database\Models\Comment;
 use Tests\Feature\Database\Models\Invoice;
@@ -53,6 +54,12 @@ it('creates models with query builders successfully', function () {
     expect($user->email)->toBe($data[0]['email']);
     expect($user->createdAt)->toBeInstanceOf(Date::class);
     expect($user->updatedAt)->toBeNull();
+
+    $data[0]['createdAt'] = Date::parse($data[0]['created_at'])->toIso8601String();
+    unset($data[0]['created_at']);
+    $data[0]['updatedAt'] = null;
+
+    expect($user->toJson())->toBe(json_encode($data[0]));
 });
 
 it('loads relationship when the model belongs to a parent model', function () {
@@ -644,4 +651,44 @@ it('loads nested relationship using dot notation', function () {
     expect($comment->product->user->id)->toBe($userData['id']);
     expect($comment->product->user->name)->toBe($userData['name']);
     expect($comment->product->user->email)->toBe($userData['email']);
+});
+
+it('dispatches error on unknown column', function () {
+    expect(function () {
+        $data = [
+            [
+                'id' => 1,
+                'name' => 'John Doe',
+                'email' => 'john.doe@email.com',
+                'created_at' => Date::now()->toDateTimeString(),
+                'unknown_column' => 'unknown',
+            ],
+        ];
+
+        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+        $connection->expects($this->exactly(1))
+            ->method('prepare')
+            ->willReturnOnConsecutiveCalls(
+                new Statement(new Result($data)),
+            );
+
+        $this->app->swap(Connections::default(), $connection);
+
+        User::query()->selectAllColumns()->get();
+    })->toThrow(
+        ModelException::class,
+        "Unknown column 'unknown_column' for model " . User::class,
+    );
+});
+
+it('dispatches error on unknown relationship', function () {
+    expect(function () {
+        Post::query()->selectAllColumns()
+            ->with('company')
+            ->first();
+    })->toThrow(
+        ModelException::class,
+        "Undefined relationship company for " . Post::class,
+    );
 });
