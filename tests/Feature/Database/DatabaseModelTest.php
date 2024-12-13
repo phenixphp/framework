@@ -339,6 +339,25 @@ it('loads relationship when the model has many child models loading chaperone fr
 
     expect(isset($product->user))->toBeTrue();
     expect($product->user->id)->toBe($userData['id']);
+
+    $userData['createdAt'] = Date::parse($userData['created_at'])->toIso8601String();
+    unset($userData['created_at']);
+    $userData['updatedAt'] = null;
+
+    $productData['createdAt'] = Date::parse($productData['created_at'])->toIso8601String();
+    $productData['updatedAt'] = null;
+    $productData['price'] = (float) $productData['price'];
+    $productData['userId'] = $userData['id'];
+    unset($productData['user_id'], $productData['created_at']);
+    $productData['user'] = $userData;
+
+    $userData['products'][] = $productData;
+    $output = $user->toArray();
+
+    ksort($output['products'][0]);
+    ksort($userData['products'][0]);
+
+    expect($output)->toBe($userData);
 });
 
 it('loads relationship when the model has many child models loading chaperone by default', function () {
