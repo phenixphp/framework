@@ -31,7 +31,6 @@ class MakeModel extends Maker
         $this->addArgument('name', InputArgument::REQUIRED, 'The model name');
 
         $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create model');
-        // $this->addOption('api', 'a', InputOption::VALUE_NONE, 'Add API methods to model');
     }
 
     protected function outputDirectory(): string
@@ -41,7 +40,6 @@ class MakeModel extends Maker
 
     protected function stub(): string
     {
-        // return $this->input->getOption('api') ? 'controller.api.stub' : 'controller.stub';
         return 'model.stub';
     }
 
