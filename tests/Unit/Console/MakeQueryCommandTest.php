@@ -6,7 +6,7 @@ use Phenix\Contracts\Filesystem\File;
 use Phenix\Testing\Mock;
 use Symfony\Component\Console\Tester\CommandTester;
 
-it('creates collection successfully', function () {
+it('creates query successfully', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => false,
         get: function (string $path): string {
@@ -21,37 +21,37 @@ it('creates collection successfully', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var CommandTester $command */
-    $command = $this->phenix('make:collection', [
-        'name' => 'User',
+    $command = $this->phenix('make:query', [
+        'name' => 'UserQuery',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Query successfully generated!');
 });
 
-it('does not create the collection because it already exists', function () {
+it('does not create the query because it already exists', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => true,
     );
 
     $this->app->swap(File::class, $mock);
 
-    $this->phenix('make:collection', [
-        'name' => 'User',
+    $this->phenix('make:query', [
+        'name' => 'UserQuery',
     ]);
 
     /** @var CommandTester $command */
-    $command = $this->phenix('make:collection', [
-        'name' => 'User',
+    $command = $this->phenix('make:query', [
+        'name' => 'UserQuery',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection already exists!');
+    expect($command->getDisplay())->toContain('Query already exists!');
 });
 
-it('creates collection successfully with force option', function () {
+it('creates query successfully with force option', function () {
     $tempDir = sys_get_temp_dir();
     $tempPath = $tempDir . DIRECTORY_SEPARATOR . 'User.php';
 
@@ -71,18 +71,18 @@ it('creates collection successfully with force option', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var CommandTester $command */
-    $command = $this->phenix('make:collection', [
-        'name' => 'User',
+    $command = $this->phenix('make:query', [
+        'name' => 'UserQuery',
         '--force' => true,
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Query successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
-it('creates collection successfully in nested namespace', function () {
+it('creates query successfully in nested namespace', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => false,
         get: fn (string $path) => '',
@@ -95,11 +95,11 @@ it('creates collection successfully in nested namespace', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var \Symfony\Component\Console\Tester\CommandTester $command */
-    $command = $this->phenix('make:collection', [
-        'name' => 'Admin/User',
+    $command = $this->phenix('make:query', [
+        'name' => 'Domain/UserQuery',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Query successfully generated!');
 });
