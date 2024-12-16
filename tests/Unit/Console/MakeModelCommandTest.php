@@ -101,3 +101,29 @@ it('creates model successfully in nested namespace', function () {
 
     expect($command->getDisplay())->toContain('Model successfully generated!');
 });
+
+it('creates model with custom collection', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: fn (string $path): bool => true,
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--collection' => true,
+    ]);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Collection successfully generated!');
+});

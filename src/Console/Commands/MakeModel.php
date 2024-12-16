@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Console\Commands;
 
+use Phenix\Facades\File;
 use Phenix\Console\Maker;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MakeModel extends Maker
 {
@@ -31,6 +35,8 @@ class MakeModel extends Maker
         $this->addArgument('name', InputArgument::REQUIRED, 'The model name');
 
         $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create model');
+
+        $this->addOption('collection', 'cn', InputOption::VALUE_NONE, 'Create a collection for the model');
     }
 
     protected function outputDirectory(): string
@@ -40,6 +46,10 @@ class MakeModel extends Maker
 
     protected function stub(): string
     {
+        if ($this->input->getOption('collection')) {
+            return 'model.collection.stub';
+        }
+
         return 'model.stub';
     }
 
@@ -47,4 +57,57 @@ class MakeModel extends Maker
     {
         return 'Model';
     }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $this->input = $input;
+
+        $search = parent::SEARCH;
+
+        $name = $this->input->getArgument('name');
+        $force = $this->input->getOption('force');
+        $withCollection = $input->getOption('collection');
+
+        $namespace = explode(DIRECTORY_SEPARATOR, $name);
+        $className = array_pop($namespace);
+        $fileName = $this->getCustomFileName() ?? $className;
+
+        $filePath = $this->preparePath($namespace) . DIRECTORY_SEPARATOR . "{$fileName}.php";
+        $namespace = $this->prepareNamespace($namespace);
+
+        $replace = [$namespace, $className];
+
+        if (File::exists($filePath) && ! $force) {
+            $output->writeln(["<comment>{$this->commonName()} already exists!</comment>", self::EMPTY_LINE]);
+
+            return parent::SUCCESS;
+        }
+
+        $application = $this->getApplication();
+
+        if ($withCollection) {
+            $command = $application->find('make:collection');
+            $collectionName = "{$name}Collection";
+
+            $arguments = new ArrayInput([
+                'name' => $collectionName,
+            ]);
+
+            $command->run($arguments, $output);
+
+            $search[] = '{collection_name}';
+            $replace[] = $collectionName;
+        }
+
+        $stub = $this->getStubContent();
+        $stub = str_replace($search, $replace, $stub);
+
+        File::put($filePath, $stub);
+
+        $output->writeln(["<info>{$this->commonName()} successfully generated!</info>", self::EMPTY_LINE]);
+
+
+        return parent::SUCCESS;
+    }
 }
+

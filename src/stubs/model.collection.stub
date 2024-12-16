@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Collections\{collection_name};
+use Phenix\Database\Models\DatabaseModel;
+
+class {name} extends DatabaseModel
+{
+    public static function table(): string
+    {
+        //
+    }
+
+    public function newCollection(): {collection_name}
+    {
+        return new {collection_name}();
+    }
+}
