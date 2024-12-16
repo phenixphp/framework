@@ -9,7 +9,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 it('creates model successfully', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => false,
-        get: fn (string $path) => '',
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
         put: fn (string $path) => true,
         createDirectory: function (string $path): void {
             // ..
