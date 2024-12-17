@@ -6,9 +6,8 @@ namespace Phenix\Console\Commands;
 
 use Phenix\Facades\File;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class MakeModel extends CommonMaker
@@ -128,4 +127,3 @@ class MakeModel extends CommonMaker
         return parent::SUCCESS;
     }
 }
-

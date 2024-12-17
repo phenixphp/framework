@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Console\Commands;
 
 use Phenix\Console\Maker;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class MakeCollection extends Maker
 {
