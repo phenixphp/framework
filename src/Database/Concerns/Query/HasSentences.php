@@ -66,15 +66,15 @@ trait HasSentences
 
     public function insertRow(array $data): int|string|bool
     {
-        if ($this->insert($data)) {
-            $result = $this->connection->prepare('SELECT LAST_INSERT_ID()')
-                ->execute()
-                ->fetchRow();
+        [$dml, $params] = $this->insertRows($data)->toSql();
 
-            return array_values($result)[0];
+        try {
+            $result = $this->connection->prepare($dml)->execute($params);
+
+            return $result->getLastInsertId();
+        } catch (SqlQueryError|SqlTransactionError) {
+            return false;
         }
-
-        return false;
     }
 
     public function exists(): bool

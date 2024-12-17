@@ -715,11 +715,10 @@ it('dispatches error on unknown relationship', function () {
 it('saves a new model', function () {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-    $connection->expects($this->exactly(2))
+    $connection->expects($this->exactly(1))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['LAST_INSERT_ID()' => 1]])),
         );
 
     $this->app->swap(Connections::default(), $connection);
