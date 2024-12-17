@@ -8,6 +8,7 @@ use Phenix\Contracts\Arrayable;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
 use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
 use Phenix\Database\Models\Attributes\Column;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
@@ -134,6 +135,46 @@ abstract class DatabaseModel implements Arrayable
         return json_encode($this->toArray());
     }
 
+    public function save(): bool
+    {
+        $propertyBindings = $this->getPropertyBindings();
+        $data = [];
+        foreach ($propertyBindings as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($this->{$propertyName})) {
+                $data[$propertyName] = $this->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
+                $data[$propertyName] = new Date();
+
+                $this->{$propertyName} = $data[$propertyName];
+            }
+        }
+
+        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder->setModel($this);
+
+        if ($this->keyIsInitialized()) {
+            unset($data[$this->getModelKeyName()]);
+
+            return $queryBuilder->whereEqual($this->getModelKeyName(), $this->getKey())
+                ->update($data);
+        }
+
+        $result = $queryBuilder->insertRow($data);
+
+        if ($result) {
+            $this->{$this->getModelKeyName()} = $result;
+
+            return true;
+        }
+
+        return false;
+    }
+
     protected static function newQueryBuilder(): DatabaseQueryBuilder
     {
         return new DatabaseQueryBuilder();
@@ -219,5 +260,10 @@ abstract class DatabaseModel implements Arrayable
         return Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
             return $property->getAttribute() instanceof Id;
         });
+    }
+
+    protected function keyIsInitialized(): bool
+    {
+        return isset($this->{$this->getModelKeyName()});
     }
 }

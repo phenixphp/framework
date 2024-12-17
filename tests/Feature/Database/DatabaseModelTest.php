@@ -711,3 +711,44 @@ it('dispatches error on unknown relationship', function () {
         "Undefined relationship company for " . Post::class,
     );
 });
+
+it('saves a new model', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['LAST_INSERT_ID()' => 1]])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model = new User();
+    $model->name = 'John Doe';
+    $model->email = 'john.doe@mail.com';
+
+    expect($model->save())->toBeTrue();
+    expect($model->id)->toBe(1);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('updates a model successfully', function () {
+    $model = new User();
+    $model->id = 1;
+    $model->name = 'John Doe';
+    $model->email = 'john.doe@mail.com';
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model->name = 'John Doe Jr.';
+
+    expect($model->save())->toBeTrue();
+});

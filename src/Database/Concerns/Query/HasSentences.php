@@ -64,6 +64,19 @@ trait HasSentences
         }
     }
 
+    public function insertRow(array $data): int|string|bool
+    {
+        if ($this->insert($data)) {
+            $result = $this->connection->prepare('SELECT LAST_INSERT_ID()')
+                ->execute()
+                ->fetchRow();
+
+            return array_values($result)[0];
+        }
+
+        return false;
+    }
+
     public function exists(): bool
     {
         $this->action = Actions::EXISTS;
