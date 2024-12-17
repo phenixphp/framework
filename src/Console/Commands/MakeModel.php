@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Phenix\Console\Commands;
 
 use Phenix\Facades\File;
-use Phenix\Console\Maker;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class MakeModel extends Maker
+class MakeModel extends CommonMaker
 {
     /**
      * @var string
@@ -30,11 +29,7 @@ class MakeModel extends Maker
 
     protected function configure(): void
     {
-        $this->setHelp('This command allows you to create a new model.');
-
-        $this->addArgument('name', InputArgument::REQUIRED, 'The model name');
-
-        $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create model');
+        parent::configure();
 
         $this->addOption('collection', 'cn', InputOption::VALUE_NONE, 'Create a collection for the model');
 
