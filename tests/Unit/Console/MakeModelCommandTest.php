@@ -110,7 +110,20 @@ it('creates model with custom collection', function () {
         get: function (string $path): string {
             return file_get_contents($path);
         },
-        put: fn (string $path): bool => true,
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'UserCollection.php')) {
+                expect($content)->toContain('namespace App\Collections;');
+                expect($content)->toContain('class UserCollection extends Collection');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('use App\Collections\UserCollection;');
+                expect($content)->toContain('class User extends DatabaseModel');
+                expect($content)->toContain('public function newCollection(): UserCollection');
+            }
+
+            return true;
+        },
         createDirectory: function (string $path): void {
             // ..
         }
