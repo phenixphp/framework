@@ -37,6 +37,8 @@ class MakeModel extends Maker
         $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create model');
 
         $this->addOption('collection', 'cn', InputOption::VALUE_NONE, 'Create a collection for the model');
+
+        $this->addOption('query', 'qb', InputOption::VALUE_NONE, 'Create a query builder for the model');
     }
 
     protected function outputDirectory(): string
@@ -48,9 +50,11 @@ class MakeModel extends Maker
     {
         if ($this->input->getOption('collection')) {
             return 'model.collection.stub';
+        } elseif ($this->input->getOption('query')) {
+            return 'model.query.stub';
+        } else {
+            return 'model.stub';
         }
-
-        return 'model.stub';
     }
 
     protected function commonName(): string
@@ -67,6 +71,7 @@ class MakeModel extends Maker
         $name = $this->input->getArgument('name');
         $force = $this->input->getOption('force');
         $withCollection = $input->getOption('collection');
+        $withQuery = $input->getOption('query');
 
         $namespace = explode(DIRECTORY_SEPARATOR, $name);
         $className = array_pop($namespace);
@@ -97,6 +102,18 @@ class MakeModel extends Maker
 
             $search[] = '{collection_name}';
             $replace[] = $collectionName;
+        } elseif ($withQuery) {
+            $command = $application->find('make:query');
+            $queryName = "{$name}Query";
+
+            $arguments = new ArrayInput([
+                'name' => $queryName,
+            ]);
+
+            $command->run($arguments, $output);
+
+            $search[] = '{query_name}';
+            $replace[] = $queryName;
         }
 
         $stub = $this->getStubContent();

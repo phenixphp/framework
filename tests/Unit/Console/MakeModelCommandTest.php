@@ -142,3 +142,42 @@ it('creates model with custom collection', function () {
     expect($command->getDisplay())->toContain('Model successfully generated!');
     expect($command->getDisplay())->toContain('Collection successfully generated!');
 });
+
+it('creates model with custom query builder', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'UserQuery.php')) {
+                expect($content)->toContain('namespace App\Queries;');
+                expect($content)->toContain('class UserQuery extends DatabaseQueryBuilder');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('use App\Queries\UserQuery;');
+                expect($content)->toContain('class User extends DatabaseModel');
+                expect($content)->toContain('protected static function newQueryBuilder(): UserQuery');
+            }
+
+            return true;
+        },
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--query' => true,
+    ]);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Query successfully generated!');
+});
