@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
+
+class {name} extends DatabaseQueryBuilder
+{
+    //
+}

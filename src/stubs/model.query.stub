@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use App\Queries\{query_name};
+use Phenix\Database\Models\DatabaseModel;
+
+class {name} extends DatabaseModel
+{
+    public static function table(): string
+    {
+        //
+    }
+
+    protected static function newQueryBuilder(): {query_name}
+    {
+        return new {query_name}();
+    }
+}
