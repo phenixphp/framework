@@ -170,16 +170,17 @@ abstract class DatabaseModel implements Arrayable
     {
         $propertyBindings = $this->getPropertyBindings();
         $data = [];
+
         foreach ($propertyBindings as $property) {
             $propertyName = $property->getName();
             $attribute = $property->getAttribute();
 
             if (isset($this->{$propertyName})) {
-                $data[$propertyName] = $this->{$propertyName};
+                $data[$property->getColumnName()] = $this->{$propertyName};
             }
 
             if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
-                $data[$propertyName] = new Date();
+                $data[$property->getColumnName()] = new Date();
 
                 $this->{$propertyName} = $data[$propertyName];
             }
