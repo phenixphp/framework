@@ -181,3 +181,49 @@ it('creates model with custom query builder', function () {
     expect($command->getDisplay())->toContain('Model successfully generated!');
     expect($command->getDisplay())->toContain('Query successfully generated!');
 });
+
+it('creates model with all', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'UserCollection.php')) {
+                expect($content)->toContain('namespace App\Collections;');
+                expect($content)->toContain('class UserCollection extends Collection');
+            }
+
+            if (str_ends_with($path, 'UserQuery.php')) {
+                expect($content)->toContain('namespace App\Queries;');
+                expect($content)->toContain('class UserQuery extends DatabaseQueryBuilder');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('use App\Queries\UserQuery;');
+                expect($content)->toContain('class User extends DatabaseModel');
+                expect($content)->toContain('protected static function newQueryBuilder(): UserQuery');
+                expect($content)->toContain('public function newCollection(): UserCollection');
+            }
+
+            return true;
+        },
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--all' => true,
+    ]);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Query successfully generated!');
+    expect($command->getDisplay())->toContain('Collection successfully generated!');
+});

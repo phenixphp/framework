@@ -39,6 +39,8 @@ class MakeModel extends Maker
         $this->addOption('collection', 'cn', InputOption::VALUE_NONE, 'Create a collection for the model');
 
         $this->addOption('query', 'qb', InputOption::VALUE_NONE, 'Create a query builder for the model');
+
+        $this->addOption('all', 'a', InputOption::VALUE_NONE, 'Create a model with custom query builder and collection');
     }
 
     protected function outputDirectory(): string
@@ -48,13 +50,17 @@ class MakeModel extends Maker
 
     protected function stub(): string
     {
-        if ($this->input->getOption('collection')) {
-            return 'model.collection.stub';
+        $stub = 'model.stub';
+
+        if ($this->input->getOption('all')) {
+            $stub = 'model.all.stub';
+        } elseif ($this->input->getOption('collection')) {
+            $stub = 'model.collection.stub';
         } elseif ($this->input->getOption('query')) {
-            return 'model.query.stub';
-        } else {
-            return 'model.stub';
+            $stub = 'model.query.stub';
         }
+
+        return $stub;
     }
 
     protected function commonName(): string
@@ -70,8 +76,6 @@ class MakeModel extends Maker
 
         $name = $this->input->getArgument('name');
         $force = $this->input->getOption('force');
-        $withCollection = $input->getOption('collection');
-        $withQuery = $input->getOption('query');
 
         $namespace = explode(DIRECTORY_SEPARATOR, $name);
         $className = array_pop($namespace);
@@ -90,7 +94,7 @@ class MakeModel extends Maker
 
         $application = $this->getApplication();
 
-        if ($withCollection) {
+        if ($input->getOption('collection') || $input->getOption('all')) {
             $command = $application->find('make:collection');
             $collectionName = "{$name}Collection";
 
@@ -102,7 +106,9 @@ class MakeModel extends Maker
 
             $search[] = '{collection_name}';
             $replace[] = $collectionName;
-        } elseif ($withQuery) {
+        }
+
+        if ($input->getOption('query') || $input->getOption('all')) {
             $command = $application->find('make:query');
             $queryName = "{$name}Query";
 
