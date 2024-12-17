@@ -69,6 +69,22 @@ abstract class DatabaseModel implements Arrayable
         return $queryBuilder;
     }
 
+    public static function create(array $attributes): static
+    {
+        $model = new static();
+        $propertyBindings = $model->getPropertyBindings();
+
+        foreach ($attributes as $key => $value) {
+            $property = $propertyBindings[$key];
+
+            $model->{$property->getName()} = $value;
+        }
+
+        $model->save();
+
+        return $model;
+    }
+
     /**
      * @return array<int, ModelProperty>
      */

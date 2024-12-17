@@ -725,7 +725,7 @@ it('saves a new model', function () {
 
     $model = new User();
     $model->name = 'John Doe';
-    $model->email = 'john.doe@mail.com';
+    $model->email = faker()->email();
 
     expect($model->save())->toBeTrue();
     expect($model->id)->toBe(1);
@@ -736,7 +736,7 @@ it('updates a model successfully', function () {
     $model = new User();
     $model->id = 1;
     $model->name = 'John Doe';
-    $model->email = 'john.doe@mail.com';
+    $model->email = faker()->email();
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->exactly(1))
@@ -750,4 +750,25 @@ it('updates a model successfully', function () {
     $model->name = 'John Doe Jr.';
 
     expect($model->save())->toBeTrue();
+});
+
+it('creates model instance successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model = User::create([
+        'name' => 'John Doe',
+        'email' => faker()->email(),
+        'created_at' => Date::now(),
+    ]);
+
+    expect($model->id)->toBe(1);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
