@@ -772,3 +772,31 @@ it('creates model instance successfully', function () {
     expect($model->id)->toBe(1);
     expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
+
+it('finds a model successfully', function () {
+    $data = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var User $user */
+    $user = User::find(1);
+
+    expect($user)->toBeInstanceOf(User::class);
+    expect($user->id)->toBe($data['id']);
+    expect($user->name)->toBe($data['name']);
+    expect($user->email)->toBe($data['email']);
+    expect($user->createdAt)->toBeInstanceOf(Date::class);
+});
