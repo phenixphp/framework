@@ -304,7 +304,6 @@ abstract class DatabaseModel implements Arrayable
         return isset($this->{$this->getModelKeyName()});
     }
 
-
     /**
      * @return array<string, mixed>
      */
