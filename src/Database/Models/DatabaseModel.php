@@ -69,6 +69,11 @@ abstract class DatabaseModel implements Arrayable
         return $queryBuilder;
     }
 
+    /**
+     * @param array $attributes<string, mixed>
+     * @throws ModelException
+     * @return DatabaseModel
+     */
     public static function create(array $attributes): static
     {
         $model = new static();
@@ -89,6 +94,11 @@ abstract class DatabaseModel implements Arrayable
         return $model;
     }
 
+    /**
+     * @param string|int $id
+     * @param array $columns<int, string>
+     * @return DatabaseModel|null
+     */
     public static function find(string|int $id, array $columns = ['*']): self|null
     {
         $model = new static();
@@ -112,7 +122,7 @@ abstract class DatabaseModel implements Arrayable
     /**
      * @return array<string, array<int, Relationship>>
      */
-    public function getRelationshipBindings()
+    public function getRelationshipBindings(): array
     {
         return $this->relationshipBindings ??= $this->buildRelationshipBindings();
     }
