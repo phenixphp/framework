@@ -159,11 +159,11 @@ abstract class DatabaseModel implements Arrayable
             $value = isset($this->{$propertyName}) ? $this->{$propertyName} : null;
 
             if ($value || $property->isNullable()) {
-                if ($value instanceof Arrayable) {
-                    $value = $value->toArray();
-                } elseif ($value instanceof Date) {
-                    $value = $value->toIso8601String();
-                }
+                $value = match (true) {
+                    $value instanceof Arrayable => $value->toArray(),
+                    $value instanceof Date => $value->toIso8601String(),
+                    default => $value,
+                };
 
                 $data[$propertyName] = $value;
             }
@@ -179,25 +179,7 @@ abstract class DatabaseModel implements Arrayable
 
     public function save(): bool
     {
-        $propertyBindings = $this->getPropertyBindings();
-        $data = [];
-
-        foreach ($propertyBindings as $property) {
-            $propertyName = $property->getName();
-            $attribute = $property->getAttribute();
-
-            if (isset($this->{$propertyName})) {
-                $data[$property->getColumnName()] = $this->{$propertyName};
-            }
-
-            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
-                $now = Date::now();
-
-                $data[$property->getColumnName()] = $now->format($attribute->format);
-
-                $this->{$propertyName} = $now;
-            }
-        }
+        $data = $this->buildSavingData();
 
         $queryBuilder = static::newQueryBuilder();
         $queryBuilder->setModel($this);
@@ -320,5 +302,34 @@ abstract class DatabaseModel implements Arrayable
     protected function keyIsInitialized(): bool
     {
         return isset($this->{$this->getModelKeyName()});
+    }
+
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function buildSavingData(): array
+    {
+        $data = [];
+
+        foreach ($this->getPropertyBindings() as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($this->{$propertyName})) {
+                $data[$property->getColumnName()] = $this->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
+                $now = Date::now();
+
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $this->{$propertyName} = $now;
+            }
+        }
+
+
+        return $data;
     }
 }
