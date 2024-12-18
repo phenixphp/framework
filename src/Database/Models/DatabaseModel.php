@@ -89,7 +89,7 @@ abstract class DatabaseModel implements Arrayable
         return $model;
     }
 
-    public static function find(string|int $id, array $columns = ['*']): static|null
+    public static function find(string|int $id, array $columns = ['*']): self|null
     {
         $model = new static();
         $queryBuilder = static::newQueryBuilder();
