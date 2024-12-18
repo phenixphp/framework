@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Database\Models;
 
 use Phenix\Database\Models\Attributes\Column;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\HasMany;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Collection;
@@ -22,10 +23,10 @@ class User extends DatabaseModel
     #[Column]
     public string $email;
 
-    #[Column(name: 'created_at')]
+    #[DateTime(name: 'created_at', autoInit: true)]
     public Date $createdAt;
 
-    #[Column(name: 'updated_at')]
+    #[DateTime(name: 'updated_at')]
     public Date|null $updatedAt = null;
 
     #[HasMany(model: Product::class, foreignKey: 'user_id')]

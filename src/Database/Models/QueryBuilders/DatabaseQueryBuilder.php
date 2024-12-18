@@ -152,7 +152,7 @@ class DatabaseQueryBuilder extends QueryBase
         return $collection;
     }
 
-    public function first(): DatabaseModel
+    public function first(): DatabaseModel|null
     {
         $this->action = Actions::SELECT;
 

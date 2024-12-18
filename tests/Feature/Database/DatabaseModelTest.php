@@ -711,3 +711,128 @@ it('dispatches error on unknown relationship', function () {
         "Undefined relationship company for " . Post::class,
     );
 });
+
+it('saves a new model', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model = new User();
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->save())->toBeTrue();
+    expect($model->id)->toBe(1);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('updates a model successfully', function () {
+    $model = new User();
+    $model->id = 1;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model->name = 'John Doe Jr.';
+
+    expect($model->save())->toBeTrue();
+});
+
+it('creates model instance successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model = User::create([
+        'name' => 'John Doe',
+        'email' => faker()->email(),
+        'created_at' => Date::now(),
+    ]);
+
+    expect($model->id)->toBe(1);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('throws an exception when column in invalid on create instance', function () {
+    expect(function () {
+        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+        $this->app->swap(Connections::default(), $connection);
+
+        User::create([
+            'name' => 'John Doe',
+            'email' => faker()->email(),
+            'other_date' => Date::now(),
+        ]);
+    })->toThrow(
+        ModelException::class,
+        "Property other_date not found for model " . User::class,
+    );
+});
+
+it('finds a model successfully', function () {
+    $data = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    /** @var User $user */
+    $user = User::find(1);
+
+    expect($user)->toBeInstanceOf(User::class);
+    expect($user->id)->toBe($data['id']);
+    expect($user->name)->toBe($data['name']);
+    expect($user->email)->toBe($data['email']);
+    expect($user->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('deletes a model successfully', function () {
+    $model = new User();
+    $model->id = 1;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    expect($model->delete())->toBeTrue();
+});

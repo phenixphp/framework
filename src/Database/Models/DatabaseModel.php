@@ -8,6 +8,7 @@ use Phenix\Contracts\Arrayable;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
 use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
 use Phenix\Database\Models\Attributes\Column;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Attributes\ModelAttribute;
@@ -69,6 +70,48 @@ abstract class DatabaseModel implements Arrayable
     }
 
     /**
+     * @param array $attributes<string, mixed>
+     * @throws ModelException
+     * @return static
+     */
+    public static function create(array $attributes): static
+    {
+        $model = new static();
+        $propertyBindings = $model->getPropertyBindings();
+
+        foreach ($attributes as $key => $value) {
+            $property = $propertyBindings[$key] ?? null;
+
+            if (! $property) {
+                throw new ModelException("Property {$key} not found for model " . static::class);
+            }
+
+            $model->{$property->getName()} = $value;
+        }
+
+        $model->save();
+
+        return $model;
+    }
+
+    /**
+     * @param string|int $id
+     * @param array $columns<int, string>
+     * @return DatabaseModel|null
+     */
+    public static function find(string|int $id, array $columns = ['*']): self|null
+    {
+        $model = new static();
+        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder->setModel($model);
+
+        return $queryBuilder
+            ->select($columns)
+            ->whereEqual($model->getModelKeyName(), $id)
+            ->first();
+    }
+
+    /**
      * @return array<int, ModelProperty>
      */
     public function getPropertyBindings(): array
@@ -79,7 +122,7 @@ abstract class DatabaseModel implements Arrayable
     /**
      * @return array<string, array<int, Relationship>>
      */
-    public function getRelationshipBindings()
+    public function getRelationshipBindings(): array
     {
         return $this->relationshipBindings ??= $this->buildRelationshipBindings();
     }
@@ -116,11 +159,11 @@ abstract class DatabaseModel implements Arrayable
             $value = isset($this->{$propertyName}) ? $this->{$propertyName} : null;
 
             if ($value || $property->isNullable()) {
-                if ($value instanceof Arrayable) {
-                    $value = $value->toArray();
-                } elseif ($value instanceof Date) {
-                    $value = $value->toIso8601String();
-                }
+                $value = match (true) {
+                    $value instanceof Arrayable => $value->toArray(),
+                    $value instanceof Date => $value->toIso8601String(),
+                    default => $value,
+                };
 
                 $data[$propertyName] = $value;
             }
@@ -132,6 +175,41 @@ abstract class DatabaseModel implements Arrayable
     public function toJson(): string
     {
         return json_encode($this->toArray());
+    }
+
+    public function save(): bool
+    {
+        $data = $this->buildSavingData();
+
+        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder->setModel($this);
+
+        if ($this->keyIsInitialized()) {
+            unset($data[$this->getModelKeyName()]);
+
+            return $queryBuilder->whereEqual($this->getModelKeyName(), $this->getKey())
+                ->update($data);
+        }
+
+        $result = $queryBuilder->insertRow($data);
+
+        if ($result) {
+            $this->{$this->getModelKeyName()} = $result;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function delete(): bool
+    {
+        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder->setModel($this);
+
+        return $queryBuilder
+            ->whereEqual($this->getModelKeyName(), $this->getKey())
+            ->delete();
     }
 
     protected static function newQueryBuilder(): DatabaseQueryBuilder
@@ -219,5 +297,38 @@ abstract class DatabaseModel implements Arrayable
         return Arr::first($this->getPropertyBindings(), function (ModelProperty $property): bool {
             return $property->getAttribute() instanceof Id;
         });
+    }
+
+    protected function keyIsInitialized(): bool
+    {
+        return isset($this->{$this->getModelKeyName()});
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function buildSavingData(): array
+    {
+        $data = [];
+
+        foreach ($this->getPropertyBindings() as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($this->{$propertyName})) {
+                $data[$property->getColumnName()] = $this->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
+                $now = Date::now();
+
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $this->{$propertyName} = $now;
+            }
+        }
+
+
+        return $data;
     }
 }

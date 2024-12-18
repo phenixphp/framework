@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Concerns\Query;
 
+use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransactionError;
 use League\Uri\Components\Query;
@@ -59,6 +60,20 @@ trait HasSentences
             $this->connection->prepare($dml)->execute($params);
 
             return true;
+        } catch (SqlQueryError|SqlTransactionError) {
+            return false;
+        }
+    }
+
+    public function insertRow(array $data): int|string|bool
+    {
+        [$dml, $params] = $this->insertRows($data)->toSql();
+
+        try {
+            /** @var MysqlPooledResult $result */
+            $result = $this->connection->prepare($dml)->execute($params);
+
+            return $result->getLastInsertId();
         } catch (SqlQueryError|SqlTransactionError) {
             return false;
         }

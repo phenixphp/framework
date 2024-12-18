@@ -44,4 +44,9 @@ class Result implements SqlResult, IteratorAggregate
     {
         return $this->fakeResult;
     }
+
+    public function getLastInsertId(): int
+    {
+        return 1;
+    }
 }
