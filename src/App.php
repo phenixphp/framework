@@ -19,6 +19,7 @@ use Phenix\Contracts\Makeable;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
+use Phenix\Runtime\Log;
 
 class App implements AppContract, Makeable
 {
@@ -58,6 +59,8 @@ class App implements AppContract, Makeable
         $this->logger = LoggerFactory::make($channel);
 
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
+
+        $this->register(Log::class, new Log($this->logger));
     }
 
     public function run(): void
