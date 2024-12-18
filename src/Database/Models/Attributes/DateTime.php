@@ -11,7 +11,8 @@ readonly class DateTime extends Column
 {
     public function __construct(
         public string|null $name = null,
-        public bool $autoInit = false
+        public bool $autoInit = false,
+        public string $format = 'Y-m-d H:i:s',
     ) {
     }
 }

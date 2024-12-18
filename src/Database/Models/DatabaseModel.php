@@ -181,9 +181,11 @@ abstract class DatabaseModel implements Arrayable
             }
 
             if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
-                $data[$property->getColumnName()] = new Date();
+                $now = Date::now();
 
-                $this->{$propertyName} = $data[$propertyName];
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $this->{$propertyName} = $now;
             }
         }
 
