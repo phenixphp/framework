@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\App;
+use Phenix\Facades\Log;
 use Phenix\Http\Response;
 
 if (! function_exists('base_path()')) {
@@ -42,5 +43,16 @@ if (! function_exists('value')) {
     function value($value, ...$args)
     {
         return $value instanceof Closure ? $value(...$args) : $value;
+    }
+}
+
+if (! function_exists('report')) {
+    function report(Throwable $e): void
+    {
+        Log::error($e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
     }
 }

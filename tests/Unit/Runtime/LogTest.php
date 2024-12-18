@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Phenix\Runtime\Log;
+use Monolog\Handler\TestHandler;
+use Phenix\Exceptions\RuntimeError;
 
 it('can log messages successfully', function () {
     $handler = new TestHandler();
@@ -28,4 +29,27 @@ it('can log messages successfully', function () {
     $records = $handler->getRecords();
 
     expect($records)->toHaveCount(8);
+});
+
+it('reports an exception in logs', function () {
+    $handler = new TestHandler();
+
+    $logger = new Logger('phenix');
+    $logger->pushHandler($handler);
+
+    $log = new Log($logger);
+
+    $this->app->swap(Log::class, $log);
+
+    try {
+        throw new RuntimeError('This is an exception');
+    } catch (Exception $e) {
+        report($e);
+    }
+
+    /** @var array<int, LogRecord> $records */
+    $records = $handler->getRecords();
+
+    expect($records)->toHaveCount(1);
+    expect($records[0]->message)->toBe('This is an exception');
 });
