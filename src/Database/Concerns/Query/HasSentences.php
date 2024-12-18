@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Concerns\Query;
 
+use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransactionError;
 use League\Uri\Components\Query;
@@ -69,6 +70,7 @@ trait HasSentences
         [$dml, $params] = $this->insertRows($data)->toSql();
 
         try {
+            /** @var MysqlPooledResult $result */
             $result = $this->connection->prepare($dml)->execute($params);
 
             return $result->getLastInsertId();
