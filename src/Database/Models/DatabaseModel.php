@@ -85,19 +85,16 @@ abstract class DatabaseModel implements Arrayable
         return $model;
     }
 
-    public static function find(string|int $id): static
+    public static function find(string|int $id, array $columns = ['*']): static|null
     {
         $model = new static();
         $queryBuilder = static::newQueryBuilder();
         $queryBuilder->setModel($model);
 
-        $result = $queryBuilder->whereEqual($model->getModelKeyName(), $id)->first();
-
-        if (!$result) {
-            throw new ModelException('Model not found.');
-        }
-
-        return $result;
+        return $queryBuilder
+            ->select($columns)
+            ->whereEqual($model->getModelKeyName(), $id)
+            ->first();
     }
 
     /**
