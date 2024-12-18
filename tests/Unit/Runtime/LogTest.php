@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use Monolog\LogRecord;
-use Phenix\Runtime\Log;
-use Monolog\Handler\TestHandler;
 use Phenix\Exceptions\RuntimeError;
+use Phenix\Runtime\Log;
 
 it('can log messages successfully', function () {
     $handler = new TestHandler();
