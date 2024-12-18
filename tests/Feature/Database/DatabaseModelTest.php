@@ -817,3 +817,22 @@ it('finds a model successfully', function () {
     expect($user->email)->toBe($data['email']);
     expect($user->createdAt)->toBeInstanceOf(Date::class);
 });
+
+it('deletes a model successfully', function () {
+    $model = new User();
+    $model->id = 1;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connections::default(), $connection);
+
+    expect($model->delete())->toBeTrue();
+});

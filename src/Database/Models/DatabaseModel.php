@@ -208,6 +208,16 @@ abstract class DatabaseModel implements Arrayable
         return false;
     }
 
+    public function delete(): bool
+    {
+        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder->setModel($this);
+
+        return $queryBuilder
+            ->whereEqual($this->getModelKeyName(), $this->getKey())
+            ->delete();
+    }
+
     protected static function newQueryBuilder(): DatabaseQueryBuilder
     {
         return new DatabaseQueryBuilder();
