@@ -60,7 +60,9 @@ trait HasSentences
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (SqlQueryError|SqlTransactionError) {
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
             return false;
         }
     }
@@ -74,7 +76,9 @@ trait HasSentences
             $result = $this->connection->prepare($dml)->execute($params);
 
             return $result->getLastInsertId();
-        } catch (SqlQueryError|SqlTransactionError) {
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
             return false;
         }
     }
@@ -107,7 +111,9 @@ trait HasSentences
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (SqlQueryError|SqlTransactionError) {
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
             return false;
         }
     }
@@ -122,7 +128,9 @@ trait HasSentences
             $this->connection->prepare($dml)->execute($params);
 
             return true;
-        } catch (SqlQueryError|SqlTransactionError) {
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
             return false;
         }
     }

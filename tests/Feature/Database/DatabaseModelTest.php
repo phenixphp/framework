@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Amp\Sql\SqlQueryError;
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
@@ -730,6 +731,22 @@ it('saves a new model', function () {
     expect($model->save())->toBeTrue();
     expect($model->id)->toBe(1);
     expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('fails on save model', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Constraint integrity'));
+
+    $this->app->swap(Connections::default(), $connection);
+
+    $model = new User();
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->save())->toBeFalse();
 });
 
 it('updates a model successfully', function () {

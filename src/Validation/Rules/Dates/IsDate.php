@@ -20,7 +20,9 @@ class IsDate extends IsString
             $dateTime = new DateTimeImmutable($value);
 
             return is_string($value) && $dateTime->getLastErrors() === false;
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
+
             return false;
         }
 
