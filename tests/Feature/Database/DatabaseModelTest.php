@@ -773,6 +773,23 @@ it('creates model instance successfully', function () {
     expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
 
+it('throws an exception when column in invalid on create instance', function () {
+    expect(function () {
+        $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+        $this->app->swap(Connections::default(), $connection);
+
+        User::create([
+            'name' => 'John Doe',
+            'email' => faker()->email(),
+            'other_date' => Date::now(),
+        ]);
+    })->toThrow(
+        ModelException::class,
+        "Property other_date not found for model " . User::class,
+    );
+});
+
 it('finds a model successfully', function () {
     $data = [
         'id' => 1,

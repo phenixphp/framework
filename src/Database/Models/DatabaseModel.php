@@ -75,7 +75,11 @@ abstract class DatabaseModel implements Arrayable
         $propertyBindings = $model->getPropertyBindings();
 
         foreach ($attributes as $key => $value) {
-            $property = $propertyBindings[$key];
+            $property = $propertyBindings[$key] ?? null;
+
+            if (! $property) {
+                throw new ModelException("Property {$key} not found for model " . static::class);
+            }
 
             $model->{$property->getName()} = $value;
         }
