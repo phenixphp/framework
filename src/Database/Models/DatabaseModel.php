@@ -72,7 +72,7 @@ abstract class DatabaseModel implements Arrayable
     /**
      * @param array $attributes<string, mixed>
      * @throws ModelException
-     * @return DatabaseModel
+     * @return static
      */
     public static function create(array $attributes): static
     {
