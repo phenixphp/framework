@@ -7,16 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# Release Notes for 0.5.x
+
+## [v0.5.0 (2024-12-20)](https://github.com/phenixphp/framework/compare/0.4.0...0.5.0)
+
+### Added
+- Log facade. ([#42](https://github.com/phenixphp/framework/pull/42))
+- Database model API. ([#41](https://github.com/phenixphp/framework/pull/41))
+- Commands to make models, queries and model collections. ([#40](https://github.com/phenixphp/framework/pull/40))
+- Database models using Data Mapper pattern. ([#39](https://github.com/phenixphp/framework/pull/39))
+
 # Release Notes for 0.4.x
 
 ## [v0.4.0 (2024-09-27)](https://github.com/phenixphp/framework/compare/0.3.8...0.4.0)
 
 ### Added
-- Basic validation layer using form request. ([#32](https://github.com/phenixphp/framework/pull/32))
-- Stream form parser. ([#33](https://github.com/phenixphp/framework/pull/33))
-- Move validation layer to framework. ([#34](https://github.com/phenixphp/framework/pull/34))
-- File validation. ([#35](https://github.com/phenixphp/framework/pull/35))
 - Database validations (unique, exists). ([#36](https://github.com/phenixphp/framework/pull/36))
+- File validation. ([#35](https://github.com/phenixphp/framework/pull/35))
+- Move validation layer to framework. ([#34](https://github.com/phenixphp/framework/pull/34))
+- Stream form parser. ([#33](https://github.com/phenixphp/framework/pull/33))
+- Basic validation layer using form request. ([#32](https://github.com/phenixphp/framework/pull/32))
+- Add basic form request. ([#31](https://github.com/phenixphp/framework/pull/31))
+- Integrate CORS middleware. ([#30](https://github.com/phenixphp/framework/pull/30))
 
 # Release Notes for 0.3.x
 
@@ -28,9 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.3.7 (2023-10-10)](https://github.com/phenixphp/framework/compare/0.3.6...0.3.7)
 
 ### Added
-- `pcntl` as required extension. ([#22](https://github.com/phenixphp/framework/pull/22))
-- Command to make service providers. ([#23](https://github.com/phenixphp/framework/pull/23))
 - Add FakerPHP to Seed class. ([#24](https://github.com/phenixphp/framework/pull/24))
+- Command to make service providers. ([#23](https://github.com/phenixphp/framework/pull/23))
+- `pcntl` as required extension. ([#22](https://github.com/phenixphp/framework/pull/22))
 
 ## [v0.3.6 (2023-10-07)](https://github.com/phenixphp/framework/compare/0.3.5...0.3.6)
 
