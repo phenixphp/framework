@@ -28,6 +28,10 @@ class MakeModel extends CommonMaker
      */
     protected static $defaultDescription = 'Creates a new model.';
 
+    protected array $search = parent::SEARCH;
+
+    protected array $replace;
+
     protected function configure(): void
     {
         parent::configure();
@@ -68,13 +72,8 @@ class MakeModel extends CommonMaker
     {
         $this->input = $input;
 
-        $search = parent::SEARCH;
-
         $name = $this->input->getArgument('name');
         $force = $this->input->getOption('force');
-
-        /** @var QuestionHelper $questionHelper */
-        $questionHelper = $this->getHelper('question');
 
         $namespace = explode(DIRECTORY_SEPARATOR, $name);
         $className = array_pop($namespace);
@@ -83,7 +82,7 @@ class MakeModel extends CommonMaker
         $filePath = $this->preparePath($namespace) . DIRECTORY_SEPARATOR . "{$fileName}.php";
         $namespace = $this->prepareNamespace($namespace);
 
-        $replace = [$namespace, $className];
+        $this->replace = [$namespace, $className];
 
         if (File::exists($filePath) && ! $force) {
             $output->writeln(["<comment>{$this->commonName()} already exists!</comment>", self::EMPTY_LINE]);
@@ -91,68 +90,74 @@ class MakeModel extends CommonMaker
             return parent::SUCCESS;
         }
 
-        $application = $this->getApplication();
-
-        if ($input->getOption('collection') || $input->getOption('all')) {
-            $command = $application->find('make:collection');
-            $collectionName = "{$name}Collection";
-
-            $arguments = new ArrayInput([
-                'name' => $collectionName,
-            ]);
-
-            $command->run($arguments, $output);
-
-            $search[] = '{collection_name}';
-            $replace[] = $collectionName;
-        }
-
-        if ($input->getOption('query') || $input->getOption('all')) {
-            $command = $application->find('make:query');
-            $queryName = "{$name}Query";
-
-            $arguments = new ArrayInput([
-                'name' => $queryName,
-            ]);
-
-            $command->run($arguments, $output);
-
-            $search[] = '{query_name}';
-            $replace[] = $queryName;
-        }
-
-        if ($input->getOption('migration') || $input->getOption('all')) {
-            $question = new Question('Enter migration name');
-
-            $migrationName = $questionHelper->ask($input, $output, $question);
-
-            $command = $application->find('make:migration');
-
-            $arguments = new ArrayInput([
-                'name' => $migrationName,
-            ]);
-
-            $command->run($arguments, $output);
-        }
-
-        if ($input->getOption('controller') || $input->getOption('all')) {
-            $command = $application->find('make:controller');
-            $controllerName = "{$name}Controller";
-
-            $arguments = new ArrayInput([
-                'name' => $controllerName,
-            ]);
-
-            $command->run($arguments, $output);
-        }
+        $this->executeCommands($input, $output, $name);
 
         $stub = $this->getStubContent();
-        $stub = str_replace($search, $replace, $stub);
+        $stub = str_replace($this->search, $this->replace, $stub);
 
         File::put($filePath, $stub);
 
         $output->writeln(["<info>{$this->commonName()} successfully generated!</info>", self::EMPTY_LINE]);
 
         return parent::SUCCESS;
+    }
+
+    protected function executeCommands(InputInterface $input, OutputInterface $output, string $name): void
+    {
+        $application = $this->getApplication();
+
+        /** @var QuestionHelper $questionHelper */
+        $questionHelper = $this->getHelper('question');
+
+        foreach ($this->getCommandOptions() as $option => $task) {
+            if ($input->getOption($option) || $input->getOption('all')) {
+                $command = $application->find($task['command']);
+                $taskName = $task['name_suffix'] ? "{$name}{$task['name_suffix']}" : $name;
+
+                if (isset($task['ask_name']) && $task['ask_name']) {
+                    $question = new Question($task['question']);
+                    $taskName = $questionHelper->ask($input, $output, $question);
+                }
+
+                $arguments = new ArrayInput([
+                    'name' => $taskName,
+                ]);
+
+                $command->run($arguments, $output);
+
+                if ($task['search_key']) {
+                    $this->search[] = $task['search_key'];
+                    $this->replace[] = $taskName;
+                }
+            }
+        }
+    }
+
+    protected function getCommandOptions(): array
+    {
+        return [
+            'collection' => [
+                'command' => 'make:collection',
+                'name_suffix' => 'Collection',
+                'search_key' => '{collection_name}',
+            ],
+            'query' => [
+                'command' => 'make:query',
+                'name_suffix' => 'Query',
+                'search_key' => '{query_name}',
+            ],
+            'migration' => [
+                'command' => 'make:migration',
+                'name_suffix' => '',
+                'search_key' => '',
+                'ask_name' => true,
+                'question' => 'Enter migration name',
+            ],
+            'controller' => [
+                'command' => 'make:controller',
+                'name_suffix' => 'Controller',
+                'search_key' => '',
+            ],
+        ];
     }
 }
