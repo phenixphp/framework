@@ -219,7 +219,7 @@ it('creates model with all', function () {
     $command = $this->phenix('make:model', [
         'name' => 'User',
         '--all' => true,
-    ]);
+    ], ['CreateUsersTable']);
 
     $command->assertCommandIsSuccessful();
 
