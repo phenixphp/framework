@@ -227,3 +227,40 @@ it('creates model with all', function () {
     expect($command->getDisplay())->toContain('Query successfully generated!');
     expect($command->getDisplay())->toContain('Collection successfully generated!');
 });
+
+it('creates model with migration', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'CreateUsersTable.php')) {
+                expect($content)->toContain('use Phenix\Database\Migration;');
+                expect($content)->toContain('class CreateUserTable extends Migration∂');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('class User extends DatabaseModel');
+            }
+
+            return true;
+        },
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--migration' => true,
+    ], ['CreateUsersTable']);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Migration successfully generated!');
+});
