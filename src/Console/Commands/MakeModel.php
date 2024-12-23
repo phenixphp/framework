@@ -36,6 +36,7 @@ class MakeModel extends CommonMaker
         $this->addOption('query', 'qb', InputOption::VALUE_NONE, 'Create a query builder for the model');
         $this->addOption('all', 'a', InputOption::VALUE_NONE, 'Create a model with custom query builder, collection, and migration');
         $this->addOption('migration', 'm', InputOption::VALUE_REQUIRED, 'Create a migration for the model');
+        $this->addOption('controller', 'c', InputOption::VALUE_NONE, 'Create a controller for the model');
     }
 
     protected function outputDirectory(): string
@@ -129,6 +130,17 @@ class MakeModel extends CommonMaker
 
             $arguments = new ArrayInput([
                 'name' => $migrationName,
+            ]);
+
+            $command->run($arguments, $output);
+        }
+
+        if ($input->getOption('controller') || $input->getOption('all')) {
+            $command = $application->find('make:controller');
+            $controllerName = "{$name}Controller";
+
+            $arguments = new ArrayInput([
+                'name' => $controllerName,
             ]);
 
             $command->run($arguments, $output);
