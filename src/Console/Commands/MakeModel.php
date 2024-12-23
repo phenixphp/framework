@@ -109,13 +109,13 @@ class MakeModel extends CommonMaker
         /** @var QuestionHelper $questionHelper */
         $questionHelper = $this->getHelper('question');
 
-        foreach ($this->getCommandOptions() as $option => $task) {
+        foreach ($this->getCommandOptions() as $option => $data) {
             if ($input->getOption($option) || $input->getOption('all')) {
-                $command = $application->find($task['command']);
-                $taskName = $task['name_suffix'] ? "{$name}{$task['name_suffix']}" : $name;
+                $command = $application->find($data['command']);
+                $taskName = $data['name_suffix'] ? "{$name}{$data['name_suffix']}" : $name;
 
-                if (isset($task['ask_name']) && $task['ask_name']) {
-                    $question = new Question($task['question']);
+                if (isset($data['ask_name']) && $data['ask_name']) {
+                    $question = new Question($data['question']);
                     $taskName = $questionHelper->ask($input, $output, $question);
                 }
 
@@ -125,8 +125,8 @@ class MakeModel extends CommonMaker
 
                 $command->run($arguments, $output);
 
-                if ($task['search_key']) {
-                    $this->search[] = $task['search_key'];
+                if ($data['search_key']) {
+                    $this->search[] = $data['search_key'];
                     $this->replace[] = $taskName;
                 }
             }
