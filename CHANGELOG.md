@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.5.x
 
+## [v0.5.1 (2024-12-24)](https://github.com/phenixphp/framework/compare/0.5.0...0.5.1)
+
+### Added
+- Options to make models with controller and migrations. ([#46](https://github.com/phenixphp/framework/pull/46))
+
 ## [v0.5.0 (2024-12-20)](https://github.com/phenixphp/framework/compare/0.4.0...0.5.0)
 
 ### Added
