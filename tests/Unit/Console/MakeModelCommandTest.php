@@ -219,11 +219,85 @@ it('creates model with all', function () {
     $command = $this->phenix('make:model', [
         'name' => 'User',
         '--all' => true,
-    ]);
+    ], ['CreateUsersTable']);
 
     $command->assertCommandIsSuccessful();
 
     expect($command->getDisplay())->toContain('Model successfully generated!');
     expect($command->getDisplay())->toContain('Query successfully generated!');
     expect($command->getDisplay())->toContain('Collection successfully generated!');
+});
+
+it('creates model with migration', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'CreateUsersTable.php')) {
+                expect($content)->toContain('use Phenix\Database\Migration;');
+                expect($content)->toContain('class CreateUserTable extends Migration∂');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('class User extends DatabaseModel');
+            }
+
+            return true;
+        },
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--migration' => true,
+    ], ['CreateUsersTable']);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Migration successfully generated!');
+});
+
+it('creates model with controller', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (string $path): bool => false,
+        get: function (string $path): string {
+            return file_get_contents($path);
+        },
+        put: function (string $path, string $content): bool {
+            if (str_ends_with($path, 'UserController.php')) {
+                expect($content)->toContain('namespace App\Http\Controllers;');
+                expect($content)->toContain('class UserController extends Controller');
+            }
+
+            if (str_ends_with($path, 'User.php')) {
+                expect($content)->toContain('class User extends DatabaseModel');
+            }
+
+            return true;
+        },
+        createDirectory: function (string $path): void {
+            // ..
+        }
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    /** @var CommandTester $command */
+    $command = $this->phenix('make:model', [
+        'name' => 'User',
+        '--controller' => true,
+    ]);
+
+    $command->assertCommandIsSuccessful();
+
+    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Controller successfully generated!');
 });

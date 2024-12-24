@@ -38,12 +38,17 @@ abstract class TestCase extends AsyncTestCase
         $this->app = null;
     }
 
-    protected function phenix(string $signature, array $arguments): CommandTester
+    protected function phenix(string $signature, array $arguments, array $inputs = []): CommandTester
     {
         $phenix = App::make(Phenix::class);
 
         $command = $phenix->find($signature);
         $commandTester = new CommandTester($command);
+
+        if (! empty($inputs)) {
+            $commandTester->setInputs($inputs);
+        }
+
         $commandTester->execute($arguments);
 
         return $commandTester;
