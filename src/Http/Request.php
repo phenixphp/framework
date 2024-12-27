@@ -132,7 +132,7 @@ class Request implements Arrayable
         return $this->body;
     }
 
-    public function session(string|null $key = null, mixed $default = null): mixed
+    public function session(string|null $key = null, array|string|int|null $default = null): Session|array|string|int|null
     {
         if ($key) {
             return $this->session?->get($key, $default);

@@ -44,15 +44,17 @@ class Session
 
     public function clear(): void
     {
+        $this->session->lock();
         $this->session->destroy();
     }
 
-    public function regenerate(): void
+    public function refresh(): void
     {
+        $this->session->lock();
         $this->session->regenerate();
     }
 
-    public function getId(): ?string
+    public function getId(): string|null
     {
         return $this->session->getId();
     }

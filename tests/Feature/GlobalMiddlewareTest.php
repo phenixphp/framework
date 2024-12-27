@@ -25,9 +25,48 @@ it('initializes the session middleware', function () {
     Route::get('/', function (Request $request): Response {
         expect($request->session())->toBeInstanceOf(Session::class);
 
-        $request->session()->put('name', 'John Doe');
+        $session = $request->session();
 
-        expect($request->session()->get('name'))->toBe('John Doe');
+        $session->put('name', 'John Doe');
+
+        expect($session->get('name'))->toBe('John Doe');
+        expect($request->session('name'))->toBe('John Doe');
+        expect($session->isRead())->toBeTrue();
+        expect($session->getData())->toBeArray();
+
+        $session->delete('name');
+        expect($session->has('name'))->toBeFalse();
+
+        $session->put('name', 'Jane Doe');
+        $session->clear();
+        expect($request->session()->isEmpty())->toBeTrue();
+
+        $request->session()->refresh();
+        expect($request->session()->getId())->not()->toBeNull();
+
+        $session->lock();
+        expect($session->isLocked())->toBeTrue();
+
+        $session->set('id', '123');
+        $session->rollback();
+
+        expect($session->has('id'))->toBeFalse();
+
+        $session->lock();
+
+        expect($session->isLocked())->toBeTrue();
+
+        $session->unlockAll();
+
+        expect($session->isLocked())->toBeFalse();
+
+        $session->lock();
+
+        expect($session->isLocked())->toBeTrue();
+
+        $session->unlock();
+
+        expect($session->isLocked())->toBeFalse();
 
         return response()->plain('Hello');
     });
