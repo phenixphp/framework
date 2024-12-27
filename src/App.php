@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix;
 
+use Amp\Http\Cookie\CookieAttributes;
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
+use Amp\Http\Server\Session\SessionMiddleware;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Socket;
 use League\Container\Container;
@@ -20,6 +22,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
+use Phenix\Util\Date;
 
 class App implements AppContract, Makeable
 {
@@ -142,6 +145,25 @@ class App implements AppContract, Makeable
         /** @var array<int, Middleware> $globalMiddlewares */
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
+        $cookieAttributes = CookieAttributes::default()
+            ->withDomain($this->getAppDomain())
+            ->withExpiry(Date::now()->addMinutes(30)->toDateTime());
+
+        if (Config::get('session.secure', false)) {
+            $cookieAttributes->withSecure();
+        }
+
+        $globalMiddlewares[] = new SessionMiddleware(
+            cookieAttributes: $cookieAttributes,
+        );
+
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
+    }
+
+    private function getAppDomain(): string
+    {
+        $protocol = Config::get('session.secure', false) ? 'https://' : 'http://';
+
+        return $protocol . Config::get('app.url') . ':' . Config::get('app.port');
     }
 }
