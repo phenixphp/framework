@@ -23,6 +23,7 @@
         "php": "^8.2",
         "ext-pcntl": "*",
         "adbario/php-dot-notation": "^3.1",
+        "amphp/cache": "^2.0",
         "amphp/file": "^v3.0.0",
         "amphp/http-client": "^v5.0.1",
         "amphp/http-server": "^v3.2.0",
