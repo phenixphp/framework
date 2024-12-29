@@ -147,8 +147,10 @@ class App implements AppContract, Makeable
 
         $cookieAttributes = CookieAttributes::default()
             ->withDomain($this->getAppDomain())
-            ->withExpiry(Date::now()->addMinutes(30)->toDateTime());
+            ->withExpiry(Date::now()->addMinutes(30)->toDateTime())
+            ->withSameSite(CookieAttributes::SAMESITE_LAX);
 
+        // app.ssl or app.secure or app_server_cert
         if (Config::get('session.secure', false)) {
             $cookieAttributes->withSecure();
         }
@@ -162,8 +164,7 @@ class App implements AppContract, Makeable
 
     private function getAppDomain(): string
     {
-        $protocol = Config::get('session.secure', false) ? 'https://' : 'http://';
-
-        return $protocol . Config::get('app.url') . ':' . Config::get('app.port');
+        // Scheme: http or https
+        return Config::get('app.url') . ':' . Config::get('app.port');
     }
 }
