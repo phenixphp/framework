@@ -72,10 +72,9 @@ class App implements AppContract, Makeable
 
         $this->setRouter();
 
-        $uri = Uri::new(Config::get('app.url'));
         $port = (int) Config::get('app.port');
 
-        $this->server->expose(new Socket\InternetAddress($uri->getHost(), $port));
+        $this->server->expose(new Socket\InternetAddress($this->getHost(), $port));
 
         $this->server->start($this->router, $this->errorHandler);
 
@@ -146,9 +145,10 @@ class App implements AppContract, Makeable
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
         $cookieAttributes = CookieAttributes::default()
-            ->withDomain($this->getAppDomain())
+            ->withDomain($this->getHost())
             ->withExpiry(Date::now()->addMinutes(30)->toDateTime())
-            ->withSameSite(CookieAttributes::SAMESITE_LAX);
+            ->withSameSite(CookieAttributes::SAMESITE_LAX)
+            ->withHttpOnly();
 
         // app.ssl or app.secure or app_server_cert
         if (Config::get('session.secure', false)) {
@@ -162,9 +162,10 @@ class App implements AppContract, Makeable
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
 
-    private function getAppDomain(): string
+    private function getHost(): string
     {
-        // Scheme: http or https
-        return Config::get('app.url') . ':' . Config::get('app.port');
+        $uri = Uri::new(Config::get('app.url'));
+
+        return $uri->getHost();
     }
 }
