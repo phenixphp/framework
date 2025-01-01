@@ -46,6 +46,8 @@ class DatabaseServiceProvider extends ServiceProvider
             $this->bind(Connections::name($connection), $callback);
         }
 
+        $this->registerRedisConnections();
+
         $this->bind(QueryBuilder::class);
     }
 
@@ -71,5 +73,16 @@ class DatabaseServiceProvider extends ServiceProvider
             Rollback::class,
             SeedRun::class,
         ]);
+    }
+
+    private function registerRedisConnections(): void
+    {
+        $connections = Config::get('database.redis.connections');
+
+        foreach ($connections as $connection => $settings) {
+            $callback = ConnectionFactory::make(Drivers::REDIS, $settings);
+
+            $this->bind(Connections::redis($connection), $callback);
+        }
     }
 }

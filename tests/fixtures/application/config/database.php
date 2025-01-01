@@ -34,4 +34,17 @@ return [
         'migrations' => base_path('database' . DIRECTORY_SEPARATOR . 'migrations'),
         'seeds' => base_path('database' . DIRECTORY_SEPARATOR . 'seeds'),
     ],
+
+    'redis' => [
+        'connections' => [
+            'default' => [
+                'scheme' => env('REDIS_SCHEME', fn () => 'redis'),
+                'host' => env('REDIS_HOST', fn () => '127.0.0.1'),
+                'username' => env('REDIS_USERNAME'),
+                'password' => env('REDIS_PASSWORD'),
+                'port' => env('REDIS_PORT', fn () => '6379'),
+                'database' => env('REDIS_DB', fn () => 0),
+            ],
+        ],
+    ],
 ];

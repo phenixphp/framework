@@ -8,4 +8,5 @@ enum Drivers: string
 {
     case MYSQL = 'mysql';
     case POSTGRESQL = 'postgresql';
+    case REDIS = 'redis';
 }

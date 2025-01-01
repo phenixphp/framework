@@ -150,7 +150,6 @@ class App implements AppContract, Makeable
             ->withSameSite(CookieAttributes::SAMESITE_LAX)
             ->withHttpOnly();
 
-        // app.ssl or app.secure or app_server_cert
         if (Config::get('session.secure', false)) {
             $cookieAttributes->withSecure();
         }
