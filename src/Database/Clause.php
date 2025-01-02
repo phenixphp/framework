@@ -8,8 +8,8 @@ use Closure;
 use Phenix\Contracts\Database\Builder;
 use Phenix\Database\Concerns\Query\HasWhereClause;
 use Phenix\Database\Concerns\Query\PrepareColumns;
-use Phenix\Database\Constants\LogicalOperators;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
 use Phenix\Util\Arr;
 
@@ -25,9 +25,9 @@ abstract class Clause implements Builder
 
     protected function resolveWhereMethod(
         string $column,
-        Operators $operator,
+        Operator $operator,
         Closure|array|string|int $value,
-        LogicalOperators $logicalConnector = LogicalOperators::AND
+        LogicalOperator $logicalConnector = LogicalOperator::AND
     ): void {
         if ($value instanceof Closure) {
             $this->whereSubquery(
@@ -43,10 +43,10 @@ abstract class Clause implements Builder
 
     protected function whereSubquery(
         Closure $subquery,
-        Operators $comparisonOperator,
+        Operator $comparisonOperator,
         string|null $column = null,
-        Operators|null $operator = null,
-        LogicalOperators $logicalConnector = LogicalOperators::AND
+        Operator|null $operator = null,
+        LogicalOperator $logicalConnector = LogicalOperator::AND
     ): void {
         $builder = new Subquery();
         $builder->select(['*']);
@@ -64,9 +64,9 @@ abstract class Clause implements Builder
 
     protected function pushWhereWithArgs(
         string $column,
-        Operators $operator,
+        Operator $operator,
         array|string|int $value,
-        LogicalOperators $logicalConnector = LogicalOperators::AND
+        LogicalOperator $logicalConnector = LogicalOperator::AND
     ): void {
         $placeholders = is_array($value)
             ? array_fill(0, count($value), SQL::PLACEHOLDER->value)
@@ -77,7 +77,7 @@ abstract class Clause implements Builder
         $this->arguments = array_merge($this->arguments, (array) $value);
     }
 
-    protected function pushClause(array $where, LogicalOperators $logicalConnector = LogicalOperators::AND): void
+    protected function pushClause(array $where, LogicalOperator $logicalConnector = LogicalOperator::AND): void
     {
         if (count($this->clauses) > 0) {
             array_unshift($where, $logicalConnector);
@@ -91,8 +91,8 @@ abstract class Clause implements Builder
         return array_map(function (array $clause): array {
             return array_map(function ($value) {
                 return match (true) {
-                    $value instanceof Operators => $value->value,
-                    $value instanceof LogicalOperators => $value->value,
+                    $value instanceof Operator => $value->value,
+                    $value instanceof LogicalOperator => $value->value,
                     is_array($value) => '(' . Arr::implodeDeeply($value, ', ') . ')',
                     default => $value,
                 };

@@ -9,7 +9,7 @@ use Amp\Http\Server\Session\RedisSessionStorage;
 use Amp\Http\Server\Session\SessionFactory;
 use Amp\Http\Server\Session\SessionMiddleware as Middleware;
 use Phenix\App;
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Connection;
 use Phenix\Session\Constants\Driver;
 
 class SessionMiddleware
@@ -24,7 +24,7 @@ class SessionMiddleware
         $storage = new LocalSessionStorage();
 
         if ($driver === Driver::REDIS) {
-            $connection = Connections::redis($config->connection());
+            $connection = Connection::redis($config->connection());
 
             $client = App::make($connection);
             $storage = new RedisSessionStorage($client);

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Database\Constants\LogicalOperators;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
 
 trait HasWhereClause
@@ -19,168 +19,168 @@ trait HasWhereClause
 
     public function whereEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::EQUAL, $value);
+        $this->resolveWhereMethod($column, Operator::EQUAL, $value);
 
         return $this;
     }
 
     public function orWhereEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::EQUAL, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::EQUAL, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereDistinct(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::DISTINCT, $value);
+        $this->resolveWhereMethod($column, Operator::DISTINCT, $value);
 
         return $this;
     }
 
     public function orWhereDistinct(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::DISTINCT, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::DISTINCT, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereGreaterThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::GREATER_THAN, $value);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN, $value);
 
         return $this;
     }
 
     public function orWhereGreaterThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::GREATER_THAN, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereGreaterThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::GREATER_THAN_OR_EQUAL, $value);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN_OR_EQUAL, $value);
 
         return $this;
     }
 
     public function orWhereGreaterThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::GREATER_THAN_OR_EQUAL, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereLessThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::LESS_THAN, $value);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN, $value);
 
         return $this;
     }
 
     public function orWhereLessThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::LESS_THAN, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereLessThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::LESS_THAN_OR_EQUAL, $value);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN_OR_EQUAL, $value);
 
         return $this;
     }
 
     public function orWhereLessThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operators::LESS_THAN_OR_EQUAL, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operators::IN, $value);
+        $this->resolveWhereMethod($column, Operator::IN, $value);
 
         return $this;
     }
 
     public function orWhereIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operators::IN, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::IN, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereNotIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operators::NOT_IN, $value);
+        $this->resolveWhereMethod($column, Operator::NOT_IN, $value);
 
         return $this;
     }
 
     public function orWhereNotIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operators::NOT_IN, $value, LogicalOperators::OR);
+        $this->resolveWhereMethod($column, Operator::NOT_IN, $value, LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereNull(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_NULL]);
+        $this->pushClause([$column, Operator::IS_NULL]);
 
         return $this;
     }
 
     public function orWhereNull(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_NULL], LogicalOperators::OR);
+        $this->pushClause([$column, Operator::IS_NULL], LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereNotNull(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_NOT_NULL]);
+        $this->pushClause([$column, Operator::IS_NOT_NULL]);
 
         return $this;
     }
 
     public function orWhereNotNull(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_NOT_NULL], LogicalOperators::OR);
+        $this->pushClause([$column, Operator::IS_NOT_NULL], LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereTrue(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_TRUE]);
+        $this->pushClause([$column, Operator::IS_TRUE]);
 
         return $this;
     }
 
     public function orWhereTrue(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_TRUE], LogicalOperators::OR);
+        $this->pushClause([$column, Operator::IS_TRUE], LogicalOperator::OR);
 
         return $this;
     }
 
     public function whereFalse(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_FALSE]);
+        $this->pushClause([$column, Operator::IS_FALSE]);
 
         return $this;
     }
 
     public function orWhereFalse(string $column): static
     {
-        $this->pushClause([$column, Operators::IS_FALSE], LogicalOperators::OR);
+        $this->pushClause([$column, Operator::IS_FALSE], LogicalOperator::OR);
 
         return $this;
     }
@@ -189,9 +189,9 @@ trait HasWhereClause
     {
         $this->pushClause([
             $column,
-            Operators::BETWEEN,
+            Operator::BETWEEN,
             SQL::PLACEHOLDER->value,
-            LogicalOperators::AND,
+            LogicalOperator::AND,
             SQL::PLACEHOLDER->value,
         ]);
 
@@ -204,11 +204,11 @@ trait HasWhereClause
     {
         $this->pushClause([
             $column,
-            Operators::BETWEEN,
+            Operator::BETWEEN,
             SQL::PLACEHOLDER->value,
-            LogicalOperators::AND,
+            LogicalOperator::AND,
             SQL::PLACEHOLDER->value,
-        ], LogicalOperators::OR);
+        ], LogicalOperator::OR);
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -219,9 +219,9 @@ trait HasWhereClause
     {
         $this->pushClause([
             $column,
-            Operators::NOT_BETWEEN,
+            Operator::NOT_BETWEEN,
             SQL::PLACEHOLDER->value,
-            LogicalOperators::AND,
+            LogicalOperator::AND,
             SQL::PLACEHOLDER->value,
         ]);
 
@@ -234,11 +234,11 @@ trait HasWhereClause
     {
         $this->pushClause([
             $column,
-            Operators::NOT_BETWEEN,
+            Operator::NOT_BETWEEN,
             SQL::PLACEHOLDER->value,
-            LogicalOperators::AND,
+            LogicalOperator::AND,
             SQL::PLACEHOLDER->value,
-        ], LogicalOperators::OR);
+        ], LogicalOperator::OR);
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -247,7 +247,7 @@ trait HasWhereClause
 
     public function whereExists(Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::EXISTS);
+        $this->whereSubquery($subquery, Operator::EXISTS);
 
         return $this;
     }
@@ -256,8 +256,8 @@ trait HasWhereClause
     {
         $this->whereSubquery(
             subquery: $subquery,
-            comparisonOperator: Operators::EXISTS,
-            logicalConnector: LogicalOperators::OR
+            comparisonOperator: Operator::EXISTS,
+            logicalConnector: LogicalOperator::OR
         );
 
         return $this;
@@ -265,7 +265,7 @@ trait HasWhereClause
 
     public function whereNotExists(Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::NOT_EXISTS);
+        $this->whereSubquery($subquery, Operator::NOT_EXISTS);
 
         return $this;
     }
@@ -274,8 +274,8 @@ trait HasWhereClause
     {
         $this->whereSubquery(
             subquery: $subquery,
-            comparisonOperator: Operators::NOT_EXISTS,
-            logicalConnector: LogicalOperators::OR
+            comparisonOperator: Operator::NOT_EXISTS,
+            logicalConnector: LogicalOperator::OR
         );
 
         return $this;
@@ -283,7 +283,7 @@ trait HasWhereClause
 
     public function whereColumn(string $localColumn, string $foreignColumn): static
     {
-        $this->pushClause([$localColumn, Operators::EQUAL, $foreignColumn]);
+        $this->pushClause([$localColumn, Operator::EQUAL, $foreignColumn]);
 
         return $this;
     }

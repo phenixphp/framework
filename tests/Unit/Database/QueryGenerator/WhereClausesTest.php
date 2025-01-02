@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryGenerator;
@@ -57,11 +57,11 @@ it('generates query to select using comparison clause', function (
     expect($dml)->toBe("SELECT * FROM users WHERE {$column} {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
-    ['whereDistinct', 'id', Operators::DISTINCT->value, 1],
-    ['whereGreaterThan', 'id', Operators::GREATER_THAN->value, 1],
-    ['whereGreaterThanOrEqual', 'id', Operators::GREATER_THAN_OR_EQUAL->value, 1],
-    ['whereLessThan', 'id', Operators::LESS_THAN->value, 1],
-    ['whereLessThanOrEqual', 'id', Operators::LESS_THAN_OR_EQUAL->value, 1],
+    ['whereDistinct', 'id', Operator::DISTINCT->value, 1],
+    ['whereGreaterThan', 'id', Operator::GREATER_THAN->value, 1],
+    ['whereGreaterThanOrEqual', 'id', Operator::GREATER_THAN_OR_EQUAL->value, 1],
+    ['whereLessThan', 'id', Operator::LESS_THAN->value, 1],
+    ['whereLessThanOrEqual', 'id', Operator::LESS_THAN_OR_EQUAL->value, 1],
 ]);
 
 it('generates query selecting specific columns', function () {
@@ -91,8 +91,8 @@ it('generates query using in and not in operators', function (string $method, st
     expect($dml)->toBe("SELECT * FROM users WHERE id {$operator} (?, ?, ?)");
     expect($params)->toBe([1, 2, 3]);
 })->with([
-    ['whereIn', Operators::IN->value],
-    ['whereNotIn', Operators::NOT_IN->value],
+    ['whereIn', Operator::IN->value],
+    ['whereNotIn', Operator::NOT_IN->value],
 ]);
 
 it('generates query using in and not in operators with subquery', function (string $method, string $operator) {
@@ -116,8 +116,8 @@ it('generates query using in and not in operators with subquery', function (stri
     expect($dml)->toBe($expected);
     expect($params)->toBe([$date]);
 })->with([
-    ['whereIn', Operators::IN->value],
-    ['whereNotIn', Operators::NOT_IN->value],
+    ['whereIn', Operator::IN->value],
+    ['whereNotIn', Operator::NOT_IN->value],
 ]);
 
 it('generates query to select null or not null columns', function (string $method, string $operator) {
@@ -132,8 +132,8 @@ it('generates query to select null or not null columns', function (string $metho
     expect($dml)->toBe("SELECT * FROM users WHERE verified_at {$operator}");
     expect($params)->toBe([]);
 })->with([
-    ['whereNull', Operators::IS_NULL->value],
-    ['whereNotNull', Operators::IS_NOT_NULL->value],
+    ['whereNull', Operator::IS_NULL->value],
+    ['whereNotNull', Operator::IS_NOT_NULL->value],
 ]);
 
 it('generates query to select by column or null or not null columns', function (string $method, string $operator) {
@@ -151,8 +151,8 @@ it('generates query to select by column or null or not null columns', function (
     expect($dml)->toBe("SELECT * FROM users WHERE created_at > ? OR verified_at {$operator}");
     expect($params)->toBe([$date]);
 })->with([
-    ['orWhereNull', Operators::IS_NULL->value],
-    ['orWhereNotNull', Operators::IS_NOT_NULL->value],
+    ['orWhereNull', Operator::IS_NULL->value],
+    ['orWhereNotNull', Operator::IS_NOT_NULL->value],
 ]);
 
 it('generates query to select boolean columns', function (string $method, string $operator) {
@@ -167,8 +167,8 @@ it('generates query to select boolean columns', function (string $method, string
     expect($dml)->toBe("SELECT * FROM users WHERE enabled {$operator}");
     expect($params)->toBe([]);
 })->with([
-    ['whereTrue', Operators::IS_TRUE->value],
-    ['whereFalse', Operators::IS_FALSE->value],
+    ['whereTrue', Operator::IS_TRUE->value],
+    ['whereFalse', Operator::IS_FALSE->value],
 ]);
 
 it('generates query to select by column or boolean column', function (string $method, string $operator) {
@@ -186,8 +186,8 @@ it('generates query to select by column or boolean column', function (string $me
     expect($dml)->toBe("SELECT * FROM users WHERE created_at > ? OR enabled {$operator}");
     expect($params)->toBe([$date]);
 })->with([
-    ['orWhereTrue', Operators::IS_TRUE->value],
-    ['orWhereFalse', Operators::IS_FALSE->value],
+    ['orWhereTrue', Operator::IS_TRUE->value],
+    ['orWhereFalse', Operator::IS_FALSE->value],
 ]);
 
 it('generates query using logical connectors', function () {
@@ -256,15 +256,15 @@ it('generates queries using logical connectors', function (
     expect($dml)->toBe("SELECT * FROM users WHERE verified_at IS NOT NULL OR {$column} {$operator} {$placeholders}");
     expect($params)->toBe([...(array)$value]);
 })->with([
-    ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operators::LESS_THAN->value],
-    ['orWhereEqual', 'updated_at', date('Y-m-d'), Operators::EQUAL->value],
-    ['orWhereDistinct', 'updated_at', date('Y-m-d'), Operators::DISTINCT->value],
-    ['orWhereGreaterThan', 'updated_at', date('Y-m-d'), Operators::GREATER_THAN->value],
-    ['orWhereGreaterThanOrEqual', 'updated_at', date('Y-m-d'), Operators::GREATER_THAN_OR_EQUAL->value],
-    ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operators::LESS_THAN->value],
-    ['orWhereLessThanOrEqual', 'updated_at', date('Y-m-d'), Operators::LESS_THAN_OR_EQUAL->value],
-    ['orWhereIn', 'status', ['enabled', 'verified'], Operators::IN->value],
-    ['orWhereNotIn', 'status', ['disabled', 'banned'], Operators::NOT_IN->value],
+    ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operator::LESS_THAN->value],
+    ['orWhereEqual', 'updated_at', date('Y-m-d'), Operator::EQUAL->value],
+    ['orWhereDistinct', 'updated_at', date('Y-m-d'), Operator::DISTINCT->value],
+    ['orWhereGreaterThan', 'updated_at', date('Y-m-d'), Operator::GREATER_THAN->value],
+    ['orWhereGreaterThanOrEqual', 'updated_at', date('Y-m-d'), Operator::GREATER_THAN_OR_EQUAL->value],
+    ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operator::LESS_THAN->value],
+    ['orWhereLessThanOrEqual', 'updated_at', date('Y-m-d'), Operator::LESS_THAN_OR_EQUAL->value],
+    ['orWhereIn', 'status', ['enabled', 'verified'], Operator::IN->value],
+    ['orWhereNotIn', 'status', ['disabled', 'banned'], Operator::NOT_IN->value],
 ]);
 
 it('generates query to select between columns', function (string $method, string $operator) {
@@ -279,8 +279,8 @@ it('generates query to select between columns', function (string $method, string
     expect($dml)->toBe("SELECT * FROM users WHERE age {$operator} ? AND ?");
     expect($params)->toBe([20, 30]);
 })->with([
-    ['whereBetween', Operators::BETWEEN->value],
-    ['whereNotBetween', Operators::NOT_BETWEEN->value],
+    ['whereBetween', Operator::BETWEEN->value],
+    ['whereNotBetween', Operator::NOT_BETWEEN->value],
 ]);
 
 it('generates query to select by column or between columns', function (string $method, string $operator) {
@@ -300,8 +300,8 @@ it('generates query to select by column or between columns', function (string $m
     expect($dml)->toBe("SELECT * FROM users WHERE created_at > ? OR updated_at {$operator} ? AND ?");
     expect($params)->toBe([$date, $startDate, $endDate]);
 })->with([
-    ['orWhereBetween', Operators::BETWEEN->value],
-    ['orWhereNotBetween', Operators::NOT_BETWEEN->value],
+    ['orWhereBetween', Operator::BETWEEN->value],
+    ['orWhereNotBetween', Operator::NOT_BETWEEN->value],
 ]);
 
 it('generates a column-ordered query', function (array|string $column, string $order) {
@@ -313,7 +313,7 @@ it('generates a column-ordered query', function (array|string $column, string $o
 
     [$dml, $params] = $sql;
 
-    $operator = Operators::ORDER_BY->value;
+    $operator = Operator::ORDER_BY->value;
 
     $column = implode(', ', (array) $column);
 
@@ -354,7 +354,7 @@ it('generates a limited query', function (array|string $column, string $order) {
 
     [$dml, $params] = $sql;
 
-    $operator = Operators::ORDER_BY->value;
+    $operator = Operator::ORDER_BY->value;
 
     $column = implode(', ', (array) $column);
 
@@ -387,8 +387,8 @@ it('generates a query with a exists subquery in where clause', function (string 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1, 9]);
 })->with([
-    ['whereExists', Operators::EXISTS->value],
-    ['whereNotExists', Operators::NOT_EXISTS->value],
+    ['whereExists', Operator::EXISTS->value],
+    ['whereNotExists', Operator::NOT_EXISTS->value],
 ]);
 
 it('generates a query to select by column or when exists or not exists subquery', function (
@@ -414,8 +414,8 @@ it('generates a query to select by column or when exists or not exists subquery'
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
 })->with([
-    ['orWhereExists', Operators::EXISTS->value],
-    ['orWhereNotExists', Operators::NOT_EXISTS->value],
+    ['orWhereExists', Operator::EXISTS->value],
+    ['orWhereNotExists', Operator::NOT_EXISTS->value],
 ]);
 
 it('generates query to select using comparison clause with subqueries and functions', function (
@@ -439,12 +439,12 @@ it('generates query to select using comparison clause with subqueries and functi
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whereEqual', 'price', Operators::EQUAL->value],
-    ['whereDistinct', 'price', Operators::DISTINCT->value],
-    ['whereGreaterThan', 'price', Operators::GREATER_THAN->value],
-    ['whereGreaterThanOrEqual', 'price', Operators::GREATER_THAN_OR_EQUAL->value],
-    ['whereLessThan', 'price', Operators::LESS_THAN->value],
-    ['whereLessThanOrEqual', 'price', Operators::LESS_THAN_OR_EQUAL->value],
+    ['whereEqual', 'price', Operator::EQUAL->value],
+    ['whereDistinct', 'price', Operator::DISTINCT->value],
+    ['whereGreaterThan', 'price', Operator::GREATER_THAN->value],
+    ['whereGreaterThanOrEqual', 'price', Operator::GREATER_THAN_OR_EQUAL->value],
+    ['whereLessThan', 'price', Operator::LESS_THAN->value],
+    ['whereLessThanOrEqual', 'price', Operator::LESS_THAN_OR_EQUAL->value],
 ]);
 
 it('generates query using comparison clause with subqueries and any, all, some operators', function (
@@ -471,26 +471,26 @@ it('generates query using comparison clause with subqueries and any, all, some o
     expect($dml)->toBe($expected);
     expect($params)->toBe([10]);
 })->with([
-    ['whereAnyEqual', Operators::EQUAL->value, Operators::ANY->value],
-    ['whereAnyDistinct', Operators::DISTINCT->value, Operators::ANY->value],
-    ['whereAnyGreaterThan', Operators::GREATER_THAN->value, Operators::ANY->value],
-    ['whereAnyGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::ANY->value],
-    ['whereAnyLessThan', Operators::LESS_THAN->value, Operators::ANY->value],
-    ['whereAnyLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::ANY->value],
+    ['whereAnyEqual', Operator::EQUAL->value, Operator::ANY->value],
+    ['whereAnyDistinct', Operator::DISTINCT->value, Operator::ANY->value],
+    ['whereAnyGreaterThan', Operator::GREATER_THAN->value, Operator::ANY->value],
+    ['whereAnyGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::ANY->value],
+    ['whereAnyLessThan', Operator::LESS_THAN->value, Operator::ANY->value],
+    ['whereAnyLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value, Operator::ANY->value],
 
-    ['whereAllEqual', Operators::EQUAL->value, Operators::ALL->value],
-    ['whereAllDistinct', Operators::DISTINCT->value, Operators::ALL->value],
-    ['whereAllGreaterThan', Operators::GREATER_THAN->value, Operators::ALL->value],
-    ['whereAllGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::ALL->value],
-    ['whereAllLessThan', Operators::LESS_THAN->value, Operators::ALL->value],
-    ['whereAllLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::ALL->value],
+    ['whereAllEqual', Operator::EQUAL->value, Operator::ALL->value],
+    ['whereAllDistinct', Operator::DISTINCT->value, Operator::ALL->value],
+    ['whereAllGreaterThan', Operator::GREATER_THAN->value, Operator::ALL->value],
+    ['whereAllGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::ALL->value],
+    ['whereAllLessThan', Operator::LESS_THAN->value, Operator::ALL->value],
+    ['whereAllLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value, Operator::ALL->value],
 
-    ['whereSomeEqual', Operators::EQUAL->value, Operators::SOME->value],
-    ['whereSomeDistinct', Operators::DISTINCT->value, Operators::SOME->value],
-    ['whereSomeGreaterThan', Operators::GREATER_THAN->value, Operators::SOME->value],
-    ['whereSomeGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value, Operators::SOME->value],
-    ['whereSomeLessThan', Operators::LESS_THAN->value, Operators::SOME->value],
-    ['whereSomeLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value, Operators::SOME->value],
+    ['whereSomeEqual', Operator::EQUAL->value, Operator::SOME->value],
+    ['whereSomeDistinct', Operator::DISTINCT->value, Operator::SOME->value],
+    ['whereSomeGreaterThan', Operator::GREATER_THAN->value, Operator::SOME->value],
+    ['whereSomeGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::SOME->value],
+    ['whereSomeLessThan', Operator::LESS_THAN->value, Operator::SOME->value],
+    ['whereSomeLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value, Operator::SOME->value],
 ]);
 
 it('generates query with row subquery', function (string $method, string $operator) {
@@ -515,12 +515,12 @@ it('generates query with row subquery', function (string $method, string $operat
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
 })->with([
-    ['whereRowEqual', Operators::EQUAL->value],
-    ['whereRowDistinct', Operators::DISTINCT->value],
-    ['whereRowGreaterThan', Operators::GREATER_THAN->value],
-    ['whereRowGreaterThanOrEqual', Operators::GREATER_THAN_OR_EQUAL->value],
-    ['whereRowLessThan', Operators::LESS_THAN->value],
-    ['whereRowLessThanOrEqual', Operators::LESS_THAN_OR_EQUAL->value],
-    ['whereRowIn', Operators::IN->value],
-    ['whereRowNotIn', Operators::NOT_IN->value],
+    ['whereRowEqual', Operator::EQUAL->value],
+    ['whereRowDistinct', Operator::DISTINCT->value],
+    ['whereRowGreaterThan', Operator::GREATER_THAN->value],
+    ['whereRowGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value],
+    ['whereRowLessThan', Operator::LESS_THAN->value],
+    ['whereRowLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value],
+    ['whereRowIn', Operator::IN->value],
+    ['whereRowNotIn', Operator::NOT_IN->value],
 ]);

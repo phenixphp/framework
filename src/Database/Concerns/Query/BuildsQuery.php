@@ -6,7 +6,7 @@ namespace Phenix\Database\Concerns\Query;
 
 use Closure;
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Constants\SQL;
 use Phenix\Database\Functions;
@@ -142,7 +142,7 @@ trait BuildsQuery
             default => $column,
         };
 
-        $this->groupBy = [Operators::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
+        $this->groupBy = [Operator::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
 
         return $this;
     }
@@ -169,14 +169,14 @@ trait BuildsQuery
             default => $column,
         };
 
-        $this->orderBy = [Operators::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
+        $this->orderBy = [Operator::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
 
         return $this;
     }
 
     public function limit(int $number): static
     {
-        $this->limit = [Operators::LIMIT->value, abs($number)];
+        $this->limit = [Operator::LIMIT->value, abs($number)];
 
         return $this;
     }
@@ -189,7 +189,7 @@ trait BuildsQuery
 
         $offset = $page === 1 ? 0 : (($page - 1) * abs($perPage));
 
-        $this->offset = [Operators::OFFSET->value, $offset];
+        $this->offset = [Operator::OFFSET->value, $offset];
 
         return $this;
     }
@@ -207,7 +207,7 @@ trait BuildsQuery
     {
         $this->action = Action::EXISTS;
 
-        $this->columns = [Operators::EXISTS->value];
+        $this->columns = [Operator::EXISTS->value];
 
         return $this;
     }
@@ -216,7 +216,7 @@ trait BuildsQuery
     {
         $this->action = Action::EXISTS;
 
-        $this->columns = [Operators::NOT_EXISTS->value];
+        $this->columns = [Operator::NOT_EXISTS->value];
 
         return $this;
     }

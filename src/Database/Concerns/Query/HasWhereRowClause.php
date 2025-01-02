@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Operator;
 
 trait HasWhereRowClause
 {
     public function whereRowEqual(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::EQUAL, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::EQUAL, $this->prepareRowFields($columns));
 
         return $this;
     }
 
     public function whereRowDistinct(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::DISTINCT, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::DISTINCT, $this->prepareRowFields($columns));
 
         return $this;
     }
@@ -27,7 +27,7 @@ trait HasWhereRowClause
     {
         $this->whereSubquery(
             $subquery,
-            Operators::GREATER_THAN,
+            Operator::GREATER_THAN,
             $this->prepareRowFields($columns)
         );
 
@@ -38,7 +38,7 @@ trait HasWhereRowClause
     {
         $this->whereSubquery(
             $subquery,
-            Operators::GREATER_THAN_OR_EQUAL,
+            Operator::GREATER_THAN_OR_EQUAL,
             $this->prepareRowFields($columns)
         );
 
@@ -47,7 +47,7 @@ trait HasWhereRowClause
 
     public function whereRowLessThan(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::LESS_THAN, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::LESS_THAN, $this->prepareRowFields($columns));
 
         return $this;
     }
@@ -56,7 +56,7 @@ trait HasWhereRowClause
     {
         $this->whereSubquery(
             $subquery,
-            Operators::LESS_THAN_OR_EQUAL,
+            Operator::LESS_THAN_OR_EQUAL,
             $this->prepareRowFields($columns)
         );
 
@@ -65,14 +65,14 @@ trait HasWhereRowClause
 
     public function whereRowIn(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::IN, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::IN, $this->prepareRowFields($columns));
 
         return $this;
     }
 
     public function whereRowNotIn(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operators::NOT_IN, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::NOT_IN, $this->prepareRowFields($columns));
 
         return $this;
     }

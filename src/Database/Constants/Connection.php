@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-class Connections
+class Connection
 {
     public const PREFIX = 'database.connections.';
     public const REDIS = 'redis.connections.';

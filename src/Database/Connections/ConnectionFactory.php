@@ -10,18 +10,18 @@ use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\Redis\RedisClient;
 use Closure;
-use Phenix\Database\Constants\Drivers;
+use Phenix\Database\Constants\Driver;
 
 use function Amp\Redis\createRedisClient;
 
 class ConnectionFactory
 {
-    public static function make(Drivers $driver, array $settings): Closure
+    public static function make(Driver $driver, array $settings): Closure
     {
         return match ($driver) {
-            Drivers::MYSQL => self::createMySqlConnection($settings),
-            Drivers::POSTGRESQL => self::createPostgreSqlConnection($settings),
-            Drivers::REDIS => self::createRedisConnection($settings),
+            Driver::MYSQL => self::createMySqlConnection($settings),
+            Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
+            Driver::REDIS => self::createRedisConnection($settings),
         };
     }
 

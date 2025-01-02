@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-enum Drivers: string
+enum Driver: string
 {
     case MYSQL = 'mysql';
     case POSTGRESQL = 'postgresql';

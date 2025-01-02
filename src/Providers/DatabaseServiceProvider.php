@@ -10,8 +10,8 @@ use Phenix\Database\Console\MakeSeeder;
 use Phenix\Database\Console\Migrate;
 use Phenix\Database\Console\Rollback;
 use Phenix\Database\Console\SeedRun;
-use Phenix\Database\Constants\Connections;
-use Phenix\Database\Constants\Drivers;
+use Phenix\Database\Constants\Connection;
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\QueryBuilder;
 use Phenix\Facades\Config;
 
@@ -21,10 +21,10 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $this->provided = [
             QueryBuilder::class,
-            Connections::name('default'),
-            Connections::name('mysql'),
-            Connections::name('postgresql'),
-            Connections::redis('default'),
+            Connection::name('default'),
+            Connection::name('mysql'),
+            Connection::name('postgresql'),
+            Connection::redis('default'),
         ];
 
         return $this->isProvided($id);
@@ -39,12 +39,12 @@ class DatabaseServiceProvider extends ServiceProvider
         foreach ($connections as $connection) {
             $settings = Config::get('database.connections.' . $connection);
 
-            /** @var Drivers $driver */
+            /** @var Driver $driver */
             $driver = $settings['driver'];
 
             $callback = ConnectionFactory::make($driver, $settings);
 
-            $this->bind(Connections::name($connection), $callback);
+            $this->bind(Connection::name($connection), $callback);
         }
 
         $this->registerRedisConnections();
@@ -58,14 +58,14 @@ class DatabaseServiceProvider extends ServiceProvider
 
         $settings = Config::get('database.connections.' . $defaultConnection);
 
-        /** @var Drivers $driver */
+        /** @var Driver $driver */
         $driver = $settings['driver'];
 
         $callback = ConnectionFactory::make($driver, $settings);
 
-        $this->bind(Connections::name('default'), $callback);
+        $this->bind(Connection::name('default'), $callback);
 
-        $this->bind(Connections::name($defaultConnection), $callback());
+        $this->bind(Connection::name($defaultConnection), $callback());
 
         $this->commands([
             MakeMigration::class,
@@ -81,9 +81,9 @@ class DatabaseServiceProvider extends ServiceProvider
         $connections = Config::get('database.redis.connections');
 
         foreach ($connections as $connection => $settings) {
-            $callback = ConnectionFactory::make(Drivers::REDIS, $settings);
+            $callback = ConnectionFactory::make(Driver::REDIS, $settings);
 
-            $this->bind(Connections::redis($connection), $callback);
+            $this->bind(Connection::redis($connection), $callback);
         }
     }
 }

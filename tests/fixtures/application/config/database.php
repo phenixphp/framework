@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Drivers;
+use Phenix\Database\Constants\Driver;
 
 return [
     'default' => env('DB_CONNECTION', fn () => 'mysql'),
 
     'connections' => [
         'mysql' => [
-            'driver' => Drivers::MYSQL,
+            'driver' => Driver::MYSQL,
             'host' => env('DB_HOST', fn () => '127.0.0.1'),
             'port' => env('DB_PORT', fn () => '3306'),
             'database' => env('DB_DATABASE'),
@@ -21,7 +21,7 @@ return [
             'prefix' => '',
         ],
         'postgresql' => [
-            'driver' => Drivers::POSTGRESQL,
+            'driver' => Driver::POSTGRESQL,
             'host' => env('DB_HOST', fn () => '127.0.0.1'),
             'port' => env('DB_PORT', fn () => '3306'),
             'database' => env('DB_DATABASE'),

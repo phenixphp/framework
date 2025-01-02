@@ -11,7 +11,7 @@ use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasSentences;
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Connection;
 use Phenix\Database\Join;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
@@ -66,13 +66,13 @@ class DatabaseQueryBuilder extends QueryBase
         parent::__construct();
 
         $this->relationships = [];
-        $this->connection = App::make(Connections::default());
+        $this->connection = App::make(Connection::default());
     }
 
     public function connection(SqlCommonConnectionPool|string $connection): self
     {
         if (is_string($connection)) {
-            $connection = App::make(Connections::name($connection));
+            $connection = App::make(Connection::name($connection));
         }
 
         $this->connection = $connection;
