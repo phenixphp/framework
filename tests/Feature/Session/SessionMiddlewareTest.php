@@ -72,3 +72,20 @@ it('initializes the session middleware with redis driver', function () {
     $this->get('/')
         ->assertOk();
 });
+
+it('initializes the session middleware with redis driver and user credentials', function () {
+    Config::set('session.driver', Driver::REDIS->value);
+    Config::set('database.redis.connections.default.username', 'root');
+    Config::set('database.redis.connections.default.password', 'password');
+
+    Route::get('/', function (Request $request): Response {
+        expect($request->session())->toBeInstanceOf(Session::class);
+
+        return response()->plain('Hello');
+    });
+
+    $this->app->run();
+
+    $this->get('/')
+        ->assertOk();
+});
