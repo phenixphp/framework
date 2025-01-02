@@ -9,7 +9,7 @@ use Phenix\Facades\Config as Configuration;
 use Phenix\Session\Constants\Driver;
 use Phenix\Session\Constants\SameSite;
 
-class Config implements Arrayable
+class Config
 {
     private array $config;
 
@@ -63,10 +63,5 @@ class Config implements Arrayable
     public function sameSite(): SameSite
     {
         return SameSite::from($this->config['same_site']);
-    }
-
-    public function toArray(): array
-    {
-        return $this->config;
     }
 }
