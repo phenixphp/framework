@@ -10,7 +10,7 @@ use Phenix\App;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasSentences;
-use Phenix\Database\Constants\Actions;
+use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connections;
 use Phenix\Database\Join;
 use Phenix\Database\Models\Collection;
@@ -82,7 +82,7 @@ class DatabaseQueryBuilder extends QueryBase
 
     public function addSelect(array $columns): static
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->columns = array_merge($this->columns, $columns);
 
@@ -131,7 +131,7 @@ class DatabaseQueryBuilder extends QueryBase
      */
     public function get(): Collection
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
         $this->columns = empty($this->columns) ? ['*'] : $this->columns;
 
         [$dml, $params] = $this->toSql();
@@ -154,7 +154,7 @@ class DatabaseQueryBuilder extends QueryBase
 
     public function first(): DatabaseModel|null
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->limit(1);
 

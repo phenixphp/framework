@@ -9,14 +9,14 @@ use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransactionError;
 use League\Uri\Components\Query;
 use League\Uri\Http;
-use Phenix\Database\Constants\Actions;
+use Phenix\Database\Constants\Action;
 use Phenix\Database\Paginator;
 
 trait HasSentences
 {
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $query = Query::fromUri($uri);
 
@@ -37,7 +37,7 @@ trait HasSentences
 
     public function count(string $column = '*'): int
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->countRows($column);
 
@@ -85,7 +85,7 @@ trait HasSentences
 
     public function exists(): bool
     {
-        $this->action = Actions::EXISTS;
+        $this->action = Action::EXISTS;
 
         $this->existsRows();
 
