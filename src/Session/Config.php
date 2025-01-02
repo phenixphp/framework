@@ -25,7 +25,9 @@ class Config implements Arrayable
 
     public function lifetime(): int
     {
-        return (int) $this->config['lifetime'] ?? 120;
+        $lifetime = $this->config['lifetime'] ?? 120;
+
+        return (int) $lifetime;
     }
 
     public function connection(): string
