@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Session;
 
-use Phenix\Contracts\Arrayable;
 use Phenix\Facades\Config as Configuration;
 use Phenix\Session\Constants\Driver;
 use Phenix\Session\Constants\SameSite;
