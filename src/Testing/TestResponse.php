@@ -21,6 +21,16 @@ class TestResponse
         return $this->body;
     }
 
+    public function getHeaders(): array
+    {
+        return $this->response->getHeaders();
+    }
+
+    public function getHeader(string $name): string|null
+    {
+        return $this->response->getHeader($name);
+    }
+
     public function assertOk(): self
     {
         expect($this->response->getStatus())->toBe(HttpStatus::OK->value);

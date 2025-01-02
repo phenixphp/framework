@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix;
 
-use Amp\Http\Cookie\CookieAttributes;
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
-use Amp\Http\Server\Session\SessionMiddleware;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Socket;
 use League\Container\Container;
@@ -22,12 +20,13 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
-use Phenix\Util\Date;
+use Phenix\Session\SessionMiddleware;
 
 class App implements AppContract, Makeable
 {
     private static string $path;
     private static Container $container;
+    private string $host;
     private RequestHandler $router;
     private Logger $logger;
     private SocketHttpServer $server;
@@ -48,6 +47,8 @@ class App implements AppContract, Makeable
             Config::getKeyName(),
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
+
+        $this->host = $this->getHost();
 
         /** @var array $providers */
         $providers = Config::get('app.providers', []);
@@ -74,7 +75,7 @@ class App implements AppContract, Makeable
 
         $port = (int) Config::get('app.port');
 
-        $this->server->expose(new Socket\InternetAddress($this->getHost(), $port));
+        $this->server->expose(new Socket\InternetAddress($this->host, $port));
 
         $this->server->start($this->router, $this->errorHandler);
 
@@ -144,19 +145,7 @@ class App implements AppContract, Makeable
         /** @var array<int, Middleware> $globalMiddlewares */
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
-        $cookieAttributes = CookieAttributes::default()
-            ->withDomain($this->getHost())
-            ->withExpiry(Date::now()->addMinutes(30)->toDateTime())
-            ->withSameSite(CookieAttributes::SAMESITE_LAX)
-            ->withHttpOnly();
-
-        if (Config::get('session.secure', false)) {
-            $cookieAttributes->withSecure();
-        }
-
-        $globalMiddlewares[] = new SessionMiddleware(
-            cookieAttributes: $cookieAttributes,
-        );
+        $globalMiddlewares[] = SessionMiddleware::make($this->host);
 
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }

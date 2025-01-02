@@ -24,6 +24,7 @@ class DatabaseServiceProvider extends ServiceProvider
             Connections::name('default'),
             Connections::name('mysql'),
             Connections::name('postgresql'),
+            Connections::redis('default'),
         ];
 
         return $this->isProvided($id);

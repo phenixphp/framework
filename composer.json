@@ -33,6 +33,7 @@
         "amphp/log": "^v2.0.0",
         "amphp/mysql": "^v3.0.0",
         "amphp/postgres": "v2.0.0",
+        "amphp/redis": "^2.0",
         "amphp/socket": "^2.1.0",
         "egulias/email-validator": "^4.0",
         "fakerphp/faker": "^1.23",
