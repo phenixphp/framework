@@ -10,8 +10,8 @@ use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasSentences;
-use Phenix\Database\Constants\Actions;
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Connection;
 
 use function is_string;
 
@@ -42,13 +42,13 @@ class QueryBuilder extends QueryBase
     {
         parent::__construct();
 
-        $this->connection = App::make(Connections::default());
+        $this->connection = App::make(Connection::default());
     }
 
     public function connection(SqlCommonConnectionPool|string $connection): self
     {
         if (is_string($connection)) {
-            $connection = App::make(Connections::name($connection));
+            $connection = App::make(Connection::name($connection));
         }
 
         $this->connection = $connection;
@@ -61,7 +61,7 @@ class QueryBuilder extends QueryBase
      */
     public function get(): Collection
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         [$dml, $params] = $this->toSql();
 
@@ -82,7 +82,7 @@ class QueryBuilder extends QueryBase
      */
     public function first(): array
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->limit(1);
 

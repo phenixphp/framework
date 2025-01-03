@@ -10,6 +10,7 @@ use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\Request as ServerRequest;
 use Amp\Http\Server\RequestBody;
 use Amp\Http\Server\Router;
+use Amp\Http\Server\Session\Session as ServerSession;
 use Amp\Http\Server\Trailers;
 use League\Uri\Components\Query;
 use Phenix\Constants\ContentType;
@@ -34,13 +35,19 @@ class Request implements Arrayable
     protected readonly BodyParser $body;
     protected readonly Query $query;
     protected readonly RouteAttributes|null $attributes;
+    protected Session|null $session;
 
     public function __construct(protected ServerRequest $request)
     {
         $attributes = [];
+        $this->session = null;
 
         if ($request->hasAttribute(Router::class)) {
             $attributes = $request->getAttribute(Router::class);
+        }
+
+        if ($request->hasAttribute(ServerSession::class)) {
+            $this->session = new Session($request->getAttribute(ServerSession::class));
         }
 
         $this->query = Query::fromUri($request->getUri());
@@ -123,6 +130,15 @@ class Request implements Arrayable
         }
 
         return $this->body;
+    }
+
+    public function session(string|null $key = null, array|string|int|null $default = null): Session|array|string|int|null
+    {
+        if ($key) {
+            return $this->session?->get($key, $default);
+        }
+
+        return $this->session;
     }
 
     public function toArray(): array

@@ -5,84 +5,84 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Database\Constants\Joins;
+use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Join;
 
 trait HasJoinClause
 {
     public function innerJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::INNER);
+        $this->jointIt($relationship, $callback, JoinType::INNER);
 
         return $this;
     }
 
     public function innerJoinOnEqual(string $relationship, string $column, string $value): static
     {
-        $this->jointFrom($relationship, $column, $value, Joins::INNER);
+        $this->jointFrom($relationship, $column, $value, JoinType::INNER);
 
         return $this;
     }
 
     public function leftJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::LEFT);
+        $this->jointIt($relationship, $callback, JoinType::LEFT);
 
         return $this;
     }
 
     public function leftJoinOnEqual(string $relationship, string $column, string $value): static
     {
-        $this->jointFrom($relationship, $column, $value, Joins::LEFT);
+        $this->jointFrom($relationship, $column, $value, JoinType::LEFT);
 
         return $this;
     }
 
     public function leftOuterJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::LEFT_OUTER);
+        $this->jointIt($relationship, $callback, JoinType::LEFT_OUTER);
 
         return $this;
     }
 
     public function rightJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::RIGHT);
+        $this->jointIt($relationship, $callback, JoinType::RIGHT);
 
         return $this;
     }
 
     public function rightJoinOnEqual(string $relationship, string $column, string $value): static
     {
-        $this->jointFrom($relationship, $column, $value, Joins::RIGHT);
+        $this->jointFrom($relationship, $column, $value, JoinType::RIGHT);
 
         return $this;
     }
 
     public function rightOuterJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::RIGHT_OUTER);
+        $this->jointIt($relationship, $callback, JoinType::RIGHT_OUTER);
 
         return $this;
     }
 
     public function crossJoin(string $relationship, Closure $callback): static
     {
-        $this->jointIt($relationship, $callback, Joins::CROSS);
+        $this->jointIt($relationship, $callback, JoinType::CROSS);
 
         return $this;
     }
 
-    protected function jointIt(string $relationship, Closure $callback, Joins $type): void
+    protected function jointIt(string $relationship, Closure $callback, JoinType $joinType): void
     {
-        $join = new Join($relationship, $type);
+        $join = new Join($relationship, $joinType);
 
         $callback($join);
 
         $this->pushJoin($join);
     }
 
-    protected function jointFrom(string $relationship, string $column, string $value, Joins $joinType): void
+    protected function jointFrom(string $relationship, string $column, string $value, JoinType $joinType): void
     {
         $join = new Join($relationship, $joinType);
         $join->onEqual($column, $value);

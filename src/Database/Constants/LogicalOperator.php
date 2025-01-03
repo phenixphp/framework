@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-enum LogicalOperators: string
+enum LogicalOperator: string
 {
     case AND = 'AND';
     case OR = 'OR';

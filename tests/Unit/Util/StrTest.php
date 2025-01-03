@@ -13,3 +13,23 @@ it('creates universal identifiers', function () {
     expect($uuid)->toBeInstanceOf(UuidV4::class);
     expect($ulid)->toBeInstanceOf(Ulid::class);
 });
+
+it('create slugs', function () {
+    $slug = Str::slug('Hello World');
+
+    expect($slug)->toBe('hello-world');
+});
+
+it('checks if string starts with a prefix', function () {
+    $string = Str::start('Hello World', 'Hello');
+
+    expect($string)->toBe('Hello World');
+    expect(Str::start('World', 'Hello '))->toBe('Hello World');
+});
+
+it('checks if string ends with a suffix', function () {
+    $string = Str::finish('Hello World', 'World');
+
+    expect($string)->toBe('Hello World');
+    expect(Str::finish('Hello', ' World'))->toBe('Hello World');
+});

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Amp\Sql\SqlQueryError;
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Connection;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Relationships\BelongsTo;
@@ -40,7 +40,7 @@ it('creates models with query builders successfully', function () {
             new Statement(new Result($data)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $users = User::query()->selectAllColumns()->get();
 
@@ -92,7 +92,7 @@ it('loads relationship when the model belongs to a parent model', function () {
             new Statement(new Result($userCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Post $post */
     $post = Post::query()->selectAllColumns()
@@ -141,7 +141,7 @@ it('loads relationship with short syntax to select columns', function () {
             new Statement(new Result($userCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Post $post */
     $post = Post::query()->selectAllColumns()
@@ -190,7 +190,7 @@ it('loads relationship when the model belongs to a parent model with column sele
             new Statement(new Result($userCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Post $post */
     $post = Post::query()->selectAllColumns()
@@ -247,7 +247,7 @@ it('loads relationship when the model has many child models without chaperone', 
             new Statement(new Result($productCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var User $user */
     $user = User::query()
@@ -307,7 +307,7 @@ it('loads relationship when the model has many child models loading chaperone fr
             new Statement(new Result($productCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var User $user */
     $user = User::query()
@@ -389,7 +389,7 @@ it('loads relationship when the model has many child models loading chaperone by
             new Statement(new Result($commentCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var User $user */
     $user = User::query()
@@ -449,7 +449,7 @@ it('loads relationship when the model belongs to many models', function () {
             new Statement(new Result($productCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
@@ -510,7 +510,7 @@ it('loads relationship when the model belongs to many models with pivot columns'
             new Statement(new Result($productCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
@@ -575,7 +575,7 @@ it('loads relationship when the model belongs to many models with column selecti
             new Statement(new Result($productCollection)),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
@@ -646,7 +646,7 @@ it('loads nested relationship using dot notation', function () {
             new Statement(new Result([$userData])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var Comment $comment */
     $comment = Comment::query()
@@ -693,7 +693,7 @@ it('dispatches error on unknown column', function () {
                 new Statement(new Result($data)),
             );
 
-        $this->app->swap(Connections::default(), $connection);
+        $this->app->swap(Connection::default(), $connection);
 
         User::query()->selectAllColumns()->get();
     })->toThrow(
@@ -722,7 +722,7 @@ it('saves a new model', function () {
             new Statement(new Result([['Query OK']])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $model = new User();
     $model->name = 'John Doe';
@@ -740,7 +740,7 @@ it('fails on save model', function () {
         ->method('prepare')
         ->willThrowException(new SqlQueryError('Constraint integrity'));
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $model = new User();
     $model->name = 'John Doe';
@@ -762,7 +762,7 @@ it('updates a model successfully', function () {
             new Statement(new Result([['Query OK']])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $model->name = 'John Doe Jr.';
 
@@ -778,7 +778,7 @@ it('creates model instance successfully', function () {
             new Statement(new Result([['Query OK']])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $model = User::create([
         'name' => 'John Doe',
@@ -794,7 +794,7 @@ it('throws an exception when column in invalid on create instance', function () 
     expect(function () {
         $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-        $this->app->swap(Connections::default(), $connection);
+        $this->app->swap(Connection::default(), $connection);
 
         User::create([
             'name' => 'John Doe',
@@ -823,7 +823,7 @@ it('finds a model successfully', function () {
             new Statement(new Result([$data])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     /** @var User $user */
     $user = User::find(1);
@@ -849,7 +849,7 @@ it('deletes a model successfully', function () {
             new Statement(new Result([['Query OK']])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     expect($model->delete())->toBeTrue();
 });

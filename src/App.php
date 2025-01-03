@@ -20,11 +20,13 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
+use Phenix\Session\SessionMiddleware;
 
 class App implements AppContract, Makeable
 {
     private static string $path;
     private static Container $container;
+    private string $host;
     private RequestHandler $router;
     private Logger $logger;
     private SocketHttpServer $server;
@@ -45,6 +47,8 @@ class App implements AppContract, Makeable
             Config::getKeyName(),
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
+
+        $this->host = $this->getHost();
 
         /** @var array $providers */
         $providers = Config::get('app.providers', []);
@@ -69,10 +73,9 @@ class App implements AppContract, Makeable
 
         $this->setRouter();
 
-        $uri = Uri::new(Config::get('app.url'));
         $port = (int) Config::get('app.port');
 
-        $this->server->expose(new Socket\InternetAddress($uri->getHost(), $port));
+        $this->server->expose(new Socket\InternetAddress($this->host, $port));
 
         $this->server->start($this->router, $this->errorHandler);
 
@@ -142,6 +145,15 @@ class App implements AppContract, Makeable
         /** @var array<int, Middleware> $globalMiddlewares */
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
+        $globalMiddlewares[] = SessionMiddleware::make($this->host);
+
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
+    }
+
+    private function getHost(): string
+    {
+        $uri = Uri::new(Config::get('app.url'));
+
+        return $uri->getHost();
     }
 }

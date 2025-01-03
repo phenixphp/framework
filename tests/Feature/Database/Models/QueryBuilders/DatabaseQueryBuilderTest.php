@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Connection;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Tests\Feature\Database\Models\User;
 use Tests\Mocks\Database\MysqlConnectionPool;
@@ -12,7 +12,7 @@ it('sets custom connection for database query builder', function () {
         ['id' => 1, 'name' => 'John Doe'],
     ];
 
-    $this->app->swap(Connections::name('mysql'), MysqlConnectionPool::fake($data));
+    $this->app->swap(Connection::name('mysql'), MysqlConnectionPool::fake($data));
 
     $queryBuilder = new DatabaseQueryBuilder();
     $queryBuilder->connection('mysql');

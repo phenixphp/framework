@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-enum Functions
+enum DatabaseFunction
 {
     case AVG;
     case SUM;
