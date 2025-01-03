@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Routing;
 
-use Amp\Http\Server\Response;
 use Phenix\Http\Controller;
+use Phenix\Http\Response;
 
 class WelcomeController extends Controller
 {

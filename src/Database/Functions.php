@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Database\Constants\Functions as FunctionNames;
+use Phenix\Database\Constants\DatabaseFunction;
 use Stringable;
 
 class Functions implements Stringable
@@ -12,7 +12,7 @@ class Functions implements Stringable
     protected string $alias;
 
     public function __construct(
-        protected readonly FunctionNames $function,
+        protected readonly DatabaseFunction $function,
         protected readonly string $column
     ) {
         // ..
@@ -38,42 +38,42 @@ class Functions implements Stringable
 
     public static function avg(string $column): self
     {
-        return new self(FunctionNames::AVG, $column);
+        return new self(DatabaseFunction::AVG, $column);
     }
 
     public static function sum(string $column): self
     {
-        return new self(FunctionNames::SUM, $column);
+        return new self(DatabaseFunction::SUM, $column);
     }
 
     public static function min(string $column): self
     {
-        return new self(FunctionNames::MIN, $column);
+        return new self(DatabaseFunction::MIN, $column);
     }
 
     public static function max(string $column): self
     {
-        return new self(FunctionNames::MAX, $column);
+        return new self(DatabaseFunction::MAX, $column);
     }
 
     public static function count(string $column): self
     {
-        return new self(FunctionNames::COUNT, $column);
+        return new self(DatabaseFunction::COUNT, $column);
     }
 
     public static function date(string $column): self
     {
-        return new self(FunctionNames::DATE, $column);
+        return new self(DatabaseFunction::DATE, $column);
     }
 
     public static function month(string $column): self
     {
-        return new self(FunctionNames::MONTH, $column);
+        return new self(DatabaseFunction::MONTH, $column);
     }
 
     public static function year(string $column): self
     {
-        return new self(FunctionNames::YEAR, $column);
+        return new self(DatabaseFunction::YEAR, $column);
     }
 
     public static function case(): SelectCase

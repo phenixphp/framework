@@ -38,4 +38,29 @@ class Str extends Utility
     {
         return Ulid::isValid($ulid);
     }
+
+    public static function start(string $string, string $prefix): string
+    {
+        if (str_starts_with($string, $prefix)) {
+            return $string;
+        }
+
+        return "{$prefix}{$string}";
+    }
+
+    public static function finish(string $string, string $suffix): string
+    {
+        if (str_ends_with($string, $suffix)) {
+            return $string;
+        }
+
+        return "{$string}{$suffix}";
+    }
+
+    public static function slug(string $value, string $separator = '-'): string
+    {
+        $value = preg_replace('/[^\p{L}\p{N}\s]/u', '', $value);
+
+        return strtolower(preg_replace('/[\s]/u', $separator, $value));
+    }
 }

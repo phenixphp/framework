@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Joins;
+use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
@@ -30,12 +30,12 @@ it('generates query for all join types', function (string $method, string $joinT
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['innerJoin', Joins::INNER->value],
-    ['leftJoin', Joins::LEFT->value],
-    ['leftOuterJoin', Joins::LEFT_OUTER->value],
-    ['rightJoin', Joins::RIGHT->value],
-    ['rightOuterJoin', Joins::RIGHT_OUTER->value],
-    ['crossJoin', Joins::CROSS->value],
+    ['innerJoin', JoinType::INNER->value],
+    ['leftJoin', JoinType::LEFT->value],
+    ['leftOuterJoin', JoinType::LEFT_OUTER->value],
+    ['rightJoin', JoinType::RIGHT->value],
+    ['rightOuterJoin', JoinType::RIGHT_OUTER->value],
+    ['crossJoin', JoinType::CROSS->value],
 ]);
 
 it('generates query using join with distinct clasue', function () {
@@ -141,7 +141,7 @@ it('generates query with shortcut methods for all join types', function (string 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['innerJoinOnEqual', Joins::INNER->value],
-    ['leftJoinOnEqual', Joins::LEFT->value],
-    ['rightJoinOnEqual', Joins::RIGHT->value],
+    ['innerJoinOnEqual', JoinType::INNER->value],
+    ['leftJoinOnEqual', JoinType::LEFT->value],
+    ['rightJoinOnEqual', JoinType::RIGHT->value],
 ]);

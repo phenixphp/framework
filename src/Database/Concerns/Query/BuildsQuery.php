@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Database\Constants\Actions;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Constants\SQL;
 use Phenix\Database\Functions;
@@ -54,7 +54,7 @@ trait BuildsQuery
 
     public function select(array $columns): static
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->columns = $columns;
 
@@ -70,7 +70,7 @@ trait BuildsQuery
 
     public function insert(array $data): static
     {
-        $this->action = Actions::INSERT;
+        $this->action = Action::INSERT;
 
         $this->prepareDataToInsert($data);
 
@@ -88,7 +88,7 @@ trait BuildsQuery
 
     public function upsert(array $values, array $columns): static
     {
-        $this->action = Actions::INSERT;
+        $this->action = Action::INSERT;
 
         $this->uniqueColumns = $columns;
 
@@ -110,7 +110,7 @@ trait BuildsQuery
 
         $this->arguments = array_merge($this->arguments, $arguments);
 
-        $this->action = Actions::INSERT;
+        $this->action = Action::INSERT;
 
         $this->ignore = $ignore;
 
@@ -121,7 +121,7 @@ trait BuildsQuery
 
     public function update(array $values): static
     {
-        $this->action = Actions::UPDATE;
+        $this->action = Action::UPDATE;
 
         $this->values = $values;
 
@@ -130,7 +130,7 @@ trait BuildsQuery
 
     public function delete(): static
     {
-        $this->action = Actions::DELETE;
+        $this->action = Action::DELETE;
 
         return $this;
     }
@@ -142,7 +142,7 @@ trait BuildsQuery
             default => $column,
         };
 
-        $this->groupBy = [Operators::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
+        $this->groupBy = [Operator::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
 
         return $this;
     }
@@ -169,14 +169,14 @@ trait BuildsQuery
             default => $column,
         };
 
-        $this->orderBy = [Operators::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
+        $this->orderBy = [Operator::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
 
         return $this;
     }
 
     public function limit(int $number): static
     {
-        $this->limit = [Operators::LIMIT->value, abs($number)];
+        $this->limit = [Operator::LIMIT->value, abs($number)];
 
         return $this;
     }
@@ -189,14 +189,14 @@ trait BuildsQuery
 
         $offset = $page === 1 ? 0 : (($page - 1) * abs($perPage));
 
-        $this->offset = [Operators::OFFSET->value, $offset];
+        $this->offset = [Operator::OFFSET->value, $offset];
 
         return $this;
     }
 
     public function count(string $column = '*'): static
     {
-        $this->action = Actions::SELECT;
+        $this->action = Action::SELECT;
 
         $this->columns = [Functions::count($column)];
 
@@ -205,18 +205,18 @@ trait BuildsQuery
 
     public function exists(): static
     {
-        $this->action = Actions::EXISTS;
+        $this->action = Action::EXISTS;
 
-        $this->columns = [Operators::EXISTS->value];
+        $this->columns = [Operator::EXISTS->value];
 
         return $this;
     }
 
     public function doesntExist(): static
     {
-        $this->action = Actions::EXISTS;
+        $this->action = Action::EXISTS;
 
-        $this->columns = [Operators::NOT_EXISTS->value];
+        $this->columns = [Operator::NOT_EXISTS->value];
 
         return $this;
     }
@@ -227,11 +227,11 @@ trait BuildsQuery
     public function toSql(): array
     {
         $sql = match ($this->action) {
-            Actions::SELECT => $this->buildSelectQuery(),
-            Actions::EXISTS => $this->buildExistsQuery(),
-            Actions::INSERT => $this->buildInsertSentence(),
-            Actions::UPDATE => $this->buildUpdateSentence(),
-            Actions::DELETE => $this->buildDeleteSentence(),
+            Action::SELECT => $this->buildSelectQuery(),
+            Action::EXISTS => $this->buildExistsQuery(),
+            Action::INSERT => $this->buildInsertSentence(),
+            Action::UPDATE => $this->buildUpdateSentence(),
+            Action::DELETE => $this->buildDeleteSentence(),
         };
 
         return [

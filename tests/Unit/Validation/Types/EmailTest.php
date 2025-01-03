@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Egulias\EmailValidator\Validation\DNSCheckValidation;
-use Phenix\Database\Constants\Connections;
+use Phenix\Database\Constants\Connection;
 use Phenix\Database\QueryBuilder;
 use Phenix\Validation\Rules\IsEmail;
 use Phenix\Validation\Types\Email;
@@ -49,7 +49,7 @@ it('runs validation to check if email exists in database', function () {
             new Statement(new Result([['exists' => 1]])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $rules = Email::required()->exists('users')->toArray();
 
@@ -70,7 +70,7 @@ it('runs validation to check if email exists in database with custom column', fu
             new Statement(new Result([['exists' => 1]])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $rules = Email::required()->exists('users', 'user_email')->toArray();
 
@@ -91,7 +91,7 @@ it('runs validation to check if email is unique in database', function () {
             new Statement(new Result([['COUNT(*)' => 1]])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $rules = Email::required()->unique('users')->toArray();
 
@@ -112,7 +112,7 @@ it('runs validation to check if email is unique in database except one other ema
             new Statement(new Result([['COUNT(*)' => 1]])),
         );
 
-    $this->app->swap(Connections::default(), $connection);
+    $this->app->swap(Connection::default(), $connection);
 
     $rules = Email::required()->unique(table: 'users', query: function (QueryBuilder $queryBuilder) {
         $queryBuilder->whereDistinct('email', 'john.doe@mail.com');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Console;
 
-use Phenix\Database\Constants\Drivers;
+use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
 use Phinx\Config\Config as MigrationConfig;
 use Phinx\Console\Command\AbstractCommand;
@@ -18,7 +18,7 @@ abstract class DatabaseCommand extends AbstractCommand
 
         $settings = Config::get('database.connections.' . $defaultConnection);
 
-        /** @var Drivers $driver */
+        /** @var Driver $driver */
         $driver = $settings['driver'];
 
         $this->config = new MigrationConfig([

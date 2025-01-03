@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Operator;
 use Phenix\Util\Arr;
 use Stringable;
 
@@ -23,7 +23,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::EQUAL,
+            Operator::EQUAL,
             $result,
             $value
         );
@@ -35,7 +35,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::DISTINCT,
+            Operator::DISTINCT,
             $result,
             $value
         );
@@ -47,7 +47,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::GREATER_THAN,
+            Operator::GREATER_THAN,
             $result,
             $value
         );
@@ -62,7 +62,7 @@ class SelectCase implements Stringable
     ): self {
         $this->pushCase(
             $column,
-            Operators::GREATER_THAN_OR_EQUAL,
+            Operator::GREATER_THAN_OR_EQUAL,
             $result,
             $value
         );
@@ -74,7 +74,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::LESS_THAN,
+            Operator::LESS_THAN,
             $result,
             $value
         );
@@ -86,7 +86,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::LESS_THAN_OR_EQUAL,
+            Operator::LESS_THAN_OR_EQUAL,
             $result,
             $value
         );
@@ -98,7 +98,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::IS_NULL,
+            Operator::IS_NULL,
             $result
         );
 
@@ -109,7 +109,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::IS_NOT_NULL,
+            Operator::IS_NOT_NULL,
             $result
         );
 
@@ -120,7 +120,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::IS_TRUE,
+            Operator::IS_TRUE,
             $result
         );
 
@@ -131,7 +131,7 @@ class SelectCase implements Stringable
     {
         $this->pushCase(
             $column,
-            Operators::IS_FALSE,
+            Operator::IS_FALSE,
             $result
         );
 
@@ -155,9 +155,9 @@ class SelectCase implements Stringable
     public function __toString(): string
     {
         $cases = array_map(function (array $case): array {
-            return array_map(function (Operators|string $item): string {
+            return array_map(function (Operator|string $item): string {
                 return match (true) {
-                    $item instanceof Operators => $item->value,
+                    $item instanceof Operator => $item->value,
                     default => (string) $item,
                 };
             }, $case);
@@ -180,7 +180,7 @@ class SelectCase implements Stringable
 
     protected function pushCase(
         Functions|string $column,
-        Operators $operators,
+        Operator $operators,
         Value|string $result,
         Value|string|int|null $value = null
     ): void {

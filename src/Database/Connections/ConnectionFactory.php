@@ -8,16 +8,20 @@ use Amp\Mysql\MysqlConfig;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
+use Amp\Redis\RedisClient;
 use Closure;
-use Phenix\Database\Constants\Drivers;
+use Phenix\Database\Constants\Driver;
+
+use function Amp\Redis\createRedisClient;
 
 class ConnectionFactory
 {
-    public static function make(Drivers $driver, array $settings): Closure
+    public static function make(Driver $driver, array $settings): Closure
     {
         return match ($driver) {
-            Drivers::MYSQL => self::createMySqlConnection($settings),
-            Drivers::POSTGRESQL => self::createPostgreSqlConnection($settings),
+            Driver::MYSQL => self::createMySqlConnection($settings),
+            Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
+            Driver::REDIS => self::createRedisConnection($settings),
         };
     }
 
@@ -50,6 +54,26 @@ class ConnectionFactory
             );
 
             return new PostgresConnectionPool($config);
+        };
+    }
+
+    private static function createRedisConnection(array $settings): Closure
+    {
+        return static function () use ($settings): RedisClient {
+            $auth = $settings['username'] && $settings['password']
+                ? sprintf('%s:%s@', $settings['username'], $settings['password'])
+                : '';
+
+            $uri = sprintf(
+                '%s://%s%s:%s/%d',
+                $settings['scheme'] ?: 'redis',
+                $auth,
+                $settings['host'] ?: '127.0.0.1',
+                $settings['port'] ?: '6379',
+                (int) $settings['database'] ?: 0
+            );
+
+            return createRedisClient($uri);
         };
     }
 }

@@ -6,12 +6,12 @@ namespace Phenix\Database;
 
 use Phenix\Contracts\Database\Builder;
 use Phenix\Contracts\Database\QueryBuilder;
-use Phenix\Database\Constants\Actions;
+use Phenix\Database\Constants\Action;
 
 abstract class QueryBase extends Clause implements QueryBuilder, Builder
 {
     protected string $table;
-    protected Actions $action;
+    protected Action $action;
     protected array $columns;
     protected array $values;
     protected array $joins;

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.5.x
 
+## [v0.5.2 (2025-01-03)](https://github.com/phenixphp/framework/compare/0.5.1...0.5.2)
+
+### Added
+- Session management with support for local in memory and redis drivers. ([#49](https://github.com/phenixphp/framework/pull/49))
+
 ## [v0.5.1 (2024-12-24)](https://github.com/phenixphp/framework/compare/0.5.0...0.5.1)
 
 ### Added

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-enum Joins: string
+enum JoinType: string
 {
     case INNER = 'INNER JOIN';
     case LEFT = 'LEFT JOIN';

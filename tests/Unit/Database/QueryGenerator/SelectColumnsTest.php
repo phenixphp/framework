@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Database\Alias;
-use Phenix\Database\Constants\Operators;
+use Phenix\Database\Constants\Operator;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
@@ -211,12 +211,12 @@ it('generates query with select-cases using comparisons', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operators::EQUAL->value],
-    ['whenDistinct', ['price', 100, 'expensive'], 'cheap', Operators::DISTINCT->value],
-    ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operators::GREATER_THAN->value],
-    ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operators::GREATER_THAN_OR_EQUAL->value],
-    ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operators::LESS_THAN->value],
-    ['whenLessThanOrEqual', ['price', 100, 'cheap'], 'expensive', Operators::LESS_THAN_OR_EQUAL->value],
+    ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
+    ['whenDistinct', ['price', 100, 'expensive'], 'cheap', Operator::DISTINCT->value],
+    ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
+    ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
+    ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],
+    ['whenLessThanOrEqual', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN_OR_EQUAL->value],
 ]);
 
 it('generates query with select-cases using logical comparisons', function (
@@ -250,10 +250,10 @@ it('generates query with select-cases using logical comparisons', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenNull', ['created_at', 'inactive'], 'active', Operators::IS_NULL->value],
-    ['whenNotNull', ['created_at', 'active'], 'inactive', Operators::IS_NOT_NULL->value],
-    ['whenTrue', ['is_verified', 'active'], 'inactive', Operators::IS_TRUE->value],
-    ['whenFalse', ['is_verified', 'inactive'], 'active', Operators::IS_FALSE->value],
+    ['whenNull', ['created_at', 'inactive'], 'active', Operator::IS_NULL->value],
+    ['whenNotNull', ['created_at', 'active'], 'inactive', Operator::IS_NOT_NULL->value],
+    ['whenTrue', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
+    ['whenFalse', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
 ]);
 
 it('generates query with select-cases with multiple conditions and string values', function () {
