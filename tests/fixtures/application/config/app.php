@@ -7,6 +7,7 @@ return [
     'env' => env('APP_ENV', fn () => 'local'),
     'url' => env('APP_URL', fn () => 'http://127.0.0.1'),
     'port' => env('APP_PORT', fn () => 1337),
+    'key' => env('APP_KEY'),
     'middlewares' => [
         'global' => [
             \Phenix\Http\Middlewares\HandleCors::class,
