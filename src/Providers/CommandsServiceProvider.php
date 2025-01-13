@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Providers;
 
+use Phenix\Console\Commands\GenerateKey;
 use Phenix\Console\Commands\MakeCollection;
 use Phenix\Console\Commands\MakeController;
 use Phenix\Console\Commands\MakeMiddleware;
@@ -26,6 +27,7 @@ class CommandsServiceProvider extends ServiceProvider
             MakeCollection::class,
             MakeQuery::class,
             MakeServiceProvider::class,
+            GenerateKey::class,
         ]);
     }
 }

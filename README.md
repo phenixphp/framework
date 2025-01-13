@@ -19,3 +19,8 @@ If you discover a security vulnerability within Phenix, please send an e-mail to
 ## License
 
 The Phenix framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Credits
+
+- [Amphp team](https://amphp.org/)
+- [Laravel team](https://laravel.com/)
