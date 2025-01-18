@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Host and port as optionals params for start server. ([#53](https://github.com/phenixphp/framework/pull/53))
+
 # Release Notes for 0.5.x
 
 ## [v0.5.2 (2025-01-03)](https://github.com/phenixphp/framework/compare/0.5.1...0.5.2)

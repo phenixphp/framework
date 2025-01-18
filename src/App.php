@@ -73,7 +73,7 @@ class App implements AppContract, Makeable
 
         $this->setRouter();
 
-        $port = (int) Config::get('app.port');
+        $port = $this->getPort();
 
         $this->server->expose(new Socket\InternetAddress($this->host, $port));
 
@@ -152,8 +152,29 @@ class App implements AppContract, Makeable
 
     private function getHost(): string
     {
-        $uri = Uri::new(Config::get('app.url'));
+        $host = $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
 
-        return $uri->getHost();
+        return $host;
+    }
+
+    private function getPort(): int
+    {
+        $port = $this->getPortFromOptions() ?? Config::get('app.port');
+
+        return (int) $port;
+    }
+
+    private function getHostFromOptions(): string|null
+    {
+        $options = getopt('', ['host:']);
+
+        return $options['host'] ?? null;
+    }
+
+    private function getPortFromOptions(): string|null
+    {
+        $options = getopt('', ['port:']);
+
+        return $options['port'] ?? null;
     }
 }
