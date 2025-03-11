@@ -53,4 +53,29 @@ class File implements FileContract
     {
         return $this->driver->openFile($path, $mode);
     }
+
+    public function getCreationTime(string $path): int
+    {
+        return $this->driver->getCreationTime($path);
+    }
+
+    public function getModificationTime(string $path): int
+    {
+        return $this->driver->getModificationTime($path);
+    }
+
+    public function listFiles(string $path): array
+    {
+        return $this->driver->listFiles($path);
+    }
+
+    public function deleteFile(string $path): void
+    {
+        $this->driver->deleteFile($path);
+    }
+
+    public function deleteDirectory(string $path): void
+    {
+        $this->driver->deleteDirectory($path);
+    }
 }
