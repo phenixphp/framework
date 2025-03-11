@@ -19,19 +19,4 @@ class Layout extends View
             $this->templateFactory->startSection($name, $value);
         }
     }
-
-    public function render(): string
-    {
-        ob_start();
-
-        (function (): void {
-            $_env = $this->templateFactory;
-
-            extract($this->data);
-
-            require $this->template;
-        })();
-
-        return ob_get_clean();
-    }
 }
