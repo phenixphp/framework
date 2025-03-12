@@ -30,3 +30,13 @@ it('render a template successfully', function () {
     expect($output)->toContain('green');
     expect($output)->toContain('blue');
 });
+
+it('render a template in a specific directory successfully', function () {
+    $template = new TemplateEngine();
+    $output = $template->view('users.index', [
+        'title' => 'Users',
+    ])->render();
+
+    expect($output)->toBeString();
+    expect($output)->toContain('Users');
+});
