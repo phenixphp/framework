@@ -23,7 +23,7 @@ class TemplateEngine
     {
         $this->config = new Config();
         $this->compiler = new TemplateCompiler();
-        $this->cache = new ViewCache($this->config->compiledPath());
+        $this->cache = new ViewCache($this->config);
         $this->templateFactory = new TemplateFactory($this->cache);
 
     }
@@ -46,10 +46,9 @@ class TemplateEngine
 
     protected function compile(string $template): void
     {
-        $file = str_replace(['..', '//'], '', $template);
-        $file = Str::finish(str_replace('.', DIRECTORY_SEPARATOR, $file), '.php');
+        $file = ViewName::ensure($template);
 
-        $filePath = realpath($this->config->path() . $file);
+        $filePath = realpath($this->config->path($file));
         $basePath = realpath($this->config->path());
 
         if ($filePath === false || ! str_starts_with($filePath, $basePath)) {

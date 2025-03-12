@@ -16,13 +16,20 @@ class Config
         $this->config = Configuration::get('view', []);
     }
 
-    public function path(): string
+    public function path(string|null $path = null): string
     {
-        return Str::finish($this->config['path'], DIRECTORY_SEPARATOR);
+        return $this->buildPath($this->config['path'], $path);
     }
 
-    public function compiledPath(): string
+    public function compiledPath(string|null $path = null): string
     {
-        return Str::finish($this->config['compiled_path'], DIRECTORY_SEPARATOR);
+        return $this->buildPath($this->config['compiled_path'], $path);
+    }
+
+    private function buildPath(string $base, string|null $path = null): string
+    {
+        $path = $path ? Str::finish($path, '.php') : '';
+    
+        return Str::finish($base, DIRECTORY_SEPARATOR) . $path;
     }
 }

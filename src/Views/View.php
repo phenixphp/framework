@@ -19,9 +19,7 @@ class View implements ViewContract
         $this->template = $template;
         $this->data = $data;
 
-        $config = new Config();
-
-        $this->templateFactory = new TemplateFactory(new ViewCache($config->compiledPath()));
+        $this->templateFactory = new TemplateFactory(new ViewCache(new Config()));
     }
 
     public function render(): string

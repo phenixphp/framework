@@ -10,20 +10,27 @@ use Phenix\Util\Str;
 class ViewCache
 {
     public function __construct(
-        protected string $cachePath
-    ) {
+        protected Config $config
+    ) {}
+
+    public function getSourcePath(string $template): string
+    {
+        return $this->config->path(ViewName::normalize($template));
     }
 
     public function getCacheFilePath(string $template): string
     {
-        return Str::finish($this->cachePath, DIRECTORY_SEPARATOR) . md5($template) . '.php';
+        $hash = md5($template);
+    
+        return $this->config->compiledPath(Str::finish($hash, '.php'));
     }
 
     public function isCached(string $template): bool
     {
-        $file = $this->getCacheFilePath($template);
+        $cacheFile = $this->getCacheFilePath($template);
+        $sourceFile = $this->getSourcePath($template);
 
-        return File::exists($file);
+        return File::exists($cacheFile) && !$this->isExpired($sourceFile, $cacheFile);
     }
 
     public function put(string $template, string $content): void
@@ -31,8 +38,8 @@ class ViewCache
         File::put($this->getCacheFilePath($template), $content);
     }
 
-    public function get(string $template): string
+    private function isExpired(string $sourceFile, string $cacheFile): bool 
     {
-        return File::get($this->getCacheFilePath($template));
+        return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
     }
 }
