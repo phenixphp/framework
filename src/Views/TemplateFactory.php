@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
-use Throwable;
 use Phenix\Views\Contracts\View as ViewContract;
+use Throwable;
 
 class TemplateFactory
 {
@@ -61,12 +61,12 @@ class TemplateFactory
     public function endSection(): void
     {
         try {
-            if ($this->section && $this->sections[$this->section] === null) {    
+            if ($this->section && $this->sections[$this->section] === null) {
                 $buffer = ob_get_clean();
 
                 $this->sections[$this->section] = trim($buffer) ?: '';
             }
-    
+
             $this->section = null;
         } catch (Throwable $th) {
             if (ob_get_level() > 0) {
@@ -82,7 +82,7 @@ class TemplateFactory
         return $this->sections[$name] ?? '';
     }
 
-    public function clear(): void 
+    public function clear(): void
     {
         $this->layout = null;
         $this->sections = [];

@@ -11,7 +11,8 @@ class ViewCache
 {
     public function __construct(
         protected Config $config
-    ) {}
+    ) {
+    }
 
     public function getSourcePath(string $template): string
     {
@@ -21,7 +22,7 @@ class ViewCache
     public function getCacheFilePath(string $template): string
     {
         $hash = md5($template);
-    
+
         return $this->config->compiledPath(Str::finish($hash, '.php'));
     }
 
@@ -30,7 +31,7 @@ class ViewCache
         $cacheFile = $this->getCacheFilePath($template);
         $sourceFile = $this->getSourcePath($template);
 
-        return File::exists($cacheFile) && !$this->isExpired($sourceFile, $cacheFile);
+        return File::exists($cacheFile) && ! $this->isExpired($sourceFile, $cacheFile);
     }
 
     public function put(string $template, string $content): void
@@ -38,7 +39,7 @@ class ViewCache
         File::put($this->getCacheFilePath($template), $content);
     }
 
-    private function isExpired(string $sourceFile, string $cacheFile): bool 
+    private function isExpired(string $sourceFile, string $cacheFile): bool
     {
         return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
     }

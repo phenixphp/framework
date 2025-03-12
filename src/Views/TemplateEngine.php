@@ -7,7 +7,6 @@ namespace Phenix\Views;
 use Phenix\Exceptions\Views\FileNotFoundException;
 use Phenix\Exceptions\Views\InvalidPathException;
 use Phenix\Facades\File;
-use Phenix\Util\Str;
 use Phenix\Views\Contracts\View as ViewContract;
 
 class TemplateEngine
@@ -58,7 +57,7 @@ class TemplateEngine
         if (! File::exists($filePath)) {
             throw new FileNotFoundException("Template {$file} not found.");
         }
-    
+
         if (! $this->cache->isCached($template)) {
             $content = File::get($filePath);
 

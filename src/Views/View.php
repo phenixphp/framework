@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
-use Throwable;
 use Phenix\Views\Contracts\View as ViewContract;
+use Throwable;
 
 class View implements ViewContract
 {
@@ -30,20 +30,20 @@ class View implements ViewContract
 
             (function (): void {
                 $_env = $this->templateFactory;
-    
+
                 extract($this->data);
-    
+
                 require $this->template;
             })();
-    
+
             $content = ob_get_clean();
-    
+
             if ($this->templateFactory->hasLayout()) {
                 return $this->templateFactory->layout()->render();
             }
-    
+
             $this->templateFactory->clear();
-    
+
             return $content;
         } catch (Throwable $th) {
             if (ob_get_level() > 0) {

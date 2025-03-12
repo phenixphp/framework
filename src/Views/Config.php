@@ -29,7 +29,7 @@ class Config
     private function buildPath(string $base, string|null $path = null): string
     {
         $path = $path ? Str::finish($path, '.php') : '';
-    
+
         return Str::finish($base, DIRECTORY_SEPARATOR) . $path;
     }
 }
