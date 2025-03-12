@@ -58,7 +58,7 @@ class TemplateEngine
         if (! File::exists($filePath)) {
             throw new FileNotFoundException("Template {$file} not found.");
         }
-
+    
         if (! $this->cache->isCached($template)) {
             $content = File::get($filePath);
 
