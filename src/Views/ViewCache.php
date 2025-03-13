@@ -21,9 +21,7 @@ class ViewCache
 
     public function getCacheFilePath(string $template): string
     {
-        $hash = md5($template);
-
-        return $this->config->compiledPath(Str::finish($hash, '.php'));
+        return $this->config->compiledPath(Str::finish($template, '.php'));
     }
 
     public function isCached(string $template): bool
