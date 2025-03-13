@@ -26,6 +26,8 @@ class View implements ViewContract
     public function render(): string
     {
         try {
+            $obLevel = ob_get_level();
+
             ob_start();
 
             $path = $this->template;
@@ -48,7 +50,7 @@ class View implements ViewContract
 
             return $content;
         } catch (Throwable $th) {
-            if (ob_get_level() > 0) {
+            while (ob_get_level() > $obLevel) {
                 ob_end_clean();
             }
 
