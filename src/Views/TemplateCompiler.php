@@ -36,8 +36,8 @@ class TemplateCompiler
             '@extends' => '<?php $_env->extends',
             '@section' => '<?php $_env->startSection',
             '@endsection' => '<?php $_env->endSection(); ?>',
-            '@yield' => '<?php echo $_env->yieldSection',
-            '@include' => '<?php echo $_env->make',
+            '@yield' => '<?= $_env->yieldSection',
+            '@include' => '<?= $_env->make',
         ];
     }
 
