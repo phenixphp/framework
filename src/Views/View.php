@@ -33,7 +33,7 @@ class View implements ViewContract
 
                 extract($this->data);
 
-                require $this->template;
+                include $this->template;
             })();
 
             $content = ob_get_clean();

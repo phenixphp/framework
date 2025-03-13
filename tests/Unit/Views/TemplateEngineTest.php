@@ -40,3 +40,17 @@ it('render a template in a specific directory successfully', function () {
     expect($output)->toBeString();
     expect($output)->toContain('Users');
 });
+
+it('render a template including partial', function () {
+    $token = 'abcd123';
+
+    $template = new TemplateEngine();
+    $output = $template->view('users.create', [
+        'title' => 'Create user',
+        'token' => $token,
+    ])->render();
+
+    expect($output)->toBeString();
+    expect($output)->toContain('form');
+    expect($output)->toContain($token);
+});

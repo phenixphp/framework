@@ -31,8 +31,8 @@ class TemplateEngine
     {
         $this->compile($template);
 
-        while ($this->compiler->hasLayout()) {
-            $this->compile($this->compiler->getLayoutName());
+        while ($this->compiler->hasTemplates()) {
+            $this->compile($this->compiler->dequeueTemplate());
         }
 
         return $this->templateFactory->make($template, $data);

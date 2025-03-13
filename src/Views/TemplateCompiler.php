@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use function array_shift;
+
 class TemplateCompiler
 {
     protected array $directives = [];
     protected array $sections = [];
-    protected string|null $layout = null;
+    protected array|null $templates = [];
 
     public function __construct()
     {
+        $this->templates = [];
         $this->directives = [
             '@if' => '<?php if ',
             '@elseif' => '<?php elseif ',
@@ -34,7 +37,7 @@ class TemplateCompiler
 
     public function compile(string $content): string
     {
-        $this->layout = $this->extractLayoutName($content);
+        $this->extractTemplates($content);
 
         foreach ($this->directives as $key => $replace) {
             $content = preg_replace_callback("/$key\s*(\([^)]*\))?/", function ($matches) use ($key, $replace) {
@@ -52,20 +55,20 @@ class TemplateCompiler
         return $content;
     }
 
-    public function hasLayout(): bool
+    public function hasTemplates(): bool
     {
-        return $this->layout !== null;
+        return $this->templates !== null && count($this->templates) > 0;
     }
 
-    public function getLayoutName(): string
+    public function dequeueTemplate(): string
     {
-        return $this->layout;
+        return array_shift($this->templates);
     }
 
-    private function extractLayoutName(string $content): string|null
+    private function extractTemplates(string $content): void
     {
-        preg_match('/@extends\(\s*[\'"]([^\'"]+)[\'"](?:\s*,\s*\[.*\])?\s*\)/', $content, $matches);
+        preg_match_all('/@(?:extends|include)\s*\(\s*[\'"](.+?)[\'"](?:\s*,.*?)?\s*\)/', $content, $matches);
 
-        return $matches[1] ?? null;
+        $this->templates = array_merge($this->templates, $matches[1] ?? []);
     }
 }
