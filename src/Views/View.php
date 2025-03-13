@@ -28,12 +28,14 @@ class View implements ViewContract
         try {
             ob_start();
 
-            (function (): void {
-                $_env = $this->templateFactory;
+            $path = $this->template;
+            $data = $this->data;
+            $data['_env'] = $this->templateFactory;
+    
+            (static function () use ($path, $data): void {
+                extract($data, EXTR_SKIP);
 
-                extract($this->data);
-
-                include $this->template;
+                require $path;
             })();
 
             $content = ob_get_clean();
