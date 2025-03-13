@@ -44,7 +44,7 @@
         "robmorgan/phinx": "^0.15.2",
         "symfony/console": "^6.1",
         "symfony/uid": "^7.1",
-        "symfony/var-dumper": "^7.0",
+        "symfony/var-dumper": "^7.2.0",
         "vlucas/phpdotenv": "^5.4"
     },
     "require-dev": {
