@@ -8,9 +8,20 @@ use function array_shift;
 
 class TemplateCompiler
 {
+    /**
+     * @var array<string, string>
+     */
     protected array $directives = [];
+
+    /**
+     * @var array<string, string|null>
+     */
     protected array $sections = [];
-    protected array|null $templates = [];
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $templates = [];
 
     public function __construct()
     {
@@ -57,7 +68,7 @@ class TemplateCompiler
 
     public function hasTemplates(): bool
     {
-        return $this->templates !== null && count($this->templates) > 0;
+        return count($this->templates) > 0;
     }
 
     public function dequeueTemplate(): string
@@ -69,6 +80,6 @@ class TemplateCompiler
     {
         preg_match_all('/@(?:extends|include)\s*\(\s*[\'"](.+?)[\'"](?:\s*,.*?)?\s*\)/', $content, $matches);
 
-        $this->templates = array_merge($this->templates, $matches[1] ?? []);
+        $this->templates = array_merge($this->templates, $matches[1]);
     }
 }
