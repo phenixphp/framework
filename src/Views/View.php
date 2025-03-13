@@ -31,7 +31,7 @@ class View implements ViewContract
             $path = $this->template;
             $data = $this->data;
             $data['_env'] = $this->templateFactory;
-    
+
             (static function () use ($path, $data): void {
                 extract($data, EXTR_SKIP);
 
