@@ -6,7 +6,7 @@ namespace Phenix\Exceptions\Views;
 
 use Exception;
 
-class FileNotFoundException extends Exception
+class ViewNotFoundException extends Exception
 {
     // ..
 }

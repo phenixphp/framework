@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\File;
 use Phenix\Views\TemplateEngine;
 
@@ -54,3 +55,9 @@ it('render a template including partial', function () {
     expect($output)->toContain('form');
     expect($output)->toContain($token);
 });
+
+it('throw exception when template not found', function () {
+    $template = new TemplateEngine();
+
+    $template->view('missing')->render();
+})->throws(ViewNotFoundException::class);
