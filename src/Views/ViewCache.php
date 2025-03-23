@@ -21,7 +21,7 @@ class ViewCache
 
     public function getSourcePath(string $template): string
     {
-        return $this->config->path(ViewName::normalize($template));
+        return $this->config->path(ViewName::ensure($template));
     }
 
     public function getCacheFilePath(string $template): string
