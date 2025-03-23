@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\File;
 use Phenix\Views\TemplateEngine;
-use Phenix\Exceptions\Views\ViewNotFoundException;
 
 beforeEach(function () {
     $path = $this->getAppDir() . '/storage/framework/views';
@@ -87,4 +87,3 @@ it('throw exception when template has errors', function () {
 
     $template->view('invalid_content')->render();
 })->throws(Exception::class);
-
