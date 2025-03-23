@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\File;
 use Phenix\Views\TemplateEngine;
-use Phenix\Views\ViewCache;
 
 beforeEach(function () {
     $path = $this->getAppDir() . '/storage/framework/views';
@@ -99,14 +98,7 @@ it('overwrite an expired template in cache', function (): void {
     expect($output)->toBeString();
     expect($output)->toContain('Previous title');
 
-    $cache = new class () extends ViewCache {
-        protected function isExpired(string $sourceFile, string $cacheFile): bool
-        {
-            return true;
-        }
-    };
-
-    $template = new TemplateEngine(cache: $cache);
+    $template = new TemplateEngine();
 
     $output = $template->view('users.index', [
         'title' => 'New title',
