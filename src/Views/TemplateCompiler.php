@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Closure;
+
 use function array_shift;
 
 class TemplateCompiler
@@ -12,6 +14,11 @@ class TemplateCompiler
      * @var array<string, string>
      */
     protected array $directives = [];
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $customDirectives = [];
 
     /**
      * @var array<string, string|null>
@@ -39,11 +46,12 @@ class TemplateCompiler
             '@yield' => '<?= $_env->yieldSection',
             '@include' => '<?= $_env->make',
         ];
+        $this->customDirectives = [];
     }
 
-    public function directive(string $name, callable $callback): void
+    public function registerDirective(string $name, Closure $closure): void
     {
-        $this->directives[$name] = $callback;
+        $this->customDirectives[$name] = $closure;
     }
 
     public function compile(string $content): string
@@ -51,12 +59,20 @@ class TemplateCompiler
         $this->extractTemplates($content);
 
         foreach ($this->directives as $key => $replace) {
-            $content = preg_replace_callback("/$key\s*(\([^)]*\))?/", function ($matches) use ($key, $replace) {
+            $content = preg_replace_callback("/$key\s*(\([^)]*\))?/", function ($matches) use ($key, $replace): string {
                 return match($key) {
                     '@if', '@elseif', '@foreach' => "{$replace}{$matches[1]}: ?>",
                     '@extends', '@include', '@section', '@yield' => "{$replace}{$matches[1]}; ?>",
                     default => $replace,
                 };
+            }, $content);
+        }
+
+        foreach ($this->customDirectives as $name => $callback) {
+            $pattern = "/@{$name}(?:\((.*?)\))?/";
+
+            $content = preg_replace_callback($pattern, function ($matches) use ($callback): string {
+                return isset($matches[1]) ? $callback($matches[1]) : $callback();
             }, $content);
         }
 

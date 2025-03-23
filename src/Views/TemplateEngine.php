@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Closure;
 use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\File;
 use Phenix\Views\Contracts\View as ViewContract;
@@ -23,7 +24,6 @@ class TemplateEngine
         $this->compiler = new TemplateCompiler();
         $this->cache = new ViewCache($this->config);
         $this->templateFactory = new TemplateFactory($this->cache);
-
     }
 
     public function view(string $template, array $data = []): ViewContract
@@ -37,9 +37,9 @@ class TemplateEngine
         return $this->templateFactory->make($template, $data);
     }
 
-    public function directive(string $name, callable $callback): void
+    public function directive(string $name, Closure $closure): void
     {
-        $this->compiler->directive($name, $callback);
+        $this->compiler->registerDirective($name, $closure);
     }
 
     protected function compile(string $template): void

@@ -61,3 +61,23 @@ it('throw exception when template not found', function () {
 
     $template->view('missing')->render();
 })->throws(ViewNotFoundException::class);
+
+it('register custom directive', function () {
+    $action = 'You can create it';
+
+    $template = new TemplateEngine();
+    $template->directive('can', function (string $action): string {
+        return "<?php if({$action} === 'create'): ?>";
+    });
+    $template->directive('endcan', function (): string {
+        return "<?php endif; ?>";
+    });
+
+    $output = $template->view('invoice', [
+        'title' => 'Create invoices',
+        'action' => $action,
+    ])->render();
+
+    expect($output)->toBeString();
+    expect($output)->toContain($action);
+});
