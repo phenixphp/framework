@@ -10,8 +10,13 @@ use Phenix\Util\Str;
 class ViewCache
 {
     public function __construct(
-        protected Config $config
+        protected Config $config = new Config(),
     ) {
+    }
+
+    public function getViewPath(): string
+    {
+        return $this->config->path();
     }
 
     public function getSourcePath(string $template): string
