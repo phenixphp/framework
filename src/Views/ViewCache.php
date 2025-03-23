@@ -42,7 +42,7 @@ class ViewCache
         File::put($this->getCacheFilePath($template), $content);
     }
 
-    private function isExpired(string $sourceFile, string $cacheFile): bool
+    protected function isExpired(string $sourceFile, string $cacheFile): bool
     {
         return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
     }
