@@ -7,8 +7,10 @@ namespace Phenix\Filesystem;
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
 use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Util\Str;
 
 use function Amp\File\filesystem;
+use function array_map;
 
 class File implements FileContract
 {
@@ -66,7 +68,9 @@ class File implements FileContract
 
     public function listFiles(string $path): array
     {
-        return $this->driver->listFiles($path);
+        return array_map(function (string $file) use ($path): string {
+            return Str::finish($path, DIRECTORY_SEPARATOR) . $file;
+        }, $this->driver->listFiles($path));
     }
 
     public function deleteFile(string $path): void

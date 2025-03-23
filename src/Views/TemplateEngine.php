@@ -39,6 +39,11 @@ class TemplateEngine
         $this->compiler->registerDirective($name, $closure);
     }
 
+    public function clearCache(): void
+    {
+        $this->cache->clear();
+    }
+
     protected function compile(string $template): void
     {
         $filePath = realpath($this->cache->getSourcePath($template));

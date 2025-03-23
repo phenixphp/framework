@@ -3,23 +3,12 @@
 declare(strict_types=1);
 
 use Phenix\Exceptions\Views\ViewNotFoundException;
-use Phenix\Facades\File;
 use Phenix\Views\TemplateEngine;
-
-beforeEach(function () {
-    $path = $this->getAppDir() . '/storage/framework/views';
-
-    foreach (File::listFiles($path) as $file) {
-        $filePath = "{$path}/{$file}";
-
-        if (str_ends_with($filePath, '.php')) {
-            File::deleteFile($filePath);
-        }
-    }
-});
 
 it('render a template successfully', function (): void {
     $template = new TemplateEngine();
+    $template->clearCache();
+
     $output = $template->view('welcome', [
         'title' => 'Welcome',
         'colors' => ['red', 'green', 'blue'],
@@ -34,6 +23,8 @@ it('render a template successfully', function (): void {
 
 it('render a template in a specific directory successfully', function (): void {
     $template = new TemplateEngine();
+    $template->clearCache();
+
     $output = $template->view('users.index', [
         'title' => 'Users',
     ])->render();
@@ -46,6 +37,8 @@ it('render a template including partial', function (): void {
     $token = 'abcd123';
 
     $template = new TemplateEngine();
+    $template->clearCache();
+
     $output = $template->view('users.create', [
         'title' => 'Create user',
         'token' => $token,
@@ -58,6 +51,7 @@ it('render a template including partial', function (): void {
 
 it('throw exception when template not found', function (): void {
     $template = new TemplateEngine();
+    $template->clearCache();
 
     $template->view('missing')->render();
 })->throws(ViewNotFoundException::class);
@@ -66,6 +60,8 @@ it('register custom directive', function (): void {
     $action = 'You can create it';
 
     $template = new TemplateEngine();
+    $template->clearCache();
+
     $template->directive('can', function (string $action): string {
         return "<?php if({$action} === 'create'): ?>";
     });
@@ -84,6 +80,7 @@ it('register custom directive', function (): void {
 
 it('throw exception when template has errors', function (): void {
     $template = new TemplateEngine();
+    $template->clearCache();
 
     $template->view('invalid_content')->render();
 })->throws(Exception::class);
@@ -91,6 +88,8 @@ it('throw exception when template has errors', function (): void {
 it('overwrite an expired template in cache', function (): void {
     // Precompile the view
     $template = new TemplateEngine();
+    $template->clearCache();
+
     $output = $template->view('users.index', [
         'title' => 'Previous title',
     ])->render();

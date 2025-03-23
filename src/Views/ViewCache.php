@@ -42,6 +42,15 @@ class ViewCache
         File::put($this->getCacheFilePath($template), $content);
     }
 
+    public function clear(): void
+    {
+        foreach (File::listFiles($this->config->compiledPath()) as $file) {
+            if (str_ends_with($file, '.php')) {
+                File::deleteFile($file);
+            }
+        }
+    }
+
     protected function isExpired(string $sourceFile, string $cacheFile): bool
     {
         return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
