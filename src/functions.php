@@ -56,3 +56,10 @@ if (! function_exists('report')) {
         ]);
     }
 }
+
+if (! function_exists('e')) {
+    function e(Stringable|string|null $value, bool $doubleEncode = true): string
+    {
+        return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', $doubleEncode);
+    }
+}

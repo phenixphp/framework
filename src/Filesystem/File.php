@@ -7,8 +7,10 @@ namespace Phenix\Filesystem;
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
 use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Util\Str;
 
 use function Amp\File\filesystem;
+use function array_map;
 
 class File implements FileContract
 {
@@ -52,5 +54,32 @@ class File implements FileContract
     public function openFile(string $path, string $mode = 'w'): FileHandler
     {
         return $this->driver->openFile($path, $mode);
+    }
+
+    public function getCreationTime(string $path): int
+    {
+        return $this->driver->getCreationTime($path);
+    }
+
+    public function getModificationTime(string $path): int
+    {
+        return $this->driver->getModificationTime($path);
+    }
+
+    public function listFiles(string $path): array
+    {
+        return array_map(function (string $file) use ($path): string {
+            return Str::finish($path, DIRECTORY_SEPARATOR) . $file;
+        }, $this->driver->listFiles($path));
+    }
+
+    public function deleteFile(string $path): void
+    {
+        $this->driver->deleteFile($path);
+    }
+
+    public function deleteDirectory(string $path): void
+    {
+        $this->driver->deleteDirectory($path);
     }
 }

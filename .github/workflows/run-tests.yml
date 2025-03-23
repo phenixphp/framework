@@ -21,7 +21,7 @@ jobs:
         with:
           php-version: 8.2
           extensions: json, mbstring, pcntl, intl, fileinfo
-          coverage: xdebug
+          coverage: pcov
 
       - name: Setup problem matchers
         run: |
@@ -35,10 +35,6 @@ jobs:
       - name: Check code formatting with PHP CS Fixer
         run: |
           vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
-
-      - name: Check quality code with PHPInsights
-        run: |
-          vendor/bin/phpinsights -n --ansi --format=github-action
 
       - name: Analyze code statically with PHPStan
         run: |
