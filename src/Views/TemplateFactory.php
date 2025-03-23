@@ -60,21 +60,13 @@ class TemplateFactory
 
     public function endSection(): void
     {
-        try {
-            if ($this->section && $this->sections[$this->section] === null) {
-                $buffer = ob_get_clean();
+        if ($this->section && $this->sections[$this->section] === null) {
+            $buffer = ob_get_clean();
 
-                $this->sections[$this->section] = trim($buffer) ?: '';
-            }
-
-            $this->section = null;
-        } catch (Throwable $th) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
-
-            throw $th;
+            $this->sections[$this->section] = trim($buffer) ?: '';
         }
+
+        $this->section = null;
     }
 
     public function yieldSection(string $name): string
