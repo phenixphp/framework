@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Views;
 
 use Phenix\Views\Contracts\View as ViewContract;
-use Throwable;
 
 class TemplateFactory
 {
