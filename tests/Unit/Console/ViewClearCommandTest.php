@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Symfony\Component\Console\Tester\CommandTester;
 
-it('clear compiled views successfully', function () {
+it('clear compiled views successfully', function (): void {
     /** @var CommandTester $command */
     $command = $this->phenix('view:clear');
 

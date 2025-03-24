@@ -66,8 +66,12 @@ class File implements FileContract
         return $this->driver->getModificationTime($path);
     }
 
-    public function listFiles(string $path): array
+    public function listFiles(string $path, bool $relativePath = false): array
     {
+        if ($relativePath) {
+            return $this->driver->listFiles($path);
+        }
+
         return array_map(function (string $file) use ($path): string {
             return Str::finish($path, DIRECTORY_SEPARATOR) . $file;
         }, $this->driver->listFiles($path));

@@ -13,4 +13,6 @@ interface TemplateEngine
     public function directive(string $name, Closure $closure): void;
 
     public function clearCache(): void;
+
+    public function compile(string $template): void;
 }
