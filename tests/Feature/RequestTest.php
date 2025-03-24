@@ -9,6 +9,8 @@ use Amp\Http\Server\RequestBody;
 use Phenix\Constants\ContentType;
 use Phenix\Facades\Route;
 use Phenix\Http\Request;
+use Phenix\Http\Response;
+use Phenix\Testing\TestResponse;
 use Tests\Unit\Routing\AcceptJsonResponses;
 
 afterEach(function () {
@@ -100,4 +102,22 @@ it('can decode multipart form data body', function () {
 
     $this->post('/files', $body)
         ->assertOk();
+});
+
+it('responds with a view', function () {
+    Route::get('/users', function (): Response {
+        return response()->view('users.index', [
+            'title' => 'New title',
+        ]);
+    });
+
+    $this->app->run();
+
+    /** @var TestResponse $response */
+    $response = $this->get('/users');
+    
+    $response->assertOk()
+        ->assertHeaderContains(['Content-Type' => 'text/html; charset=utf-8'])
+        ->assertBodyContains('<body>')
+        ->assertBodyContains('User index');
 });
