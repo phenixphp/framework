@@ -86,3 +86,17 @@ it('open a file for IO operations', function () {
     expect($file->getCreationTime($path))->toBe(filemtime($path));
     expect($file->getModificationTime($path))->toBe(filemtime($path));
 });
+
+it('list files in a directory', function () {
+    $path = __DIR__;
+
+    $file = new File();
+
+    expect($file->listFiles($path, true))->toBe([
+        'FileTest.php',
+    ]);
+
+    expect($file->listFiles($path))->toBe([
+        $path . DIRECTORY_SEPARATOR . 'FileTest.php',
+    ]);
+});
