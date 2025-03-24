@@ -13,6 +13,7 @@ use Phenix\Views\Contracts\View as ViewContract;
  * @method static ViewContract view(string $template, array $data = [])
  * @method static void directive(string $name, Closure $closure)
  * @method static void clearCache()
+ * @method static void compile(string $template)
  */
 class View extends Facade
 {

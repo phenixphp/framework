@@ -23,4 +23,11 @@ class ViewName extends Utility
     {
         return self::normalize(self::clean($name));
     }
+
+    public static function template(string $path, string $base): string
+    {
+        $path = str_replace(Str::finish($base, DIRECTORY_SEPARATOR), '', $path);
+
+        return str_replace([DIRECTORY_SEPARATOR, '.php'], ['.', ''], $path);
+    }
 }

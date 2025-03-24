@@ -45,7 +45,7 @@ class TemplateEngine implements TemplateEngineContract
         $this->cache->clear();
     }
 
-    protected function compile(string $template): void
+    public function compile(string $template): void
     {
         $filePath = realpath($this->cache->getSourcePath($template));
         $basePath = realpath($this->cache->getViewPath());
