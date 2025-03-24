@@ -115,7 +115,7 @@ it('responds with a view', function () {
 
     /** @var TestResponse $response */
     $response = $this->get('/users');
-    
+
     $response->assertOk()
         ->assertHeaderContains(['Content-Type' => 'text/html; charset=utf-8'])
         ->assertBodyContains('<body>')
