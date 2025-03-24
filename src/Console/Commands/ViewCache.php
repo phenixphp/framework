@@ -37,14 +37,14 @@ class ViewCache extends Command
     {
         View::clearCache();
 
-        $this->pushTask(Config::get('view.path'));
+        $this->compile(Config::get('view.path'));
 
         $output->writeln('<info>All views were compiled successfully!.</info>');
 
         return Command::SUCCESS;
     }
 
-    private function pushTask(string $path): void
+    private function compile(string $path): void
     {
         $directories = [];
 
@@ -59,7 +59,7 @@ class ViewCache extends Command
         }
 
         foreach ($directories as $directory) {
-            $this->pushTask($directory);
+            $this->compile($directory);
         }
     }
 }
