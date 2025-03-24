@@ -19,5 +19,6 @@ return [
         \Phenix\Providers\RouteServiceProvider::class,
         \Phenix\Providers\DatabaseServiceProvider::class,
         \Phenix\Providers\FilesystemServiceProvider::class,
+        \Phenix\Providers\ViewServiceProvider::class,
     ],
 ];

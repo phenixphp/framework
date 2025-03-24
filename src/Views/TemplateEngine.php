@@ -7,9 +7,10 @@ namespace Phenix\Views;
 use Closure;
 use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\File;
+use Phenix\Views\Contracts\TemplateEngine as TemplateEngineContract;
 use Phenix\Views\Contracts\View as ViewContract;
 
-class TemplateEngine
+class TemplateEngine implements TemplateEngineContract
 {
     protected TemplateFactory $templateFactory;
 

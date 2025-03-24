@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Exceptions\Views\ViewNotFoundException;
+use Phenix\Facades\View;
 use Phenix\Views\TemplateEngine;
 
 it('render a template successfully', function (): void {
@@ -105,4 +106,37 @@ it('overwrite an expired template in cache', function (): void {
 
     expect($output)->toBeString();
     expect($output)->toContain('New title');
+});
+
+it('render template using facade', function (): void {
+    View::clearCache();
+
+    $output = View::view('users.index', [
+        'title' => 'New title',
+    ])->render();
+
+    expect($output)->toBeString();
+    expect($output)->toContain('New title');
+});
+
+it('register custom directive using facade', function (): void {
+    $action = 'You can create it';
+
+    View::clearCache();
+
+    View::directive('can', function (string $action): string {
+        return "<?php if({$action} === 'create'): ?>";
+    });
+
+    View::directive('endcan', function (): string {
+        return "<?php endif; ?>";
+    });
+
+    $output = View::view('invoice', [
+        'title' => 'Create invoices',
+        'action' => $action,
+    ])->render();
+
+    expect($output)->toBeString();
+    expect($output)->toContain($action);
 });
