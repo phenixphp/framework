@@ -13,6 +13,7 @@ use Phenix\Console\Commands\MakeQuery;
 use Phenix\Console\Commands\MakeRequest;
 use Phenix\Console\Commands\MakeServiceProvider;
 use Phenix\Console\Commands\MakeTest;
+use Phenix\Console\Commands\ViewClear;
 
 class CommandsServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,7 @@ class CommandsServiceProvider extends ServiceProvider
             MakeQuery::class,
             MakeServiceProvider::class,
             GenerateKey::class,
+            ViewClear::class,
         ]);
     }
 }
