@@ -15,9 +15,9 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', fn (): string => 'local'),
+    'driver' => env('SESSION_DRIVER', static fn (): string => 'local'),
 
-    'lifetime' => env('SESSION_LIFETIME', fn () => 120),
+    'lifetime' => env('SESSION_LIFETIME', static fn () => 120),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,11 +29,11 @@ return [
     | connection in your database configuration options.
     */
 
-    'connection' => env('SESSION_CONNECTION', fn () => 'default'),
+    'connection' => env('SESSION_CONNECTION', static fn () => 'default'),
 
     'cookie_name' => env(
         'SESSION_COOKIE_NAME',
-        fn () => Str::slug(env('APP_NAME', fn () => 'phenix'), '_') . '_session'
+        static fn () => Str::slug(env('APP_NAME', static fn () => 'phenix'), '_') . '_session'
     ),
 
     'path' => '/',

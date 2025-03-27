@@ -7,6 +7,8 @@ namespace Phenix\Console\Commands;
 use Phenix\Facades\Config;
 use Phenix\Facades\File;
 use Phenix\Facades\View;
+use Phenix\Tasks\TaskPool;
+use Phenix\Views\Tasks\CompileTemplates;
 use Phenix\Views\ViewName;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,6 +30,8 @@ class ViewCache extends Command
      */
     protected static $defaultDescription = 'Compiled all available views';
 
+    protected TaskPool $taskPool;
+
     protected function configure(): void
     {
         $this->setHelp('This command allows you to compile all available views.');
@@ -35,9 +39,13 @@ class ViewCache extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->taskPool = new TaskPool();
+
         View::clearCache();
 
         $this->compile(Config::get('view.path'));
+
+        $this->taskPool->run();
 
         $output->writeln('<info>All views were compiled successfully!.</info>');
 
@@ -46,17 +54,20 @@ class ViewCache extends Command
 
     private function compile(string $path): void
     {
+        $templates = [];
         $directories = [];
 
         foreach (File::listFiles($path) as $file) {
             if (File::isDirectory($file)) {
                 $directories[] = $file;
             } else {
-                $template = ViewName::template($file, Config::get('view.path'));
-
-                View::compile($template);
+                $templates[] = ViewName::template($file, Config::get('view.path'));
             }
         }
+
+        $this->taskPool->push(new CompileTemplates($templates));
+
+        $templates = [];
 
         foreach ($directories as $directory) {
             $this->compile($directory);
