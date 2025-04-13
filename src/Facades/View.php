@@ -14,6 +14,8 @@ use Phenix\Views\Contracts\View as ViewContract;
  * @method static void directive(string $name, Closure $closure)
  * @method static void clearCache()
  * @method static void compile(string $template)
+ *
+ * @see \Phenix\Views\TemplateEngine
  */
 class View extends Facade
 {
