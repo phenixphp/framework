@@ -41,8 +41,12 @@
         "nesbot/carbon": "^3.0",
         "phenixphp/http-cors": "^0.1.0",
         "ramsey/collection": "^2.0",
+        "resend/resend-php": "^0.16.0",
         "robmorgan/phinx": "^0.15.2",
+        "symfony/amazon-mailer": "^7.2",
         "symfony/console": "^6.1",
+        "symfony/mailer": "^7.2",
+        "symfony/resend-mailer": "^7.2",
         "symfony/uid": "^7.1",
         "symfony/var-dumper": "^7.2.0",
         "vlucas/phpdotenv": "^5.4"

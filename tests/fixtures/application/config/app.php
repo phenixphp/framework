@@ -20,5 +20,6 @@ return [
         \Phenix\Providers\DatabaseServiceProvider::class,
         \Phenix\Providers\FilesystemServiceProvider::class,
         \Phenix\Providers\ViewServiceProvider::class,
+        \Phenix\Mail\MailServiceProvider::class,
     ],
 ];
