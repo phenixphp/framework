@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Mail;
 
 use Phenix\Facades\Config as Configuration;
-use Symfony\Component\Mailer\Transport\Dsn;
+use Phenix\Mail\Constants\MailerDriver;
 use Symfony\Component\Mime\Address;
 
 class Config
@@ -22,24 +22,6 @@ class Config
         return $this->config['default'] ?? 'smtp';
     }
 
-    public function dsn(): Dsn
-    {
-        $smtp = $this->config['mailers']['smtp'];
-
-        $scheme = ! empty($smtp['encryption']) && $smtp['encryption'] === 'tls'
-            ? (($smtp['port'] == 465) ? 'smtps' : 'smtp')
-            : '';
-
-        return new Dsn(
-            $scheme,
-            $smtp['host'],
-            $smtp['username'] ?? null,
-            $smtp['password'] ?? null,
-            $smtp['port'] ?? null,
-            $smtp
-        );
-    }
-
     public function from(): Address
     {
         return new Address($this->config['from']['address'], $this->config['from']['name'] ?? '');
@@ -50,8 +32,8 @@ class Config
         $this->config['mailers'][$mailer]['transport'] = 'log';
     }
 
-    public function transport(string $mailer): string
+    public function get(MailerDriver $mailer): array
     {
-        return $this->config['mailers'][$mailer]['transport'] ?? 'smtp';
+        return $this->config['mailers'][$mailer->value];
     }
 }

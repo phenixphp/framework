@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
 use Phenix\Mail\Constants\MailerDriver;
+use Phenix\Mail\Mailers\Resend;
+use Phenix\Mail\Mailers\Ses;
+use Phenix\Mail\Mailers\Smtp;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
@@ -103,6 +106,8 @@ it('build log transport for smtp mailer', function (): void {
 
     $mailer = Mail::to($email);
 
+    expect($mailer)->toBeInstanceOf(Smtp::class);
+
     $reflection = new ReflectionClass($mailer);
 
     $property = $reflection->getProperty('transport');
@@ -117,6 +122,8 @@ it('build log transport for smtp mailer', function (): void {
     $email = faker()->freeEmail();
 
     $mailer = Mail::to($email);
+
+    expect($mailer)->toBeInstanceOf(Smtp::class);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -139,6 +146,8 @@ it('build log transport for ses mailer', function (): void {
 
     $mailer = Mail::to($email);
 
+    expect($mailer)->toBeInstanceOf(Ses::class);
+
     $reflection = new ReflectionClass($mailer);
 
     $property = $reflection->getProperty('transport');
@@ -159,6 +168,8 @@ it('build log transport for resend mailer', function (): void {
     $email = faker()->freeEmail();
 
     $mailer = Mail::to($email);
+
+    expect($mailer)->toBeInstanceOf(Resend::class);
 
     $reflection = new ReflectionClass($mailer);
 

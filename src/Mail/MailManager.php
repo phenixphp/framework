@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Phenix\Mail;
 
 use Closure;
-use Phenix\Facades\Config as Configuration;
 use Phenix\Mail\Constants\MailerDriver;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
-use Phenix\Mail\Transports\LogTransport;
-use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
-use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
-use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransportFactory;
+use Phenix\Mail\Mailers\Resend;
+use Phenix\Mail\Mailers\Ses;
+use Phenix\Mail\Mailers\Smtp;
 
 class MailManager
 {
@@ -84,40 +82,16 @@ class MailManager
 
     protected function createSmtpDriver(): MailerContract
     {
-        $factory = new EsmtpTransportFactory();
-
-        $transport = match ($this->config->transport(MailerDriver::SMTP->value)) {
-            'log' => new LogTransport(),
-            'smtp' => $factory->create($this->config->dsn()),
-            default => $factory->create($this->config->dsn()),
-        };
-
-        return new Mailer($transport, $this->config);
+        return new Smtp($this->config->from(), $this->config->get(MailerDriver::SMTP));
     }
 
     protected function createSesDriver(): MailerContract
     {
-        $sesConfig = Configuration::get('services.ses');
-
-        $transport = match ($this->config->transport(MailerDriver::AMAZON_SES->value)) {
-            'log' => new LogTransport(),
-            'ses' => new SesSmtpTransport($sesConfig['key'], $sesConfig['secret'], $sesConfig['region']),
-            default => new SesSmtpTransport($sesConfig['key'], $sesConfig['secret'], $sesConfig['region']),
-        };
-
-        return new Mailer($transport, $this->config);
+        return new Ses($this->config->from(), $this->config->get(MailerDriver::AMAZON_SES));
     }
 
     protected function createResendDriver(): MailerContract
     {
-        $resendConfig = Configuration::get('services.resend');
-
-        $transport = match ($this->config->transport(MailerDriver::RESEND->value)) {
-            'log' => new LogTransport(),
-            'resend' => new ResendApiTransport($resendConfig['key']),
-            default => new ResendApiTransport($resendConfig['key']),
-        };
-
-        return new Mailer($transport, $this->config);
+        return new Resend($this->config->from(), $this->config->get(MailerDriver::RESEND));
     }
 }

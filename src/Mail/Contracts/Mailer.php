@@ -16,4 +16,6 @@ interface Mailer
     public function bcc(array|string $bcc): self;
 
     public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void;
+
+    public function getSendingLog(): array;
 }

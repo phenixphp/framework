@@ -10,9 +10,10 @@ use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Mailer as SymfonyMailer;
 use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Address;
 use Throwable;
 
-class Mailer implements MailerContract
+abstract class Mailer implements MailerContract
 {
     protected array $to;
 
@@ -22,15 +23,20 @@ class Mailer implements MailerContract
 
     protected array $sendingLog;
 
+    protected TransportInterface $transport;
+
     public function __construct(
-        protected TransportInterface $transport,
-        protected Config $config
+        protected Address $from,
+        protected array $config
     ) {
         $this->to = [];
         $this->cc = [];
         $this->bcc = [];
         $this->sendingLog = [];
+        $this->transport = $this->resolveTransport();
     }
+
+    abstract protected function resolveTransport(): TransportInterface;
 
     public function to(array|string $to): self
     {
