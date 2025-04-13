@@ -30,11 +30,9 @@ class MailManager
 
     public function mailer(string|null $mailer = null): MailerContract
     {
-        $mailer ??= $this->config->default();
+        $mailer = $this->resolveDriver($mailer);
 
-        $mailer = MailerDriver::tryFrom($mailer) ?? MailerDriver::SMTP;
-
-        return $this->mailers[$mailer->value] ??= $this->resolve($mailer);
+        return $this->mailers[$mailer->value] ??= $this->resolveMailer($mailer);
     }
 
     public function using(string $mailer): MailerContract
@@ -52,16 +50,18 @@ class MailManager
         $this->mailer()->send($mailable, $data, $callback);
     }
 
-    public function log(string|null $mailer = null): void
+    public function log(MailerDriver|null $mailer = null): void
     {
-        $mailer ??= $this->config->default();
+        if (! $mailer) {
+            $mailer = MailerDriver::from($this->config->default());
+        }
 
-        $this->config->setLogTransport($mailer);
+        $this->loggableMailerDriver = $mailer;
 
-        $this->loggableMailerDriver = MailerDriver::tryFrom($mailer) ?? MailerDriver::SMTP;
+        $this->config->setLogTransport($mailer->value);
     }
 
-    protected function resolve(MailerDriver $mailer): MailerContract
+    protected function resolveMailer(MailerDriver $mailer): MailerContract
     {
         return match ($mailer) {
             MailerDriver::SMTP => $this->createSmtpDriver(),
@@ -69,6 +69,17 @@ class MailManager
             MailerDriver::RESEND => $this->createResendDriver(),
             default => $this->createSmtpDriver(),
         };
+    }
+
+    protected function resolveDriver(string|null $mailer = null): MailerDriver
+    {
+        if ($this->loggableMailerDriver) {
+            return $this->loggableMailerDriver;
+        }
+
+        $mailer ??= $this->config->default();
+
+        return MailerDriver::tryFrom($mailer) ?? MailerDriver::SMTP;
     }
 
     protected function createSmtpDriver(): MailerContract
