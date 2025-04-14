@@ -12,7 +12,7 @@ use Phenix\Runtime\Facade;
  * @method static \Phenix\Mail\Contracts\Mailer using(string $mailer)
  * @method static \Phenix\Mail\Contracts\Mailer to(array|string $to)
  * @method static void send(\Phenix\Mail\Contracts\Mailable $mailable, array $data = [], \Closure|null $callback = null)
- * @method static \Phenix\Mail\Contracts\Mailer log(\Phenix\Mail\Constants\MailerDriver|null $mailer = null)
+ * @method static \Phenix\Mail\Contracts\Mailer log(\Phenix\Mail\Constants\MailerType|null $mailer = null)
  *
  * @see \Phenix\Mail\MailManager
  */

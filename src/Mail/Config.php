@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Mail;
 
 use Phenix\Facades\Config as Configuration;
-use Phenix\Mail\Constants\MailerDriver;
+use Phenix\Mail\Constants\MailerType;
 use Symfony\Component\Mime\Address;
 
 class Config
@@ -32,7 +32,7 @@ class Config
         $this->config['mailers'][$mailer]['transport'] = 'log';
     }
 
-    public function get(MailerDriver $mailer): array
+    public function get(MailerType $mailer): array
     {
         return $this->config['mailers'][$mailer->value];
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
-use Phenix\Mail\Constants\MailerDriver;
+use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Mailers\Resend;
 use Phenix\Mail\Mailers\Ses;
 use Phenix\Mail\Mailers\Smtp;
@@ -38,7 +38,7 @@ it('build smtp transport', function (): void {
 
     expect($transport)->toBeInstanceOf(EsmtpTransport::class);
 
-    $mailer = Mail::using(MailerDriver::SMTP->value)->to($email);
+    $mailer = Mail::using(MailerType::SMTP->value)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -59,7 +59,7 @@ it('build ses transport', function (): void {
 
     $email = faker()->freeEmail();
 
-    $mailer = Mail::using(MailerDriver::AMAZON_SES->value)->to($email);
+    $mailer = Mail::using(MailerType::AMAZON_SES->value)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -78,7 +78,7 @@ it('build resend transport', function (): void {
 
     $email = faker()->freeEmail();
 
-    $mailer = Mail::using(MailerDriver::RESEND->value)->to($email);
+    $mailer = Mail::using(MailerType::RESEND->value)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -117,7 +117,7 @@ it('build log transport for smtp mailer', function (): void {
 
     expect($transport)->toBeInstanceOf(LogTransport::class);
 
-    Mail::log(MailerDriver::SMTP);
+    Mail::log(MailerType::SMTP);
 
     $email = faker()->freeEmail();
 
@@ -140,7 +140,7 @@ it('build log transport for ses mailer', function (): void {
         'transport' => 'ses',
     ]);
 
-    Mail::log(MailerDriver::AMAZON_SES);
+    Mail::log(MailerType::AMAZON_SES);
 
     $email = faker()->freeEmail();
 
@@ -163,7 +163,7 @@ it('build log transport for resend mailer', function (): void {
         'transport' => 'resend',
     ]);
 
-    Mail::log(MailerDriver::RESEND);
+    Mail::log(MailerType::RESEND);
 
     $email = faker()->freeEmail();
 

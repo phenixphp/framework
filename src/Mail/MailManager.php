@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Mail;
 
 use Closure;
-use Phenix\Mail\Constants\MailerDriver;
+use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Mailers\Resend;
 use Phenix\Mail\Mailers\Ses;
@@ -15,7 +15,7 @@ class MailManager
 {
     protected array $mailers = [];
 
-    protected MailerDriver|null $loggableMailerDriver;
+    protected MailerType|null $loggableMailerType;
 
     protected Config $config;
 
@@ -23,12 +23,12 @@ class MailManager
         Config|null $config = new Config()
     ) {
         $this->config = $config;
-        $this->loggableMailerDriver = null;
+        $this->loggableMailerType = null;
     }
 
     public function mailer(string|null $mailer = null): MailerContract
     {
-        $mailer = $this->resolveDriver($mailer);
+        $mailer = $this->resolveMailerType($mailer);
 
         return $this->mailers[$mailer->value] ??= $this->resolveMailer($mailer);
     }
@@ -48,50 +48,50 @@ class MailManager
         $this->mailer()->send($mailable, $data, $callback);
     }
 
-    public function log(MailerDriver|null $mailer = null): void
+    public function log(MailerType|null $mailer = null): void
     {
         if (! $mailer) {
-            $mailer = MailerDriver::from($this->config->default());
+            $mailer = MailerType::from($this->config->default());
         }
 
-        $this->loggableMailerDriver = $mailer;
+        $this->loggableMailerType = $mailer;
 
         $this->config->setLogTransport($mailer->value);
     }
 
-    protected function resolveMailer(MailerDriver $mailer): MailerContract
+    protected function resolveMailer(MailerType $mailer): MailerContract
     {
         return match ($mailer) {
-            MailerDriver::SMTP => $this->createSmtpDriver(),
-            MailerDriver::AMAZON_SES => $this->createSesDriver(),
-            MailerDriver::RESEND => $this->createResendDriver(),
+            MailerType::SMTP => $this->createSmtpDriver(),
+            MailerType::AMAZON_SES => $this->createSesDriver(),
+            MailerType::RESEND => $this->createResendDriver(),
             default => $this->createSmtpDriver(),
         };
     }
 
-    protected function resolveDriver(string|null $mailer = null): MailerDriver
+    protected function resolveMailerType(string|null $mailer = null): MailerType
     {
-        if ($this->loggableMailerDriver) {
-            return $this->loggableMailerDriver;
+        if ($this->loggableMailerType) {
+            return $this->loggableMailerType;
         }
 
         $mailer ??= $this->config->default();
 
-        return MailerDriver::tryFrom($mailer) ?? MailerDriver::SMTP;
+        return MailerType::tryFrom($mailer) ?? MailerType::SMTP;
     }
 
     protected function createSmtpDriver(): MailerContract
     {
-        return new Smtp($this->config->from(), $this->config->get(MailerDriver::SMTP));
+        return new Smtp($this->config->from(), $this->config->get(MailerType::SMTP));
     }
 
     protected function createSesDriver(): MailerContract
     {
-        return new Ses($this->config->from(), $this->config->get(MailerDriver::AMAZON_SES));
+        return new Ses($this->config->from(), $this->config->get(MailerType::AMAZON_SES));
     }
 
     protected function createResendDriver(): MailerContract
     {
-        return new Resend($this->config->from(), $this->config->get(MailerDriver::RESEND));
+        return new Resend($this->config->from(), $this->config->get(MailerType::RESEND));
     }
 }
