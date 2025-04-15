@@ -217,3 +217,29 @@ it('send email successfully using smtp mailer', function (): void {
         return $matches['success'] === false;
     });
 });
+
+it('send email successfully using smtp mailer with sender defined in mailable', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->to(faker()->freeEmail())
+                ->view('emails.welcome')
+                ->subject('Welcome to the team');
+        }
+    };
+
+    Mail::send($mailable);
+
+    Mail::expect()->toBeSent($mailable);
+});
