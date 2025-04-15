@@ -26,14 +26,14 @@ class MailManager
         $this->loggableMailerType = null;
     }
 
-    public function mailer(string|null $mailerType = null): MailerContract
+    public function mailer(MailerType|null $mailerType = null): MailerContract
     {
         $mailerType = $this->resolveMailerType($mailerType);
 
         return $this->mailers[$mailerType->value] ??= $this->resolveMailer($mailerType);
     }
 
-    public function using(string $mailerType): MailerContract
+    public function using(MailerType $mailerType): MailerContract
     {
         return $this->mailer($mailerType);
     }
@@ -67,15 +67,15 @@ class MailManager
         };
     }
 
-    protected function resolveMailerType(string|null $mailerType = null): MailerType
+    protected function resolveMailerType(MailerType|null $mailerType = null): MailerType
     {
         if ($this->loggableMailerType) {
             return $this->loggableMailerType;
         }
 
-        $mailerType ??= $this->config->default();
+        $mailerType ??= MailerType::tryFrom($this->config->default());
 
-        return MailerType::tryFrom($mailerType) ?? MailerType::SMTP;
+        return $mailerType ?? MailerType::SMTP;
     }
 
     protected function createSmtpDriver(): MailerContract

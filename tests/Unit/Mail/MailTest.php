@@ -39,7 +39,7 @@ it('build smtp transport', function (): void {
 
     expect($transport)->toBeInstanceOf(EsmtpTransport::class);
 
-    $mailer = Mail::using(MailerType::SMTP->value)->to($email);
+    $mailer = Mail::using(MailerType::SMTP)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -60,7 +60,7 @@ it('build ses transport', function (): void {
 
     $email = faker()->freeEmail();
 
-    $mailer = Mail::using(MailerType::AMAZON_SES->value)->to($email);
+    $mailer = Mail::using(MailerType::AMAZON_SES)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 
@@ -79,7 +79,7 @@ it('build resend transport', function (): void {
 
     $email = faker()->freeEmail();
 
-    $mailer = Mail::using(MailerType::RESEND->value)->to($email);
+    $mailer = Mail::using(MailerType::RESEND)->to($email);
 
     $reflection = new ReflectionClass($mailer);
 

@@ -10,11 +10,11 @@ use Phenix\Runtime\Facade;
 use Phenix\Testing\TestMail;
 
 /**
- * @method static \Phenix\Mail\Contracts\Mailer mailer(string|null $mailer = null)
- * @method static \Phenix\Mail\Contracts\Mailer using(string $mailer)
+ * @method static \Phenix\Mail\Contracts\Mailer mailer(MailerType|null $mailerType = null)
+ * @method static \Phenix\Mail\Contracts\Mailer using(MailerType $mailerType)
  * @method static \Phenix\Mail\Contracts\Mailer to(array|string $to)
  * @method static void send(\Phenix\Mail\Contracts\Mailable $mailable, array $data = [], \Closure|null $callback = null)
- * @method static \Phenix\Mail\Contracts\Mailer log(\Phenix\Mail\Constants\MailerType|null $mailer = null)
+ * @method static \Phenix\Mail\Contracts\Mailer log(\Phenix\Mail\Constants\MailerType|null $mailerType = null)
  *
  * @see \Phenix\Mail\MailManager
  */
@@ -30,7 +30,7 @@ class Mail extends Facade
         $mailerType ??= MailerType::from(Config::get('mail.default'));
 
         return new TestMail(
-            self::mailer($mailerType->value)->getSendingLog()
+            self::mailer($mailerType)->getSendingLog()
         );
     }
 }
