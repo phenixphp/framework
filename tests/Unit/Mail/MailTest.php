@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
 use Phenix\Mail\Constants\MailerType;
+use Phenix\Mail\Mailable;
 use Phenix\Mail\Mailers\Resend;
 use Phenix\Mail\Mailers\Ses;
 use Phenix\Mail\Mailers\Smtp;
@@ -179,4 +180,35 @@ it('build log transport for resend mailer', function (): void {
     $transport = $property->getValue($mailer);
 
     expect($transport)->toBeInstanceOf(LogTransport::class);
+});
+
+it('send email successfully using smtp mailer', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $email = faker()->freeEmail();
+
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome to the team');
+        }
+    };
+
+    Mail::to($email)->send($mailable);
+
+    Mail::expect()->toBeSent($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+        return $matches['success'] === true;
+    });
 });

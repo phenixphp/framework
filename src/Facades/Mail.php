@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
+use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\MailManager;
 use Phenix\Runtime\Facade;
+use Phenix\Testing\TestMail;
 
 /**
  * @method static \Phenix\Mail\Contracts\Mailer mailer(string|null $mailer = null)
@@ -21,5 +23,14 @@ class Mail extends Facade
     public static function getKeyName(): string
     {
         return MailManager::class;
+    }
+
+    public static function expect(MailerType|null $mailerType = null): TestMail
+    {
+        $mailerType ??= MailerType::from(Config::get('mail.default'));
+
+        return new TestMail(
+            self::mailer($mailerType->value)->getSendingLog()
+        );
     }
 }

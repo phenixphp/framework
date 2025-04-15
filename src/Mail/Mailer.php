@@ -63,7 +63,7 @@ abstract class Mailer implements MailerContract
     {
         $mailer = new SymfonyMailer($this->transport);
 
-        $mailable->from($this->config->from())
+        $mailable->from($this->from)
             ->to($this->to)
             ->cc($this->cc)
             ->bcc($this->bcc)
@@ -72,7 +72,8 @@ abstract class Mailer implements MailerContract
         $email = $mailable->toMail();
 
         if ($this->transport instanceof LogTransport) {
-            $this->sendingLog[$mailable::class] = [
+            $this->sendingLog[] = [
+                'mailable' => $mailable::class,
                 'body' => $email->getHtmlBody(),
                 'subject' => $email->getSubject(),
                 'from' => $email->getFrom(),

@@ -26,16 +26,16 @@ class MailManager
         $this->loggableMailerType = null;
     }
 
-    public function mailer(string|null $mailer = null): MailerContract
+    public function mailer(string|null $mailerType = null): MailerContract
     {
-        $mailer = $this->resolveMailerType($mailer);
+        $mailerType = $this->resolveMailerType($mailerType);
 
-        return $this->mailers[$mailer->value] ??= $this->resolveMailer($mailer);
+        return $this->mailers[$mailerType->value] ??= $this->resolveMailer($mailerType);
     }
 
-    public function using(string $mailer): MailerContract
+    public function using(string $mailerType): MailerContract
     {
-        return $this->mailer($mailer);
+        return $this->mailer($mailerType);
     }
 
     public function to(array|string $to): MailerContract
@@ -48,15 +48,13 @@ class MailManager
         $this->mailer()->send($mailable, $data, $callback);
     }
 
-    public function log(MailerType|null $mailer = null): void
+    public function log(MailerType|null $mailerType = null): void
     {
-        if (! $mailer) {
-            $mailer = MailerType::from($this->config->default());
-        }
+        $mailerType ??= MailerType::from($this->config->default());
 
-        $this->loggableMailerType = $mailer;
+        $this->loggableMailerType = $mailerType;
 
-        $this->config->setLogTransport($mailer->value);
+        $this->config->setLogTransport($mailerType->value);
     }
 
     protected function resolveMailer(MailerType $mailer): MailerContract
@@ -69,15 +67,15 @@ class MailManager
         };
     }
 
-    protected function resolveMailerType(string|null $mailer = null): MailerType
+    protected function resolveMailerType(string|null $mailerType = null): MailerType
     {
         if ($this->loggableMailerType) {
             return $this->loggableMailerType;
         }
 
-        $mailer ??= $this->config->default();
+        $mailerType ??= $this->config->default();
 
-        return MailerType::tryFrom($mailer) ?? MailerType::SMTP;
+        return MailerType::tryFrom($mailerType) ?? MailerType::SMTP;
     }
 
     protected function createSmtpDriver(): MailerContract
