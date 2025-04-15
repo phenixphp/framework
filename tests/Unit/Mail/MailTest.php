@@ -211,4 +211,9 @@ it('send email successfully using smtp mailer', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         return $matches['success'] === true;
     });
+
+    Mail::expect()->toBeSentTimes($mailable, 1);
+    Mail::expect()->toNotBeSent($mailable, function (array $matches): bool {
+        return $matches['success'] === false;
+    });
 });

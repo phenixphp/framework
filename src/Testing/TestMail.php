@@ -33,4 +33,34 @@ class TestMail
             expect($matches)->not->toBeEmpty();
         }
     }
+
+    public function toNotBeSent(Mailable|string $mailable, Closure|null $closure = null): void
+    {
+        if ($mailable instanceof Mailable) {
+            $mailable = $mailable::class;
+        }
+
+        $matches = $this->log->filter(function (array $mail) use ($mailable): bool {
+            return $mail['mailable'] === $mailable;
+        });
+
+        if ($closure) {
+            expect($closure($matches->first()))->toBeFalse();
+        } else {
+            expect($matches)->toBeEmpty();
+        }
+    }
+
+    public function toBeSentTimes(Mailable|string $mailable, int $times): void
+    {
+        if ($mailable instanceof Mailable) {
+            $mailable = $mailable::class;
+        }
+
+        $matches = $this->log->filter(function (array $mail) use ($mailable): bool {
+            return $mail['mailable'] === $mailable;
+        });
+
+        expect($matches)->toHaveCount($times);
+    }
 }
