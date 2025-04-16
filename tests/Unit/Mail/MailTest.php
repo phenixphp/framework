@@ -338,4 +338,35 @@ it('send email successfully using bcc', function (): void {
     });
 });
 
+it('send email successfully using reply to', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+
+    $mailable = new class extends Mailable {
+        public function build(): self
+        {
+            return $this->replyTo(faker()->freeEmail())
+                ->view('emails.welcome')
+                ->subject('Welcome with BCC');
+        }
+    };
+
+    Mail::to($to)
+        ->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+        return isset($matches['replyTo'][0]);
+    });
+});
+
 
