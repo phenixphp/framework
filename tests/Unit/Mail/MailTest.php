@@ -273,3 +273,69 @@ it('merge sender defined from facade and mailer', function (): void {
         return count($matches['to']) === 2;
     });
 });
+
+it('send email successfully using cc', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+    $cc = faker()->freeEmail();
+
+    $mailable = new class extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome with CC');
+        }
+    };
+
+    Mail::to($to)
+        ->cc($cc)
+        ->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches) use ($cc): bool {
+        return $matches['cc'][0]->getAddress() === $cc;
+    });
+});
+
+it('send email successfully using bcc', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+    $bcc = faker()->freeEmail();
+
+    $mailable = new class extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome with BCC');
+        }
+    };
+
+    Mail::to($to)
+        ->bcc($bcc)
+        ->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches) use ($bcc): bool {
+        return $matches['bcc'][0]->getAddress() === $bcc;
+    });
+});
+
+
