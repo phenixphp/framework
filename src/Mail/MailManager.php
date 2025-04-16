@@ -63,7 +63,6 @@ class MailManager
             MailerType::SMTP => $this->createSmtpDriver(),
             MailerType::AMAZON_SES => $this->createSesDriver(),
             MailerType::RESEND => $this->createResendDriver(),
-            default => $this->createSmtpDriver(),
         };
     }
 
