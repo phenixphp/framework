@@ -243,3 +243,33 @@ it('send email successfully using smtp mailer with sender defined in mailable', 
 
     Mail::expect()->toBeSent($mailable);
 });
+
+it('merge sender defined from facade and mailer', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $email = faker()->freeEmail();
+
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->to(faker()->freeEmail())
+                ->view('emails.welcome')
+                ->subject('Welcome to the team');
+        }
+    };
+
+    Mail::to($email)->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+        return count($matches['to']) === 2;
+    });
+});

@@ -39,7 +39,7 @@ abstract class Mailable implements MailableContract
 
     public function to(array|string $to): self
     {
-        $this->to = (array) $to;
+        $this->to = array_merge($this->to, (array) $to);
 
         return $this;
     }
@@ -71,6 +71,8 @@ abstract class Mailable implements MailableContract
             ->replyTo(...$this->replyTo)
             ->subject($this->subject)
             ->html($this->html);
+
+        $this->reset();
 
         return $email;
     }
@@ -116,5 +118,21 @@ abstract class Mailable implements MailableContract
         $this->metadata = $metadata;
 
         return $this;
+    }
+
+    private function reset(): void
+    {
+        $this->from = [];
+        $this->to = [];
+        $this->cc = [];
+        $this->bcc = [];
+        $this->replyTo = [];
+        $this->subject = '';
+        $this->html = '';
+        $this->view = '';
+        $this->textView = '';
+        $this->viewData = [];
+        $this->attachments = [];
+        $this->metadata = [];
     }
 }
