@@ -10,8 +10,6 @@ use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Mail\Transports\LogTransport;
 use Phenix\Tasks\TaskPool;
-use Symfony\Component\Mailer\Mailer as SymfonyMailer;
-use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Address;
 
 abstract class Mailer implements MailerContract
@@ -24,7 +22,7 @@ abstract class Mailer implements MailerContract
 
     protected array $sendingLog;
 
-    protected TransportInterface $transport;
+    protected array $serviceConfig;
 
     public function __construct(
         protected Address $from,
@@ -34,10 +32,13 @@ abstract class Mailer implements MailerContract
         $this->cc = [];
         $this->bcc = [];
         $this->sendingLog = [];
-        $this->transport = $this->resolveTransport();
+        $this->serviceConfig = $this->serviceConfig();
     }
 
-    abstract protected function resolveTransport(): TransportInterface;
+    protected function serviceConfig(): array
+    {
+        return [];
+    }
 
     public function to(array|string $to): self
     {
@@ -62,8 +63,6 @@ abstract class Mailer implements MailerContract
 
     public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void
     {
-        $mailer = new SymfonyMailer($this->transport);
-
         $mailable->from($this->from)
             ->to($this->to)
             ->cc($this->cc)
@@ -74,12 +73,13 @@ abstract class Mailer implements MailerContract
 
         [$result] = TaskPool::pool([
             new SendEmail(
-                $mailer,
                 $email,
+                $this->config,
+                $this->serviceConfig,
             ),
         ]);
 
-        if ($this->transport instanceof LogTransport) {
+        if ($this->serviceConfig instanceof LogTransport) {
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
                 'body' => $email->getHtmlBody(),
