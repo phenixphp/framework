@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
+use Amp\Sync\Channel;
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
 use Phenix\Mail\Constants\MailerType;
@@ -9,11 +11,13 @@ use Phenix\Mail\Mailable;
 use Phenix\Mail\Mailers\Resend;
 use Phenix\Mail\Mailers\Ses;
 use Phenix\Mail\Mailers\Smtp;
+use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Mail\TransportFactory;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
+use Symfony\Component\Mime\Email;
 
 use function Pest\Faker\faker;
 
@@ -324,4 +328,140 @@ it('send email successfully using reply to', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         return isset($matches['replyTo'][0]);
     });
+});
+
+it('run parallel task to send email', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(?Cancellation $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return true;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(\Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $email = new Email();
+    $email->from(faker()->freeEmail())
+        ->to(faker()->freeEmail())
+        ->subject('Welcome to the team')
+        ->text('Welcome to the team');
+
+    $task = new SendEmail($email, [
+        'transport' => 'log',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    expect($task->run($channel, $cancellation))->toBeTruthy();
+});
+
+it('fail on sending email', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(?Cancellation $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return true;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(\Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $email = new Email();
+    $email->from(faker()->freeEmail())
+        ->to(faker()->freeEmail())
+        ->subject('Welcome to the team')
+        ->text('Welcome to the team');
+
+    $task = new SendEmail($email, [
+        'transport' => 'unsupported',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    expect($task->run($channel, $cancellation))->toBeFalsy();
 });
