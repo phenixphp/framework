@@ -8,7 +8,6 @@ use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
-use Phenix\Mail\Transports\LogTransport;
 use Phenix\Tasks\TaskPool;
 use Symfony\Component\Mime\Address;
 
@@ -21,7 +20,6 @@ abstract class Mailer implements MailerContract
     protected array $bcc;
 
     protected array $sendingLog;
-
 
     public function __construct(
         protected Address $from,

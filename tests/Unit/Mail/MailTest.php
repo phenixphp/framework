@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
-use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Mailable;
-use Phenix\Mail\Mailers\Resend;
-use Phenix\Mail\Mailers\Ses;
-use Phenix\Mail\Mailers\Smtp;
 use Phenix\Mail\TransportFactory;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
