@@ -34,6 +34,18 @@ it('build smtp transport', function (): void {
     expect($transport)->toBeInstanceOf(EsmtpTransport::class);
 });
 
+it('build smtp transport without encryption', function (): void {
+    $transport = TransportFactory::make([
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    expect($transport)->toBeInstanceOf(EsmtpTransport::class);
+});
+
 it('build ses transport', function (): void {
     $transport = TransportFactory::make([
         'transport' => 'ses',
