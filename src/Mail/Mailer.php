@@ -7,11 +7,12 @@ namespace Phenix\Mail;
 use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
+use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Mail\Transports\LogTransport;
+use Phenix\Tasks\TaskPool;
 use Symfony\Component\Mailer\Mailer as SymfonyMailer;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Address;
-use Throwable;
 
 abstract class Mailer implements MailerContract
 {
@@ -71,6 +72,13 @@ abstract class Mailer implements MailerContract
 
         $email = $mailable->toMail();
 
+        [$result] = TaskPool::pool([
+            new SendEmail(
+                $mailer,
+                $email,
+            ),
+        ]);
+
         if ($this->transport instanceof LogTransport) {
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
@@ -81,18 +89,8 @@ abstract class Mailer implements MailerContract
                 'cc' => $email->getCc(),
                 'bcc' => $email->getBcc(),
                 'replyTo' => $email->getReplyTo(),
-                'success' => true,
+                'success' => $result,
             ];
-        }
-
-        try {
-            $mailer->send($email);
-        } catch (Throwable) {
-            if ($this->transport instanceof LogTransport) {
-                $this->sendingLog[$mailable::class]['success'] = false;
-            }
-
-            return;
         }
     }
 

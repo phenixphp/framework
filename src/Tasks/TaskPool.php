@@ -30,4 +30,19 @@ class TaskPool
             $this->tasks,
         ));
     }
+
+    /**
+     * @param ParallelTask[] $tasks
+     * @return array
+     */
+    public static function pool(array $tasks): array
+    {
+        $pool = new self();
+
+        foreach ($tasks as $task) {
+            $pool->push($task);
+        }
+
+        return $pool->run();
+    }
 }

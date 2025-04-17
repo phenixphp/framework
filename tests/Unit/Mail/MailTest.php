@@ -289,7 +289,7 @@ it('send email successfully using cc', function (): void {
     $to = faker()->freeEmail();
     $cc = faker()->freeEmail();
 
-    $mailable = new class extends Mailable {
+    $mailable = new class () extends Mailable {
         public function build(): self
         {
             return $this->view('emails.welcome')
@@ -321,7 +321,7 @@ it('send email successfully using bcc', function (): void {
     $to = faker()->freeEmail();
     $bcc = faker()->freeEmail();
 
-    $mailable = new class extends Mailable {
+    $mailable = new class () extends Mailable {
         public function build(): self
         {
             return $this->view('emails.welcome')
@@ -352,7 +352,7 @@ it('send email successfully using reply to', function (): void {
 
     $to = faker()->freeEmail();
 
-    $mailable = new class extends Mailable {
+    $mailable = new class () extends Mailable {
         public function build(): self
         {
             return $this->replyTo(faker()->freeEmail())
@@ -368,5 +368,3 @@ it('send email successfully using reply to', function (): void {
         return isset($matches['replyTo'][0]);
     });
 });
-
-
