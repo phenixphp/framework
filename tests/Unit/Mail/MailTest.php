@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
+use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Mailable;
+use Phenix\Mail\Mailers\Resend;
+use Phenix\Mail\Mailers\Ses;
+use Phenix\Mail\Mailers\Smtp;
 use Phenix\Mail\TransportFactory;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
@@ -57,6 +61,7 @@ it('build log transport', function (): void {
     ]);
 
     expect($transport)->toBeInstanceOf(LogTransport::class);
+    expect((string) $transport)->toBe('LogTransport');
 });
 
 it('throw exception for unsupported transport', function (): void {
@@ -64,6 +69,39 @@ it('throw exception for unsupported transport', function (): void {
         'transport' => 'unsupported',
     ]);
 })->throws(InvalidArgumentException::class, 'Unsupported transport: unsupported');
+
+it('build smtp mailer', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    $email = faker()->freeEmail();
+
+    $mailer = Mail::to($email);
+
+    expect($mailer)->toBeInstanceOf(Smtp::class);
+});
+
+it('build ses mailer', function (): void {
+    $email = faker()->freeEmail();
+
+    $mailer = Mail::using(MailerType::AMAZON_SES)->to($email);
+
+    expect($mailer)->toBeInstanceOf(Ses::class);
+});
+
+it('build resend mailer', function (): void {
+    $email = faker()->freeEmail();
+
+    $mailer = Mail::using(MailerType::RESEND)->to($email);
+
+    expect($mailer)->toBeInstanceOf(Resend::class);
+});
 
 it('send email successfully using smtp mailer', function (): void {
     Config::set('mail.mailers.smtp', [

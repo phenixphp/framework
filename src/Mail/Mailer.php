@@ -21,6 +21,8 @@ abstract class Mailer implements MailerContract
 
     protected array $sendingLog;
 
+    protected array $serviceConfig;
+
     public function __construct(
         protected Address $from,
         protected array $config
@@ -29,6 +31,7 @@ abstract class Mailer implements MailerContract
         $this->cc = [];
         $this->bcc = [];
         $this->sendingLog = [];
+        $this->serviceConfig = $this->serviceConfig();
     }
 
     public function to(array|string $to): self
@@ -66,7 +69,7 @@ abstract class Mailer implements MailerContract
             new SendEmail(
                 $email,
                 $this->config,
-                $this->serviceConfig(),
+                $this->serviceConfig,
             ),
         ]);
 
