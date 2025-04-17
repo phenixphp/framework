@@ -22,7 +22,6 @@ abstract class Mailer implements MailerContract
 
     protected array $sendingLog;
 
-    protected array $serviceConfig;
 
     public function __construct(
         protected Address $from,
@@ -32,12 +31,6 @@ abstract class Mailer implements MailerContract
         $this->cc = [];
         $this->bcc = [];
         $this->sendingLog = [];
-        $this->serviceConfig = $this->serviceConfig();
-    }
-
-    protected function serviceConfig(): array
-    {
-        return [];
     }
 
     public function to(array|string $to): self
@@ -75,11 +68,11 @@ abstract class Mailer implements MailerContract
             new SendEmail(
                 $email,
                 $this->config,
-                $this->serviceConfig,
+                $this->serviceConfig(),
             ),
         ]);
 
-        if ($this->serviceConfig instanceof LogTransport) {
+        if ($this->config['transport'] === 'log') {
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
                 'body' => $email->getHtmlBody(),
@@ -97,5 +90,10 @@ abstract class Mailer implements MailerContract
     public function getSendingLog(): array
     {
         return $this->sendingLog;
+    }
+
+    protected function serviceConfig(): array
+    {
+        return [];
     }
 }

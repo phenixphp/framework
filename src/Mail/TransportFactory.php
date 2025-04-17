@@ -14,7 +14,7 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
 
 class TransportFactory
 {
-    public static function make(array $mailerConfig, array $serviceConfig): TransportInterface
+    public static function make(array $mailerConfig, array $serviceConfig = []): TransportInterface
     {
         return match ($mailerConfig['transport']) {
             'smtp' => self::createSmtpTransport($mailerConfig),
@@ -30,7 +30,7 @@ class TransportFactory
         $factory = new EsmtpTransportFactory();
 
         $scheme = ! empty($config['encryption']) && $config['encryption'] === 'tls'
-        ? (($config['port'] == 465) ? 'smtps' : 'smtp')
+        ? (($config['port'] === 465) ? 'smtps' : 'smtp')
         : '';
 
         $dsn = new Dsn(
