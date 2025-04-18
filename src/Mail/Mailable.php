@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
+use InvalidArgumentException;
+use Phenix\Facades\File;
 use Phenix\Facades\View;
 use Phenix\Mail\Contracts\Mailable as MailableContract;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\File as MailFile;
+
+use function is_array;
+use function is_string;
 
 abstract class Mailable implements MailableContract
 {
@@ -72,6 +79,16 @@ abstract class Mailable implements MailableContract
             ->subject($this->subject)
             ->html($this->html);
 
+        foreach ($this->attachments as $attachment) {
+            $file = new MailFile($attachment['path'], $attachment['name']);
+
+            $email->addPart(new DataPart(
+                $file,
+                $attachment['name'],
+                $attachment['mime']
+            ));
+        }
+
         $this->reset();
 
         return $email;
@@ -106,9 +123,34 @@ abstract class Mailable implements MailableContract
         return $this;
     }
 
+    protected function attachment(string $path, string|null $name = null, string|null $mime = null): self
+    {
+        if (File::exists($path) === false) {
+            throw new InvalidArgumentException("File {$path} does not exist.");
+        }
+
+        $this->attachments[] = [
+            'path' => $path,
+            'name' => $name,
+            'mime' => $mime,
+        ];
+
+        return $this;
+    }
+
     protected function attachments(array $attachments): self
     {
-        $this->attachments = $attachments;
+        foreach ($attachments as $attachment) {
+            if (is_string($attachment)) {
+                $this->attachment($attachment);
+            } elseif (is_array($attachment)) {
+                $this->attachment(
+                    $attachment['path'],
+                    $attachment['name'] ?? null,
+                    $attachment['mime'] ?? null
+                );
+            }
+        }
 
         return $this;
     }

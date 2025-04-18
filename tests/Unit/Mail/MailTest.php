@@ -342,6 +342,73 @@ it('send email successfully using reply to', function (): void {
     });
 });
 
+it('send email with multi attachments', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome with Attachment')
+                ->attachments([
+                    dirname(__DIR__, 2) . '/fixtures/files/lorem.txt',
+                    [
+                        'path' => dirname(__DIR__, 2) . '/fixtures/files/lorem.txt',
+                        'name' => 'archivo.txt',
+                        'mime' => 'text/plain',
+                    ],
+                ]);
+        }
+    };
+
+    Mail::to($to)->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+        foreach ($matches['attachments'] as $part) {
+            if ($part->getFilename() === 'lorem.txt' && $part->getMediaType() === 'text' && $part->getMediaSubtype() === 'plain') {
+                return true;
+            }
+        }
+
+        return false;
+    });
+});
+
+it('throw exception when file attachment does not exists', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome with Attachment')
+                ->attachment(dirname(__DIR__, 2) . '/fixtures/files/invalid.txt');
+        }
+    };
+
+    Mail::to($to)->send($mailable);
+})->throws(InvalidArgumentException::class);
+
 it('run parallel task to send email', function (): void {
     $channel = new class () implements Channel {
         public function receive(?Cancellation $cancellation = null): mixed

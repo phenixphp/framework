@@ -83,6 +83,7 @@ abstract class Mailer implements MailerContract
                 'cc' => $email->getCc(),
                 'bcc' => $email->getBcc(),
                 'replyTo' => $email->getReplyTo(),
+                'attachments' => $email->getAttachments(),
                 'success' => $result,
             ];
         }
