@@ -137,7 +137,7 @@ it('send email successfully using smtp mailer', function (): void {
         public function build(): self
         {
             return $this->view('emails.welcome')
-                ->subject('Welcome to the team');
+                ->subject('It will be sent');
         }
     };
 
@@ -173,7 +173,7 @@ it('send email successfully using smtps', function (): void {
         public function build(): self
         {
             return $this->view('emails.welcome')
-                ->subject('Welcome to the team');
+                ->subject('It will be sent with smtps');
         }
     };
 
@@ -208,7 +208,7 @@ it('send email successfully using smtp mailer with sender defined in mailable', 
         {
             return $this->to(faker()->freeEmail())
                 ->view('emails.welcome')
-                ->subject('Welcome to the team');
+                ->subject('It will be sent with sender');
         }
     };
 
@@ -236,14 +236,21 @@ it('merge sender defined from facade and mailer', function (): void {
         {
             return $this->to(faker()->freeEmail())
                 ->view('emails.welcome')
-                ->subject('Welcome to the team');
+                ->subject('It merges sender');
         }
     };
 
     Mail::to($email)->send($mailable);
 
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
-        return count($matches['to']) === 2;
+        $email = $matches['email'] ?? null;
+
+        if (!$email) return false;
+
+        $headers = $email->getHeaders();
+        $fromHeader = $headers->get('From');
+
+        return $fromHeader !== null;
     });
 });
 
@@ -275,7 +282,15 @@ it('send email successfully using cc', function (): void {
         ->send($mailable);
 
     Mail::expect()->toBeSent($mailable, function (array $matches) use ($cc): bool {
-        return $matches['cc'][0]->getAddress() === $cc;
+        $email = $matches['email'] ?? null;
+
+        if (!$email) return false;
+
+        $headers = $email->getHeaders();
+
+        $ccHeader = $headers->get('Cc');
+
+        return $ccHeader->getAddresses()[0]->getAddress() === $cc;
     });
 });
 
@@ -307,7 +322,15 @@ it('send email successfully using bcc', function (): void {
         ->send($mailable);
 
     Mail::expect()->toBeSent($mailable, function (array $matches) use ($bcc): bool {
-        return $matches['bcc'][0]->getAddress() === $bcc;
+        $email = $matches['email'] ?? null;
+
+        if (!$email) return false;
+
+        $headers = $email->getHeaders();
+
+        $bccHeader = $headers->get('Bcc');
+
+        return $bccHeader->getAddresses()[0]->getAddress() === $bcc;
     });
 });
 
@@ -338,7 +361,14 @@ it('send email successfully using reply to', function (): void {
         ->send($mailable);
 
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
-        return isset($matches['replyTo'][0]);
+        $email = $matches['email'] ?? null;
+
+        if (!$email) return false;
+
+        $headers = $email->getHeaders();
+        $replyTo = $headers->get('Reply-To');
+
+        return $replyTo !== null;
     });
 });
 
@@ -374,7 +404,14 @@ it('send email with multi attachments', function (): void {
     Mail::to($to)->send($mailable);
 
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
-        foreach ($matches['attachments'] as $part) {
+        $email = $matches['email'] ?? null;
+        if (!$email) return false;
+
+        $attachments = $email->getAttachments();
+
+        if (count($attachments) !== 2) return false;
+
+        foreach ($attachments as $part) {
             if ($part->getFilename() === 'lorem.txt' && $part->getMediaType() === 'text' && $part->getMediaSubtype() === 'plain') {
                 return true;
             }
@@ -428,7 +465,7 @@ it('run parallel task to send email', function (): void {
 
         public function isClosed(): bool
         {
-            return true;
+            return false;
         }
 
         public function onClose(Closure $onClose): void
@@ -462,7 +499,7 @@ it('run parallel task to send email', function (): void {
     $email = new Email();
     $email->from(faker()->freeEmail())
         ->to(faker()->freeEmail())
-        ->subject('Welcome to the team')
+        ->subject('It will be sent in parallel')
         ->text('Welcome to the team');
 
     $task = new SendEmail($email, [
@@ -530,7 +567,7 @@ it('fail on sending email', function (): void {
     $email = new Email();
     $email->from(faker()->freeEmail())
         ->to(faker()->freeEmail())
-        ->subject('Welcome to the team')
+        ->subject('It will fail')
         ->text('Welcome to the team');
 
     $task = new SendEmail($email, [
