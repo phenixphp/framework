@@ -544,3 +544,52 @@ it('fail on sending email', function (): void {
 
     expect($task->run($channel, $cancellation))->toBeFalsy();
 });
+
+it('send email with custom headers', function (): void {
+    Config::set('mail.mailers.smtp', [
+        'transport' => 'smtp',
+        'host' => 'smtp.server.com',
+        'port' => 2525,
+        'encryption' => 'tls',
+        'username' => 'username',
+        'password' => 'password',
+    ]);
+
+    Mail::log();
+
+    $to = faker()->freeEmail();
+
+    $mailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('Welcome with Headers')
+                ->tagHeader('password-reset')
+                ->metadataHeader('Color', 'blue')
+                ->metadataHeader('Client-ID', '12345')
+                ->textHeader('X-Auto-Response-Suppress', 'OOF, DR, RN, NRN, AutoReply')
+                ->idHeader('References', [faker()->freeEmail(), faker()->freeEmail()]);
+        }
+    };
+
+    Mail::to($to)->send($mailable);
+
+    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+        $email = $matches['email'] ?? null;
+
+        if (!$email) return false;
+
+        $headers = $email->getHeaders();
+        $tag = $headers->get('X-Tag');
+        $color = $headers->get('X-Metadata-Color');
+        $client = $headers->get('X-Metadata-Client-ID');
+        $text = $headers->get('X-Auto-Response-Suppress');
+        $arrayId = $headers->get('References');
+
+        return $tag && $tag->getValue() === 'password-reset'
+            && $color && $color->getValue() === 'blue'
+            && $client && $client->getValue() === '12345'
+            && $text && $text->getValue() === 'OOF, DR, RN, NRN, AutoReply'
+            && $arrayId !== null;
+    });
+});

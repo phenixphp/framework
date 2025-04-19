@@ -76,14 +76,7 @@ abstract class Mailer implements MailerContract
         if ($this->config['transport'] === 'log') {
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
-                'body' => $email->getHtmlBody(),
-                'subject' => $email->getSubject(),
-                'from' => $email->getFrom(),
-                'to' => $email->getTo(),
-                'cc' => $email->getCc(),
-                'bcc' => $email->getBcc(),
-                'replyTo' => $email->getReplyTo(),
-                'attachments' => $email->getAttachments(),
+                'email' => $email,
                 'success' => $result,
             ];
         }

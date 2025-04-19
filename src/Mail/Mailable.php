@@ -12,6 +12,10 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\File as MailFile;
+use Symfony\Component\Mailer\Header\MetadataHeader;
+use Symfony\Component\Mailer\Header\TagHeader;
+use Symfony\Component\Mime\Header\UnstructuredHeader;
+use Symfony\Component\Mime\Header\IdentificationHeader;
 
 use function is_array;
 use function is_string;
@@ -40,7 +44,7 @@ abstract class Mailable implements MailableContract
 
     public array $attachments = [];
 
-    public array $metadata = [];
+    private array $headers = [];
 
     abstract public function build(): self;
 
@@ -61,6 +65,34 @@ abstract class Mailable implements MailableContract
     public function bcc(array|string $bcc): self
     {
         $this->bcc = (array) $bcc;
+
+        return $this;
+    }
+
+    public function tagHeader(string $value): self
+    {
+        $this->headers[] = new TagHeader($value);
+
+        return $this;
+    }
+
+    public function metadataHeader(string $key, string $value): self
+    {
+        $this->headers[] = new MetadataHeader($key, $value);
+
+        return $this;
+    }
+
+    public function textHeader(string $name, string $value): self
+    {
+        $this->headers[] = new UnstructuredHeader($name, $value);
+
+        return $this;
+    }
+
+    public function idHeader(string $name, array|string $value): self
+    {
+        $this->headers[] = new IdentificationHeader($name, $value);
 
         return $this;
     }
@@ -87,6 +119,10 @@ abstract class Mailable implements MailableContract
                 $attachment['name'],
                 $attachment['mime']
             ));
+        }
+
+        foreach ($this->headers as $header) {
+            $email->getHeaders()->add($header);
         }
 
         $this->reset();
@@ -155,13 +191,6 @@ abstract class Mailable implements MailableContract
         return $this;
     }
 
-    protected function metadata(array $metadata): self
-    {
-        $this->metadata = $metadata;
-
-        return $this;
-    }
-
     private function reset(): void
     {
         $this->from = [];
@@ -175,6 +204,6 @@ abstract class Mailable implements MailableContract
         $this->textView = '';
         $this->viewData = [];
         $this->attachments = [];
-        $this->metadata = [];
+        $this->headers = [];
     }
 }
