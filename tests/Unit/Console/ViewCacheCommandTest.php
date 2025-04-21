@@ -25,7 +25,7 @@ it('compile all available views', function (): void {
         fn (string $filename): bool => str_ends_with($filename, '.php')
     );
 
-    expect($templates)->toHaveCount(7);
+    expect($templates)->toHaveCount(8);
 });
 
 it('run parallel task', function (): void {

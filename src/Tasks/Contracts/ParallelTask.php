@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Contracts;
+namespace Phenix\Tasks\Contracts;
 
 use Amp\Parallel\Worker\Task;
 
