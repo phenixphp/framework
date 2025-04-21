@@ -6,7 +6,7 @@ namespace Phenix\Tasks;
 
 use Amp\Parallel\Worker as Workers;
 
-class WorkerPool extends AbstractWorkerPool
+class WorkerPool extends AbstractWorker
 {
     protected function submitTask(ParallelTask $parallelTask): Workers\Execution
     {

@@ -8,7 +8,7 @@ use Amp\Future;
 use Amp\Parallel\Worker as Workers;
 use Phenix\Tasks\Contracts\WorkerPoolContract;
 
-abstract class AbstractWorkerPool implements WorkerPoolContract
+abstract class AbstractWorker implements WorkerPoolContract
 {
     /**
      * @var Workers\Execution[]

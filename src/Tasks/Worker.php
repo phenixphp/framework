@@ -7,7 +7,7 @@ namespace Phenix\Tasks;
 use Amp\Parallel\Worker as Workers;
 use Amp\Parallel\Worker\Worker as WorkerContract;
 
-class Worker extends AbstractWorkerPool
+class Worker extends AbstractWorker
 {
     protected WorkerContract $worker;
 
