@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Contracts\Http\Requests;
+namespace Phenix\Http\Contracts;
 
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\Request;

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Phenix\Database\Models;
 
 use Phenix\Contracts\Arrayable;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Concerns\BuildModelData;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Database\Models\Relationships\Relationship;
-use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 use stdClass;

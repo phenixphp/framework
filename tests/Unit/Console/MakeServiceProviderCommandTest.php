@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Contracts\Filesystem\File;
+use Phenix\Filesystem\Contracts\File;
 use Phenix\Testing\Mock;
 
 it('creates service provider successfully', function () {

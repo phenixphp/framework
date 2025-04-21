@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
-use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Filesystem\Contracts\File as FileContract;
 use Phenix\Runtime\Facade;
 
 /**

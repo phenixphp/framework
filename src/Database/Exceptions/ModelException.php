@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Exceptions\Database;
+namespace Phenix\Database\Exceptions;
 
 use Exception;
 

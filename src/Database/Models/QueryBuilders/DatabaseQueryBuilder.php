@@ -12,6 +12,7 @@ use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasSentences;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Join;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
@@ -22,7 +23,6 @@ use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Models\Relationships\RelationshipParser;
 use Phenix\Database\QueryBase;
-use Phenix\Exceptions\Database\ModelException;
 use Phenix\Util\Arr;
 
 use function array_key_exists;

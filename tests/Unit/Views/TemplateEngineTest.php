@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Phenix\Exceptions\Views\ViewNotFoundException;
 use Phenix\Facades\View;
+use Phenix\Views\Exceptions\ViewNotFoundException;
 use Phenix\Views\TemplateEngine;
 
 it('render a template successfully', function (): void {

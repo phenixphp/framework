@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Contracts\Filesystem;
+namespace Phenix\Filesystem\Contracts;
 
 interface File
 {

@@ -6,7 +6,7 @@ namespace Phenix\Filesystem;
 
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
-use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Filesystem\Contracts\File as FileContract;
 use Phenix\Util\Str;
 
 use function Amp\File\filesystem;

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 use Phenix\Database\Value;
-use Phenix\Exceptions\QueryError;
 
 it('generates query to select all columns of table', function () {
     $query = new QueryGenerator();
@@ -139,7 +139,7 @@ it('throws exception on generate query using subqueries in column selection with
             ])
             ->from('users')
             ->get();
-    })->toThrow(QueryError::class);
+    })->toThrow(QueryErrorException::class);
 });
 
 it('generates query with column alias', function () {

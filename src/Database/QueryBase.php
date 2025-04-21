@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Contracts\Database\Builder;
-use Phenix\Contracts\Database\QueryBuilder;
 use Phenix\Database\Constants\Action;
+use Phenix\Database\Contracts\Builder;
+use Phenix\Database\Contracts\QueryBuilder;
 
 abstract class QueryBase extends Clause implements QueryBuilder, Builder
 {
