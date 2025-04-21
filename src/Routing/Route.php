@@ -6,7 +6,7 @@ namespace Phenix\Routing;
 
 use Closure;
 use Phenix\App;
-use Phenix\Constants\HttpMethod;
+use Phenix\Http\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\FormRequest;
 use Phenix\Http\Request;
