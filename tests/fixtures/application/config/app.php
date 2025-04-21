@@ -16,11 +16,11 @@ return [
         'router' => [],
     ],
     'providers' => [
-        \Phenix\Providers\CommandsServiceProvider::class,
-        \Phenix\Providers\RouteServiceProvider::class,
-        \Phenix\Providers\DatabaseServiceProvider::class,
-        \Phenix\Providers\FilesystemServiceProvider::class,
-        \Phenix\Providers\ViewServiceProvider::class,
+        \Phenix\Console\CommandsServiceProvider::class,
+        \Phenix\Routing\RouteServiceProvider::class,
+        \Phenix\Database\DatabaseServiceProvider::class,
+        \Phenix\Filesystem\FilesystemServiceProvider::class,
+        \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
     ],
 ];

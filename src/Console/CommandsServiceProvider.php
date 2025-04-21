@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Providers;
+namespace Phenix\Console;
 
 use Phenix\Console\Commands\GenerateKey;
 use Phenix\Console\Commands\MakeCollection;
@@ -15,6 +15,7 @@ use Phenix\Console\Commands\MakeServiceProvider;
 use Phenix\Console\Commands\MakeTest;
 use Phenix\Console\Commands\ViewCache;
 use Phenix\Console\Commands\ViewClear;
+use Phenix\Providers\ServiceProvider;
 
 class CommandsServiceProvider extends ServiceProvider
 {

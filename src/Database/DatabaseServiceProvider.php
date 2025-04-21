@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Providers;
+namespace Phenix\Database;
 
 use Phenix\Database\Connections\ConnectionFactory;
 use Phenix\Database\Console\MakeMigration;
@@ -12,8 +12,8 @@ use Phenix\Database\Console\Rollback;
 use Phenix\Database\Console\SeedRun;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\QueryBuilder;
 use Phenix\Facades\Config;
+use Phenix\Providers\ServiceProvider;
 
 class DatabaseServiceProvider extends ServiceProvider
 {

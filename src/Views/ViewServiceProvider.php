@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Providers;
+namespace Phenix\Views;
 
+use Phenix\Providers\ServiceProvider;
 use Phenix\Views\Contracts\TemplateEngine as TemplateEngineContract;
-use Phenix\Views\TemplateEngine;
 
 class ViewServiceProvider extends ServiceProvider
 {

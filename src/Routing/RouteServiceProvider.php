@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Providers;
+namespace Phenix\Routing;
 
-use Phenix\Routing\Route;
+use Phenix\Providers\ServiceProvider;
 use Phenix\Util\Directory;
 use Phenix\Util\NamespaceResolver;
 

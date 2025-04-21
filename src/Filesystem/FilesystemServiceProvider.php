@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Providers;
+namespace Phenix\Filesystem;
 
 use Phenix\Filesystem\Contracts\File as FileContract;
-use Phenix\Filesystem\File;
-use Phenix\Filesystem\Storage;
+use Phenix\Providers\ServiceProvider;
 
 class FilesystemServiceProvider extends ServiceProvider
 {
