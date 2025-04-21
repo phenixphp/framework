@@ -8,7 +8,7 @@ use Phenix\Database\Alias;
 use Phenix\Database\Functions;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Database\Exceptions\QueryError;
+use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Util\Arr;
 
 use function is_string;
@@ -35,7 +35,7 @@ trait PrepareColumns
         [$dml, $arguments] = $subquery->toSql();
 
         if (! str_contains($dml, 'LIMIT 1')) {
-            throw new QueryError('The subquery must be limited to one record');
+            throw new QueryErrorException('The subquery must be limited to one record');
         }
 
         $this->arguments = array_merge($this->arguments, $arguments);

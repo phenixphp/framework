@@ -6,7 +6,7 @@ namespace Phenix\Database\Exceptions;
 
 use Exception;
 
-class QueryError extends Exception
+class QueryErrorException extends Exception
 {
     // ..
 }
