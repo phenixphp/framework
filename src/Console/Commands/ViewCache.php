@@ -7,7 +7,7 @@ namespace Phenix\Console\Commands;
 use Phenix\Facades\Config;
 use Phenix\Facades\File;
 use Phenix\Facades\View;
-use Phenix\Tasks\Worker;
+use Phenix\Tasks\WorkerPool;
 use Phenix\Views\Tasks\CompileTemplates;
 use Phenix\Views\ViewName;
 use Symfony\Component\Console\Command\Command;
@@ -30,7 +30,7 @@ class ViewCache extends Command
      */
     protected static $defaultDescription = 'Compiled all available views';
 
-    protected Worker $taskPool;
+    protected array $tasks = [];
 
     protected function configure(): void
     {
@@ -39,13 +39,13 @@ class ViewCache extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->taskPool = new Worker();
+        $this->tasks = [];
 
         View::clearCache();
 
         $this->compile(Config::get('view.path'));
 
-        $this->taskPool->run();
+        WorkerPool::batch($this->tasks);
 
         $output->writeln('<info>All views were compiled successfully!.</info>');
 
@@ -65,7 +65,7 @@ class ViewCache extends Command
             }
         }
 
-        $this->taskPool->submit(new CompileTemplates($templates));
+        $this->tasks[] = new CompileTemplates($templates);
 
         $templates = [];
 
