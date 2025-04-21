@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Closure;
-use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Concerns\Query\HasWhereClause;
 use Phenix\Database\Concerns\Query\PrepareColumns;
 use Phenix\Database\Constants\LogicalOperator;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
+use Phenix\Database\Contracts\Builder;
 use Phenix\Util\Arr;
 
 use function is_array;

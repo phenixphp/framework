@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalOperator;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Contracts\Builder;
 use Phenix\Util\Arr;
 
 class Join extends Clause implements Builder
