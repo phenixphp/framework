@@ -47,7 +47,7 @@ class Worker
      * @param ParallelTask[] $tasks
      * @return array
      */
-    public static function pool(array $tasks): array
+    public static function batch(array $tasks): array
     {
         $pool = new self();
 

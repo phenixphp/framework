@@ -65,7 +65,7 @@ abstract class Mailer implements MailerContract
 
         $email = $mailable->toMail();
 
-        [$result] = Worker::pool([
+        [$result] = Worker::batch([
             new SendEmail(
                 $email,
                 $this->config,
