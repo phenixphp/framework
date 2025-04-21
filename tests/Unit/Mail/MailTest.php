@@ -456,6 +456,8 @@ it('throw exception when file attachment does not exists', function (): void {
     };
 
     Mail::to($to)->send($mailable);
+
+    Mail::expect()->toNotBeSent($mailable);
 })->throws(InvalidArgumentException::class);
 
 it('run parallel task to send email', function (): void {
