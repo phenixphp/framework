@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Amp\Future;
-use Amp\Parallel\Worker;
+use Amp\Parallel\Worker as Workers;
 use Amp\Parallel\Worker\Worker as WorkerContract;
 
-class TaskPool
+class Worker
 {
     protected WorkerContract $worker;
 
     /**
-     * @var Worker\Execution[]
+     * @var Workers\Execution[]
      */
     protected array $tasks;
 
     public function __construct()
     {
         $this->tasks = [];
-        $this->worker = Worker\createWorker();
+        $this->worker = Workers\createWorker();
     }
 
     public function push(ParallelTask $parallelTask): self
@@ -33,7 +33,7 @@ class TaskPool
     public function run(): array
     {
         return Future\await(array_map(
-            fn (Worker\Execution $e) => $e->getFuture(),
+            fn (Workers\Execution $e) => $e->getFuture(),
             $this->tasks,
         ));
     }

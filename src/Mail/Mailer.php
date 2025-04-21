@@ -8,7 +8,7 @@ use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
-use Phenix\Tasks\TaskPool;
+use Phenix\Tasks\Worker;
 use Symfony\Component\Mime\Address;
 
 abstract class Mailer implements MailerContract
@@ -65,7 +65,7 @@ abstract class Mailer implements MailerContract
 
         $email = $mailable->toMail();
 
-        [$result] = TaskPool::pool([
+        [$result] = Worker::pool([
             new SendEmail(
                 $email,
                 $this->config,
