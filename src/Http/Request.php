@@ -16,7 +16,7 @@ use League\Uri\Components\Query;
 use Phenix\Constants\ContentType;
 use Phenix\Constants\RequestMode;
 use Phenix\Contracts\Arrayable;
-use Phenix\Contracts\Http\Requests\BodyParser;
+use Phenix\Http\Contracts\BodyParser;
 use Phenix\Http\Requests\Concerns\HasCookies;
 use Phenix\Http\Requests\Concerns\HasHeaders;
 use Phenix\Http\Requests\Concerns\HasQueryParameters;
