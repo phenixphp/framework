@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Contracts\Database;
+namespace Phenix\Database\Contracts;
 
 use Stringable;
 

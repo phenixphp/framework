@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Contracts\Database\RawValue;
+use Phenix\Database\Contracts\RawValue;
 
 class Value implements RawValue
 {
