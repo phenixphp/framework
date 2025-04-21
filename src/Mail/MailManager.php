@@ -54,7 +54,7 @@ class MailManager
 
         $this->loggableMailerType = $mailerType;
 
-        $this->config->setLogTransport($mailerType->value);
+        $this->config->setLogTransport($mailerType);
     }
 
     protected function resolveMailer(MailerType $mailer): MailerContract

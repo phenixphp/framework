@@ -27,9 +27,9 @@ class Config
         return new Address($this->config['from']['address'], $this->config['from']['name'] ?? '');
     }
 
-    public function setLogTransport(string $mailer): void
+    public function setLogTransport(MailerType $mailer): void
     {
-        $this->config['mailers'][$mailer]['transport'] = 'log';
+        $this->config['mailers'][$mailer->value]['transport'] = 'log';
     }
 
     public function get(MailerType $mailer): array
