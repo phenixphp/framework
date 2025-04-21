@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Mail;
 
 use InvalidArgumentException;
+use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Transports\LogTransport;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
@@ -17,10 +18,10 @@ class TransportFactory
     public static function make(array $mailerConfig, array $serviceConfig = []): TransportInterface
     {
         return match ($mailerConfig['transport']) {
-            'smtp' => self::createSmtpTransport($mailerConfig),
-            'ses' => new SesSmtpTransport($serviceConfig['key'], $serviceConfig['secret'], $serviceConfig['region']),
+            MailerType::SMTP->value => self::createSmtpTransport($mailerConfig),
+            MailerType::AMAZON_SES->value => new SesSmtpTransport($serviceConfig['key'], $serviceConfig['secret'], $serviceConfig['region']),
+            MailerType::RESEND->value => new ResendApiTransport($serviceConfig['key']),
             'log' => new LogTransport(),
-            'resend' => new ResendApiTransport($serviceConfig['key']),
             default => throw new InvalidArgumentException("Unsupported transport: {$mailerConfig['transport']}"),
         };
     }
@@ -31,7 +32,7 @@ class TransportFactory
 
         $scheme = 'smtp';
 
-        if (!empty($config['encryption']) && $config['encryption'] === 'tls') {
+        if (! empty($config['encryption']) && $config['encryption'] === 'tls') {
             $scheme = ($config['port'] === 465) ? 'smtps' : 'smtp';
         }
 
