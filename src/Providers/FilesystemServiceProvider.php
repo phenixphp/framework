@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Providers;
 
-use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Filesystem\Contracts\File as FileContract;
 use Phenix\Filesystem\File;
 use Phenix\Filesystem\Storage;
 
