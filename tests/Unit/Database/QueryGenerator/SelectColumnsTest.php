@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 use Phenix\Database\Value;
-use Phenix\Database\Exceptions\QueryErrorException;
 
 it('generates query to select all columns of table', function () {
     $query = new QueryGenerator();

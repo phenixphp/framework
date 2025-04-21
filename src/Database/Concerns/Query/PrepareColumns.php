@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Phenix\Database\Alias;
+use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Util\Arr;
 
 use function is_string;

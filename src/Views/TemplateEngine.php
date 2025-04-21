@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Phenix\Views;
 
 use Closure;
-use Phenix\Views\Exceptions\ViewNotFoundException;
 use Phenix\Facades\File;
 use Phenix\Views\Contracts\TemplateEngine as TemplateEngineContract;
 use Phenix\Views\Contracts\View as ViewContract;
+use Phenix\Views\Exceptions\ViewNotFoundException;
 
 class TemplateEngine implements TemplateEngineContract
 {

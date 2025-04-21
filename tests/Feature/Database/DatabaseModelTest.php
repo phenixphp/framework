@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Amp\Sql\SqlQueryError;
 use Phenix\Database\Constants\Connection;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
-use Phenix\Database\Exceptions\ModelException;
 use Phenix\Util\Date;
 use Tests\Feature\Database\Models\Comment;
 use Tests\Feature\Database\Models\Invoice;

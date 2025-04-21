@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models\Concerns;
 
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
 use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
 use Phenix\Database\Models\Attributes\Column;
@@ -16,7 +17,6 @@ use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
-use Phenix\Database\Exceptions\ModelException;
 use Phenix\Util\Arr;
 use ReflectionAttribute;
 use ReflectionObject;
