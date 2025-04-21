@@ -65,7 +65,7 @@ class ViewCache extends Command
             }
         }
 
-        $this->taskPool->push(new CompileTemplates($templates));
+        $this->taskPool->submit(new CompileTemplates($templates));
 
         $templates = [];
 

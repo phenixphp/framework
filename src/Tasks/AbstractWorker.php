@@ -20,7 +20,7 @@ abstract class AbstractWorker implements WorkerContract
         $this->tasks = [];
     }
 
-    public function push(ParallelTask $parallelTask): self
+    public function submit(ParallelTask $parallelTask): self
     {
         $this->tasks[] = $this->submitTask($parallelTask);
 
@@ -44,7 +44,7 @@ abstract class AbstractWorker implements WorkerContract
         $pool = new static();
 
         foreach ($tasks as $task) {
-            $pool->push($task);
+            $pool->submit($task);
         }
 
         $results = $pool->run();
