@@ -8,6 +8,7 @@ use Amp\Future;
 use Amp\Parallel\Worker as Workers;
 use Phenix\Tasks\Contracts\Worker as WorkerContract;
 
+/** @phpstan-consistent-constructor */
 abstract class AbstractWorker implements WorkerContract
 {
     /**
