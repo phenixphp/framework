@@ -30,6 +30,7 @@ class TransportFactory
         $factory = new EsmtpTransportFactory();
 
         $scheme = 'smtp';
+
         if (!empty($config['encryption']) && $config['encryption'] === 'tls') {
             $scheme = ($config['port'] === 465) ? 'smtps' : 'smtp';
         }
