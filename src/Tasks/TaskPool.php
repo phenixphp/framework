@@ -6,19 +6,26 @@ namespace Phenix\Tasks;
 
 use Amp\Future;
 use Amp\Parallel\Worker;
+use Amp\Parallel\Worker\Worker as WorkerContract;
 
 class TaskPool
 {
+    protected WorkerContract $worker;
+
+    /**
+     * @var Worker\Execution[]
+     */
     protected array $tasks;
 
     public function __construct()
     {
         $this->tasks = [];
+        $this->worker = Worker\createWorker();
     }
 
     public function push(ParallelTask $parallelTask): self
     {
-        $this->tasks[] = Worker\submit($parallelTask);
+        $this->tasks[] = $this->worker->submit($parallelTask);
 
         return $this;
     }
@@ -29,6 +36,11 @@ class TaskPool
             fn (Worker\Execution $e) => $e->getFuture(),
             $this->tasks,
         ));
+    }
+
+    public function shutdown(): void
+    {
+        $this->worker->shutdown();
     }
 
     /**
@@ -43,6 +55,10 @@ class TaskPool
             $pool->push($task);
         }
 
-        return $pool->run();
+        $results = $pool->run();
+
+        $pool->shutdown();
+
+        return $results;
     }
 }
