@@ -22,7 +22,7 @@ use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Models\Relationships\RelationshipParser;
 use Phenix\Database\QueryBase;
-use Phenix\Exceptions\Database\ModelException;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Util\Arr;
 
 use function array_key_exists;

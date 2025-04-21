@@ -11,7 +11,7 @@ use Phenix\Database\Models\Concerns\BuildModelData;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Database\Models\Relationships\Relationship;
-use Phenix\Exceptions\Database\ModelException;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 use stdClass;

@@ -16,7 +16,7 @@ use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
-use Phenix\Exceptions\Database\ModelException;
+use Phenix\Database\Exceptions\ModelException;
 use Phenix\Util\Arr;
 use ReflectionAttribute;
 use ReflectionObject;
