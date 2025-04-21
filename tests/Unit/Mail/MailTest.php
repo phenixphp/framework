@@ -245,7 +245,9 @@ it('merge sender defined from facade and mailer', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $headers = $email->getHeaders();
         $fromHeader = $headers->get('From');
@@ -284,7 +286,9 @@ it('send email successfully using cc', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches) use ($cc): bool {
         $email = $matches['email'] ?? null;
 
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $headers = $email->getHeaders();
 
@@ -324,7 +328,9 @@ it('send email successfully using bcc', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches) use ($bcc): bool {
         $email = $matches['email'] ?? null;
 
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $headers = $email->getHeaders();
 
@@ -363,7 +369,9 @@ it('send email successfully using reply to', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $headers = $email->getHeaders();
         $replyTo = $headers->get('Reply-To');
@@ -405,11 +413,15 @@ it('send email with multi attachments', function (): void {
 
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         $email = $matches['email'] ?? null;
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $attachments = $email->getAttachments();
 
-        if (count($attachments) !== 2) return false;
+        if (count($attachments) !== 2) {
+            return false;
+        }
 
         foreach ($attachments as $part) {
             if ($part->getFilename() === 'lorem.txt' && $part->getMediaType() === 'text' && $part->getMediaSubtype() === 'plain') {
@@ -614,7 +626,9 @@ it('send email with custom headers', function (): void {
     Mail::expect()->toBeSent($mailable, function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
-        if (!$email) return false;
+        if (! $email) {
+            return false;
+        }
 
         $headers = $email->getHeaders();
         $tag = $headers->get('X-Tag');
