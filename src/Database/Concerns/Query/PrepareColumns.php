@@ -8,7 +8,7 @@ use Phenix\Database\Alias;
 use Phenix\Database\Functions;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Exceptions\QueryError;
+use Phenix\Database\Exceptions\QueryError;
 use Phenix\Util\Arr;
 
 use function is_string;

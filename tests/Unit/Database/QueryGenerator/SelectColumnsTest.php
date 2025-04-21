@@ -8,7 +8,7 @@ use Phenix\Database\Functions;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 use Phenix\Database\Value;
-use Phenix\Exceptions\QueryError;
+use Phenix\Database\Exceptions\QueryError;
 
 it('generates query to select all columns of table', function () {
     $query = new QueryGenerator();
