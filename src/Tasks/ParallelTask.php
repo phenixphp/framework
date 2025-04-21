@@ -7,7 +7,7 @@ namespace Phenix\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\AppBuilder;
-use Phenix\Contracts\ParallelTask as ParallelTaskContract;
+use Phenix\Tasks\Contracts\ParallelTask as ParallelTaskContract;
 use Phenix\Facades\Config;
 
 abstract class ParallelTask implements ParallelTaskContract
