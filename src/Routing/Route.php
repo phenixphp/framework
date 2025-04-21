@@ -6,8 +6,8 @@ namespace Phenix\Routing;
 
 use Closure;
 use Phenix\App;
-use Phenix\Http\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
+use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\FormRequest;
 use Phenix\Http\Request;
 use Phenix\Http\Requests\ClosureRequestHandler;

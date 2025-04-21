@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Requests;
 
-use Phenix\Constants\RequestMode;
+use Phenix\Http\Constants\RequestMode;
 use Phenix\Http\FormRequest;
 use Phenix\Validation\Types\Email;
 use Phenix\Validation\Types\Str;

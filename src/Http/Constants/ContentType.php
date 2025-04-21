@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Constants;
+namespace Phenix\Http\Constants;
 
 enum ContentType: string
 {
