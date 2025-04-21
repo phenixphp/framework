@@ -6,7 +6,7 @@ namespace Phenix\Tasks\Contracts;
 
 use Phenix\Tasks\ParallelTask;
 
-interface WorkerPoolContract
+interface Worker
 {
     public function push(ParallelTask $parallelTask): self;
 

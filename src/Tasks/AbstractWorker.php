@@ -6,9 +6,9 @@ namespace Phenix\Tasks;
 
 use Amp\Future;
 use Amp\Parallel\Worker as Workers;
-use Phenix\Tasks\Contracts\WorkerPoolContract;
+use Phenix\Tasks\Contracts\Worker as WorkerContract;
 
-abstract class AbstractWorker implements WorkerPoolContract
+abstract class AbstractWorker implements WorkerContract
 {
     /**
      * @var Workers\Execution[]
