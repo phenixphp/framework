@@ -8,7 +8,7 @@ use Amp\Http\Server\Request as ServerRequest;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response as ServerResponse;
 use Closure;
-use Phenix\Constants\HttpStatus;
+use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\FormRequest;
 
 class ClosureRequestHandler implements RequestHandler

@@ -8,7 +8,7 @@ use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
-use Phenix\Constants\HttpStatus;
+use Phenix\Http\Constants\HttpStatus;
 
 class AcceptJsonResponses implements Middleware
 {

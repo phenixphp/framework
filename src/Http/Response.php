@@ -7,7 +7,7 @@ namespace Phenix\Http;
 use Amp\ByteStream\ReadableStream;
 use Amp\Http\Server\Response as ServerResponse;
 use Amp\Http\Server\Trailers;
-use Phenix\Constants\HttpStatus;
+use Phenix\Http\Constants\HttpStatus;
 use Phenix\Contracts\Arrayable;
 use Phenix\Facades\View;
 

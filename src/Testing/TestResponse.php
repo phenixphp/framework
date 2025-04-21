@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Testing;
 
 use Amp\Http\Client\Response;
-use Phenix\Constants\HttpStatus;
+use Phenix\Http\Constants\HttpStatus;
 
 class TestResponse
 {
