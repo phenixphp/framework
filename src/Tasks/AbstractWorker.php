@@ -21,7 +21,7 @@ abstract class AbstractWorker implements WorkerContract
         $this->tasks = [];
     }
 
-    public function submit(ParallelTask $parallelTask): self
+    public function submit(AppParallelTask $parallelTask): self
     {
         $this->tasks[] = $this->submitTask($parallelTask);
 
@@ -37,7 +37,7 @@ abstract class AbstractWorker implements WorkerContract
     }
 
     /**
-     * @param ParallelTask[] $tasks
+     * @param AppParallelTask[] $tasks
      * @return array
      */
     public static function batch(array $tasks): array
@@ -55,7 +55,7 @@ abstract class AbstractWorker implements WorkerContract
         return $results;
     }
 
-    abstract protected function submitTask(ParallelTask $parallelTask): Workers\Execution;
+    abstract protected function submitTask(AppParallelTask $parallelTask): Workers\Execution;
 
     protected function finalize(): void
     {

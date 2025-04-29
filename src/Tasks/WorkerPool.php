@@ -8,7 +8,7 @@ use Amp\Parallel\Worker as Workers;
 
 class WorkerPool extends AbstractWorker
 {
-    protected function submitTask(ParallelTask $parallelTask): Workers\Execution
+    protected function submitTask(AppParallelTask $parallelTask): Workers\Execution
     {
         return Workers\submit($parallelTask);
     }

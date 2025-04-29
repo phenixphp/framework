@@ -10,7 +10,7 @@ use Phenix\AppBuilder;
 use Phenix\Facades\Config;
 use Phenix\Tasks\Contracts\ParallelTask as ParallelTaskContract;
 
-abstract class ParallelTask implements ParallelTaskContract
+abstract class AppParallelTask implements ParallelTaskContract
 {
     protected string $basePath;
 

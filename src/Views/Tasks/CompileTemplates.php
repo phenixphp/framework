@@ -8,10 +8,10 @@ use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Facades\Config;
 use Phenix\Facades\View;
-use Phenix\Tasks\ParallelTask;
+use Phenix\Tasks\AppParallelTask;
 use Phenix\Views\ViewName;
 
-class CompileTemplates extends ParallelTask
+class CompileTemplates extends AppParallelTask
 {
     protected string $basePath;
 

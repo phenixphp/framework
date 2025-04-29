@@ -17,7 +17,7 @@ class Worker extends AbstractWorker
         $this->worker = Workers\createWorker();
     }
 
-    protected function submitTask(ParallelTask $parallelTask): Workers\Execution
+    protected function submitTask(AppParallelTask $parallelTask): Workers\Execution
     {
         return $this->worker->submit($parallelTask);
     }
