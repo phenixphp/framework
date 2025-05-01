@@ -8,8 +8,8 @@ use Phenix\Crypto\Contracts\Hasher;
 use Phenix\Runtime\Facade;
 
 /**
- * @method static string make(string $value): string
- * @method static bool verify(string $hash, string $value): bool
+ * @method static string make(string $password): string
+ * @method static bool verify(string $hash, string $password): bool
  * @method static bool needsRehash(string $hash): bool
  *
  * @see \Phenix\Crypto\Hash
