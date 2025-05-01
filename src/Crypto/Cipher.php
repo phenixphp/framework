@@ -59,7 +59,7 @@ class Cipher implements CipherContract
             }
         }
 
-        if ($decrypted === false) {
+        if (! $decrypted) {
             throw new DecryptException('Could not decrypt the data.');
         }
 

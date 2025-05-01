@@ -164,7 +164,7 @@ it('run encryption and decryption tasks successfully', function (): void {
     expect($result->output())->toEqual($data);
 })->group('crypto');
 
-it('run encryption with failed result', function (): void {
+it('run encryption task with failed result', function (): void {
     $channel = new class () implements Channel {
         public function receive(Cancellation|null $cancellation = null): mixed
         {
@@ -305,3 +305,72 @@ it('execute hashing operations successfully', function (): void {
         ->and($isValid)->toBeTrue()
         ->and($needsRehash)->toBeFalse();
 })->group('crypto');
+
+it('decrypt data with previous key', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(Cancellation|null $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return false;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+            //
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $previousKey = Crypto::generateEncodedKey();
+    $newKey = Crypto::generateEncodedKey();
+
+    $data = ['foo' => 'bar'];
+
+    $cipher = new Cipher($previousKey);
+
+    $encrypted = $cipher->encrypt($data, true);
+
+    $task = new Decrypt($newKey, $encrypted, true, $previousKey);
+
+    $result = $task->run($channel, $cancellation);
+
+    expect($result)->toBeInstanceOf(Result::class);
+    expect($result->isSuccess())->toBeTrue();
+    expect($result->output())->toBeArray()->and($result->output())->toEqual($data);
+})
+->group('crypto');

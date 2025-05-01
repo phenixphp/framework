@@ -19,7 +19,9 @@ class Decrypt extends ParallelTask
         protected string $key,
         #[SensitiveParameter]
         protected string $value,
-        protected bool $unserialize = true
+        protected bool $unserialize = true,
+        #[SensitiveParameter]
+        protected string|null $previousKey = null,
     ) {
         parent::__construct();
     }
@@ -27,7 +29,7 @@ class Decrypt extends ParallelTask
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
         try {
-            $cipher = new Cipher($this->key);
+            $cipher = new Cipher($this->key, $this->previousKey);
 
             $output = $cipher->decrypt($this->value, $this->unserialize);
 

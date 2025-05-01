@@ -32,7 +32,7 @@ class CryptoServiceProvider extends ServiceProvider
 
             return new Crypto(
                 $key,
-                Config::get('app.previous_keys')
+                Config::get('app.previous_key')
             );
         })->setShared(true);
 
