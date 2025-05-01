@@ -30,7 +30,7 @@ class Cipher implements CipherContract
             key: $this->parseKey($this->key)
         );
 
-        if ($output === false) {
+        if (! $output) {
             throw new EncryptException();
         }
 
