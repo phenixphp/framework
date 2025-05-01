@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Crypto;
 
+use InvalidArgumentException;
 use Phenix\Crypto\Constants\BinBase64Mode;
 use Phenix\Util\Utility;
 
@@ -23,13 +24,18 @@ final class Bin2Base64 extends Utility
 
     public static function decode(string $data): string
     {
-        [$mode, $encoded] = explode(':', $data, 2);
+        if (str_contains($data, ':')) {
+            [$mode, $encoded] = explode(':', $data, 2);
 
-        return match ($mode) {
-            BinBase64Mode::BASE_64->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_ORIGINAL),
-            BinBase64Mode::BASE_64_NO_PADDING->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_ORIGINAL_NO_PADDING),
-            BinBase64Mode::BASE_64_URL->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_URLSAFE),
-            BinBase64Mode::BASE_64_URL_NO_PADDING->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
-        };
+            return match ($mode) {
+                BinBase64Mode::BASE_64->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_ORIGINAL),
+                BinBase64Mode::BASE_64_NO_PADDING->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_ORIGINAL_NO_PADDING),
+                BinBase64Mode::BASE_64_URL->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_URLSAFE),
+                BinBase64Mode::BASE_64_URL_NO_PADDING->value => sodium_base642bin($encoded, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+                default => throw new InvalidArgumentException("Invalid base64 mode: {$mode}"),
+            };
+        }
+
+        return sodium_base642bin($data, SODIUM_BASE64_VARIANT_ORIGINAL);
     }
 }
