@@ -7,11 +7,11 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
-use Phenix\Tasks\AppParallelTask;
+use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
 use Throwable;
 
-class Decrypt extends AppParallelTask
+class Decrypt extends ParallelTask
 {
     public function __construct(
         protected string $key,

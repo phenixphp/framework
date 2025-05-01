@@ -8,12 +8,12 @@ use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Facades\Log;
 use Phenix\Mail\TransportFactory;
-use Phenix\Tasks\AppParallelTask;
+use Phenix\Tasks\ParallelTask;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
 use Throwable;
 
-class SendEmail extends AppParallelTask
+class SendEmail extends ParallelTask
 {
     public function __construct(
         private Email $email,

@@ -56,7 +56,7 @@ abstract class AbstractWorker implements WorkerContract
         return $results;
     }
 
-    abstract protected function submitTask(AppParallelTask $parallelTask): Workers\Execution;
+    abstract protected function submitTask(ParallelTask $parallelTask): Workers\Execution;
 
     protected function finalize(): void
     {
