@@ -6,6 +6,7 @@ namespace Phenix\Tasks;
 
 use Amp\Future;
 use Amp\Parallel\Worker as Workers;
+use Phenix\Tasks\Contracts\ParallelTask;
 use Phenix\Tasks\Contracts\Worker as WorkerContract;
 
 /** @phpstan-consistent-constructor */

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Filesystem\Contracts\File;
 use Phenix\Testing\Mock;
 use Symfony\Component\Console\Command\Command;
@@ -27,7 +28,7 @@ it('sets the application key', function () {
 });
 
 it('does not set the application key if it is already set', function () {
-    Config::set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+    Config::set('app.key', Crypto::generateEncodedKey());
 
     /** @var CommandTester $command */
     $command = $this->phenix('key:generate');
@@ -51,7 +52,7 @@ it('fails on set application key', function () {
 });
 
 it('sets application key with force option', function () {
-    Config::set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+    Config::set('app.key', Crypto::generateEncodedKey());
 
     $mock = Mock::of(File::class)->expect(
         get: function (string $path): string {

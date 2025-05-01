@@ -6,6 +6,7 @@ namespace Phenix\Tasks;
 
 use Amp\Parallel\Worker as Workers;
 use Amp\Parallel\Worker\Worker as WorkerContract;
+use Phenix\Tasks\Contracts\ParallelTask;
 
 class Worker extends AbstractWorker
 {

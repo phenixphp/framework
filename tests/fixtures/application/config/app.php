@@ -8,6 +8,7 @@ return [
     'url' => env('APP_URL', static fn (): string => 'http://127.0.0.1'),
     'port' => env('APP_PORT', static fn (): int => 1337),
     'key' => env('APP_KEY'),
+    'previous_key' => env('APP_PREVIOUS_KEY'),
     'debug' => env('APP_DEBUG', static fn (): bool => true),
     'middlewares' => [
         'global' => [
@@ -22,5 +23,6 @@ return [
         \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
+        \Phenix\Crypto\CryptoServiceProvider::class,
     ],
 ];
