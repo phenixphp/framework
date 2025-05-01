@@ -6,6 +6,7 @@ namespace Phenix\Tasks;
 
 use Amp\Parallel\Worker as Workers;
 use Amp\Parallel\Worker\Worker as WorkerContract;
+use Phenix\Tasks\Contracts\ParallelTask;
 
 class Worker extends AbstractWorker
 {
@@ -17,7 +18,7 @@ class Worker extends AbstractWorker
         $this->worker = Workers\createWorker();
     }
 
-    protected function submitTask(AppParallelTask $parallelTask): Workers\Execution
+    protected function submitTask(ParallelTask $parallelTask): Workers\Execution
     {
         return $this->worker->submit($parallelTask);
     }

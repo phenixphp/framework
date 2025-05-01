@@ -22,5 +22,6 @@ return [
         \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
+        \Phenix\Crypto\CryptoServiceProvider::class,
     ],
 ];

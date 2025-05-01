@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Console\Commands;
 
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\File;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -49,7 +50,7 @@ class GenerateKey extends Command
             return Command::FAILURE;
         }
 
-        $key = 'base64:' . base64_encode(random_bytes(32));
+        $key = Crypto::generateEncodedKey();
         $environment = $input->getArgument('environment');
 
         $environmentData = File::get(base_path($environment));

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Crypto\Cipher;
 use Phenix\Facades\Config;
 use Phenix\Filesystem\Contracts\File;
 use Phenix\Testing\Mock;
@@ -27,7 +28,7 @@ it('sets the application key', function () {
 });
 
 it('does not set the application key if it is already set', function () {
-    Config::set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+    Config::set('app.key', Cipher::generateEncodedKey());
 
     /** @var CommandTester $command */
     $command = $this->phenix('key:generate');
