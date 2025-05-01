@@ -9,8 +9,8 @@ use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
 use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
-use Throwable;
 use SensitiveParameter;
+use Throwable;
 
 class Encrypt extends ParallelTask
 {
