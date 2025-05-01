@@ -162,3 +162,133 @@ it('run encryption and decryption tasks successfully', function (): void {
     expect($result->message())->toBeNull();
     expect($result->output())->toEqual($data);
 })->group('crypto');
+
+it('run encryption with failed result', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(Cancellation|null $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return false;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+            //
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $key = Crypto::generateEncodedKey();
+
+    $key = substr($key, 7);
+
+    $data = ['foo' => 'bar'];
+
+    $task = new Encrypt($key, $data);
+
+    $result = $task->run($channel, $cancellation);
+
+    expect($result)->toBeInstanceOf(Result::class);
+    expect($result->isSuccess())->toBeFalse();
+    expect($result->isFailure())->toBeTrue();
+    expect($result->output())->toBeNull();
+})
+->group('crypto');
+
+it('run decryption with failed result', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(Cancellation|null $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return false;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+            //
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $key = Crypto::generateEncodedKey();
+
+    $task = new Decrypt($key, 'invalid-encrypted-string');
+
+    $result = $task->run($channel, $cancellation);
+
+    expect($result)->toBeInstanceOf(Result::class);
+    expect($result->isSuccess())->toBeFalse();
+    expect($result->isFailure())->toBeTrue();
+    expect($result->output())->toBeNull();
+})
+->group('crypto');

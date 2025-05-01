@@ -23,9 +23,9 @@ class Decrypt extends ParallelTask
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
-        $cipher = new Cipher($this->key);
-
         try {
+            $cipher = new Cipher($this->key);
+
             $output = $cipher->decrypt($this->value, $this->unserialize);
 
             return Result::success($output);
