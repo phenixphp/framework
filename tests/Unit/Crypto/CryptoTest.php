@@ -8,8 +8,11 @@ use Phenix\Crypto\Cipher;
 use Phenix\Crypto\Exceptions\DecryptException;
 use Phenix\Crypto\Exceptions\EncryptException;
 use Phenix\Crypto\Exceptions\MissingKeyException;
+use Phenix\Crypto\Tasks\CheckNeedsRehash;
 use Phenix\Crypto\Tasks\Decrypt;
 use Phenix\Crypto\Tasks\Encrypt;
+use Phenix\Crypto\Tasks\GeneratePasswordHash;
+use Phenix\Crypto\Tasks\VerifyPasswordHash;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
 use Phenix\Facades\Hash;
@@ -305,6 +308,85 @@ it('execute hashing operations successfully', function (): void {
         ->and($isValid)->toBeTrue()
         ->and($needsRehash)->toBeFalse();
 })->group('crypto');
+
+it('execute hashing tasks successfully', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(Cancellation|null $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return false;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+            //
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $password = 'password';
+
+    $hashingTask = new GeneratePasswordHash($password);
+
+    $result = $hashingTask->run($channel, $cancellation);
+
+    expect($result->isSuccess())->toBeTrue();
+
+    $hash = $result->output();
+
+    $verificationTask = new VerifyPasswordHash(
+        $hash,
+        $password
+    );
+
+    $result = $verificationTask->run($channel, $cancellation);
+
+    expect($result->isSuccess())->toBeTrue();
+    expect($result->output())->toBeTrue();
+
+    $rehashingTask = new CheckNeedsRehash($hash);
+
+    $result = $rehashingTask->run($channel, $cancellation);
+
+    expect($result->isSuccess())->toBeTrue();
+    expect($result->output())->toBeFalse();
+})
+->group('crypto');
 
 it('decrypt data with previous key', function (): void {
     $channel = new class () implements Channel {
