@@ -6,6 +6,7 @@ namespace Phenix\Tasks;
 
 use Phenix\Tasks\Contracts\Result as ContractsResult;
 
+/** @phpstan-consistent-constructor */
 class Result implements ContractsResult
 {
     protected bool $status;
