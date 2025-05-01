@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Crypto\Exceptions\DecryptException;
+use Phenix\Crypto\Exceptions\EncryptException;
 
 it('generate encoded key successfully', function (): void {
     $key = Crypto::generateEncodedKey();
@@ -34,3 +36,25 @@ it('encrypt and decrypt string successfully', function (): void {
 
     expect($decrypted)->toBeString()->and($decrypted)->toEqual($data);
 })->group('crypto');
+
+it('throws exception on failed encryption', function (): void {
+    $key = Crypto::generateEncodedKey();
+
+    $key = substr($key, 7);
+
+    Config::set('app.key', $key);
+
+    $data = ['foo' => 'bar'];
+
+    Crypto::encrypt($data, true);
+})->throws(EncryptException::class)
+->group('crypto');
+
+it('throws exception on failed decryption', function (): void {
+    $key = Crypto::generateEncodedKey();
+
+    Config::set('app.key', $key);
+
+    Crypto::decryptString('invalid-encrypted-string');
+})->throws(DecryptException::class)
+->group('crypto');

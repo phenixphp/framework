@@ -23,16 +23,20 @@ class Encrypt extends ParallelTask
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
-        $cipher = new Cipher($this->key);
-
         try {
+            $cipher = new Cipher($this->key);
+
             $output = $cipher->encrypt($this->value, $this->serialize);
 
             return Result::success($output);
         } catch (Throwable $th) {
             report($th);
 
-            return Result::failure(message: $th->getMessage());
+            $className = $this::class;
+
+            $message = "[{$className}] {$th->getMessage()}";
+
+            return Result::failure(message: $message);
         }
     }
 }

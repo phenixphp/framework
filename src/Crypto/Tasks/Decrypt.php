@@ -32,7 +32,11 @@ class Decrypt extends ParallelTask
         } catch (Throwable $th) {
             report($th);
 
-            return Result::failure(message: $th->getMessage());
+            $className = $this::class;
+
+            $message = "[{$className}] {$th->getMessage()}";
+
+            return Result::failure(message: $message);
         }
     }
 }
