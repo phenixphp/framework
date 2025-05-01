@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Crypto;
 
+use Phenix\Crypto\Contracts\Hasher;
 use Phenix\Crypto\Exceptions\MissingKeyException;
 use Phenix\Facades\Config;
 use Phenix\Providers\ServiceProvider;
@@ -12,7 +13,10 @@ class CryptoServiceProvider extends ServiceProvider
 {
     public function provides(string $id): bool
     {
-        $this->provided = [Crypto::class];
+        $this->provided = [
+            Crypto::class,
+            Hasher::class,
+        ];
 
         return $this->isProvided($id);
     }
@@ -31,5 +35,7 @@ class CryptoServiceProvider extends ServiceProvider
                 Config::get('app.previous_keys')
             );
         })->setShared(true);
+
+        $this->bind(Hasher::class, Hash::class)->setShared(true);
     }
 }

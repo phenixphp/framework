@@ -12,6 +12,7 @@ use Phenix\Crypto\Tasks\Decrypt;
 use Phenix\Crypto\Tasks\Encrypt;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Facades\Hash;
 use Phenix\Tasks\Result;
 
 it('generate encoded key successfully', function (): void {
@@ -292,3 +293,15 @@ it('run decryption with failed result', function (): void {
     expect($result->output())->toBeNull();
 })
 ->group('crypto');
+
+it('execute hashing operations successfully', function (): void {
+    $password = 'password';
+
+    $hash = Hash::make($password);
+    $isValid = Hash::verify($hash, $password);
+    $needsRehash = Hash::needsRehash($hash);
+
+    expect($hash)->toBeString()
+        ->and($isValid)->toBeTrue()
+        ->and($needsRehash)->toBeFalse();
+})->group('crypto');
