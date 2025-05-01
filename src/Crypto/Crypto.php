@@ -10,6 +10,7 @@ use Phenix\Crypto\Exceptions\DecryptException;
 use Phenix\Crypto\Exceptions\EncryptException;
 use Phenix\Crypto\Tasks\Decrypt;
 use Phenix\Crypto\Tasks\Encrypt;
+use Phenix\Tasks\Result;
 use Phenix\Tasks\Worker;
 use SensitiveParameter;
 
@@ -25,7 +26,8 @@ class Crypto implements CipherContract, StringCipher
 
     public function encrypt(#[SensitiveParameter] object|array|string $value, bool $serialize = true): string
     {
-        [$output] = Worker::batch([
+        /** @var Result $result */
+        [$result] = Worker::batch([
             new Encrypt(
                 key: $this->key,
                 value: $value,
@@ -33,11 +35,11 @@ class Crypto implements CipherContract, StringCipher
             ),
         ]);
 
-        if ($output->isFailure()) {
-            throw new EncryptException($output->message());
+        if ($result->isFailure()) {
+            throw new EncryptException($result->message());
         }
 
-        return $output->output();
+        return $result->output();
     }
 
     public function encryptString(#[SensitiveParameter] string $value): string
@@ -47,7 +49,8 @@ class Crypto implements CipherContract, StringCipher
 
     public function decrypt(string $payload, bool $unserialize = true): object|array|string
     {
-        [$output] = Worker::batch([
+        /** @var Result $result */
+        [$result] = Worker::batch([
             new Decrypt(
                 key: $this->key,
                 value: $payload,
@@ -55,11 +58,11 @@ class Crypto implements CipherContract, StringCipher
             ),
         ]);
 
-        if ($output->isFailure()) {
-            throw new DecryptException($output->message());
+        if ($result->isFailure()) {
+            throw new DecryptException($result->message());
         }
 
-        return $output->output();
+        return $result->output();
     }
 
     public function decryptString(string $payload): string
