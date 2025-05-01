@@ -12,7 +12,7 @@ use Phenix\Runtime\Facade;
  * @method static string encrypt(object|array|string $value, bool $serialize = true)
  * @method static string encryptString(string $value)
  * @method static object|array|string decrypt(string $payload, bool $unserialize = true)
- * @method static object|array|string decryptString(string $payload, bool $unserialize = true)
+ * @method static object|array|string decryptString(string $payload)
  *
  * @see \Phenix\Crypto\Crypto
  */
