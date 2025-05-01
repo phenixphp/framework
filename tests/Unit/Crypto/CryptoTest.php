@@ -309,7 +309,7 @@ it('execute hashing operations successfully', function (): void {
         ->and($needsRehash)->toBeFalse();
 })->group('crypto');
 
-it('execute hashing tasks successfully', function (): void {
+it('execute hashing operations successfully using tasks', function (): void {
     $channel = new class () implements Channel {
         public function receive(Cancellation|null $cancellation = null): mixed
         {
