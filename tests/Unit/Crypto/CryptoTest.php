@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Crypto\Cipher;
 use Phenix\Crypto\Exceptions\DecryptException;
 use Phenix\Crypto\Exceptions\EncryptException;
+use Phenix\Crypto\Exceptions\MissingKeyException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
 
@@ -71,3 +72,11 @@ it('encrypt and decrypt using cipher', function (): void {
 
     expect($decrypted)->toBeArray()->and($decrypted)->toEqual($data);
 })->group('crypto');
+
+it('throws exception when key is missing', function (): void {
+    $data = ['foo' => 'bar'];
+
+    Crypto::encrypt($data, true);
+})->throws(MissingKeyException::class)
+->group('crypto');
+

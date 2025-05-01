@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Crypto;
 
+use Phenix\Crypto\Exceptions\MissingKeyException;
 use Phenix\Facades\Config;
 use Phenix\Providers\ServiceProvider;
 
@@ -18,9 +19,17 @@ class CryptoServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->bind(Crypto::class, fn (): Crypto => new Crypto(
-            Config::get('app.key'),
-            Config::get('app.previous_keys')
-        ))->setShared(true);
+        $this->bind(Crypto::class, function (): Crypto {
+            $key = Config::get('app.key');
+
+            if (empty($key)) {
+                throw new MissingKeyException('The application key is not set.');
+            }
+
+            return new Crypto(
+                $key,
+                Config::get('app.previous_keys')
+            );
+        })->setShared(true);
     }
 }
