@@ -2,12 +2,17 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
+use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
 use Phenix\Crypto\Exceptions\DecryptException;
 use Phenix\Crypto\Exceptions\EncryptException;
 use Phenix\Crypto\Exceptions\MissingKeyException;
+use Phenix\Crypto\Tasks\Decrypt;
+use Phenix\Crypto\Tasks\Encrypt;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Tasks\Result;
 
 it('generate encoded key successfully', function (): void {
     $key = Crypto::generateEncodedKey();
@@ -80,3 +85,80 @@ it('throws exception when key is missing', function (): void {
 })->throws(MissingKeyException::class)
 ->group('crypto');
 
+it('run encryption and decryption tasks successfully', function (): void {
+    $channel = new class () implements Channel {
+        public function receive(Cancellation|null $cancellation = null): mixed
+        {
+            return true;
+        }
+
+        public function send(mixed $data): void
+        {
+            //
+        }
+
+        public function close(): void
+        {
+            //
+        }
+
+        public function isClosed(): bool
+        {
+            return false;
+        }
+
+        public function onClose(Closure $onClose): void
+        {
+            //
+        }
+    };
+
+    $cancellation = new class () implements Cancellation {
+        public function subscribe(Closure $callback): string
+        {
+            return 'id';
+        }
+
+        public function unsubscribe(string $id): void
+        {
+
+        }
+
+        public function isRequested(): bool
+        {
+            return true;
+        }
+
+        public function throwIfRequested(): void
+        {
+            //
+        }
+    };
+
+    $key = Crypto::generateEncodedKey();
+
+    $data = ['foo' => 'bar'];
+
+    $task = new Encrypt($key, $data);
+
+    $result = $task->run($channel, $cancellation);
+
+    expect($result)->toBeInstanceOf(Result::class);
+    expect($result->isSuccess())->toBeTrue();
+    expect($result->isFailure())->toBeFalse();
+    expect($result->output())->toBeString();
+    expect($result->message())->toBeNull();
+
+    $encrypted = $result->output();
+
+    $task = new Decrypt($key, $encrypted);
+
+    $result = $task->run($channel, $cancellation);
+
+    expect($result)->toBeInstanceOf(Result::class);
+    expect($result->isSuccess())->toBeTrue();
+    expect($result->isFailure())->toBeFalse();
+    expect($result->output())->toBeArray();
+    expect($result->message())->toBeNull();
+    expect($result->output())->toEqual($data);
+})->group('crypto');
