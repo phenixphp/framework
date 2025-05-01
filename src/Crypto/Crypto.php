@@ -16,7 +16,9 @@ use SensitiveParameter;
 class Crypto implements CipherContract, StringCipher
 {
     public function __construct(
+        #[SensitiveParameter]
         protected string $key,
+        #[SensitiveParameter]
         protected string|null $previousKey = null
     ) {
     }

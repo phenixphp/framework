@@ -10,11 +10,14 @@ use Phenix\Crypto\Cipher;
 use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
 use Throwable;
+use SensitiveParameter;
 
 class Encrypt extends ParallelTask
 {
     public function __construct(
+        #[SensitiveParameter]
         protected string $key,
+        #[SensitiveParameter]
         protected object|array|string $value,
         protected bool $serialize = true
     ) {

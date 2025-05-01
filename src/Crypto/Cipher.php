@@ -11,12 +11,12 @@ use SensitiveParameter;
 
 class Cipher implements CipherContract
 {
-    protected string|null $previousKey;
-
     public function __construct(
-        protected string $key
+        #[SensitiveParameter]
+        protected string $key,
+        #[SensitiveParameter]
+        protected string|null $previousKey = null,
     ) {
-        $this->previousKey = null;
     }
 
     public function encrypt(#[SensitiveParameter] object|array|string $value, bool $serialize = true): string

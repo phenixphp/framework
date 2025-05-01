@@ -10,11 +10,14 @@ use Phenix\Crypto\Cipher;
 use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
 use Throwable;
+use SensitiveParameter;
 
 class Decrypt extends ParallelTask
 {
     public function __construct(
+        #[SensitiveParameter]
         protected string $key,
+        #[SensitiveParameter]
         protected string $value,
         protected bool $unserialize = true
     ) {

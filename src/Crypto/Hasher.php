@@ -9,7 +9,7 @@ use SensitiveParameter;
 
 class Hasher implements HasherContract
 {
-    public function make(#[SensitiveParameter]  string $password): string
+    public function make(#[SensitiveParameter] string $password): string
     {
         return sodium_crypto_pwhash_str(
             $password,
