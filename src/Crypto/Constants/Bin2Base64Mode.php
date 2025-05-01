@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Crypto\Constants;
 
-enum BinBase64Mode: string
+enum Bin2Base64Mode: string
 {
     case BASE_64 = 'base64';
 
