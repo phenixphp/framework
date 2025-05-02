@@ -10,6 +10,7 @@ use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Mailers\Resend;
 use Phenix\Mail\Mailers\Ses;
 use Phenix\Mail\Mailers\Smtp;
+use SensitiveParameter;
 
 class MailManager
 {
@@ -20,6 +21,7 @@ class MailManager
     protected Config $config;
 
     public function __construct(
+        #[SensitiveParameter]
         Config|null $config = new Config()
     ) {
         $this->config = $config;

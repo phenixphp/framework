@@ -9,6 +9,7 @@ use Amp\Sync\Channel;
 use Phenix\Facades\Log;
 use Phenix\Mail\TransportFactory;
 use Phenix\Tasks\ParallelTask;
+use SensitiveParameter;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
 use Throwable;
@@ -16,8 +17,11 @@ use Throwable;
 class SendEmail extends ParallelTask
 {
     public function __construct(
+        #[SensitiveParameter]
         private Email $email,
+        #[SensitiveParameter]
         private array $mailerConfig,
+        #[SensitiveParameter]
         private array $serviceConfig = [],
     ) {
         parent::__construct();
