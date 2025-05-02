@@ -9,8 +9,8 @@ use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Tasks\Worker;
-use Symfony\Component\Mime\Address;
 use SensitiveParameter;
+use Symfony\Component\Mime\Address;
 
 abstract class Mailer implements MailerContract
 {
