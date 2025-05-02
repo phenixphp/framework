@@ -9,6 +9,7 @@ use Amp\Sync\Channel;
 use Phenix\Facades\Config;
 use Phenix\Facades\View;
 use Phenix\Tasks\ParallelTask;
+use Phenix\Tasks\Result;
 use Phenix\Views\ViewName;
 
 class CompileTemplates extends ParallelTask
@@ -21,7 +22,7 @@ class CompileTemplates extends ParallelTask
         parent::__construct();
     }
 
-    protected function handle(Channel $channel, Cancellation $cancellation): bool
+    protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
         foreach ($this->paths as $path) {
             $template = ViewName::template($path, Config::get('view.path'));
@@ -29,6 +30,6 @@ class CompileTemplates extends ParallelTask
             View::compile($template);
         }
 
-        return true;
+        return Result::success();
     }
 }

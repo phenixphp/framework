@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Amp\Cancellation;
-use Amp\Sync\Channel;
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
 use Phenix\Mail\Constants\MailerType;
@@ -14,6 +12,7 @@ use Phenix\Mail\Mailers\Smtp;
 use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Mail\TransportFactory;
 use Phenix\Mail\Transports\LogTransport;
+use Phenix\Tasks\Result;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
@@ -461,55 +460,6 @@ it('throw exception when file attachment does not exists', function (): void {
 })->throws(InvalidArgumentException::class);
 
 it('run parallel task to send email', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(?Cancellation $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(\Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
-
     $email = new Email();
     $email->from(faker()->freeEmail())
         ->to(faker()->freeEmail())
@@ -525,58 +475,10 @@ it('run parallel task to send email', function (): void {
         'password' => 'password',
     ]);
 
-    expect($task->run($channel, $cancellation))->toBeTruthy();
+    expect($task->run($this->getFakeChannel(), $this->getFakeCancellation()))->toBeTruthy();
 });
 
 it('fail on sending email', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(?Cancellation $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return true;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(\Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
 
     $email = new Email();
     $email->from(faker()->freeEmail())
@@ -593,7 +495,10 @@ it('fail on sending email', function (): void {
         'password' => 'password',
     ]);
 
-    expect($task->run($channel, $cancellation))->toBeFalsy();
+    /** @var Result $result */
+    $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
+
+    expect($result->isSuccess())->toBeFalsy();
 });
 
 it('send email with custom headers', function (): void {

@@ -9,6 +9,7 @@ use Amp\Sync\Channel;
 use Phenix\Facades\Log;
 use Phenix\Mail\TransportFactory;
 use Phenix\Tasks\ParallelTask;
+use Phenix\Tasks\Result;
 use SensitiveParameter;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
@@ -27,7 +28,7 @@ class SendEmail extends ParallelTask
         parent::__construct();
     }
 
-    protected function handle(Channel $channel, Cancellation $cancellation): bool
+    protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
         try {
             $transport = TransportFactory::make(
@@ -38,7 +39,7 @@ class SendEmail extends ParallelTask
             $mailer = new Mailer($transport);
             $mailer->send($this->email);
 
-            return true;
+            return Result::success();
         } catch (Throwable $e) {
             Log::error(
                 'Failed to send email',
@@ -48,7 +49,7 @@ class SendEmail extends ParallelTask
                 ]
             );
 
-            return false;
+            return Result::failure();
         }
     }
 }

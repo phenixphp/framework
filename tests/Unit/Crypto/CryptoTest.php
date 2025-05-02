@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Amp\Cancellation;
-use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
 use Phenix\Crypto\Exceptions\DecryptException;
 use Phenix\Crypto\Exceptions\EncryptException;
@@ -90,54 +88,8 @@ it('throws exception when key is missing', function (): void {
 ->group('crypto');
 
 it('run encryption and decryption tasks successfully', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(Cancellation|null $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
+    $channel = $this->getFakeChannel();
+    $cancellation = $this->getFakeCancellation();
 
     $key = Crypto::generateEncodedKey();
 
@@ -168,55 +120,6 @@ it('run encryption and decryption tasks successfully', function (): void {
 })->group('crypto');
 
 it('run encryption task with failed result', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(Cancellation|null $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-            //
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
-
     $key = Crypto::generateEncodedKey();
 
     $key = substr($key, 7);
@@ -225,7 +128,7 @@ it('run encryption task with failed result', function (): void {
 
     $task = new Encrypt($key, $data);
 
-    $result = $task->run($channel, $cancellation);
+    $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
 
     expect($result)->toBeInstanceOf(Result::class);
     expect($result->isSuccess())->toBeFalse();
@@ -235,60 +138,11 @@ it('run encryption task with failed result', function (): void {
 ->group('crypto');
 
 it('run decryption with failed result', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(Cancellation|null $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-            //
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
-
     $key = Crypto::generateEncodedKey();
 
     $task = new Decrypt($key, 'invalid-encrypted-string');
 
-    $result = $task->run($channel, $cancellation);
+    $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
 
     expect($result)->toBeInstanceOf(Result::class);
     expect($result->isSuccess())->toBeFalse();
@@ -310,54 +164,8 @@ it('execute hashing operations successfully', function (): void {
 })->group('crypto');
 
 it('execute hashing operations successfully using tasks', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(Cancellation|null $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-            //
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
+    $channel = $this->getFakeChannel();
+    $cancellation = $this->getFakeCancellation();
 
     $password = 'password';
 
@@ -389,55 +197,6 @@ it('execute hashing operations successfully using tasks', function (): void {
 ->group('crypto');
 
 it('decrypt data with previous key', function (): void {
-    $channel = new class () implements Channel {
-        public function receive(Cancellation|null $cancellation = null): mixed
-        {
-            return true;
-        }
-
-        public function send(mixed $data): void
-        {
-            //
-        }
-
-        public function close(): void
-        {
-            //
-        }
-
-        public function isClosed(): bool
-        {
-            return false;
-        }
-
-        public function onClose(Closure $onClose): void
-        {
-            //
-        }
-    };
-
-    $cancellation = new class () implements Cancellation {
-        public function subscribe(Closure $callback): string
-        {
-            return 'id';
-        }
-
-        public function unsubscribe(string $id): void
-        {
-            //
-        }
-
-        public function isRequested(): bool
-        {
-            return true;
-        }
-
-        public function throwIfRequested(): void
-        {
-            //
-        }
-    };
-
     $previousKey = Crypto::generateEncodedKey();
     $newKey = Crypto::generateEncodedKey();
 
@@ -449,7 +208,7 @@ it('decrypt data with previous key', function (): void {
 
     $task = new Decrypt($newKey, $encrypted, true, $previousKey);
 
-    $result = $task->run($channel, $cancellation);
+    $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
 
     expect($result)->toBeInstanceOf(Result::class);
     expect($result->isSuccess())->toBeTrue();
