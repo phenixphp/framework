@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
+use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Tasks\Worker;
-use SensitiveParameter;
 use Symfony\Component\Mime\Address;
+use SensitiveParameter;
 
 abstract class Mailer implements MailerContract
 {
@@ -56,7 +57,7 @@ abstract class Mailer implements MailerContract
         return $this;
     }
 
-    public function send(Mailable $mailable): void
+    public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void
     {
         $mailable->from($this->from)
             ->to($this->to)
