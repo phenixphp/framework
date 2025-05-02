@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
-use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
+use Phenix\Tasks\Result;
 use Phenix\Tasks\Worker;
 use SensitiveParameter;
 use Symfony\Component\Mime\Address;
@@ -57,7 +57,7 @@ abstract class Mailer implements MailerContract
         return $this;
     }
 
-    public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void
+    public function send(Mailable $mailable): void
     {
         $mailable->from($this->from)
             ->to($this->to)
@@ -67,6 +67,7 @@ abstract class Mailer implements MailerContract
 
         $email = $mailable->toMail();
 
+        /** @var Result $result */
         [$result] = Worker::batch([
             new SendEmail(
                 $email,
@@ -79,7 +80,7 @@ abstract class Mailer implements MailerContract
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
                 'email' => $email,
-                'success' => $result,
+                'success' => $result->isSuccess(),
             ];
         }
     }

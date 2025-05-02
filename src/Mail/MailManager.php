@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
-use Closure;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Mailers\Resend;
@@ -45,9 +44,9 @@ class MailManager
         return $this->mailer()->to($to);
     }
 
-    public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void
+    public function send(Mailable $mailable): void
     {
-        $this->mailer()->send($mailable, $data, $callback);
+        $this->mailer()->send($mailable);
     }
 
     public function log(MailerType|null $mailerType = null): void
