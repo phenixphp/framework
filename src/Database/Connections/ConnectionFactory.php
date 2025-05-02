@@ -11,12 +11,13 @@ use Amp\Postgres\PostgresConnectionPool;
 use Amp\Redis\RedisClient;
 use Closure;
 use Phenix\Database\Constants\Driver;
+use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
 
 class ConnectionFactory
 {
-    public static function make(Driver $driver, array $settings): Closure
+    public static function make(Driver $driver, #[SensitiveParameter] array $settings): Closure
     {
         return match ($driver) {
             Driver::MYSQL => self::createMySqlConnection($settings),
@@ -25,7 +26,7 @@ class ConnectionFactory
         };
     }
 
-    private static function createMySqlConnection(array $settings): Closure
+    private static function createMySqlConnection(#[SensitiveParameter] array $settings): Closure
     {
         return static function () use ($settings): MysqlConnectionPool {
             $config = new MysqlConfig(
@@ -42,7 +43,7 @@ class ConnectionFactory
         };
     }
 
-    private static function createPostgreSqlConnection(array $settings): Closure
+    private static function createPostgreSqlConnection(#[SensitiveParameter] array $settings): Closure
     {
         return static function () use ($settings): PostgresConnectionPool {
             $config = new PostgresConfig(
@@ -57,7 +58,7 @@ class ConnectionFactory
         };
     }
 
-    private static function createRedisConnection(array $settings): Closure
+    private static function createRedisConnection(#[SensitiveParameter] array $settings): Closure
     {
         return static function () use ($settings): RedisClient {
             $auth = $settings['username'] && $settings['password']
