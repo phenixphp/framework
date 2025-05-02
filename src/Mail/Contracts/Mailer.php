@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Mail\Contracts;
 
-use Closure;
 use Phenix\Mail\Mailable;
 
 interface Mailer
@@ -15,7 +14,7 @@ interface Mailer
 
     public function bcc(array|string $bcc): self;
 
-    public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void;
+    public function send(Mailable $mailable): void;
 
     public function getSendingLog(): array;
 }

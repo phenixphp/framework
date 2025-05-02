@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
-use Closure;
 use Phenix\Mail\Contracts\Mailable;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Tasks\SendEmail;
@@ -57,7 +56,7 @@ abstract class Mailer implements MailerContract
         return $this;
     }
 
-    public function send(Mailable $mailable, array $data = [], Closure|null $callback = null): void
+    public function send(Mailable $mailable): void
     {
         $mailable->from($this->from)
             ->to($this->to)
