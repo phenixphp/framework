@@ -8,14 +8,14 @@ use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Facades\Log;
 use Phenix\Mail\TransportFactory;
-use Phenix\Tasks\ParallelTask;
+use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
 use SensitiveParameter;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
 use Throwable;
 
-class SendEmail extends ParallelTask
+class SendEmail extends Task
 {
     public function __construct(
         #[SensitiveParameter]

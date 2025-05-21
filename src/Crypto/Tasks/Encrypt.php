@@ -7,12 +7,12 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
-use Phenix\Tasks\ParallelTask;
+use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
 use SensitiveParameter;
 use Throwable;
 
-class Encrypt extends ParallelTask
+class Encrypt extends Task
 {
     public function __construct(
         #[SensitiveParameter]

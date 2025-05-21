@@ -8,9 +8,9 @@ use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\AppBuilder;
 use Phenix\Facades\Config;
-use Phenix\Tasks\Contracts\ParallelTask as ParallelTaskContract;
+use Phenix\Tasks\Contracts\Task as TaskContract;
 
-abstract class ParallelTask implements ParallelTaskContract
+abstract class Task implements TaskContract
 {
     protected string $basePath;
 
@@ -33,5 +33,10 @@ abstract class ParallelTask implements ParallelTaskContract
         }
 
         return $this->handle($channel, $cancellation);
+    }
+
+    public function dispatch()
+    {
+        
     }
 }
