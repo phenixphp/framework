@@ -22,21 +22,6 @@ abstract class AbstractWorker implements WorkerContract
         $this->tasks = [];
     }
 
-    public function submit(Task $parallelTask): self
-    {
-        $this->tasks[] = $this->submitTask($parallelTask);
-
-        return $this;
-    }
-
-    public function run(): array
-    {
-        return Future\await(array_map(
-            fn (Workers\Execution $e) => $e->getFuture(),
-            $this->tasks,
-        ));
-    }
-
     /**
      * @param Task[] $tasks
      * @return array
@@ -54,6 +39,21 @@ abstract class AbstractWorker implements WorkerContract
         $pool->finalize();
 
         return $results;
+    }
+
+    public function submit(Task $parallelTask): self
+    {
+        $this->tasks[] = $this->submitTask($parallelTask);
+
+        return $this;
+    }
+
+    public function run(): array
+    {
+        return Future\await(array_map(
+            fn (Workers\Execution $e) => $e->getFuture(),
+            $this->tasks,
+        ));
     }
 
     abstract protected function submitTask(Task $parallelTask): Workers\Execution;
