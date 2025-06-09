@@ -8,8 +8,8 @@ use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Facades\Config;
 use Phenix\Facades\View;
-use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 use Phenix\Views\ViewName;
 
 class CompileTemplates extends Task

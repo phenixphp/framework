@@ -7,8 +7,8 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
-use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 use SensitiveParameter;
 use Throwable;
 

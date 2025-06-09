@@ -7,8 +7,8 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Hasher;
-use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 use SensitiveParameter;
 
 class VerifyPasswordHash extends Task
