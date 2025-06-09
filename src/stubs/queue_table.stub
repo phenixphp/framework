@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+use Phenix\Database\Migration;
+
+class CreateQueueTable extends Migration
+{
+    public function up(): void
+    {
+        $table = $this->table('queues');
+        $table->addColumn('queue_name', 'string', ['limit' => 100]);
+        $table->addColumn('payload', 'longtext');
+        $table->addColumn('attempts', 'smallinteger', ['signed' => false]);
+        $table->addColumn('reserved_at', 'datetime', ['null' => true]);
+        $table->addColumn('available_at', 'datetime');
+        $table->addColumn('created_at', 'datetime');
+        $table->addIndex(['queue_name']);
+        $table->create();
+    }
+
+    public function down(): void
+    {
+        $this->table('queues')->drop()->save();
+    }
+}
