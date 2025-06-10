@@ -16,9 +16,7 @@ class GeneratePasswordHash extends Task
     public function __construct(
         #[SensitiveParameter]
         protected string $password
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

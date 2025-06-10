@@ -22,9 +22,7 @@ class Decrypt extends Task
         protected bool $unserialize = true,
         #[SensitiveParameter]
         protected string|null $previousKey = null,
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

@@ -7,36 +7,39 @@ namespace Phenix\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\AppBuilder;
+use Phenix\AppProxy;
 use Phenix\Facades\Config;
 use Phenix\Tasks\Contracts\Task as TaskContract;
 
 abstract class Task implements TaskContract
 {
-    protected string $basePath;
-
-    protected bool $isDebugging;
-
-    public function __construct()
-    {
-        $this->basePath = base_path();
-        $this->isDebugging = Config::get('app.debug');
-    }
+    protected static string $basePath;
 
     abstract protected function handle(Channel $channel, Cancellation $cancellation): mixed;
 
     public function run(Channel $channel, Cancellation $cancellation): mixed
     {
-        $app = AppBuilder::build($this->basePath);
+        $app = self::bootApplication();
 
-        if ($this->isDebugging) {
+        if (Config::get('app.debug')) {
             $app->enableTestingMode();
         }
 
         return $this->handle($channel, $cancellation);
     }
 
-    public function dispatch()
+    public static function setBootingSettings(): void
     {
-        
+        self::setBasePath();
+    }
+
+    protected static function setBasePath(): void
+    {
+        static::$basePath = base_path();
+    }
+
+    protected static function bootApplication(): AppProxy
+    {
+        return AppBuilder::build(static::$basePath);
     }
 }

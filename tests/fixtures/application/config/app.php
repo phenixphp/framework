@@ -24,6 +24,7 @@ return [
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
         \Phenix\Crypto\CryptoServiceProvider::class,
+        \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Queue\QueueServiceProvider::class,
     ],
 ];

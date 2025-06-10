@@ -20,9 +20,7 @@ class Encrypt extends Task
         #[SensitiveParameter]
         protected object|array|string $value,
         protected bool $serialize = true
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

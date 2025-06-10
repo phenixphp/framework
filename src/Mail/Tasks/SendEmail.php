@@ -24,9 +24,7 @@ class SendEmail extends Task
         private array $mailerConfig,
         #[SensitiveParameter]
         private array $serviceConfig = [],
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

@@ -18,9 +18,7 @@ class CompileTemplates extends Task
 
     public function __construct(
         private array $paths
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
