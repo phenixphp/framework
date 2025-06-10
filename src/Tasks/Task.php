@@ -35,7 +35,9 @@ abstract class Task implements TaskContract
 
     protected static function setBasePath(): void
     {
-        static::$basePath = base_path();
+        if (!isset(static::$basePath)) {
+            static::$basePath = base_path();
+        }
     }
 
     protected static function bootApplication(): AppProxy
