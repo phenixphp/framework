@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     'default' => env('MAIL_MAILER', static fn (): string => 'smtp'),
 
     'mailers' => [
