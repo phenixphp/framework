@@ -8,7 +8,7 @@ class CreateQueueTable extends Migration
 {
     public function up(): void
     {
-        $table = $this->table('queues');
+        $table = $this->table('tasks');
         $table->addColumn('queue_name', 'string', ['limit' => 100]);
         $table->addColumn('payload', 'longtext');
         $table->addColumn('attempts', 'smallinteger', ['signed' => false]);
@@ -21,6 +21,6 @@ class CreateQueueTable extends Migration
 
     public function down(): void
     {
-        $this->table('queues')->drop()->save();
+        $this->table('tasks')->drop()->save();
     }
 }
