@@ -40,6 +40,11 @@ abstract class QueuableTask extends Task implements ShouldQueue
         return $this->queueName;
     }
 
+    public function getPayload(): string
+    {
+        return serialize($this);
+    }
+
     public static function dispatch(mixed ...$args): PendingTask
     {
         return new PendingTask(new static(...$args));
