@@ -13,6 +13,7 @@ class QueueServiceProvider extends ServiceProvider
     public function provides(string $id): bool
     {
         $this->provided = [
+            Worker::class,
             QueueManager::class,
         ];
 
@@ -23,6 +24,10 @@ class QueueServiceProvider extends ServiceProvider
     {
         $this->bind(QueueManager::class)
             ->setShared(true);
+
+        $this->bind(Worker::class, fn (): Worker => new Worker(
+            $this->getContainer()->get(QueueManager::class)
+        ))->setShared(true);
     }
 
     public function boot(): void

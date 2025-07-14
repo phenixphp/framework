@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Phenix\Queue\Console;
+
+use Phenix\App;
+use Phenix\Facades\Config;
+use Phenix\Queue\Worker;
+use Phenix\Queue\WorkerOptions;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class WorkCommand extends Command
+{
+    /**
+     * @var string
+     *
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
+     */
+    protected static $defaultName = 'queue:work';
+
+    /**
+     * @var string
+     *
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
+     */
+    protected static $defaultDescription = 'Process the queue';
+
+    protected function configure(): void
+    {
+        $this->setHelp('This command allows you to process the queue...')
+            ->addArgument('connection', InputOption::VALUE_OPTIONAL, 'The name of the connection to use')
+            ->addOption('queue', 'q', InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
+            ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
+            ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no jobs are available', 3);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        /** @var Worker $worker */
+        $worker = App::make(Worker::class);
+
+        $connection = $input->getArgument('connection') ?? Config::get('queue.default');
+        $queue = $input->getOption('queue');
+        $method = $input->getOption('once') ? 'runNextJob' : 'daemon';
+
+        $worker->{$method}(
+            $connection,
+            $queue,
+            new WorkerOptions(
+                sleep: (int) $input->getOption('sleep')
+            )
+        );
+
+        return Command::SUCCESS;
+    }
+}
