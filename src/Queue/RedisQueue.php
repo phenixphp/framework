@@ -44,9 +44,9 @@ class RedisQueue extends Queue
         return $this;
     }
 
-    public function pop(): QueuableTask|null
+    public function pop(string|null $queueName = null): QueuableTask|null
     {
-        $queueKey = $this->getQueueKey();
+        $queueKey = $this->getQueueKey($queueName);
         $payload = $this->redis->execute('LPOP', $queueKey);
 
         if ($payload === null) {

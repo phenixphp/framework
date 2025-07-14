@@ -16,9 +16,7 @@ class DatabaseQueue extends Queue
         protected string $connection,
         protected string|null $queueName = 'default',
         protected string $table = 'tasks',
-    ) {
-        $this->connectionName = $connection;
-    }
+    ) {}
 
     public function size(): int
     {
@@ -50,10 +48,11 @@ class DatabaseQueue extends Queue
         return $this;
     }
 
-    public function pop(): QueuableTask|null
+    public function pop(string|null $queueName = null): QueuableTask|null
     {
         $task = DB::connection($this->connection)
             ->table($this->table)
+            ->whereEqual('queue_name', $queueName ?? $this->queueName)
             ->whereNull('reserved_at')
             ->orderBy('created_at', Order::ASC)
             ->first();

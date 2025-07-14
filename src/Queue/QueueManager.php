@@ -25,14 +25,14 @@ class QueueManager
         $this->driver()->push($task);
     }
 
-    public function pushOn(string $queue, QueuableTask $task): void
+    public function pushOn(string $queueName, QueuableTask $task): void
     {
-        $this->driver()->pushOn($queue, $task);
+        $this->driver()->pushOn($queueName, $task);
     }
 
-    public function pop(): QueuableTask|null
+    public function pop(string|null $queueName = null): QueuableTask|null
     {
-        return $this->driver()->pop();
+        return $this->driver()->pop($queueName);
     }
 
     public function size(): int

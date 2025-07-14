@@ -10,7 +10,10 @@ use Phenix\Tasks\QueuableTask;
 abstract class Queue implements QueueContract
 {
     protected array $queue = [];
-    protected string $connectionName = 'default';
+
+    public function __construct(
+        protected string|null $queueName = 'default',
+    ) {}
 
     public function push(QueuableTask $task): void
     {
@@ -24,9 +27,17 @@ abstract class Queue implements QueueContract
         return $this;
     }
 
-    public function pop(): QueuableTask|null
+    public function pop(string|null $queueName = null): QueuableTask|null
     {
-        return array_shift($this->queue);
+        $queueName ??= $this->queueName;
+
+        foreach ($this->queue as $key => $task) {
+            if ($task->getQueueName() === $queueName) {
+                unset($this->queue[$key]);
+                return $task;
+            }
+        }
+        return null;
     }
 
     public function size(): int
