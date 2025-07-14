@@ -12,7 +12,7 @@ interface Queue
 
     public function pushOn(string $queue, QueuableTask $job): static;
 
-    public function pop(): QueuableTask|null;
+    public function pop(string|null $queueName = null): QueuableTask|null;
 
     public function size(): int;
 
