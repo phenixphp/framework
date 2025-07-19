@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use Phenix\Queue\Contracts\Queue as QueueContract;
+use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
 
 abstract class Queue implements QueueContract
 {
     protected array $queue = [];
+
+    protected string $connectionName = 'default';
+
+    protected TaskState $stateManager;
 
     public function __construct(
         protected string|null $queueName = 'default',
@@ -58,5 +63,10 @@ abstract class Queue implements QueueContract
     public function setConnectionName(string $name): void
     {
         $this->connectionName = $name;
+    }
+
+    public function getStateManager(): TaskState
+    {
+        return $this->stateManager;
     }
 }

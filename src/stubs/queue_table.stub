@@ -8,14 +8,20 @@ class CreateQueueTable extends Migration
 {
     public function up(): void
     {
-        $table = $this->table('tasks');
-        $table->addColumn('queue_name', 'string', ['limit' => 100]);
+        $table = $this->table('tasks', ['id' => false]);
+        $table->addColumn('id', 'string', ['limit' => 36, 'null' => false]);
+        $table->addColumn('queue_name', 'string', ['limit' => 100, 'default' => 'default']);
         $table->addColumn('payload', 'longtext');
-        $table->addColumn('attempts', 'smallinteger', ['signed' => false]);
+        $table->addColumn('attempts', 'smallinteger', ['signed' => false, 'default' => 0]);
         $table->addColumn('reserved_at', 'datetime', ['null' => true]);
         $table->addColumn('available_at', 'datetime');
         $table->addColumn('created_at', 'datetime');
-        $table->addIndex(['queue_name']);
+        $table->addColumn('failed_at', 'datetime', ['null' => true]);
+        $table->addColumn('exception', 'text', ['null' => true]);
+        $table->addPrimaryKey(['id']);
+        $table->addIndex(['queue_name', 'available_at'], ['name' => 'idx_queue_available']);
+        $table->addIndex(['reserved_at'], ['name' => 'idx_reserved_at']);
+        $table->addIndex(['failed_at'], ['name' => 'idx_failed_at']);
         $table->create();
     }
 

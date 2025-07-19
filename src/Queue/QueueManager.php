@@ -55,7 +55,7 @@ class QueueManager
         $this->driver()->setConnectionName($name);
     }
 
-    protected function driver(QueueDriver|null $driverName = null): Queue
+    public function driver(QueueDriver|null $driverName = null): Queue
     {
         $driverName = $this->resolveDriverName($driverName);
 

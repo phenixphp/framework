@@ -8,9 +8,9 @@ use Phenix\Tasks\QueuableTask;
 
 interface Queue
 {
-    public function push(QueuableTask $job): void;
+    public function push(QueuableTask $task): void;
 
-    public function pushOn(string $queue, QueuableTask $job): static;
+    public function pushOn(string $queue, QueuableTask $task): static;
 
     public function pop(string|null $queueName = null): QueuableTask|null;
 
@@ -21,4 +21,6 @@ interface Queue
     public function getConnectionName(): string;
 
     public function setConnectionName(string $name): void;
+
+    public function getStateManager(): TaskState;
 }

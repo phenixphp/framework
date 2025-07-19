@@ -7,6 +7,7 @@ namespace Phenix\Tasks;
 use Closure;
 use Phenix\Queue\PendingTask;
 use Phenix\Queue\Contracts\ShouldQueue;
+use Phenix\Util\Str;
 
 /** @phpstan-consistent-constructor */
 abstract class QueuableTask extends Task implements ShouldQueue
@@ -14,6 +15,14 @@ abstract class QueuableTask extends Task implements ShouldQueue
     protected string|null $connectionName = null;
 
     protected string|null $queueName = null;
+
+    protected string|null $taskId = null;
+
+    protected int $attempts = 0;
+
+    protected int $maxTries = 3;
+
+    protected int $timeout = 60;
 
     public function __construct(mixed ...$args)
     {
@@ -40,6 +49,36 @@ abstract class QueuableTask extends Task implements ShouldQueue
         return $this->queueName;
     }
 
+    public function getTaskId(): string|null
+    {
+        return $this->taskId ?? $this->generateId();
+    }
+
+    public function setTaskId(string $taskId): void
+    {
+        $this->taskId = $taskId;
+    }
+
+    public function getAttempts(): int
+    {
+        return $this->attempts;
+    }
+
+    public function setAttempts(int $attempts): void
+    {
+        $this->attempts = $attempts;
+    }
+
+    public function getMaxTries(): int
+    {
+        return $this->maxTries;
+    }
+
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
     public function getPayload(): string
     {
         return serialize($this);
@@ -63,4 +102,8 @@ abstract class QueuableTask extends Task implements ShouldQueue
         return null;
     }
 
+    protected function generateId(): string
+    {
+        return Str::uuid()->toString();
+    }
 }

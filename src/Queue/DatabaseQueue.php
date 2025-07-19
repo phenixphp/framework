@@ -9,6 +9,7 @@ use Phenix\Facades\DB;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Contracts\Task;
 use Phenix\Database\Constants\Order;
+use Phenix\Queue\StateManagers\DatabaseTaskState;
 
 class DatabaseQueue extends Queue
 {
@@ -16,7 +17,12 @@ class DatabaseQueue extends Queue
         protected string $connection,
         protected string|null $queueName = 'default',
         protected string $table = 'tasks',
-    ) {}
+    ) {
+        parent::__construct($queueName);
+
+        $this->connectionName = $connection;
+        $this->stateManager = new DatabaseTaskState($connection, $table);
+    }
 
     public function size(): int
     {
@@ -30,6 +36,7 @@ class DatabaseQueue extends Queue
         DB::connection($task->getConnectionName() ?? $this->connection)
             ->table($this->table)
             ->insert([
+                'id' => $task->getTaskId(),
                 'queue_name' => $task->getQueueName() ?? $this->queueName,
                 'payload' => $task->getPayload(),
                 'attempts' => 0,
@@ -54,18 +61,20 @@ class DatabaseQueue extends Queue
             ->table($this->table)
             ->whereEqual('queue_name', $queueName ?? $this->queueName)
             ->whereNull('reserved_at')
+            ->whereLessThanOrEqual('available_at', Date::now()->toString())
             ->orderBy('created_at', Order::ASC)
             ->first();
 
-        if ($task) {
-            DB::connection($this->connection)
-                ->table($this->table)
-                ->whereEqual('id', $task['id'])
-                ->update([
-                    'reserved_at' => Date::now(),
-                ]);
+        if (!$task) {
+            return null;
+        }
 
-            return unserialize($task['payload']);
+        $task = unserialize($task['payload']);
+        $task->setTaskId($task['id']);
+        $task->setAttempts($task['attempts']);
+
+        if ($this->stateManager->reserve($task)) {
+            return $task;
         }
 
         return null;

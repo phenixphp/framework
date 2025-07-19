@@ -8,6 +8,7 @@ use Amp\Redis\RedisClient;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
 use Phenix\Tasks\QueuableTask;
+use Phenix\Queue\StateManagers\RedisTaskState;
 
 class RedisQueue extends Queue
 {
@@ -17,8 +18,11 @@ class RedisQueue extends Queue
         protected string $connection = 'default',
         protected string|null $queueName = 'default'
     ) {
+        parent::__construct($queueName);
+
         $this->connectionName = $connection;
         $this->redis = App::make(Connection::redis($connection));
+        $this->stateManager = new RedisTaskState($connection);
     }
 
     public function size(): int
@@ -53,7 +57,16 @@ class RedisQueue extends Queue
             return null;
         }
 
-        return unserialize($payload);
+        $task = unserialize($payload);
+        
+        // Intentar reservar
+        if ($this->stateManager->reserve($task)) {
+            return $task;
+        }
+
+        // Si no se pudo reservar, devolver a la cola
+        $this->redis->execute('RPUSH', $queueKey, $payload);
+        return null;
     }
 
     public function clear(): void
