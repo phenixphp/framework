@@ -9,8 +9,8 @@ use Phenix\Runtime\Facade;
 use Phenix\Queue\QueueManager;
 
 /**
- * @method static void push(QueuableTask $job)
- * @method static void pushOn(string $queue, QueuableTask $job)
+ * @method static void push(QueuableTask $task)
+ * @method static void pushOn(string $queue, QueuableTask $task)
  * @method static QueuableTask|null pop()
  * @method static int size()
  * @method static void clear()
