@@ -13,3 +13,4 @@ Thumbs.db
 build
 tests/fixtures/application/storage/framework/logs/*.log
 tests/fixtures/application/storage/framework/views/*.php
+.env
