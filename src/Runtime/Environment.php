@@ -8,13 +8,14 @@ use Dotenv\Dotenv;
 
 class Environment
 {
-    public static function load(string|null $env = null): void
+    public static function load(string|null $fileName = null, string|null $environment = null): void
     {
-        $base = '.env';
-        $env = $env ? "{$base}.{$env}" : $base;
+        $fileName ??= '.env';
+        $fileName .= $environment ? ".{$environment}" : '';
+        $fileNamePath = base_path() . DIRECTORY_SEPARATOR . $fileName;
 
-        if (file_exists($env)) {
-            Dotenv::createImmutable(base_path(), $env)->load();
+        if (file_exists($fileNamePath)) {
+            Dotenv::createImmutable(base_path(), $fileName)->load();
         }
     }
 }
