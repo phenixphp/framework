@@ -14,8 +14,6 @@ use Phenix\Views\ViewName;
 
 class CompileTemplates extends Task
 {
-    protected string $basePath;
-
     public function __construct(
         private array $paths
     ) {}
