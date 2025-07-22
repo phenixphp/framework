@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Phenix\Filesystem\Contracts\File;
 use Phenix\Testing\Mock;
+use Phenix\Filesystem\Contracts\File;
 
 it('creates queue table successfully', function () {
     $mock = Mock::of(File::class)->expect(
@@ -11,7 +11,7 @@ it('creates queue table successfully', function () {
         get: fn (string $path): string => file_get_contents($path),
         put: function (string $path): bool {
             expect($path)->toStartWith(base_path('database' . DIRECTORY_SEPARATOR . 'migrations'));
-            expect($path)->toEndWith('create_queues_table.php');
+            expect($path)->toEndWith('create_tasks_table.php');
 
             return true;
         },

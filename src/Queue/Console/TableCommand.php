@@ -40,7 +40,7 @@ class TableCommand extends Maker
     {
         $datetime = Date::now()->format('YmdHis');
 
-        $fileName = "{$datetime}_create_queues_table";
+        $fileName = "{$datetime}_create_tasks_table";
 
         $input->setArgument('name', $fileName);
 
