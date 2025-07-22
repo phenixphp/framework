@@ -8,7 +8,7 @@ class CreateQueueTable extends Migration
 {
     public function up(): void
     {
-        $table = $this->table('tasks', ['id' => false]);
+        $table = $this->table('tasks', ['id' => false, 'primary_key' => ['id']]);
         $table->addColumn('id', 'string', ['limit' => 36, 'null' => false]);
         $table->addColumn('queue_name', 'string', ['limit' => 100, 'default' => 'default']);
         $table->addColumn('payload', 'longtext');
@@ -18,7 +18,6 @@ class CreateQueueTable extends Migration
         $table->addColumn('created_at', 'datetime');
         $table->addColumn('failed_at', 'datetime', ['null' => true]);
         $table->addColumn('exception', 'text', ['null' => true]);
-        $table->addPrimaryKey(['id']);
         $table->addIndex(['queue_name', 'available_at'], ['name' => 'idx_queue_available']);
         $table->addIndex(['reserved_at'], ['name' => 'idx_reserved_at']);
         $table->addIndex(['failed_at'], ['name' => 'idx_failed_at']);
