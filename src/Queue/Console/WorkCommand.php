@@ -35,7 +35,7 @@ class WorkCommand extends Command
             ->addArgument('connection', InputOption::VALUE_OPTIONAL, 'The name of the connection to use')
             ->addOption('queue', 'q', InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
             ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
-            ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no jobs are available', 3);
+            ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no tasks are available', 3);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,7 @@ class WorkCommand extends Command
 
         $connection = $input->getArgument('connection') ?? Config::get('queue.default');
         $queue = $input->getOption('queue');
-        $method = $input->getOption('once') ? 'runNextJob' : 'daemon';
+        $method = $input->getOption('once') ? 'runNextTask' : 'daemon';
 
         $worker->{$method}(
             $connection,
