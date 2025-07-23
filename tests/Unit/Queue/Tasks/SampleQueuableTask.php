@@ -6,19 +6,16 @@ namespace Tests\Unit\Queue\Tasks;
 
 use Amp\Cancellation;
 use Amp\Sync\Channel;
-use Phenix\Tasks\Result;
 use Phenix\Tasks\QueuableTask;
+use Phenix\Tasks\Result;
 
-class DummyTask extends QueuableTask
+class SampleQueuableTask extends QueuableTask
 {
-
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
-        // Simulate some processing
         $output = 'Task completed successfully';
         $message = 'This is a test message';
 
-        // Return a successful result
         return Result::success($output, $message);
     }
 }
