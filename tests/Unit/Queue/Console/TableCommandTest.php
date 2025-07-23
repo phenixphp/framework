@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Phenix\Testing\Mock;
 use Phenix\Filesystem\Contracts\File;
+use Phenix\Testing\Mock;
 
 it('creates queue table successfully', function () {
     $mock = Mock::of(File::class)->expect(
