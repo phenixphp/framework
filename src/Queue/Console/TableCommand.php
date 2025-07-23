@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Queue\Console;
 
 use Phenix\Console\Maker;
-use Phenix\Util\Date;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -38,9 +37,7 @@ class TableCommand extends Maker
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $datetime = Date::now()->format('YmdHis');
-
-        $fileName = "{$datetime}_create_tasks_table";
+        $fileName = "20250101205638_create_tasks_table";
 
         $input->setArgument('name', $fileName);
 
