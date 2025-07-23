@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\Util\Date;
-use Phenix\Facades\DB;
-use Phenix\Tasks\QueuableTask;
-use Phenix\Tasks\Contracts\Task;
 use Phenix\Database\Constants\Order;
+use Phenix\Facades\DB;
 use Phenix\Queue\StateManagers\DatabaseTaskState;
+use Phenix\Tasks\QueuableTask;
+use Phenix\Util\Date;
 
 class DatabaseQueue extends Queue
 {
@@ -65,7 +64,7 @@ class DatabaseQueue extends Queue
             ->orderBy('created_at', Order::ASC)
             ->first();
 
-        if (!$task) {
+        if (! $task) {
             return null;
         }
 

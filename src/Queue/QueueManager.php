@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use InvalidArgumentException;
-use Phenix\Tasks\QueuableTask;
-use Phenix\Queue\Contracts\Queue;
 use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\Contracts\Queue;
+use Phenix\Tasks\QueuableTask;
 
 class QueueManager
 {

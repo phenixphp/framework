@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
-use Throwable;
-use Phenix\App;
 use Amp\Redis\RedisClient;
-use Phenix\Tasks\QueuableTask;
-use Phenix\Queue\Contracts\TaskState;
+use Phenix\App;
 use Phenix\Database\Constants\Connection;
+use Phenix\Queue\Contracts\TaskState;
+use Phenix\Tasks\QueuableTask;
+use Throwable;
 
 class RedisTaskState implements TaskState
 {
@@ -34,7 +34,7 @@ class RedisTaskState implements TaskState
                 'attempts' => $task->getAttempts() + 1,
                 'reserved_at' => time(),
                 'reserved_until' => time() + $timeout,
-                'payload' => $task->getPayload()
+                'payload' => $task->getPayload(),
             ];
 
             $this->redis->execute('HSET', $taskDataKey, ...$this->flattenArray($taskData));
@@ -83,7 +83,7 @@ class RedisTaskState implements TaskState
             'task_id' => $taskId,
             'failed_at' => time(),
             'exception' => serialize($exception),
-            'payload' => $task->getPayload()
+            'payload' => $task->getPayload(),
         ];
 
         $this->redis->execute('HSET', $failedKey, ...$this->flattenArray($failedData));

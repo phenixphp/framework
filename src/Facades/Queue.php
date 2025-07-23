@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
-use Phenix\Tasks\QueuableTask;
-use Phenix\Runtime\Facade;
 use Phenix\Queue\QueueManager;
+use Phenix\Runtime\Facade;
+use Phenix\Tasks\QueuableTask;
 
 /**
  * @method static void push(QueuableTask $task)

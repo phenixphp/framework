@@ -17,7 +17,8 @@ class VerifyPasswordHash extends Task
         protected string $hash,
         #[SensitiveParameter]
         protected string $password
-    ) {}
+    ) {
+    }
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

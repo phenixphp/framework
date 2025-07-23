@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
-use Throwable;
-use Phenix\Tasks\QueuableTask;
 use Phenix\Queue\Contracts\TaskState;
+use Phenix\Tasks\QueuableTask;
+use Throwable;
 
 class MemoryTaskState implements TaskState
 {
@@ -27,10 +27,11 @@ class MemoryTaskState implements TaskState
             'attempts' => $task->getAttempts() + 1,
             'reserved_at' => time(),
             'reserved_until' => time() + $timeout,
-            'payload' => $task->getPayload()
+            'payload' => $task->getPayload(),
         ];
 
         $task->setAttempts($task->getAttempts() + 1);
+
         return true;
     }
 
@@ -65,7 +66,7 @@ class MemoryTaskState implements TaskState
             'failed_at' => time(),
             'exception' => serialize($exception),
             'payload' => $task->getPayload(),
-            'attempts' => $task->getAttempts()
+            'attempts' => $task->getAttempts(),
         ];
     }
 

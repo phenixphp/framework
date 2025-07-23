@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\Queue\QueueManager;
 use Phenix\Providers\ServiceProvider;
 use Phenix\Queue\Console\TableCommand;
 

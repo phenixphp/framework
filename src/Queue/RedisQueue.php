@@ -7,8 +7,8 @@ namespace Phenix\Queue;
 use Amp\Redis\RedisClient;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
-use Phenix\Tasks\QueuableTask;
 use Phenix\Queue\StateManagers\RedisTaskState;
+use Phenix\Tasks\QueuableTask;
 
 class RedisQueue extends Queue
 {
@@ -64,6 +64,7 @@ class RedisQueue extends Queue
         }
 
         $this->redis->execute('RPUSH', $queueKey, $payload);
+
         return null;
     }
 

@@ -14,7 +14,8 @@ class CheckNeedsRehash extends Task
 {
     public function __construct(
         protected string $hash,
-    ) {}
+    ) {
+    }
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

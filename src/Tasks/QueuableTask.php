@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Closure;
-use Phenix\Queue\PendingTask;
 use Phenix\Queue\Contracts\ShouldQueue;
+use Phenix\Queue\PendingTask;
 use Phenix\Util\Str;
 
 /** @phpstan-consistent-constructor */

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Facades\Config as Configuration;
+use Phenix\Queue\Constants\QueueDriver;
 
 class Config
 {

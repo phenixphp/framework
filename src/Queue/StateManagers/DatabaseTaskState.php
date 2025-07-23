@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
-use Throwable;
-use Phenix\Util\Date;
 use Phenix\Facades\DB;
-use Phenix\Tasks\QueuableTask;
 use Phenix\Queue\Contracts\TaskState;
+use Phenix\Tasks\QueuableTask;
+use Phenix\Util\Date;
+use Throwable;
 
 class DatabaseTaskState implements TaskState
 {
     public function __construct(
         protected string $connection = 'default',
         protected string $table = 'tasks'
-    ) {}
+    ) {
+    }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
     {
@@ -28,7 +29,7 @@ class DatabaseTaskState implements TaskState
             ->whereNull('reserved_at')
             ->update([
                 'reserved_at' => $reservedUntil,
-                'attempts' => $task->getAttempts() + 1
+                'attempts' => $task->getAttempts() + 1,
             ]);
 
         if ($updated > 0) {
@@ -49,7 +50,7 @@ class DatabaseTaskState implements TaskState
             ->whereEqual('id', $taskId)
             ->update([
                 'reserved_at' => null,
-                'available_at' => Date::now()
+                'available_at' => Date::now(),
             ]);
     }
 
@@ -73,7 +74,7 @@ class DatabaseTaskState implements TaskState
             ->update([
                 'reserved_at' => null,
                 'failed_at' => Date::now(),
-                'exception' => serialize($exception)
+                'exception' => serialize($exception),
             ]);
     }
 
@@ -88,7 +89,7 @@ class DatabaseTaskState implements TaskState
             ->update([
                 'reserved_at' => null,
                 'available_at' => $availableAt,
-                'attempts' => $task->getAttempts()
+                'attempts' => $task->getAttempts(),
             ]);
     }
 

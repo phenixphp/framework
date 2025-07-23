@@ -11,7 +11,8 @@ class PendingTask
 {
     public function __construct(
         protected QueuableTask $task
-    ) {}
+    ) {
+    }
 
     public function __destruct()
     {

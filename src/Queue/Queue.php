@@ -18,7 +18,8 @@ abstract class Queue implements QueueContract
 
     public function __construct(
         protected string|null $queueName = 'default',
-    ) {}
+    ) {
+    }
 
     public function push(QueuableTask $task): void
     {
@@ -29,6 +30,7 @@ abstract class Queue implements QueueContract
     {
         $task->setQueueName($queue);
         $this->push($task);
+
         return $this;
     }
 
@@ -39,9 +41,11 @@ abstract class Queue implements QueueContract
         foreach ($this->queue as $key => $task) {
             if ($task->getQueueName() === $queueName) {
                 unset($this->queue[$key]);
+
                 return $task;
             }
         }
+
         return null;
     }
 

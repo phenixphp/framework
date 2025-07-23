@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\Contracts;
 
-use Throwable;
 use Phenix\Tasks\QueuableTask;
+use Throwable;
 
 interface TaskState
 {

@@ -20,7 +20,8 @@ class Encrypt extends Task
         #[SensitiveParameter]
         protected object|array|string $value,
         protected bool $serialize = true
-    ) {}
+    ) {
+    }
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

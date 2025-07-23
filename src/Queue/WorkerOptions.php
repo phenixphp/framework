@@ -15,7 +15,8 @@ class WorkerOptions
         public readonly int $maxRetryDelay = 300,
         public readonly int $batchSize = 1,
         public readonly bool $processInBatch = false
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

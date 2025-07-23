@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Tasks;
 
-use Phenix\AppProxy;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
-use RuntimeException;
 use Phenix\AppBuilder;
+use Phenix\AppProxy;
 use Phenix\Facades\Config;
 use Phenix\Tasks\Contracts\Task as TaskContract;
+use RuntimeException;
 
 abstract class Task implements TaskContract
 {
@@ -39,7 +39,7 @@ abstract class Task implements TaskContract
     {
         $basePath = $_ENV['PHENIX_BASE_PATH'] ?? getenv('PHENIX_BASE_PATH');
 
-        if (!$basePath) {
+        if (! $basePath) {
             throw new RuntimeException('App base path is not set, called by ' . static::class);
         }
 
