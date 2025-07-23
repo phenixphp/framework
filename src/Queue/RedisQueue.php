@@ -58,13 +58,11 @@ class RedisQueue extends Queue
         }
 
         $task = unserialize($payload);
-        
-        // Intentar reservar
+
         if ($this->stateManager->reserve($task)) {
             return $task;
         }
 
-        // Si no se pudo reservar, devolver a la cola
         $this->redis->execute('RPUSH', $queueKey, $payload);
         return null;
     }
