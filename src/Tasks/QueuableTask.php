@@ -24,9 +24,10 @@ abstract class QueuableTask extends Task implements ShouldQueue
 
     protected int $timeout = 60;
 
+     /** @phpstan-ignore-next-line */
     public function __construct(mixed ...$args)
     {
-        // Child classes can use this constructor to initialize task-specific properties.
+        $this->taskId = $this->generateId();
     }
 
     public function setConnectionName(string $connectionName): void
