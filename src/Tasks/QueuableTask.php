@@ -24,7 +24,7 @@ abstract class QueuableTask extends Task implements ShouldQueue
 
     protected int $timeout = 60;
 
-     /** @phpstan-ignore-next-line */
+    /** @phpstan-ignore-next-line */
     public function __construct(mixed ...$args)
     {
         $this->taskId = $this->generateId();
