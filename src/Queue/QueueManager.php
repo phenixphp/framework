@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use InvalidArgumentException;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
 use Phenix\Tasks\QueuableTask;
@@ -73,7 +72,6 @@ class QueueManager
             QueueDriver::PARALLEL => $this->createParallelDriver(),
             QueueDriver::DATABASE => $this->createDatabaseDriver(),
             QueueDriver::REDIS => $this->createRedisDriver(),
-            default => throw new InvalidArgumentException("Unsupported queue driver: {$driverName->value}"),
         };
     }
 
