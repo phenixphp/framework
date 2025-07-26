@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
-use Amp\Redis\RedisClient;
-use Phenix\App;
-use Phenix\Database\Constants\Connection;
 use Phenix\Queue\Contracts\TaskState;
+use Phenix\Redis\Contracts\Client;
 use Phenix\Tasks\QueuableTask;
 use Throwable;
 
 class RedisTaskState implements TaskState
 {
-    protected RedisClient $redis;
-
     public function __construct(
-        protected string $connection = 'default'
+        protected Client $redis
     ) {
-        $this->redis = App::make(Connection::redis($connection));
     }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
