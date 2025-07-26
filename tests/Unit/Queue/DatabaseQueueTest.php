@@ -55,3 +55,27 @@ it('pushes a task onto the queue with custom queue name', function (): void {
     SampleQueuableTask::dispatch()
         ->onQueue('custom-queue');
 });
+
+it('pushes a task onto the queue with custom connection', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $databaseStatement = $this->getMockBuilder(Statement::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $databaseStatement->expects($this->once())
+        ->method('execute')
+        ->with($this->callback(function (array $params): bool {
+            return Arr::get($params, 5) === 'default';
+        }))
+        ->willReturn(new Result([['Query OK']]));
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn($databaseStatement);
+
+    $this->app->swap(Connection::default(), $connection);
+
+    SampleQueuableTask::dispatch()
+        ->onConnection('default');
+});
