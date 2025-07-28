@@ -56,7 +56,7 @@ class DatabaseQueue extends Queue
 
     public function pop(string|null $queueName = null): QueuableTask|null
     {
-        $task = DB::connection($this->connection)
+        $queuedTask = DB::connection($this->connection)
             ->table($this->table)
             ->whereEqual('queue_name', $queueName ?? $this->queueName)
             ->whereNull('reserved_at')
@@ -64,13 +64,13 @@ class DatabaseQueue extends Queue
             ->orderBy('created_at', Order::ASC)
             ->first();
 
-        if (! $task) {
+        if (! $queuedTask) {
             return null;
         }
 
-        $task = unserialize($task['payload']);
-        $task->setTaskId($task['id']);
-        $task->setAttempts($task['attempts']);
+        $task = unserialize($queuedTask['payload']);
+        $task->setTaskId($queuedTask['id']);
+        $task->setAttempts($queuedTask['attempts']);
 
         if ($this->stateManager->reserve($task)) {
             return $task;
