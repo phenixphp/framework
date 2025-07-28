@@ -32,7 +32,7 @@ class DatabaseTaskState implements TaskState
                 'attempts' => $task->getAttempts() + 1,
             ]);
 
-        if ($updated > 0) {
+        if ($updated) {
             $task->setAttempts($task->getAttempts() + 1);
 
             return true;
