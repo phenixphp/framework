@@ -39,7 +39,9 @@ abstract class Queue implements QueueContract
         $queueName ??= $this->queueName;
 
         foreach ($this->queue as $key => $task) {
-            if ($task->getQueueName() === $queueName) {
+            $taskQueueName = $task->getQueueName() ?? $this->queueName;
+
+            if ($taskQueueName === $queueName) {
                 unset($this->queue[$key]);
 
                 return $task;
