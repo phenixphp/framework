@@ -72,44 +72,32 @@ it('calls Queue::pop and returns a task from Redis', function (): void {
     $payload = serialize(new SampleQueuableTask());
 
 
-    $clientMock->expects($this->at(0))
-        ->method('execute')
-        ->with($this->equalTo('LPOP'), $this->equalTo('queues:default'))
-        ->willReturn($payload);
 
-    $clientMock->expects($this->at(1))
+    $clientMock->expects($this->exactly(4))
         ->method('execute')
-        ->with(
-            $this->equalTo('SETNX'),
-            $this->stringStartsWith('task:reserved:'),
-            $this->isType('int')
+        ->withConsecutive(
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->isType('string'), // attempts
+                $this->isType('int'),    // 1
+                $this->isType('string'), // reserved_at
+                $this->isType('int'),    // timestamp
+                $this->isType('string'), // reserved_until
+                $this->isType('int'),    // timestamp
+                $this->isType('string'), // payload
+                $this->isType('string'),  // serialized payload
+            ],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')]
         )
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(2))
-        ->method('execute')
-        ->with(
-            $this->equalTo('HSET'),
-            $this->stringStartsWith('task:data:'),
-            $this->isType('string'), // attempts
-            $this->isType('int'),    // 1
-            $this->isType('string'), // reserved_at
-            $this->isType('int'),    // timestamp
-            $this->isType('string'), // reserved_until
-            $this->isType('int'),    // timestamp
-            $this->isType('string'), // payload
-            $this->isType('string')  // serialized payload
-        )
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(3))
-        ->method('execute')
-        ->with(
-            $this->equalTo('EXPIRE'),
-            $this->stringStartsWith('task:data:'),
-            $this->isType('int')
-        )
-        ->willReturn(1);
+        ->willReturnOnConsecutiveCalls(
+            $payload,
+            1,
+            1,
+            1
+        );
 
     $this->app->swap(ClientContract::class, $clientMock);
 
