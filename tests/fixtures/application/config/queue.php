@@ -4,7 +4,9 @@ return [
     'default' => env('QUEUE_DRIVER', fn (): string => 'database'),
 
     'drivers' => [
-        'parallel' => [],
+        'parallel' => [
+            'timeout' => env('PARALLEL_QUEUE_TIMEOUT', fn (): int => 2),
+        ],
 
         'database' => [
             'connection' => env('DB_QUEUE_CONNECTION'),

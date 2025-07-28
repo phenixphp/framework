@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
-use Phenix\Facades\Config;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
 
 beforeEach(function (): void {

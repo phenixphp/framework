@@ -16,6 +16,14 @@ abstract class Task implements TaskContract
 {
     abstract protected function handle(Channel $channel, Cancellation $cancellation): mixed;
 
+    public static function setBootingSettings(): void
+    {
+        if (getenv('PHENIX_BASE_PATH') === false) {
+            putenv('PHENIX_BASE_PATH=' . base_path());
+            $_ENV['PHENIX_BASE_PATH'] = base_path();
+        }
+    }
+
     public function run(Channel $channel, Cancellation $cancellation): mixed
     {
         $app = self::bootApplication();
@@ -27,12 +35,14 @@ abstract class Task implements TaskContract
         return $this->handle($channel, $cancellation);
     }
 
-    public static function setBootingSettings(): void
+    public function output(): Result
     {
-        if (getenv('PHENIX_BASE_PATH') === false) {
-            putenv('PHENIX_BASE_PATH=' . base_path());
-            $_ENV['PHENIX_BASE_PATH'] = base_path();
-        }
+        /** @var Result $result */
+        [$result] = Worker::batch([
+            $this,
+        ]);
+
+        return $result;
     }
 
     protected static function bootApplication(): AppProxy
