@@ -30,6 +30,11 @@ class Worker
         $this->startTime = microtime(true);
     }
 
+    public function sleep(int $seconds): void
+    {
+        sleep($seconds);
+    }
+
     public function daemon(string $connectionName, string $queueName, WorkerOptions $options): void
     {
         Log::info('Worker daemon started', [
@@ -71,6 +76,15 @@ class Worker
         }
 
         $this->logWorkerStats();
+    }
+
+    public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options): void
+    {
+        $task = $this->getNextTask($connectionName, $queueName);
+
+        if ($task !== null) {
+            $this->processTask($task, $options);
+        }
     }
 
     protected function processTask(QueuableTask $task, WorkerOptions $options): void
@@ -166,11 +180,6 @@ class Worker
             'throughput' => $throughput,
             'memory_peak' => memory_get_peak_usage(true),
         ]);
-    }
-
-    public function sleep(int $seconds): void
-    {
-        sleep($seconds);
     }
 
     protected function listenForSignals(): void
