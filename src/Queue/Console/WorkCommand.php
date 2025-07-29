@@ -9,6 +9,7 @@ use Phenix\Facades\Config;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -32,8 +33,8 @@ class WorkCommand extends Command
     protected function configure(): void
     {
         $this->setHelp('This command allows you to process the queue...')
-            ->addArgument('connection', InputOption::VALUE_OPTIONAL, 'The name of the connection to use')
-            ->addOption('queue', 'q', InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
+            ->addArgument('connection', InputArgument::OPTIONAL, 'The name of the connection to use', (string) Config::get('queue.default'))
+            ->addOption('queue', 'qn', InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
             ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
             ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no tasks are available', 3);
     }
