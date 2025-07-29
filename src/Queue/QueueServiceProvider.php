@@ -6,6 +6,7 @@ namespace Phenix\Queue;
 
 use Phenix\Providers\ServiceProvider;
 use Phenix\Queue\Console\TableCommand;
+use Phenix\Queue\Console\WorkCommand;
 
 class QueueServiceProvider extends ServiceProvider
 {
@@ -33,6 +34,7 @@ class QueueServiceProvider extends ServiceProvider
     {
         $this->commands([
             TableCommand::class,
+            WorkCommand::class,
         ]);
     }
 }
