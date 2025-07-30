@@ -27,3 +27,18 @@ it('processes a successful task', function (): void {
 
     $worker->runNextTask('default', 'default', new WorkerOptions());
 });
+
+it('processes a successful task in long running process', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queueManager->expects($this->once())
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturn(new SampleQueuableTask());
+
+    $worker = new Worker($queueManager);
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+});
