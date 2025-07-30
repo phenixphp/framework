@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Phenix\Queue\Worker;
 use Phenix\Facades\Config;
-use Phenix\Queue\QueueManager;
-use Phenix\Queue\WorkerOptions;
 use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\QueueManager;
+use Phenix\Queue\Worker;
+use Phenix\Queue\WorkerOptions;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
 
 beforeEach(function () {
