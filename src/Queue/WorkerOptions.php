@@ -17,18 +17,4 @@ class WorkerOptions
         public readonly bool $processInBatch = false
     ) {
     }
-
-    public function toArray(): array
-    {
-        return [
-            'sleep' => $this->sleep,
-            'maxTries' => $this->maxTries,
-            'timeout' => $this->timeout,
-            'once' => $this->once,
-            'retryDelay' => $this->retryDelay,
-            'maxRetryDelay' => $this->maxRetryDelay,
-            'batchSize' => $this->batchSize,
-            'processInBatch' => $this->processInBatch,
-        ];
-    }
 }
