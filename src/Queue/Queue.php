@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\Facades\Config;
 use Phenix\Queue\Contracts\Queue as QueueContract;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
-
-use function Amp\async;
-use function Amp\delay;
 
 abstract class Queue implements QueueContract
 {
@@ -28,13 +24,6 @@ abstract class Queue implements QueueContract
     public function push(QueuableTask $task): void
     {
         $this->queue[] = $task;
-
-        async(function (): void {
-            delay(Config::get('queue.drivers.parallel.timeout', 2));
-
-            $task = $this->pop();
-            $task?->output();
-        });
     }
 
     public function pushOn(string $queue, QueuableTask $task): static
