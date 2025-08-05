@@ -6,6 +6,7 @@ return [
     'drivers' => [
         'parallel' => [
             'timeout' => env('PARALLEL_QUEUE_TIMEOUT', fn (): int => 2),
+            'chunk_size' => env('PARALLEL_QUEUE_CHUNK_SIZE', fn (): int => 10),
         ],
 
         'database' => [
