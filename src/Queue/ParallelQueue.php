@@ -83,19 +83,24 @@ class ParallelQueue extends Queue
         $this->processingInterval = new Interval(3.0, function (): void {
             $this->cleanupCompletedTasks();
 
-            $tasksToProcess = $this->getTaskChunk();
+            $reservedTasks = $this->getTaskChunk();
 
-            if (empty($tasksToProcess)) {
+            if (empty($reservedTasks)) {
                 $this->disableProcessing();
 
                 return;
             }
 
-            $this->runningTasks = array_map(fn (QueuableTask $task): Execution => $this->worker->submit($task), $tasksToProcess);
+            // Submit reserved tasks to workers
+            $executions = array_map(fn (QueuableTask $task): Execution => $this->worker->submit($task), $reservedTasks);
+            $this->runningTasks = array_merge($this->runningTasks, $executions);
 
-            $this->processTasks();
+            // Process results asynchronously
+            async(function () use ($reservedTasks, $executions): void {
+                $this->processTaskResults($reservedTasks, $executions);
+            });
 
-            if (empty($this->tasks) && empty($this->runningTasks)) {
+            if (parent::size() == 0 && empty($this->runningTasks)) {
                 $this->disableProcessing();
             }
         });
@@ -123,22 +128,29 @@ class ParallelQueue extends Queue
 
     private function getTaskChunk(): array
     {
-        $availableTasks = [];
+        $reservedTasks = [];
         $attempted = 0;
         $maxAttempts = parent::size(); // Avoid infinite loop
 
-        while (count($availableTasks) < $this->chunkSize && $attempted < $maxAttempts) {
+        while (count($reservedTasks) < $this->chunkSize && $attempted < $maxAttempts) {
             $task = $this->getNextAvailableTask();
 
             if ($task === null) {
                 break;
             }
 
-            $availableTasks[] = $task;
+            // Reserve task immediately when found
+            if ($this->stateManager->reserve($task)) {
+                $reservedTasks[] = $task;
+            } else {
+                // If can't reserve, re-enqueue the task
+                parent::push($task);
+            }
+
             $attempted++;
         }
 
-        return $availableTasks;
+        return $reservedTasks;
     }
 
     private function getNextAvailableTask(): ?QueuableTask
@@ -167,17 +179,16 @@ class ParallelQueue extends Queue
         return null;
     }
 
-    private function processTasks(): void
+    private function processTaskResults(array $tasks, array $executions): void
     {
         /** @var array<int, Result> $results */
         $results = Future\await(array_map(
             fn (Execution $e): Future => $e->getFuture(),
-            $this->runningTasks,
+            $executions,
         ));
 
         foreach ($results as $index => $result) {
-            /** @var QueuableTask $task */
-            $task = $this->runningTasks[$index]->getTask();
+            $task = $tasks[$index];
 
             if ($result->isSuccess()) {
                 $this->stateManager->complete($task);
@@ -191,10 +202,16 @@ class ParallelQueue extends Queue
 
     private function cleanupCompletedTasks(): void
     {
-        foreach ($this->runningTasks as $taskId => $task) {
-            if ($task->getFuture()->isComplete()) {
-                unset($this->runningTasks[$taskId]);
+        $completedTasks = [];
+
+        foreach ($this->runningTasks as $index => $execution) {
+            if ($execution->getFuture()->isComplete()) {
+                $completedTasks[] = $index;
             }
+        }
+
+        foreach ($completedTasks as $index) {
+            unset($this->runningTasks[$index]);
         }
     }
 
@@ -211,8 +228,7 @@ class ParallelQueue extends Queue
                 parent::push($task);
             });
         } else {
-            $failException = $exception ?? new FailedTaskException($message);
-            $this->stateManager->fail($task, $failException);
+            $this->stateManager->fail($task, new FailedTaskException($message));
         }
     }
 
