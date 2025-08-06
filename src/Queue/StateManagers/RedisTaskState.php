@@ -13,8 +13,7 @@ class RedisTaskState implements TaskState
 {
     public function __construct(
         protected Client $redis
-    ) {
-    }
+    ) {}
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
     {
@@ -143,5 +142,43 @@ class RedisTaskState implements TaskState
         }
 
         return $result;
+    }
+
+    public function cleanupExpiredReservations(): void
+    {
+        $script = '
+            local cursor = 0
+            local now = tonumber(ARGV[1])
+            local cleanedCount = 0
+            local batchSize = 100
+
+            repeat
+                local result = redis.call("SCAN", cursor, "MATCH", "task:reserved:*", "COUNT", batchSize)
+                cursor = tonumber(result[1])
+                local reservedKeys = result[2]
+
+                for i = 1, #reservedKeys do
+                    local key = reservedKeys[i]
+                    local expiration = redis.call("GET", key)
+
+                    if expiration and tonumber(expiration) < now then
+                        redis.call("DEL", key)
+                        cleanedCount = cleanedCount + 1
+
+                        -- Extract task ID from key and update task data
+                        local taskId = string.match(key, "task:reserved:(.+)")
+                        if taskId then
+                            local taskDataKey = "task:data:" .. taskId
+                            redis.call("HDEL", taskDataKey, "reserved_at")
+                            redis.call("HSET", taskDataKey, "available_at", now)
+                        end
+                    end
+                end
+            until cursor == 0
+
+            return cleanedCount
+        ';
+
+        $this->redis->execute('EVAL', $script, 0, time());
     }
 }
