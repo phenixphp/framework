@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Tasks;
 
-use Amp\Parallel\Worker as Workers;
+use Amp\Parallel\Worker;
 use Phenix\Tasks\Contracts\Task;
 
 class WorkerPool extends AbstractWorker
 {
-    protected function submitTask(Task $parallelTask): Workers\Execution
+    protected function submitTask(Task $parallelTask): Worker\Execution
     {
-        return Workers\submit($parallelTask);
+        return Worker\submit($parallelTask);
     }
 }

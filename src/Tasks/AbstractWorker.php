@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Amp\Future;
-use Amp\Parallel\Worker as Workers;
+use Amp\Parallel\Worker;
 use Phenix\Tasks\Contracts\Task;
 use Phenix\Tasks\Contracts\Worker as WorkerContract;
 
@@ -13,7 +13,7 @@ use Phenix\Tasks\Contracts\Worker as WorkerContract;
 abstract class AbstractWorker implements WorkerContract
 {
     /**
-     * @var Workers\Execution[]
+     * @var Worker\Execution[]
      */
     protected array $tasks;
 
@@ -51,12 +51,12 @@ abstract class AbstractWorker implements WorkerContract
     public function run(): array
     {
         return Future\await(array_map(
-            fn (Workers\Execution $e) => $e->getFuture(),
+            fn (Worker\Execution $e): Future => $e->getFuture(),
             $this->tasks,
         ));
     }
 
-    abstract protected function submitTask(Task $parallelTask): Workers\Execution;
+    abstract protected function submitTask(Task $parallelTask): Worker\Execution;
 
     protected function finalize(): void
     {
