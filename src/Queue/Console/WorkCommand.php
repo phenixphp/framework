@@ -34,7 +34,7 @@ class WorkCommand extends Command
     {
         $this->setHelp('This command allows you to process the queue...')
             ->addArgument('connection', InputArgument::OPTIONAL, 'The name of the connection to use', (string) Config::get('queue.default'))
-            ->addOption('queue', 'qn', InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
+            ->addOption('queue', null, InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
             ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
             ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no tasks are available', 3);
     }
