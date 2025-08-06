@@ -153,15 +153,9 @@ class ParallelQueue extends Queue
         return $reservedTasks;
     }
 
-    private function getNextAvailableTask(): ?QueuableTask
+    private function getNextAvailableTask(): QueuableTask|null
     {
-        while (parent::size() > 0) {
-            $task = parent::pop();
-
-            if ($task === null) {
-                break;
-            }
-
+        if (parent::size() > 0 && $task = parent::pop()) {
             $taskId = $task->getTaskId();
             $state = $this->stateManager->getTaskState($taskId);
 
@@ -172,8 +166,6 @@ class ParallelQueue extends Queue
 
             // If not available, re-enqueue the task
             parent::push($task);
-
-            break; // Avoid infinite loop
         }
 
         return null;
