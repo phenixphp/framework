@@ -20,8 +20,6 @@ use function Amp\delay;
 
 class ParallelQueue extends Queue
 {
-    protected WorkerContract|null $worker = null;
-
     /**
      * @var Execution[]
      */
@@ -77,8 +75,6 @@ class ParallelQueue extends Queue
 
         $this->processingStarted = true;
 
-        $this->ensureWorkerInitialized();
-
         $this->processingInterval = new Interval(2.0, function (): void {
             $this->cleanupCompletedTasks();
 
@@ -90,10 +86,7 @@ class ParallelQueue extends Queue
                 return;
             }
 
-            $this->ensureWorkerInitialized();
-
-            // Submit reserved tasks to workers
-            $executions = array_map(fn (QueuableTask $task): Execution => $this->worker->submit($task), $reservedTasks);
+            $executions = array_map(fn (QueuableTask $task): Execution => Worker\submit($task), $reservedTasks);
             $this->runningTasks = array_merge($this->runningTasks, $executions);
 
             // Process results asynchronously
@@ -108,13 +101,6 @@ class ParallelQueue extends Queue
 
         $this->processingInterval->disable();
         $this->isEnabled = false;
-    }
-
-    private function ensureWorkerInitialized(): void
-    {
-        if ($this->worker === null) {
-            $this->worker = Worker\createWorker();
-        }
     }
 
     private function enableProcessing(): void
