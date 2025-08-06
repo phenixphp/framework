@@ -78,6 +78,10 @@ class ParallelQueue extends Queue
         $this->processingInterval = new Interval(2.0, function (): void {
             $this->cleanupCompletedTasks();
 
+            if (!empty($this->runningTasks)) {
+                return; // Skip processing if tasks are still running
+            }
+
             $reservedTasks = $this->getTaskChunk();
 
             if (empty($reservedTasks)) {
@@ -87,6 +91,7 @@ class ParallelQueue extends Queue
             }
 
             $executions = array_map(fn (QueuableTask $task): Execution => Worker\submit($task), $reservedTasks);
+
             $this->runningTasks = array_merge($this->runningTasks, $executions);
 
             // Process results asynchronously
