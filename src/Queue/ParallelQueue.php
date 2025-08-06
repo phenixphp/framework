@@ -20,7 +20,7 @@ use function Amp\delay;
 
 class ParallelQueue extends Queue
 {
-    protected WorkerContract $worker;
+    protected WorkerContract|null $worker = null;
 
     /**
      * @var Execution[]
@@ -45,8 +45,6 @@ class ParallelQueue extends Queue
         $this->stateManager = new MemoryTaskState();
         $this->maxConcurrency = Config::get('queue.drivers.parallel.max_concurrent', 10);
         $this->chunkSize = Config::get('queue.drivers.parallel.chunk_size', 10);
-
-        $this->initializeProcessor();
     }
 
     public function push(QueuableTask $task): void
@@ -78,7 +76,8 @@ class ParallelQueue extends Queue
         }
 
         $this->processingStarted = true;
-        $this->worker = Worker\createWorker();
+
+        $this->ensureWorkerInitialized();
 
         $this->processingInterval = new Interval(2.0, function (): void {
             $this->cleanupCompletedTasks();
@@ -90,6 +89,8 @@ class ParallelQueue extends Queue
 
                 return;
             }
+
+            $this->ensureWorkerInitialized();
 
             // Submit reserved tasks to workers
             $executions = array_map(fn (QueuableTask $task): Execution => $this->worker->submit($task), $reservedTasks);
@@ -105,13 +106,23 @@ class ParallelQueue extends Queue
             }
         });
 
-
         $this->processingInterval->disable();
         $this->isEnabled = false;
     }
 
+    private function ensureWorkerInitialized(): void
+    {
+        if ($this->worker === null) {
+            $this->worker = Worker\createWorker();
+        }
+    }
+
     private function enableProcessing(): void
     {
+        if (! $this->processingStarted) {
+            $this->initializeProcessor();
+        }
+
         if (! $this->isEnabled && $this->processingInterval !== null) {
             $this->processingInterval->enable();
             $this->isEnabled = true;
