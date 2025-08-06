@@ -80,7 +80,7 @@ class ParallelQueue extends Queue
         $this->processingStarted = true;
         $this->worker = Worker\createWorker();
 
-        $this->processingInterval = new Interval(3.0, function (): void {
+        $this->processingInterval = new Interval(2.0, function (): void {
             $this->cleanupCompletedTasks();
 
             $reservedTasks = $this->getTaskChunk();
