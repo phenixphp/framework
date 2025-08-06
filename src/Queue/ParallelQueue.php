@@ -8,7 +8,6 @@ use Amp\Future;
 use Amp\Interval;
 use Amp\Parallel\Worker;
 use Amp\Parallel\Worker\Execution;
-use Amp\Parallel\Worker\Worker as WorkerContract;
 use Phenix\Facades\Config;
 use Phenix\Queue\Exceptions\FailedTaskException;
 use Phenix\Queue\StateManagers\MemoryTaskState;
@@ -78,7 +77,7 @@ class ParallelQueue extends Queue
         $this->processingInterval = new Interval(2.0, function (): void {
             $this->cleanupCompletedTasks();
 
-            if (!empty($this->runningTasks)) {
+            if (! empty($this->runningTasks)) {
                 return; // Skip processing if tasks are still running
             }
 
