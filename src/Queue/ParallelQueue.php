@@ -217,7 +217,10 @@ class ParallelQueue extends Queue
 
     private function handleTaskFailure(QueuableTask $task, string $message): void
     {
+        /** @var int $maxRetries */
         $maxRetries = Config::get('queue.drivers.parallel.max_retries', 3);
+
+        /** @var int $retryDelay */
         $retryDelay = Config::get('queue.drivers.parallel.retry_delay', 5);
 
         if ($task->getAttempts() < $maxRetries) {
