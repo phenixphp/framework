@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Tasks;
 
-use Phenix\Tasks\Console\MakeTask;
 use Phenix\Providers\ServiceProvider;
+use Phenix\Tasks\Console\MakeTask;
 
 class TaskServiceProvider extends ServiceProvider
 {

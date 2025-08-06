@@ -13,7 +13,8 @@ class RedisTaskState implements TaskState
 {
     public function __construct(
         protected Client $redis
-    ) {}
+    ) {
+    }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
     {
