@@ -101,6 +101,18 @@ class DatabaseTaskState implements TaskState
             ->first();
     }
 
+    public function cleanupExpiredReservations(): void
+    {
+        DB::connection($this->connection)
+            ->table($this->table)
+            ->whereNotNull('reserved_at')
+            ->whereLessThan('reserved_at', Date::now()->toDateTimeString())
+            ->update([
+                'reserved_at' => null,
+                'available_at' => Date::now(),
+            ]);
+    }
+
     protected function getTaskId(QueuableTask $task): string
     {
         return $task->getTaskId();

@@ -20,4 +20,6 @@ interface TaskState
     public function retry(QueuableTask $task, int $delay = 0): void;
 
     public function getTaskState(string $taskId): ?array;
+
+    public function cleanupExpiredReservations(): void;
 }
