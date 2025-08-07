@@ -66,6 +66,27 @@ class ParallelQueue extends Queue
         return $this->isEnabled;
     }
 
+    public function size(): int
+    {
+        return parent::size() + count($this->runningTasks);
+    }
+
+    public function getRunningTasksCount(): int
+    {
+        return count($this->runningTasks);
+    }
+
+    public function getProcessorStatus(): array
+    {
+        return [
+            'is_processing' => $this->isEnabled,
+            'pending_tasks' => parent::size(),
+            'running_tasks' => count($this->runningTasks),
+            'max_concurrency' => $this->maxConcurrency,
+            'total_tasks' => $this->size(),
+        ];
+    }
+
     private function initializeProcessor(): void
     {
         if ($this->processingStarted) {
@@ -226,26 +247,5 @@ class ParallelQueue extends Queue
         } else {
             $this->stateManager->fail($task, new FailedTaskException($message));
         }
-    }
-
-    public function size(): int
-    {
-        return parent::size() + count($this->runningTasks);
-    }
-
-    public function getRunningTasksCount(): int
-    {
-        return count($this->runningTasks);
-    }
-
-    public function getProcessorStatus(): array
-    {
-        return [
-            'is_processing' => $this->isEnabled,
-            'pending_tasks' => parent::size(),
-            'running_tasks' => count($this->runningTasks),
-            'max_concurrency' => $this->maxConcurrency,
-            'total_tasks' => $this->size(),
-        ];
     }
 }
