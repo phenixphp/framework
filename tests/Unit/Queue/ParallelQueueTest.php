@@ -253,3 +253,27 @@ it('automatically disables processing when no tasks are available to reserve', f
     $this->assertSame(0, $parallelQueue->size());
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
 });
+
+it('automatically disables processing after all tasks complete', function () {
+    $parallelQueue = new ParallelQueue('test-complete-all-tasks');
+
+    // Add a single task
+    $parallelQueue->push(new SampleQueuableTask());
+    $this->assertTrue($parallelQueue->isProcessing());
+    $this->assertGreaterThan(0, $parallelQueue->size());
+
+    // Wait for tasks to be processed and completed
+    delay(8.0); // Wait long enough for tasks to complete and cleanup
+
+    // Verify processing was disabled after all tasks completed
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size());
+    $this->assertSame(0, $parallelQueue->getRunningTasksCount());
+
+    // Verify status reflects empty state
+    $status = $parallelQueue->getProcessorStatus();
+    $this->assertFalse($status['is_processing']);
+    $this->assertSame(0, $status['pending_tasks']);
+    $this->assertSame(0, $status['running_tasks']);
+    $this->assertSame(0, $status['total_tasks']);
+});
