@@ -7,6 +7,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\ParallelQueue;
+use Tests\Unit\Queue\Tasks\DelayableTask;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
 
 use function Amp\async;
@@ -199,39 +200,19 @@ it('works correctly with the HTTP server without blocking', function () {
 it('skips processing new tasks when previous tasks are still running', function () {
     $parallelQueue = new ParallelQueue('test-skip-processing');
 
-    // Add initial tasks that will take some time to process
-    for ($i = 0; $i < 3; $i++) {
-        $parallelQueue->push(new SampleQueuableTask());
-    }
+    // Add initial task that will take 6 seconds to process
+    $parallelQueue->push(new DelayableTask(6));
 
     $this->assertTrue($parallelQueue->isProcessing());
-    $initialSize = $parallelQueue->size();
 
     // Wait a bit for tasks to start processing but not complete
-    delay(1.0);
+    delay(4.0);
 
-    // Check if there are running tasks
-    $runningTasksCount = $parallelQueue->getRunningTasksCount();
+    // Verify the queue size
+    expect($parallelQueue->size())->ToBe(1);
 
-    if ($runningTasksCount > 0) {
-        // Add more tasks while previous ones are still running
-        for ($i = 0; $i < 2; $i++) {
-            $parallelQueue->push(new SampleQueuableTask());
-        }
-
-        // Verify the queue size increased (new tasks were queued)
-        $this->assertGreaterThan($initialSize, $parallelQueue->size());
-
-        // Processor should still be running
-        $this->assertTrue($parallelQueue->isProcessing());
-
-        // There should still be running tasks
-        $this->assertGreaterThan(0, $parallelQueue->getRunningTasksCount());
-    } else {
-        // If no tasks are running (they completed quickly),
-        // just verify the queue is working normally
-        $this->assertTrue(true, 'Tasks completed too quickly to test concurrent processing scenario');
-    }
+    // Processor should still be running
+    expect($parallelQueue->isProcessing())->ToBeTrue();
 });
 
 it('automatically disables processing when no tasks are available to reserve', function () {
