@@ -20,7 +20,7 @@ use function Amp\delay;
 class ParallelQueue extends Queue
 {
     /**
-     * @var Execution[]
+     * @var array<int, Execution> $runningTasks
      */
     private array $runningTasks = [];
 
