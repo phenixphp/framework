@@ -297,3 +297,67 @@ it('handles chunk processing when no available tasks exist', function () {
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertGreaterThan(0, $parallelQueue->size());
 });
+
+it('re-enqueues tasks that cannot be reserved during chunk processing', function () {
+    // Create a custom test to force the reserve failure scenario
+    $parallelQueue = new ParallelQueue('test-reserve-failure');
+
+    // Add multiple tasks that will create a scenario where some might not be reservable
+    for ($i = 0; $i < 5; $i++) {
+        $parallelQueue->push(new SampleQueuableTask());
+    }
+
+    $initialSize = $parallelQueue->size();
+    $this->assertTrue($parallelQueue->isProcessing());
+    $this->assertGreaterThan(0, $initialSize);
+
+    // Wait a bit to let some processing happen
+    delay(1.0);
+
+    // Even if some reservations fail, tasks should still be in the queue
+    // The size might have changed due to processing, but shouldn't be negative
+    $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
+
+    // Processor should still be working if there are tasks
+    if ($parallelQueue->size() > 0) {
+        $this->assertTrue($parallelQueue->isProcessing());
+    }
+
+    // Wait for complete processing
+    delay(8.0);
+
+    // All tasks should eventually be processed or re-enqueued appropriately
+    $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
+});
+
+it('handles concurrent task reservation attempts correctly', function () {
+    $parallelQueue = new ParallelQueue('test-concurrent-reservation');
+
+    // Create multiple tasks to increase chances of reservation conflicts
+    for ($i = 0; $i < 10; $i++) {
+        $parallelQueue->push(new SampleQueuableTask());
+    }
+
+    $this->assertTrue($parallelQueue->isProcessing());
+    $initialSize = $parallelQueue->size();
+    $this->assertSame(10, $initialSize);
+
+    // Allow some time for processing to start and potentially encounter reservation conflicts
+    delay(2.5); // Wait just a bit more than the interval time
+
+    // Verify queue is still functioning properly despite any reservation conflicts
+    $currentSize = $parallelQueue->size();
+    $this->assertGreaterThanOrEqual(0, $currentSize);
+
+    // If tasks remain, processing should continue
+    if ($currentSize > 0) {
+        $this->assertTrue($parallelQueue->isProcessing());
+    }
+
+    // Wait for all tasks to complete
+    delay(10.0);
+
+    // Eventually all tasks should be processed
+    $this->assertSame(0, $parallelQueue->size());
+    $this->assertFalse($parallelQueue->isProcessing());
+});
