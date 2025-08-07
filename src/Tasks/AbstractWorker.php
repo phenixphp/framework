@@ -13,7 +13,7 @@ use Phenix\Tasks\Contracts\Worker as WorkerContract;
 abstract class AbstractWorker implements WorkerContract
 {
     /**
-     * @var array<int, Worker\Execution> $tasks
+     * @var array<int, Worker\Execution>
      */
     protected array $tasks;
 
