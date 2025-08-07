@@ -89,10 +89,6 @@ class ParallelQueue extends Queue
 
     private function initializeProcessor(): void
     {
-        if ($this->processingStarted) {
-            return;
-        }
-
         $this->processingStarted = true;
 
         $this->processingInterval = new Interval(2.0, function (): void {
