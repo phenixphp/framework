@@ -233,3 +233,23 @@ it('skips processing new tasks when previous tasks are still running', function 
         $this->assertTrue(true, 'Tasks completed too quickly to test concurrent processing scenario');
     }
 });
+
+it('automatically disables processing when no tasks are available to reserve', function () {
+    $parallelQueue = new ParallelQueue('test-empty-queue');
+
+    // Start with an empty queue
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size());
+
+    // Manually start processing on an empty queue
+    $parallelQueue->start();
+    $this->assertTrue($parallelQueue->isProcessing());
+
+    // Wait for the interval to run and detect empty queue
+    delay(3.0); // Wait longer than the 2.0 second interval
+
+    // Processing should have been automatically disabled
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size());
+    $this->assertSame(0, $parallelQueue->getRunningTasksCount());
+});
