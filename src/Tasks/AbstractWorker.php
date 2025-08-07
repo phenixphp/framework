@@ -13,7 +13,7 @@ use Phenix\Tasks\Contracts\Worker as WorkerContract;
 abstract class AbstractWorker implements WorkerContract
 {
     /**
-     * @var Worker\Execution[]
+     * @var array<int, Worker\Execution> $tasks
      */
     protected array $tasks;
 
@@ -23,8 +23,8 @@ abstract class AbstractWorker implements WorkerContract
     }
 
     /**
-     * @param Task[] $tasks
-     * @return array
+     * @param array<int, Task> $tasks
+     * @return array<int, Result>
      */
     public static function batch(array $tasks): array
     {
