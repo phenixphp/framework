@@ -277,3 +277,23 @@ it('automatically disables processing after all tasks complete', function () {
     $this->assertSame(0, $status['running_tasks']);
     $this->assertSame(0, $status['total_tasks']);
 });
+
+it('handles chunk processing when no available tasks exist', function () {
+    $parallelQueue = new ParallelQueue('test-no-available-tasks');
+
+    // Start processing with empty queue to trigger the break condition
+    $parallelQueue->start();
+    $this->assertTrue($parallelQueue->isProcessing());
+
+    // Wait for interval to run and encounter empty task scenario
+    delay(3.0);
+
+    // Should automatically disable processing due to no tasks available
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size());
+
+    // Add a task to verify it can resume processing
+    $parallelQueue->push(new SampleQueuableTask());
+    $this->assertTrue($parallelQueue->isProcessing());
+    $this->assertGreaterThan(0, $parallelQueue->size());
+});
