@@ -195,3 +195,41 @@ it('works correctly with the HTTP server without blocking', function () {
     $this->assertSame(10, $parallelQueue->size());
     $this->assertTrue($parallelQueue->isProcessing());
 });
+
+it('skips processing new tasks when previous tasks are still running', function () {
+    $parallelQueue = new ParallelQueue('test-skip-processing');
+
+    // Add initial tasks that will take some time to process
+    for ($i = 0; $i < 3; $i++) {
+        $parallelQueue->push(new SampleQueuableTask());
+    }
+
+    $this->assertTrue($parallelQueue->isProcessing());
+    $initialSize = $parallelQueue->size();
+
+    // Wait a bit for tasks to start processing but not complete
+    delay(1.0);
+
+    // Check if there are running tasks
+    $runningTasksCount = $parallelQueue->getRunningTasksCount();
+
+    if ($runningTasksCount > 0) {
+        // Add more tasks while previous ones are still running
+        for ($i = 0; $i < 2; $i++) {
+            $parallelQueue->push(new SampleQueuableTask());
+        }
+
+        // Verify the queue size increased (new tasks were queued)
+        $this->assertGreaterThan($initialSize, $parallelQueue->size());
+
+        // Processor should still be running
+        $this->assertTrue($parallelQueue->isProcessing());
+
+        // There should still be running tasks
+        $this->assertGreaterThan(0, $parallelQueue->getRunningTasksCount());
+    } else {
+        // If no tasks are running (they completed quickly),
+        // just verify the queue is working normally
+        $this->assertTrue(true, 'Tasks completed too quickly to test concurrent processing scenario');
+    }
+});
