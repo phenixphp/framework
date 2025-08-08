@@ -18,7 +18,7 @@ beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::PARALLEL->value);
 });
 
-it('pushes a task onto the parallel queue', function () {
+it('pushes a task onto the parallel queue', function (): void {
     Queue::clear();
     Queue::push(new SampleQueuableTask());
 
@@ -28,7 +28,7 @@ it('pushes a task onto the parallel queue', function () {
     expect($task)->toBeInstanceOf(SampleQueuableTask::class);
 });
 
-it('pushes a task onto a custom parallel queue', function () {
+it('pushes a task onto a custom parallel queue', function (): void {
     Queue::clear();
     Queue::pushOn('custom-parallel', new SampleQueuableTask());
 
@@ -38,7 +38,7 @@ it('pushes a task onto a custom parallel queue', function () {
     $this->assertInstanceOf(SampleQueuableTask::class, $task);
 });
 
-it('returns the correct size for parallel queue', function () {
+it('returns the correct size for parallel queue', function (): void {
     Queue::clear();
     Queue::push(new SampleQueuableTask());
 
@@ -49,20 +49,20 @@ it('returns the correct size for parallel queue', function () {
     $this->assertSame(0, Queue::size());
 });
 
-it('clears the parallel queue', function () {
+it('clears the parallel queue', function (): void {
     Queue::push(new SampleQueuableTask());
     Queue::clear();
 
     $this->assertSame(0, Queue::size());
 });
 
-it('gets and sets the connection name for parallel queue', function () {
+it('gets and sets the connection name for parallel queue', function (): void {
     Queue::setConnectionName('parallel-connection');
 
     $this->assertSame('parallel-connection', Queue::getConnectionName());
 });
 
-it('automatically starts processing when tasks are added', function () {
+it('automatically starts processing when tasks are added', function (): void {
     $parallelQueue = new ParallelQueue('test-auto-start');
 
     // Queue should initially be without processing
@@ -75,7 +75,7 @@ it('automatically starts processing when tasks are added', function () {
     $this->assertSame(1, $parallelQueue->size());
 });
 
-it('can manually start and stop processing', function () {
+it('can manually start and stop processing', function (): void {
     $parallelQueue = new ParallelQueue('test-manual-control');
 
     // Add tasks without automatic processing
@@ -93,7 +93,7 @@ it('can manually start and stop processing', function () {
     $this->assertFalse($parallelQueue->isProcessing());
 });
 
-it('processes tasks using Interval without blocking', function () {
+it('processes tasks using Interval without blocking', function (): void {
     $parallelQueue = new ParallelQueue('test-interval');
 
     // Add multiple tasks
@@ -121,7 +121,7 @@ it('processes tasks using Interval without blocking', function () {
     $this->assertLessThanOrEqual(5, $parallelQueue->size());
 });
 
-it('automatically stops processing when no tasks remain', function () {
+it('automatically stops processing when no tasks remain', function (): void {
     $parallelQueue = new ParallelQueue('test-auto-stop');
 
     // Add a task
@@ -138,7 +138,7 @@ it('automatically stops processing when no tasks remain', function () {
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
 });
 
-it('provides detailed processor status', function () {
+it('provides detailed processor status', function (): void {
     $parallelQueue = new ParallelQueue('test-status');
 
     // Initial state
@@ -163,7 +163,7 @@ it('provides detailed processor status', function () {
     $this->assertSame(2, $status['total_tasks']);
 });
 
-it('works correctly with the HTTP server without blocking', function () {
+it('works correctly with the HTTP server without blocking', function (): void {
     $parallelQueue = new ParallelQueue('test-http-compat');
 
     // Simulate multiple concurrent operations like in an HTTP server
@@ -198,7 +198,7 @@ it('works correctly with the HTTP server without blocking', function () {
     $this->assertTrue($parallelQueue->isProcessing());
 });
 
-it('skips processing new tasks when previous tasks are still running', function () {
+it('skips processing new tasks when previous tasks are still running', function (): void {
     $parallelQueue = new ParallelQueue('test-skip-processing');
 
     // Add initial task that will take 6 seconds to process
@@ -216,7 +216,7 @@ it('skips processing new tasks when previous tasks are still running', function 
     expect($parallelQueue->isProcessing())->ToBeTrue();
 });
 
-it('automatically disables processing when no tasks are available to reserve', function () {
+it('automatically disables processing when no tasks are available to reserve', function (): void {
     $parallelQueue = new ParallelQueue('test-empty-queue');
 
     // Start with an empty queue
@@ -236,7 +236,7 @@ it('automatically disables processing when no tasks are available to reserve', f
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
 });
 
-it('automatically disables processing after all tasks complete', function () {
+it('automatically disables processing after all tasks complete', function (): void {
     $parallelQueue = new ParallelQueue('test-complete-all-tasks');
 
     // Add a single task
@@ -260,7 +260,7 @@ it('automatically disables processing after all tasks complete', function () {
     $this->assertSame(0, $status['total_tasks']);
 });
 
-it('handles chunk processing when no available tasks exist', function () {
+it('handles chunk processing when no available tasks exist', function (): void {
     $parallelQueue = new ParallelQueue('test-no-available-tasks');
 
     // Start processing with empty queue to trigger the break condition
@@ -280,7 +280,7 @@ it('handles chunk processing when no available tasks exist', function () {
     $this->assertGreaterThan(0, $parallelQueue->size());
 });
 
-it('re-enqueues tasks that cannot be reserved during chunk processing', function () {
+it('re-enqueues tasks that cannot be reserved during chunk processing', function (): void {
     // Create a custom test to force the reserve failure scenario
     $parallelQueue = new ParallelQueue('test-reserve-failure');
 
@@ -312,7 +312,7 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
 });
 
-it('handles concurrent task reservation attempts correctly', function () {
+it('handles concurrent task reservation attempts correctly', function (): void {
     $parallelQueue = new ParallelQueue('test-concurrent-reservation');
 
     // Create multiple tasks to increase chances of reservation conflicts
