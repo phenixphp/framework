@@ -419,3 +419,29 @@ it('returns null when next available task is not available', function (): void {
     // The task should have been re-enqueued, keeping the size unchanged
     $this->assertSame(1, $parallelQueue->size());
 });
+
+it('re-enqueues the task when reservation fails inside getTaskChunk', function (): void {
+    $parallelQueue = new ParallelQueue('test-reserve-fails-reenqueue');
+
+    // Add a task to the queue
+    $task = new SampleQueuableTask();
+    $parallelQueue->push($task);
+
+    // Pre-reserve the same task so that a subsequent reserve() call fails
+    $stateManager = $parallelQueue->getStateManager();
+    $stateManager->reserve($task, 60);
+
+    // Reflectively call getTaskChunk to hit the branch where reserve() returns false
+    $method = new ReflectionMethod(ParallelQueue::class, 'getTaskChunk');
+    $method->setAccessible(true);
+
+    /** @var array $chunk */
+    $chunk = $method->invoke($parallelQueue);
+
+    // Since reservation failed, no tasks should be in the chunk
+    $this->assertIsArray($chunk);
+    $this->assertEmpty($chunk);
+
+    // The task should have been re-enqueued, keeping the queue size unchanged
+    $this->assertSame(1, $parallelQueue->size());
+});
