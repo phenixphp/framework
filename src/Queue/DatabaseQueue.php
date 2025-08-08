@@ -83,4 +83,13 @@ class DatabaseQueue extends Queue
     {
         return $this->connection;
     }
+
+    public function clear(): void
+    {
+        DB::connection($this->connection)
+            ->table($this->table)
+            ->whereEqual('queue_name', $this->queueName)
+            ->whereNull('reserved_at')
+            ->delete();
+    }
 }

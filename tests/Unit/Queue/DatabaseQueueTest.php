@@ -210,3 +210,23 @@ it('gets and sets the connection name via Queue facade', function (): void {
 
     Queue::setConnectionName('custom-connection');
 });
+
+it('clears the database queue', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $databaseStatement = $this->getMockBuilder(Statement::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $databaseStatement->expects($this->once())
+        ->method('execute')
+        ->willReturn(new Result([]));
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn($databaseStatement);
+
+    $this->app->swap(Connection::default(), $connection);
+
+    Queue::clear();
+});
