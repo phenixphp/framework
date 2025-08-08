@@ -29,7 +29,6 @@ class MemoryTaskState implements TaskState
             'attempts' => $task->getAttempts() + 1,
             'reserved_at' => time(),
             'reserved_until' => time() + $timeout,
-            'payload' => $task->getPayload(),
         ];
 
         $task->setAttempts($task->getAttempts() + 1);
