@@ -9,8 +9,8 @@ use Amp\Interval;
 use Amp\Parallel\Worker;
 use Amp\Parallel\Worker\Execution;
 use Phenix\Facades\Config;
-use Phenix\Queue\Exceptions\FailedTaskException;
 use Phenix\Queue\StateManagers\MemoryTaskState;
+use Phenix\Tasks\Exceptions\FailedTaskException;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
 

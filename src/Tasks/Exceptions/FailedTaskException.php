@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Queue\Exceptions;
+namespace Phenix\Tasks\Exceptions;
 
 use Exception;
 
