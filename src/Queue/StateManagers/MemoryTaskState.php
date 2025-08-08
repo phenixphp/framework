@@ -52,16 +52,14 @@ class MemoryTaskState implements TaskState
     {
         $taskId = $this->getTaskId($task);
 
-        unset($this->reservedTasks[$taskId]);
-        unset($this->taskStates[$taskId]);
+        $this->clearState($taskId);
     }
 
     public function fail(QueuableTask $task, Throwable $exception): void
     {
         $taskId = $this->getTaskId($task);
 
-        unset($this->reservedTasks[$taskId]);
-        unset($this->taskStates[$taskId]);
+        $this->clearState($taskId);
 
         Log::error('Task failed: ' . $task::class, [
             'task_id' => $taskId,
@@ -89,20 +87,24 @@ class MemoryTaskState implements TaskState
         return $this->taskStates[$taskId] ?? null;
     }
 
-    protected function getTaskId(QueuableTask $task): string
-    {
-        return $task->getTaskId();
-    }
-
     public function cleanupExpiredReservations(): void
     {
         $now = time();
 
         foreach ($this->reservedTasks as $taskId => $expiration) {
             if ($expiration <= $now) {
-                unset($this->reservedTasks[$taskId]);
-                unset($this->taskStates[$taskId]);
+                $this->clearState($taskId);
             }
         }
+    }
+
+    protected function getTaskId(QueuableTask $task): string
+    {
+        return $task->getTaskId();
+    }
+
+    protected function clearState(string $taskId): void
+    {
+        unset($this->reservedTasks[$taskId], $this->taskStates[$taskId]);
     }
 }
