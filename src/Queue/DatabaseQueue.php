@@ -16,11 +16,12 @@ class DatabaseQueue extends Queue
         protected string $connection,
         protected string|null $queueName = 'default',
         protected string $table = 'tasks',
+        DatabaseTaskState|null $stateManager = null
     ) {
         parent::__construct($queueName);
 
         $this->connectionName = $connection;
-        $this->stateManager = new DatabaseTaskState($connection, $table);
+        $this->stateManager = $stateManager ?? new DatabaseTaskState($connection, $table);
     }
 
     public function size(): int
