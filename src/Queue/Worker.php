@@ -98,21 +98,17 @@ class Worker
             'attempt' => $task->getAttempts(),
         ]);
 
-        try {
-            /** @var Result $result */
-            [$result] = WorkerPool::batch([$task]);
+        /** @var Result $result */
+        [$result] = WorkerPool::batch([$task]);
 
-            if ($result->isSuccess()) {
-                $stateManager->complete($task);
+        if ($result->isSuccess()) {
+            $stateManager->complete($task);
 
-                $this->handleSuccessfulTask($task, $result, $startTime);
-            } else {
-                $exception = new Exception($result->message() ?? 'Task failed');
+            $this->handleSuccessfulTask($task, $result, $startTime);
+        } else {
+            $exception = new Exception($result->message() ?? 'Task failed');
 
-                $this->handleFailedTask($task, $exception, $stateManager, $options);
-            }
-        } catch (Throwable $e) {
-            $this->handleFailedTask($task, $e, $stateManager, $options);
+            $this->handleFailedTask($task, $exception, $stateManager, $options);
         }
     }
 
@@ -142,8 +138,11 @@ class Worker
             'attempt' => $task->getAttempts(),
         ]);
 
+        $stateManager->release($task);
+
         if ($task->getAttempts() < $options->maxTries) {
             $stateManager->retry($task, $options->retryDelay);
+
             Log::info('Task scheduled for retry', [
                 'task' => get_class($task),
                 'attempt' => $task->getAttempts(),
@@ -151,6 +150,7 @@ class Worker
             ]);
         } else {
             $stateManager->fail($task, $e);
+
             Log::error('Task marked as permanently failed', [
                 'task' => get_class($task),
                 'attempts' => $task->getAttempts(),
