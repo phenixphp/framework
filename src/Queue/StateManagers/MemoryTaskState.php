@@ -61,6 +61,7 @@ class MemoryTaskState implements TaskState
         $taskId = $this->getTaskId($task);
 
         unset($this->reservedTasks[$taskId]);
+        unset($this->taskStates[$taskId]);
 
         Log::error('Task failed: ' . $task::class, [
             'task_id' => $taskId,
