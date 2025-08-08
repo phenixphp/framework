@@ -227,7 +227,7 @@ class ParallelQueue extends Queue
         $maxRetries = Config::get('queue.drivers.parallel.max_retries', 3);
 
         /** @var int $retryDelay */
-        $retryDelay = Config::get('queue.drivers.parallel.retry_delay', 5);
+        $retryDelay = Config::get('queue.drivers.parallel.retry_delay', 2);
 
         if ($task->getAttempts() < $maxRetries) {
             $this->stateManager->retry($task, $retryDelay);
