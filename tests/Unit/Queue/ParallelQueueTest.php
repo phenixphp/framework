@@ -34,8 +34,8 @@ it('pushes a task onto a custom parallel queue', function (): void {
 
     $task = Queue::pop('custom-parallel');
 
-    $this->assertNotNull($task);
-    $this->assertInstanceOf(SampleQueuableTask::class, $task);
+    expect($task)->not->toBeNull();
+    expect($task)->toBeInstanceOf(SampleQueuableTask::class);
 });
 
 it('returns the correct size for parallel queue', function (): void {
