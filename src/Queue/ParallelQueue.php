@@ -232,10 +232,9 @@ class ParallelQueue extends Queue
         if ($task->getAttempts() < $maxRetries) {
             $this->stateManager->retry($task, $retryDelay);
 
-            async(function () use ($task, $retryDelay) {
-                delay($retryDelay);
-                parent::push($task);
-            });
+            delay($retryDelay);
+
+            parent::push($task);
         } else {
             $this->stateManager->fail($task, new FailedTaskException($message));
         }
