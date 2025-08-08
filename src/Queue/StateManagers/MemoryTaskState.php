@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
+use Phenix\Facades\Log;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
+use Phenix\Util\Date;
 use Throwable;
 
 class MemoryTaskState implements TaskState
@@ -61,13 +63,12 @@ class MemoryTaskState implements TaskState
 
         unset($this->reservedTasks[$taskId]);
 
-        $this->taskStates[$taskId] = [
+        Log::error('Task failed: ' . $task::class, [
             'task_id' => $taskId,
-            'failed_at' => time(),
-            'exception' => serialize($exception),
-            'payload' => $task->getPayload(),
+            'failed_at' => Date::now(),
+            'exception' => $exception->getMessage(),
             'attempts' => $task->getAttempts(),
-        ];
+        ]);
     }
 
     public function retry(QueuableTask $task, int $delay = 0): void
