@@ -7,6 +7,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\ParallelQueue;
+use Phenix\Queue\StateManagers\MemoryTaskState;
 use Tests\Unit\Queue\Tasks\BadTask;
 use Tests\Unit\Queue\Tasks\DelayableTask;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
@@ -374,4 +375,20 @@ it('prevent reserve the same task in task state management', function (): void {
 
     // Attempt to reserve the same task again
     $this->assertFalse($state->reserve($task));
+});
+
+it('clean all expired reservations', function (): void {
+    $state = new MemoryTaskState();
+
+    $task1 = new SampleQueuableTask();
+
+    $state->reserve($task1, 1);
+
+    delay(1); // Wait for the reservation to expire
+
+    // Clean up expired reservations
+    $state->cleanupExpiredReservations();
+
+    // Verify that the expired reservation has been removed
+    $this->assertNull($state->getTaskState($task1->getTaskId()));
 });

@@ -98,13 +98,9 @@ class MemoryTaskState implements TaskState
         $now = time();
 
         foreach ($this->reservedTasks as $taskId => $expiration) {
-            if ($expiration < $now) {
+            if ($expiration <= $now) {
                 unset($this->reservedTasks[$taskId]);
-
-                if (isset($this->taskStates[$taskId])) {
-                    $this->taskStates[$taskId]['reserved_at'] = null;
-                    $this->taskStates[$taskId]['available_at'] = $now;
-                }
+                unset($this->taskStates[$taskId]);
             }
         }
     }
