@@ -160,19 +160,19 @@ trait HasSentences
         }
     }
 
-    protected function beginTransaction(): SqlTransaction
+    public function beginTransaction(): SqlTransaction
     {
         $this->transaction = $this->connection->beginTransaction();
 
         return $this->transaction;
     }
 
-    protected function commit(): void
+    public function commit(): void
     {
         $this->transaction->commit();
     }
 
-    protected function rollBack(): void
+    public function rollBack(): void
     {
         $this->transaction->rollBack();
     }

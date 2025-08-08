@@ -358,3 +358,53 @@ it('rollback transaction on error', function (): void {
         return $qb->from('users')->get();
     });
 })->throws(SqlQueryError::class);
+
+it('execute transaction manually', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([])),
+        );
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $transaction->expects($this->once())
+        ->method('commit');
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+    $query->beginTransaction();
+    $query->from('users')->get();
+    $query->commit();
+});
+
+it('rollback transaction manually', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Transaction failed'));
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $transaction->expects($this->once())
+        ->method('rollback');
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    try {
+        $query->beginTransaction();
+        $query->from('users')->get();
+    } catch (Throwable $th) {
+        $query->rollBack();
+    }
+});
