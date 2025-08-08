@@ -7,6 +7,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\ParallelQueue;
+use Tests\Unit\Queue\Tasks\BadTask;
 use Tests\Unit\Queue\Tasks\DelayableTask;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
 
