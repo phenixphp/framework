@@ -365,3 +365,13 @@ it('handles task failures gracefully', function (): void {
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size()); // Task should have been removed after processing
 });
+
+it('prevent reserve the same task in task state management', function (): void {
+    $state = new MemoryTaskState();
+
+    $task = new SampleQueuableTask();
+    $state->reserve($task);
+
+    // Attempt to reserve the same task again
+    $this->assertFalse($state->reserve($task));
+});
