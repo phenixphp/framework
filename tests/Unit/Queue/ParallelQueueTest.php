@@ -129,8 +129,8 @@ it('automatically stops processing when no tasks remain', function (): void {
     $parallelQueue->push(new SampleQueuableTask());
     $this->assertTrue($parallelQueue->isProcessing());
 
-    // Give enough time to process all tasks
-    delay(6.0);
+    // Give enough time to process all tasks (interval is 2.0s)
+    delay(5.5);
 
     // Processing should have stopped automatically
     $this->assertFalse($parallelQueue->isProcessing());
@@ -203,12 +203,12 @@ it('skips processing new tasks when previous tasks are still running', function 
     $parallelQueue = new ParallelQueue('test-skip-processing');
 
     // Add initial task that will take 6 seconds to process
-    $parallelQueue->push(new DelayableTask(6));
+    $parallelQueue->push(new DelayableTask(3));
 
     $this->assertTrue($parallelQueue->isProcessing());
 
-    // Wait a bit for tasks to start processing but not complete
-    delay(4.0);
+    // Wait for the processor tick and for the task to be running but not complete
+    delay(2.5);
 
     // Verify the queue size
     expect($parallelQueue->size())->ToBe(1);
@@ -246,7 +246,7 @@ it('automatically disables processing after all tasks complete', function (): vo
     $this->assertGreaterThan(0, $parallelQueue->size());
 
     // Wait for tasks to be processed and completed
-    delay(8.0); // Wait long enough for tasks to complete and cleanup
+    delay(6.0); // Wait long enough for tasks to complete and cleanup
 
     // Verify processing was disabled after all tasks completed
     $this->assertFalse($parallelQueue->isProcessing());
@@ -307,7 +307,7 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
     }
 
     // Wait for complete processing
-    delay(8.0);
+    delay(4.0);
 
     // All tasks should eventually be processed or re-enqueued appropriately
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
@@ -338,7 +338,7 @@ it('handles concurrent task reservation attempts correctly', function (): void {
     }
 
     // Wait for all tasks to complete
-    delay(10.0);
+    delay(5.0);
 
     // Eventually all tasks should be processed
     $this->assertSame(0, $parallelQueue->size());
@@ -353,14 +353,14 @@ it('handles task failures gracefully', function (): void {
     // Push a task that is expected to fail
     $parallelQueue->push(new BadTask());
 
-    // Wait for the task to be processed
-    delay(3.0);
+    // Wait for the first processing & retry scheduling
+    delay(2.5);
 
     // Verify that the queue still processing and can handle failures
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size()); // Task should have been removed after processing
 
-    // Wait for the task to be processed
+    // Wait for follow-up attempts to finish and disable
     delay(6.0);
 
     $this->assertFalse($parallelQueue->isProcessing());
