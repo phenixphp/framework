@@ -6,14 +6,19 @@ namespace Phenix\Database\Concerns\Query;
 
 use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlTransaction;
 use Amp\Sql\SqlTransactionError;
+use Closure;
 use League\Uri\Components\Query;
 use League\Uri\Http;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Paginator;
+use Throwable;
 
 trait HasSentences
 {
+    protected SqlTransaction $transaction;
+
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
         $this->action = Action::SELECT;
@@ -133,5 +138,42 @@ trait HasSentences
 
             return false;
         }
+    }
+
+    public function transaction(Closure $callback): mixed
+    {
+        /** @var SqlTransaction $transaction */
+        $transaction = $this->connection->beginTransaction();
+
+        try {
+            $result = $callback($this);
+
+            $transaction->commit();
+
+            return $result;
+        } catch (Throwable $e) {
+            report($e);
+
+            $transaction->rollBack();
+
+            throw $e;
+        }
+    }
+
+    protected function beginTransaction(): SqlTransaction
+    {
+        $this->transaction = $this->connection->beginTransaction();
+
+        return $this->transaction;
+    }
+
+    protected function commit(): void
+    {
+        $this->transaction->commit();
+    }
+
+    protected function rollBack(): void
+    {
+        $this->transaction->rollBack();
     }
 }

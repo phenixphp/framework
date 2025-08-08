@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlTransaction;
 use League\Uri\Http;
+use Phenix\Data\Collection;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
@@ -303,3 +305,56 @@ it('gets all records from database without select columns', function () {
 
     expect($result->toArray())->toBe($data);
 });
+
+it('execute database transaction successfully', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $data = [['id' => 1, 'name' => 'John Doe']];
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($data)),
+        );
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $transaction->expects($this->once())
+        ->method('commit');
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->transaction(function (QueryBuilder $qb): Collection {
+        return $qb->from('users')->get();
+    });
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->toArray())->toBe($data);
+});
+
+it('rollback transaction on error', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Transaction failed'));
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $transaction->expects($this->once())
+        ->method('rollback');
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $query->transaction(function (QueryBuilder $qb): Collection {
+        return $qb->from('users')->get();
+    });
+})->throws(SqlQueryError::class);
