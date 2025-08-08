@@ -342,3 +342,25 @@ it('handles concurrent task reservation attempts correctly', function () {
     $this->assertSame(0, $parallelQueue->size());
     $this->assertFalse($parallelQueue->isProcessing());
 });
+
+it('handles task failures gracefully', function (): void {
+    Config::set('queue.drivers.parallel.retry_delay', 1);
+
+    $parallelQueue = new ParallelQueue('test-task-failure');
+
+    // Push a task that is expected to fail
+    $parallelQueue->push(new BadTask());
+
+    // Wait for the task to be processed
+    delay(3.0);
+
+    // Verify that the queue still processing and can handle failures
+    $this->assertTrue($parallelQueue->isProcessing());
+    $this->assertSame(1, $parallelQueue->size()); // Task should have been removed after processing
+
+    // Wait for the task to be processed
+    delay(6.0);
+
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size()); // Task should have been removed after processing
+});
