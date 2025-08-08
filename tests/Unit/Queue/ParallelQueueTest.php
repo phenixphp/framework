@@ -23,8 +23,8 @@ it('pushes a task onto the parallel queue', function () {
 
     $task = Queue::pop();
 
-    $this->assertNotNull($task);
-    $this->assertInstanceOf(SampleQueuableTask::class, $task);
+    expect($task)->not->toBeNull();
+    expect($task)->toBeInstanceOf(SampleQueuableTask::class);
 });
 
 it('pushes a task onto a custom parallel queue', function () {
