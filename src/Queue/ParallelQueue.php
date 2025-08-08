@@ -114,10 +114,6 @@ class ParallelQueue extends Queue
             async(function () use ($reservedTasks, $executions): void {
                 $this->processTaskResults($reservedTasks, $executions);
             });
-
-            if (parent::size() == 0 && empty($this->runningTasks)) {
-                $this->disableProcessing();
-            }
         });
 
         $this->processingInterval->disable();
