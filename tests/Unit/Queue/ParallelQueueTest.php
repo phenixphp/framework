@@ -394,54 +394,48 @@ it('clean all expired reservations', function (): void {
 });
 
 it('returns null when next available task is not available', function (): void {
-    $parallelQueue = new ParallelQueue('test-next-available-null');
+    // Inject a state manager to control task availability and validate behavior via public API
+    $stateManager = new MemoryTaskState();
+    $parallelQueue = new ParallelQueue('test-next-available-null', $stateManager);
 
     // Prepare a task and mark it as not available yet via state manager
     $task = new SampleQueuableTask();
     $parallelQueue->push($task);
 
-    $stateManager = $parallelQueue->getStateManager();
-
     // Create state, then set a future availability to simulate a delay/retry window
     $stateManager->reserve($task, 60);
     $stateManager->retry($task, 60); // sets available_at in the future and clears reservation
 
-    // Use reflection to call the private getNextAvailableTask method
-    $method = new ReflectionMethod(ParallelQueue::class, 'getNextAvailableTask');
-    $method->setAccessible(true);
+    // Start processing to trigger the internal selection logic
+    $parallelQueue->start();
 
-    /** @var \Phenix\Tasks\QueuableTask|null $next */
-    $next = $method->invoke($parallelQueue);
+    // Wait for the interval tick to run (configured as 2.0 seconds)
+    delay(3.0);
 
-    // Since the task isn't available yet, the method should return null
-    $this->assertNull($next);
-
-    // The task should have been re-enqueued, keeping the size unchanged
+    // Since the task isn't available yet, the processor should disable itself and re-enqueue the task
+    $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
 });
 
 it('re-enqueues the task when reservation fails inside getTaskChunk', function (): void {
-    $parallelQueue = new ParallelQueue('test-reserve-fails-reenqueue');
+    // Inject a state manager to force a reservation conflict and validate behavior via public API
+    $stateManager = new MemoryTaskState();
+    $parallelQueue = new ParallelQueue('test-reserve-fails-reenqueue', $stateManager);
 
     // Add a task to the queue
     $task = new SampleQueuableTask();
     $parallelQueue->push($task);
 
     // Pre-reserve the same task so that a subsequent reserve() call fails
-    $stateManager = $parallelQueue->getStateManager();
     $stateManager->reserve($task, 60);
 
-    // Reflectively call getTaskChunk to hit the branch where reserve() returns false
-    $method = new ReflectionMethod(ParallelQueue::class, 'getTaskChunk');
-    $method->setAccessible(true);
+    // Start processing to trigger the internal chunk selection logic
+    $parallelQueue->start();
 
-    /** @var array $chunk */
-    $chunk = $method->invoke($parallelQueue);
+    // Wait for the interval tick to run (configured as 2.0 seconds)
+    delay(3.0);
 
-    // Since reservation failed, no tasks should be in the chunk
-    $this->assertIsArray($chunk);
-    $this->assertEmpty($chunk);
-
-    // The task should have been re-enqueued, keeping the queue size unchanged
+    // Since reservation failed, it should have been re-enqueued and processing disabled
+    $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
 });

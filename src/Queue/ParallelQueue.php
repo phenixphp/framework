@@ -35,11 +35,12 @@ class ParallelQueue extends Queue
     private bool $isEnabled = false;
 
     public function __construct(
-        protected string|null $queueName = 'default'
+        protected string|null $queueName = 'default',
+        MemoryTaskState $stateManager = new MemoryTaskState()
     ) {
         parent::__construct($queueName);
 
-        $this->stateManager = new MemoryTaskState();
+        $this->stateManager = $stateManager;
         $this->maxConcurrency = Config::get('queue.drivers.parallel.max_concurrent', 10);
         $this->chunkSize = Config::get('queue.drivers.parallel.chunk_size', 10);
     }
