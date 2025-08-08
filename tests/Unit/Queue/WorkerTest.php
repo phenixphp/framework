@@ -7,6 +7,7 @@ use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\QueueManager;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
+use Tests\Unit\Queue\Tasks\BadTask;
 use Tests\Unit\Queue\Tasks\SampleQueuableTask;
 
 beforeEach(function () {
@@ -37,6 +38,21 @@ it('processes a successful task in long running process', function (): void {
         ->method('pop')
         ->with('custom-queue')
         ->willReturn(new SampleQueuableTask());
+
+    $worker = new Worker($queueManager);
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+});
+
+it('processes a failed task and retries', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queueManager->expects($this->once())
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturn(new BadTask());
 
     $worker = new Worker($queueManager);
 
