@@ -17,7 +17,14 @@ use Throwable;
 
 trait HasSentences
 {
-    protected SqlTransaction $transaction;
+    protected SqlTransaction|null $transaction = null;
+
+    protected function exec(string $dml, array $params = []): mixed
+    {
+        $executor = $this->transaction !== null ? $this->transaction : $this->connection;
+
+        return $executor->prepare($dml)->execute($params);
+    }
 
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
@@ -49,10 +56,7 @@ trait HasSentences
         [$dml, $params] = $this->toSql();
 
         /** @var array<string, int> $count */
-        $count = $this->connection
-            ->prepare($dml)
-            ->execute($params)
-            ->fetchRow();
+        $count = $this->exec($dml, $params)->fetchRow();
 
         return array_values($count)[0];
     }
@@ -62,7 +66,7 @@ trait HasSentences
         [$dml, $params] = $this->insertRows($data)->toSql();
 
         try {
-            $this->connection->prepare($dml)->execute($params);
+            $this->exec($dml, $params);
 
             return true;
         } catch (SqlQueryError|SqlTransactionError $e) {
@@ -78,7 +82,7 @@ trait HasSentences
 
         try {
             /** @var MysqlPooledResult $result */
-            $result = $this->connection->prepare($dml)->execute($params);
+            $result = $this->exec($dml, $params);
 
             return $result->getLastInsertId();
         } catch (SqlQueryError|SqlTransactionError $e) {
@@ -96,7 +100,7 @@ trait HasSentences
 
         [$dml, $params] = $this->toSql();
 
-        $results = $this->connection->prepare($dml)->execute($params)->fetchRow();
+        $results = $this->exec($dml, $params)->fetchRow();
 
         return (bool) array_values($results)[0];
     }
@@ -113,7 +117,7 @@ trait HasSentences
         [$dml, $params] = $this->toSql();
 
         try {
-            $this->connection->prepare($dml)->execute($params);
+            $this->exec($dml, $params);
 
             return true;
         } catch (SqlQueryError|SqlTransactionError $e) {
@@ -130,7 +134,7 @@ trait HasSentences
         [$dml, $params] = $this->toSql();
 
         try {
-            $this->connection->prepare($dml)->execute($params);
+            $this->exec($dml, $params);
 
             return true;
         } catch (SqlQueryError|SqlTransactionError $e) {
@@ -145,16 +149,22 @@ trait HasSentences
         /** @var SqlTransaction $transaction */
         $transaction = $this->connection->beginTransaction();
 
+        $this->transaction = $transaction;
+
         try {
             $result = $callback($this);
 
             $transaction->commit();
+
+            unset($this->transaction);
 
             return $result;
         } catch (Throwable $e) {
             report($e);
 
             $transaction->rollBack();
+
+            unset($this->transaction);
 
             throw $e;
         }
@@ -169,11 +179,17 @@ trait HasSentences
 
     public function commit(): void
     {
-        $this->transaction->commit();
+        if ($this->transaction) {
+            $this->transaction->commit();
+            $this->transaction = null;
+        }
     }
 
     public function rollBack(): void
     {
-        $this->transaction->rollBack();
+        if ($this->transaction) {
+            $this->transaction->rollBack();
+            $this->transaction = null;
+        }
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use Phenix\Database\Constants\Order;
+use Phenix\Database\QueryBuilder;
 use Phenix\Facades\DB;
 use Phenix\Queue\StateManagers\DatabaseTaskState;
 use Phenix\Tasks\QueuableTask;
@@ -57,27 +58,39 @@ class DatabaseQueue extends Queue
 
     public function pop(string|null $queueName = null): QueuableTask|null
     {
-        $queuedTask = DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('queue_name', $queueName ?? $this->queueName)
-            ->whereNull('reserved_at')
-            ->whereLessThanOrEqual('available_at', Date::now()->toString())
-            ->orderBy('created_at', Order::ASC)
-            ->first();
+        $queueName ??= $this->queueName;
 
-        if (! $queuedTask) {
+        /** @var QueryBuilder $builder */
+        $builder = DB::connection($this->connection);
+
+        return $builder->transaction(function (QueryBuilder $queryBuilder) use ($queueName): QueuableTask|null {
+            if ($this->stateManager instanceof DatabaseTaskState) {
+                $this->stateManager->setBuilder($queryBuilder);
+            }
+
+            $queuedTask = $queryBuilder
+                ->table($this->table)
+                ->whereEqual('queue_name', $queueName)
+                ->whereNull('reserved_at')
+                ->whereLessThanOrEqual('available_at', Date::now()->toDateTimeString())
+                ->orderBy('created_at', Order::ASC)
+                ->lockForUpdateSkipLocked()
+                ->first();
+
+            if (! $queuedTask) {
+                return null;
+            }
+
+            $task = unserialize($queuedTask['payload']);
+            $task->setTaskId($queuedTask['id']);
+            $task->setAttempts($queuedTask['attempts']);
+
+            if ($this->stateManager->reserve($task)) {
+                return $task;
+            }
+
             return null;
-        }
-
-        $task = unserialize($queuedTask['payload']);
-        $task->setTaskId($queuedTask['id']);
-        $task->setAttempts($queuedTask['attempts']);
-
-        if ($this->stateManager->reserve($task)) {
-            return $task;
-        }
-
-        return null;
+        });
     }
 
     public function getConnectionName(): string

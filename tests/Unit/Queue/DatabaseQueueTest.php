@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Amp\Sql\SqlTransaction;
 use Phenix\Database\Constants\Connection;
 use Phenix\Facades\Queue;
 use Phenix\Queue\QueueManager;
@@ -130,6 +131,7 @@ it('calls Queue::pushOn and enqueues the task on a custom queue', function (): v
 
 it('calls Queue::pop and returns a task', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
 
     $databaseStatement = $this->getMockBuilder(Statement::class)
         ->disableOriginalConstructor()
@@ -150,12 +152,16 @@ it('calls Queue::pop and returns a task', function (): void {
             ],
         ]));
 
-    $connection->expects($this->exactly(2))
+    $transaction->expects($this->exactly(2))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             $databaseStatement,
             new Statement(new Result([['Query OK']])),
         );
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
 
     $this->app->swap(Connection::default(), $connection);
 

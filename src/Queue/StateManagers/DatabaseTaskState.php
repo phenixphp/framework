@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
+use Phenix\Database\QueryBuilder;
 use Phenix\Facades\DB;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
@@ -12,10 +13,17 @@ use Throwable;
 
 class DatabaseTaskState implements TaskState
 {
+    protected QueryBuilder|null $queryBuilder = null;
+
     public function __construct(
         protected string $connection = 'default',
         protected string $table = 'tasks'
     ) {
+    }
+
+    public function setBuilder(QueryBuilder $builder): void
+    {
+        $this->queryBuilder = $builder;
     }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
@@ -23,14 +31,15 @@ class DatabaseTaskState implements TaskState
         $taskId = $this->getTaskId($task);
         $reservedUntil = Date::now()->addSeconds($timeout);
 
-        $updated = DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->whereNull('reserved_at')
-            ->update([
-                'reserved_at' => $reservedUntil,
-                'attempts' => $task->getAttempts() + 1,
-            ]);
+        $qb = $this->newScopedBuilder();
+
+        $updated = $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->whereNull('reserved_at')
+                ->update([
+                    'reserved_at' => $reservedUntil,
+                    'attempts' => $task->getAttempts() + 1,
+                ]);
 
         if ($updated) {
             $task->setAttempts($task->getAttempts() + 1);
@@ -45,37 +54,40 @@ class DatabaseTaskState implements TaskState
     {
         $taskId = $this->getTaskId($task);
 
-        DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->update([
-                'reserved_at' => null,
-                'available_at' => Date::now(),
-            ]);
+        $qb = $this->newScopedBuilder();
+
+        $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->update([
+                    'reserved_at' => null,
+                    'available_at' => Date::now(),
+                ]);
     }
 
     public function complete(QueuableTask $task): void
     {
         $taskId = $this->getTaskId($task);
 
-        DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->delete();
+        $qb = $this->newScopedBuilder();
+
+        $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->delete();
     }
 
     public function fail(QueuableTask $task, Throwable $exception): void
     {
         $taskId = $this->getTaskId($task);
 
-        DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->update([
-                'reserved_at' => null,
-                'failed_at' => Date::now(),
-                'exception' => serialize($exception),
-            ]);
+        $qb = $this->newScopedBuilder();
+
+        $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->update([
+                    'reserved_at' => null,
+                    'failed_at' => Date::now(),
+                    'exception' => serialize($exception),
+                ]);
     }
 
     public function retry(QueuableTask $task, int $delay = 0): void
@@ -83,34 +95,46 @@ class DatabaseTaskState implements TaskState
         $taskId = $this->getTaskId($task);
         $availableAt = Date::now()->addSeconds($delay);
 
-        DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->update([
-                'reserved_at' => null,
-                'available_at' => $availableAt,
-                'attempts' => $task->getAttempts(),
-            ]);
+        $qb = $this->newScopedBuilder();
+
+        $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->update([
+                    'reserved_at' => null,
+                    'available_at' => $availableAt,
+                    'attempts' => $task->getAttempts(),
+                ]);
     }
 
     public function getTaskState(string $taskId): array|null
     {
-        return DB::connection($this->connection)
-            ->table($this->table)
-            ->whereEqual('id', $taskId)
-            ->first();
+        $qb = $this->newScopedBuilder();
+
+        return $qb->table($this->table)
+                ->whereEqual('id', $taskId)
+                ->first();
     }
 
     public function cleanupExpiredReservations(): void
     {
-        DB::connection($this->connection)
-            ->table($this->table)
-            ->whereNotNull('reserved_at')
-            ->whereLessThan('reserved_at', Date::now()->toDateTimeString())
-            ->update([
-                'reserved_at' => null,
-                'available_at' => Date::now(),
-            ]);
+        $qb = $this->newScopedBuilder();
+
+        $qb->table($this->table)
+                ->whereNotNull('reserved_at')
+                ->whereLessThan('reserved_at', Date::now()->toDateTimeString())
+                ->update([
+                    'reserved_at' => null,
+                    'available_at' => Date::now(),
+                ]);
+    }
+
+    protected function newScopedBuilder(): QueryBuilder
+    {
+        if ($this->queryBuilder instanceof QueryBuilder) {
+            return clone $this->queryBuilder;
+        }
+
+        return DB::connection($this->connection);
     }
 
     protected function getTaskId(QueuableTask $task): string

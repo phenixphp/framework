@@ -69,8 +69,7 @@ class QueryBuilder extends QueryBase
 
         [$dml, $params] = $this->toSql();
 
-        $result = $this->connection->prepare($dml)
-            ->execute($params);
+        $result = $this->exec($dml, $params);
 
         $collection = new Collection('array');
 

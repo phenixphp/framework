@@ -312,7 +312,7 @@ it('execute database transaction successfully', function (): void {
 
     $data = [['id' => 1, 'name' => 'John Doe']];
 
-    $connection->expects($this->exactly(1))
+    $transaction->expects($this->exactly(1))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             new Statement(new Result($data)),
@@ -340,7 +340,7 @@ it('rollback transaction on error', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
     $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
 
-    $connection->expects($this->exactly(1))
+    $transaction->expects($this->exactly(1))
         ->method('prepare')
         ->willThrowException(new SqlQueryError('Transaction failed'));
 
@@ -363,7 +363,7 @@ it('execute transaction manually', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
     $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
 
-    $connection->expects($this->exactly(1))
+    $transaction->expects($this->exactly(1))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             new Statement(new Result([])),
@@ -387,7 +387,7 @@ it('rollback transaction manually', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
     $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
 
-    $connection->expects($this->exactly(1))
+    $transaction->expects($this->exactly(1))
         ->method('prepare')
         ->willThrowException(new SqlQueryError('Transaction failed'));
 
