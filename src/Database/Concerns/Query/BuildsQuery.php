@@ -271,10 +271,6 @@ trait BuildsQuery
             $query[] = Arr::implodeDeeply($this->orderBy);
         }
 
-        if (isset($this->lockType)) {
-            $query[] = $this->buildLock();
-        }
-
         if (isset($this->limit)) {
             $query[] = Arr::implodeDeeply($this->limit);
         }
@@ -282,6 +278,10 @@ trait BuildsQuery
         if (isset($this->offset)) {
             $query[] = Arr::implodeDeeply($this->offset);
 
+        }
+
+        if (isset($this->lockType)) {
+            $query[] = $this->buildLock();
         }
 
         return Arr::implodeDeeply($query);
