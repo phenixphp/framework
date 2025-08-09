@@ -50,6 +50,36 @@ trait HasLock
         return $this->lock(Lock::FOR_UPDATE_NOWAIT);
     }
 
+    public function lockForNoKeyUpdate(): static
+    {
+        return $this->lock(Lock::FOR_NO_KEY_UPDATE);
+    }
+
+    public function lockForKeyShare(): static
+    {
+        return $this->lock(Lock::FOR_KEY_SHARE);
+    }
+
+    public function lockForShareNoWait(): static
+    {
+        return $this->lock(Lock::FOR_SHARE_NOWAIT);
+    }
+
+    public function lockForShareSkipLocked(): static
+    {
+        return $this->lock(Lock::FOR_SHARE_SKIP_LOCKED);
+    }
+
+    public function lockForNoKeyUpdateNoWait(): static
+    {
+        return $this->lock(Lock::FOR_NO_KEY_UPDATE_NOWAIT);
+    }
+
+    public function lockForNoKeyUpdateSkipLocked(): static
+    {
+        return $this->lock(Lock::FOR_NO_KEY_UPDATE_SKIP_LOCKED);
+    }
+
     public function unlock(): static
     {
         $this->isLocked = false;
@@ -73,8 +103,14 @@ trait HasLock
             return match ($this->lockType) {
                 Lock::FOR_UPDATE => 'FOR UPDATE',
                 Lock::FOR_SHARE => 'FOR SHARE',
+                Lock::FOR_NO_KEY_UPDATE => 'FOR NO KEY UPDATE',
+                Lock::FOR_KEY_SHARE => 'FOR KEY SHARE',
                 Lock::FOR_UPDATE_SKIP_LOCKED => 'FOR UPDATE SKIP LOCKED',
+                Lock::FOR_SHARE_SKIP_LOCKED => 'FOR SHARE SKIP LOCKED',
+                Lock::FOR_NO_KEY_UPDATE_SKIP_LOCKED => 'FOR NO KEY UPDATE SKIP LOCKED',
                 Lock::FOR_UPDATE_NOWAIT => 'FOR UPDATE NOWAIT',
+                Lock::FOR_SHARE_NOWAIT => 'FOR SHARE NOWAIT',
+                Lock::FOR_NO_KEY_UPDATE_NOWAIT => 'FOR NO KEY UPDATE NOWAIT',
                 default => '',
             };
         }
@@ -92,7 +128,18 @@ trait HasLock
         return match ($this->driver) {
             Driver::POSTGRESQL => in_array(
                 $type,
-                [Lock::FOR_UPDATE, Lock::FOR_SHARE, Lock::FOR_UPDATE_SKIP_LOCKED, Lock::FOR_UPDATE_NOWAIT],
+                [
+                    Lock::FOR_UPDATE,
+                    Lock::FOR_SHARE,
+                    Lock::FOR_NO_KEY_UPDATE,
+                    Lock::FOR_KEY_SHARE,
+                    Lock::FOR_UPDATE_SKIP_LOCKED,
+                    Lock::FOR_SHARE_SKIP_LOCKED,
+                    Lock::FOR_NO_KEY_UPDATE_SKIP_LOCKED,
+                    Lock::FOR_UPDATE_NOWAIT,
+                    Lock::FOR_SHARE_NOWAIT,
+                    Lock::FOR_NO_KEY_UPDATE_NOWAIT,
+                ],
                 true
             ),
             Driver::MYSQL => in_array(

@@ -522,3 +522,99 @@ it('generate query with lock for share for postgresql', function () {
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);
 });
+
+it('generate query with lock for no key update for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForNoKeyUpdate()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('generate query with lock for key share for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForKeyShare()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR KEY SHARE";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('generate query with lock for share skip locked for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForShareSkipLocked()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE SKIP LOCKED";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('generate query with lock for share no wait for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForShareNoWait()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE NOWAIT";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('generate query with lock for no key update skip locked for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForNoKeyUpdateSkipLocked()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE SKIP LOCKED";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('generate query with lock for no key update no wait for postgresql', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForNoKeyUpdateNoWait()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE NOWAIT";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
