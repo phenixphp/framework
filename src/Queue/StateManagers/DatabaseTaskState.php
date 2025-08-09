@@ -86,7 +86,13 @@ class DatabaseTaskState implements TaskState
                 ->update([
                     'reserved_at' => null,
                     'failed_at' => Date::now(),
-                    'exception' => serialize($exception),
+                    'exception' => json_encode([
+                        'message' => $exception->getMessage(),
+                        'code' => $exception->getCode(),
+                        'file' => $exception->getFile(),
+                        'line' => $exception->getLine(),
+                        'trace' => $exception->getTraceAsString(),
+                    ]),
                 ]);
     }
 
