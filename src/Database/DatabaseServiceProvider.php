@@ -37,10 +37,9 @@ class DatabaseServiceProvider extends ServiceProvider
         });
 
         foreach ($connections as $connection) {
-            $settings = Config::get('database.connections.' . $connection);
+            $settings = Config::get("database.connections.{$connection}");
 
-            /** @var Driver $driver */
-            $driver = $settings['driver'];
+            $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
             $callback = ConnectionFactory::make($driver, $settings);
 
@@ -56,10 +55,9 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $defaultConnection = Config::get('database.default');
 
-        $settings = Config::get('database.connections.' . $defaultConnection);
+        $settings = Config::get("database.connections.{$defaultConnection}");
 
-        /** @var Driver $driver */
-        $driver = $settings['driver'];
+        $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
         $callback = ConnectionFactory::make($driver, $settings);
 
