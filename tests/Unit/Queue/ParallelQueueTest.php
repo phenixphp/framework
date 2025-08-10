@@ -39,6 +39,10 @@ it('dispatches a task conditionally', function (): void {
     expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
+it('does not dispatch a task conditionally', function (): void {
+    expect(BasicQueuableTask::dispatchIf(fn () => false))->toBeNull();
+});
+
 it('pushes a task onto a custom parallel queue', function (): void {
     Queue::clear();
     Queue::pushOn('custom-parallel', new BasicQueuableTask());
