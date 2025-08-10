@@ -21,6 +21,9 @@ beforeEach(function (): void {
 
 it('pushes a task onto the parallel queue', function (): void {
     Queue::clear();
+
+    expect(Queue::pop())->toBeNull();
+
     Queue::push(new BasicQueuableTask());
 
     $task = Queue::pop();
