@@ -95,10 +95,6 @@ trait HasLock
 
     protected function buildLock(): string
     {
-        if ($this->driver === Driver::SQLITE) {
-            return '';
-        }
-
         if ($this->driver === Driver::POSTGRESQL) {
             return match ($this->lockType) {
                 Lock::FOR_UPDATE => 'FOR UPDATE',
