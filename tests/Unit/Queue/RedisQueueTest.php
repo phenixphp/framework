@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\StateManagers\RedisTaskState;
 use Phenix\Redis\Client;
 use Phenix\Redis\Contracts\Client as ClientContract;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
@@ -186,4 +187,39 @@ it('returns null when queue is empty (LPOP returns null)', function (): void {
     $task = Queue::pop();
 
     expect($task)->toBeNull();
+});
+
+it('marks a task as failed and cleans reservation/data keys', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $task = new BasicQueuableTask();
+    $task->setTaskId('task-123');
+
+    $state = new RedisTaskState($clientMock);
+
+    $clientMock->expects($this->exactly(3))
+        ->method('execute')
+        ->withConsecutive(
+            [
+                $this->equalTo('HSET'),
+                $this->equalTo('task:failed:task-123'),
+                $this->equalTo('task_id'), $this->equalTo('task-123'),
+                $this->equalTo('failed_at'), $this->isType('int'),
+                $this->equalTo('exception'), $this->isType('string'),
+                $this->equalTo('payload'), $this->isType('string'),
+            ],
+            [
+                $this->equalTo('LPUSH'),
+                $this->equalTo('queues:failed'),
+                $this->equalTo('task-123'),
+            ],
+            [
+                $this->equalTo('DEL'),
+                $this->equalTo('task:reserved:task-123'),
+                $this->equalTo('task:data:task-123'),
+            ]
+        )
+        ->willReturnOnConsecutiveCalls(1, 1, 1);
+
+    $state->fail($task, new Exception('Boom', 500));
 });
