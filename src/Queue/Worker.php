@@ -104,24 +104,12 @@ class Worker
         if ($result->isSuccess()) {
             $stateManager->complete($task);
 
-            $this->handleSuccessfulTask($task, $result, $startTime);
+            $this->processedTasks++;
         } else {
             $exception = new Exception($result->message() ?? 'Task failed');
 
             $this->handleFailedTask($task, $exception, $stateManager, $options);
         }
-    }
-
-    protected function handleSuccessfulTask(QueuableTask $task, Result $result, float $startTime): void
-    {
-        $this->processedTasks++;
-        $duration = microtime(true) - $startTime;
-
-        Log::info('Task completed successfully', [
-            'task' => get_class($task),
-            'processing_time' => round($duration, 3),
-            'total_processed' => $this->processedTasks,
-        ]);
     }
 
     protected function handleFailedTask(
