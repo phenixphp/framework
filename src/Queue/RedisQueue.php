@@ -53,6 +53,8 @@ class RedisQueue extends Queue
 
         $task = unserialize($payload);
 
+        $task->setQueueName($queueName ?? $this->queueName ?? 'default');
+
         if ($this->stateManager->reserve($task)) {
             return $task;
         }
