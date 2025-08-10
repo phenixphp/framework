@@ -127,7 +127,9 @@ class Worker
 
         $stateManager->release($task);
 
-        if ($task->getAttempts() < $options->maxTries) {
+        $maxTries = $task->getMaxTries() ?? $options->maxTries;
+
+        if ($task->getAttempts() < $maxTries) {
             $stateManager->retry($task, $options->retryDelay);
 
             Log::info('Task scheduled for retry', [

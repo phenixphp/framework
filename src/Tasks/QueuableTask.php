@@ -20,7 +20,7 @@ abstract class QueuableTask extends Task implements ShouldQueue
 
     protected int $attempts = 0;
 
-    protected int $maxTries = 3;
+    protected int|null $maxTries = null;
 
     protected int $timeout = 60;
 
@@ -69,7 +69,7 @@ abstract class QueuableTask extends Task implements ShouldQueue
         $this->attempts = $attempts;
     }
 
-    public function getMaxTries(): int
+    public function getMaxTries(): int|null
     {
         return $this->maxTries;
     }
