@@ -77,7 +77,13 @@ class RedisTaskState implements TaskState
         $failedData = [
             'task_id' => $taskId,
             'failed_at' => time(),
-            'exception' => serialize($exception),
+            'exception' => json_encode([
+                'message' => $exception->getMessage(),
+                'code' => $exception->getCode(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString(),
+            ]),
             'payload' => $task->getPayload(),
         ];
 
