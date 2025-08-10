@@ -63,6 +63,8 @@ class Worker
             $task = $this->getNextTask($connectionName, $queueName);
 
             if ($task === null) {
+                $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+
                 $this->sleep($options->sleep);
 
                 continue;
@@ -109,6 +111,9 @@ class Worker
 
             $this->handleFailedTask($task, $exception, $stateManager, $options);
         }
+
+        // After handling a task, clean up any expired reservations
+        $stateManager->cleanupExpiredReservations();
     }
 
     protected function handleFailedTask(

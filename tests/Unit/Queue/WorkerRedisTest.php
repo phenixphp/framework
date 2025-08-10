@@ -20,7 +20,7 @@ it('processes a successful task', function (): void {
 
     $payload = serialize(new BasicQueuableTask());
 
-    $client->expects($this->exactly(5))
+    $client->expects($this->exactly(6))
         ->method('execute')
         ->withConsecutive(
             [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
@@ -38,10 +38,12 @@ it('processes a successful task', function (): void {
                 $this->isType('string'), // serialized payload
             ],
             [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:'), $this->stringStartsWith('task:data:')]
+            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:'), $this->stringStartsWith('task:data:')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
         )
         ->willReturnOnConsecutiveCalls(
             $payload,
+            1,
             1,
             1,
             1,
@@ -61,7 +63,7 @@ it('processes a failed task and retries', function (): void {
 
     $payload = serialize(new BadTask());
 
-    $client->expects($this->exactly(10))
+    $client->expects($this->exactly(11))
         ->method('execute')
         ->withConsecutive(
             [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
@@ -88,9 +90,11 @@ it('processes a failed task and retries', function (): void {
             [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:')],
             [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->equalTo('attempts'), $this->isType('int')],
             [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->isType('string')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
         )
         ->willReturnOnConsecutiveCalls(
             $payload,
+            1,
             1,
             1,
             1,

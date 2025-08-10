@@ -53,9 +53,10 @@ it('processes a successful task', function (): void {
         ->method('beginTransaction')
         ->willReturn($transaction);
 
-    $connection->expects($this->once())
+    $connection->expects($this->exactly(2))
         ->method('prepare')
-        ->willReturn(
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
@@ -102,9 +103,11 @@ it('processes a failed task and retries', function (): void {
         ->method('beginTransaction')
         ->willReturn($transaction);
 
-    $connection->expects($this->exactly(2))
+    $connection->expects($this->exactly(3))
         ->method('prepare')
-        ->willReturn(
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
@@ -151,9 +154,11 @@ it('processes a failed task and last retry', function (): void {
         ->method('beginTransaction')
         ->willReturn($transaction);
 
-    $connection->expects($this->exactly(2))
+    $connection->expects($this->exactly(3))
         ->method('prepare')
-        ->willReturn(
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
