@@ -88,3 +88,32 @@ it('stop daemon when signal is received', function (): void {
 
     $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
 });
+
+it('pauses processing', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queueManager->expects($this->once())
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturn(new BasicQueuableTask());
+
+    $worker = new class ($queueManager) extends Worker {
+        protected function listenForSignals(): void
+        {
+            $this->paused = true;
+        }
+
+        public function sleep(int $seconds): void
+        {
+            parent::sleep($seconds);
+
+            if ($this->paused) {
+                $this->paused = false;
+            }
+        }
+    };
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+});
