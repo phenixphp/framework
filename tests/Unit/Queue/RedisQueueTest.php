@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\RedisQueue;
 use Phenix\Queue\StateManagers\RedisTaskState;
 use Phenix\Redis\Client;
 use Phenix\Redis\Contracts\Client as ClientContract;
@@ -222,4 +223,36 @@ it('marks a task as failed and cleans reservation/data keys', function (): void 
         ->willReturnOnConsecutiveCalls(1, 1, 1);
 
     $state->fail($task, new Exception('Boom', 500));
+});
+
+it('retries a task with delay greater than zero by enqueuing into the delayed zset', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $task = new BasicQueuableTask();
+    $task->setTaskId('task-retry-1');
+
+    $clientMock->expects($this->exactly(3))
+        ->method('execute')
+        ->withConsecutive(
+            [
+                $this->equalTo('DEL'),
+                $this->equalTo('task:reserved:task-retry-1'),
+            ],
+            [
+                $this->equalTo('HSET'),
+                $this->equalTo('task:data:task-retry-1'),
+                $this->equalTo('attempts'),
+                $this->isType('int'),
+            ],
+            [
+                $this->equalTo('ZADD'),
+                $this->equalTo('queues:delayed'),
+                $this->isType('int'),
+                $this->identicalTo($task->getPayload()),
+            ],
+        )
+        ->willReturnOnConsecutiveCalls(1, 1, 1);
+
+    $queue = new RedisQueue($clientMock);
+    $queue->getStateManager()->retry($task, 30);
 });
