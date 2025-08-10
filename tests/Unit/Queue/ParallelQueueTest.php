@@ -23,6 +23,7 @@ it('pushes a task onto the parallel queue', function (): void {
     Queue::clear();
 
     expect(Queue::pop())->toBeNull();
+    expect(Queue::getConnectionName())->toBe('default');
 
     Queue::push(new BasicQueuableTask());
 
