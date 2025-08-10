@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Amp\Cancellation;
-use Amp\CompositeCancellation;
+use Amp\CancelledException;
 use Amp\Sync\Channel;
-use Amp\TimeoutCancellation;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Facades\Config;
 use Phenix\Tasks\Contracts\Task as TaskContract;
 use Phenix\Tasks\Exceptions\BootstrapAppException;
+use Throwable;
 
 abstract class Task implements TaskContract
 {
@@ -36,12 +36,19 @@ abstract class Task implements TaskContract
             $app->enableTestingMode();
         }
 
-        $timeout = new TimeoutCancellation($this->getTimeout());
-        $combined = new CompositeCancellation($cancellation, $timeout);
+        try {
+            $cancellation->throwIfRequested();
 
-        $combined->throwIfRequested();
+            return $this->handle($channel, $cancellation);
+        } catch (CancelledException $e) {
+            report($e);
 
-        return $this->handle($channel, $cancellation);
+            return Result::failure(message: $e->getMessage());
+        } catch (Throwable $th) {
+            report($th);
+
+            return Result::failure(message: $th->getMessage());
+        }
     }
 
     public function output(): Result

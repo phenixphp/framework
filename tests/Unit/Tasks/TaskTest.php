@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Tasks\Exceptions\BootstrapAppException;
 use Phenix\Tasks\Task;
 use Tests\Unit\Tasks\Internal\BasicTask;
+use Tests\Unit\Tasks\Internal\DelayableTask;
 
 it('get task output', function (): void {
     $task = new BasicTask();
@@ -13,6 +14,16 @@ it('get task output', function (): void {
 
     expect($result->isSuccess())->toBeTrue();
     expect($result->output())->toBe('Task completed successfully');
+});
+
+it('handle task cancellation by timeout', function (): void {
+    $task = new DelayableTask(delay: 4);
+    $task->setTimeout(1); // Set a short timeout
+
+    $result = $task->output();
+    dump($result);
+    expect($result->isFailure())->toBeTrue();
+    expect($result->message())->toBe('The operation was cancelled');
 });
 
 it('sets PHENIX_BASE_PATH in env and $_ENV when booting settings are applied', function (): void {
