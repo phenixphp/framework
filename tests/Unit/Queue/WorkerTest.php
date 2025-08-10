@@ -216,3 +216,102 @@ it('processes a failed task and last retry using database driver', function (): 
 
     $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1, maxTries: 1));
 });
+
+it('processes a successful task using redis driver', function (): void {
+    Config::set('queue.default', QueueDriver::REDIS->value);
+
+    $client = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $payload = serialize(new SampleQueuableTask());
+
+    $client->expects($this->exactly(5))
+        ->method('execute')
+        ->withConsecutive(
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->isType('string'), // attempts
+                $this->isType('int'),    // 1
+                $this->isType('string'), // reserved_at
+                $this->isType('int'),    // timestamp
+                $this->isType('string'), // reserved_until
+                $this->isType('int'),    // timestamp
+                $this->isType('string'), // payload
+                $this->isType('string'), // serialized payload
+            ],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:'), $this->stringStartsWith('task:data:')]
+        )
+        ->willReturnOnConsecutiveCalls(
+            $payload,
+            1,
+            1,
+            1,
+            1
+        );
+
+    $this->app->swap(ClientContract::class, $client);
+
+    $queueManager = new QueueManager();
+    $worker = new Worker($queueManager);
+
+    $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1));
+});
+
+it('processes a failed task and retries using redis driver', function (): void {
+    Config::set('queue.default', QueueDriver::REDIS->value);
+
+    $client = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $payload = serialize(new BadTask());
+
+    $client->expects($this->exactly(10))
+        ->method('execute')
+        ->withConsecutive(
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('string'),
+            ],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            // release()
+            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->equalTo('reserved_at'), $this->equalTo(''),
+                $this->equalTo('available_at'), $this->isType('int'),
+            ],
+            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->isType('string')],
+            // retry()
+            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:')],
+            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->equalTo('attempts'), $this->isType('int')],
+            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->isType('string')],
+        )
+        ->willReturnOnConsecutiveCalls(
+            $payload,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+        );
+
+    $this->app->swap(ClientContract::class, $client);
+
+    $queueManager = new QueueManager();
+    $worker = new Worker($queueManager);
+
+    $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1, retryDelay: 0));
+});
