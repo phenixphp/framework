@@ -66,6 +66,11 @@ abstract class Queue implements QueueContract
         $this->connectionName = $name;
     }
 
+    public function getConnectionName(): string
+    {
+        return $this->connectionName;
+    }
+
     public function getStateManager(): TaskState
     {
         return $this->stateManager;
