@@ -89,7 +89,6 @@ class Worker
 
     protected function processTask(QueuableTask $task, WorkerOptions $options): void
     {
-        $startTime = microtime(true);
         $stateManager = $this->queueManager->driver()->getStateManager();
 
         Log::info('Processing task', [
