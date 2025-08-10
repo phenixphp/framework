@@ -13,7 +13,7 @@ beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::REDIS->value);
 });
 
-it('pushes a task onto the Redis queue', function (): void {
+it('dispatch a task', function (): void {
     $clientMock = $this->getMockBuilder(Client::class)
         ->disableOriginalConstructor()
         ->getMock();
@@ -32,7 +32,7 @@ it('pushes a task onto the Redis queue', function (): void {
     BasicQueuableTask::dispatch();
 });
 
-it('calls Queue::push and enqueues the task in Redis', function (): void {
+it('push the task', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $clientMock->expects($this->once())
@@ -49,7 +49,7 @@ it('calls Queue::push and enqueues the task in Redis', function (): void {
     Queue::push(new BasicQueuableTask());
 });
 
-it('calls Queue::pushOn and enqueues the task on a custom queue in Redis', function (): void {
+it('enqueues the task on a custom queue', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $clientMock->expects($this->once())
@@ -66,12 +66,10 @@ it('calls Queue::pushOn and enqueues the task on a custom queue in Redis', funct
     Queue::pushOn('custom-queue', new BasicQueuableTask());
 });
 
-it('calls Queue::pop and returns a task from Redis', function (): void {
+it('returns a task', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $payload = serialize(new BasicQueuableTask());
-
-
 
     $clientMock->expects($this->exactly(4))
         ->method('execute')
@@ -106,7 +104,7 @@ it('calls Queue::pop and returns a task from Redis', function (): void {
     expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
-it('calls Queue::size and returns the queue size from Redis', function (): void {
+it('returns the queue size', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $clientMock->expects($this->once())
@@ -119,7 +117,7 @@ it('calls Queue::size and returns the queue size from Redis', function (): void 
     expect(Queue::size())->toBe(7);
 });
 
-it('calls Queue::clear and clears the Redis queue', function (): void {
+it('clear the queue', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $clientMock->expects($this->once())
@@ -131,7 +129,7 @@ it('calls Queue::clear and clears the Redis queue', function (): void {
     Queue::clear();
 });
 
-it('gets and sets the connection name via Queue facade for Redis', function (): void {
+it('gets and sets the connection name via facade', function (): void {
     $managerMock = $this->getMockBuilder(Phenix\Queue\QueueManager::class)
         ->disableOriginalConstructor()
         ->getMock();
@@ -150,7 +148,7 @@ it('gets and sets the connection name via Queue facade for Redis', function (): 
     Queue::setConnectionName('redis-connection');
 });
 
-it('requeues the payload and returns null when reservation fails in Redis', function (): void {
+it('requeues the payload and returns null when reservation fails', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $payload = serialize(new BasicQueuableTask());
@@ -175,7 +173,7 @@ it('requeues the payload and returns null when reservation fails in Redis', func
     expect($task)->toBeNull();
 });
 
-it('returns null when Redis queue is empty (LPOP returns null)', function (): void {
+it('returns null when queue is empty (LPOP returns null)', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
     $clientMock->expects($this->once())
