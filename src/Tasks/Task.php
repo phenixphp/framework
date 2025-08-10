@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Amp\Cancellation;
+use Amp\CompositeCancellation;
 use Amp\Sync\Channel;
+use Amp\TimeoutCancellation;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Facades\Config;
@@ -14,6 +16,8 @@ use Phenix\Tasks\Exceptions\BootstrapAppException;
 
 abstract class Task implements TaskContract
 {
+    protected int $timeout = 60;
+
     abstract protected function handle(Channel $channel, Cancellation $cancellation): mixed;
 
     public static function setBootingSettings(): void
@@ -32,6 +36,11 @@ abstract class Task implements TaskContract
             $app->enableTestingMode();
         }
 
+        $timeout = new TimeoutCancellation($this->getTimeout());
+        $combined = new CompositeCancellation($cancellation, $timeout);
+
+        $combined->throwIfRequested();
+
         return $this->handle($channel, $cancellation);
     }
 
@@ -43,6 +52,11 @@ abstract class Task implements TaskContract
         ]);
 
         return $result;
+    }
+
+    public function getTimeout(): int
+    {
+        return $this->timeout;
     }
 
     protected static function bootApplication(): AppProxy

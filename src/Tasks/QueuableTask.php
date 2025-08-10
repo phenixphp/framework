@@ -22,8 +22,6 @@ abstract class QueuableTask extends Task implements ShouldQueue
 
     protected int|null $maxTries = null;
 
-    protected int $timeout = 60;
-
     public function __construct()
     {
         $this->taskId = $this->generateId();
@@ -72,11 +70,6 @@ abstract class QueuableTask extends Task implements ShouldQueue
     public function getMaxTries(): int|null
     {
         return $this->maxTries;
-    }
-
-    public function getTimeout(): int
-    {
-        return $this->timeout;
     }
 
     public function getPayload(): string
