@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Phenix\Util\Arr;
-use Phenix\Facades\Queue;
-use Phenix\Facades\Config;
 use Amp\Sql\SqlTransaction;
-use Phenix\Queue\QueueManager;
-use Phenix\Queue\DatabaseQueue;
-use Tests\Mocks\Database\Result;
-use Phenix\Database\QueryBuilder;
-use Tests\Mocks\Database\Statement;
-use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Database\Constants\Connection;
-use Tests\Mocks\Database\MysqlConnectionPool;
-use Tests\Unit\Tasks\Internal\BasicQueuableTask;
+use Phenix\Database\QueryBuilder;
+use Phenix\Facades\Config;
+use Phenix\Facades\Queue;
+use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\DatabaseQueue;
+use Phenix\Queue\QueueManager;
 use Phenix\Queue\StateManagers\DatabaseTaskState;
+use Phenix\Util\Arr;
+use Tests\Mocks\Database\MysqlConnectionPool;
+use Tests\Mocks\Database\Result;
+use Tests\Mocks\Database\Statement;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::DATABASE->value);
