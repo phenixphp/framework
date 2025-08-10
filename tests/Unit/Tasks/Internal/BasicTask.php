@@ -6,8 +6,8 @@ namespace Tests\Unit\Tasks\Internal;
 
 use Amp\Cancellation;
 use Amp\Sync\Channel;
-use Phenix\Tasks\Task;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 
 class BasicTask extends Task
 {

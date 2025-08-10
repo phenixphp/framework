@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Phenix\Tasks\Exceptions\BootstrapAppException;
 use Phenix\Tasks\Task;
 use Tests\Unit\Tasks\Internal\BasicTask;
-use Phenix\Tasks\Exceptions\BootstrapAppException;
 
 it('get task output', function (): void {
     $task = new BasicTask();

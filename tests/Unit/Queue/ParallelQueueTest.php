@@ -31,7 +31,7 @@ it('pushes a task onto the parallel queue', function (): void {
 
 it('dispatches a task conditionally', function (): void {
     Queue::clear();
-    BasicQueuableTask::dispatchIf(fn() => true);
+    BasicQueuableTask::dispatchIf(fn () => true);
 
     $task = Queue::pop();
 
