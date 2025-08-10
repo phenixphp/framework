@@ -19,7 +19,7 @@ class DelayableTask extends QueuableTask
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {
-        delay($this->delay);
+        delay($this->delay, cancellation: $cancellation);
 
         $output = 'Task completed successfully';
         $message = 'This is a test message';
