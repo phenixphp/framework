@@ -117,3 +117,38 @@ it('pauses processing', function (): void {
 
     $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
 });
+
+it('sleeps when no task, then processes when a task becomes available', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queueManager->expects($this->exactly(2))
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturnOnConsecutiveCalls(null, new BasicQueuableTask());
+
+    $worker = new class ($queueManager) extends Worker {
+        public array $sleepCalls = [];
+
+        public function __construct(QueueManager $queueManager)
+        {
+            parent::__construct($queueManager);
+        }
+
+        protected function supportsAsyncSignals(): bool
+        {
+            return false;
+        }
+
+        public function sleep(int $seconds): void
+        {
+            $this->sleepCalls[] = $seconds;
+        }
+    };
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+
+    expect($worker->sleepCalls)->toHaveCount(1);
+    expect($worker->sleepCalls[0])->toBe(1);
+});
