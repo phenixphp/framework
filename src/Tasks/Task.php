@@ -54,6 +54,11 @@ abstract class Task implements TaskContract
         return $result;
     }
 
+    public function setTimeout(int $timeout): void
+    {
+        $this->timeout = $timeout;
+    }
+
     public function getTimeout(): int
     {
         return $this->timeout;
