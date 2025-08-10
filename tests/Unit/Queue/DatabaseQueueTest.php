@@ -2,17 +2,20 @@
 
 declare(strict_types=1);
 
-use Amp\Sql\SqlTransaction;
-use Phenix\Database\Constants\Connection;
-use Phenix\Facades\Config;
-use Phenix\Facades\Queue;
-use Phenix\Queue\Constants\QueueDriver;
-use Phenix\Queue\QueueManager;
 use Phenix\Util\Arr;
-use Tests\Mocks\Database\MysqlConnectionPool;
+use Phenix\Facades\Queue;
+use Phenix\Facades\Config;
+use Amp\Sql\SqlTransaction;
+use Phenix\Queue\QueueManager;
+use Phenix\Queue\DatabaseQueue;
 use Tests\Mocks\Database\Result;
+use Phenix\Database\QueryBuilder;
 use Tests\Mocks\Database\Statement;
+use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Database\Constants\Connection;
+use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
+use Phenix\Queue\StateManagers\DatabaseTaskState;
 
 beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::DATABASE->value);
@@ -202,6 +205,64 @@ it('returns null when no queued task exists', function (): void {
 
     expect($task)->toBeNull();
 });
+
+it('returns null when reservation fails (state manager returns false)', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $selectStmt = $this->getMockBuilder(Statement::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queued = new BasicQueuableTask();
+
+    $selectStmt->expects($this->once())
+        ->method('execute')
+        ->willReturn(new Result([
+            [
+                'id' => $queued->getTaskId(),
+                'payload' => $queued->getPayload(),
+                'attempts' => 0,
+                'reserved_at' => null,
+                'available_at' => (new DateTime())->format('Y-m-d H:i:s'),
+                'created_at' => (new DateTime())->format('Y-m-d H:i:s'),
+            ],
+        ]));
+
+    $transaction->expects($this->once())
+        ->method('prepare')
+        ->willReturn($selectStmt);
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $stateManager = $this->getMockBuilder(DatabaseTaskState::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $stateManager->expects($this->once())
+        ->method('setBuilder')
+        ->with($this->isInstanceOf(QueryBuilder::class));
+
+    $stateManager->expects($this->once())
+        ->method('reserve')
+        ->willReturn(false);
+
+    $queue = new DatabaseQueue(
+        connection: 'default',
+        queueName: 'default',
+        table: 'tasks',
+        stateManager: $stateManager
+    );
+
+    $task = $queue->pop();
+
+    expect($task)->toBeNull();
+});
+
 
 it('returns the queue size', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
