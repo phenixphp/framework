@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\Constants\Lock;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
@@ -507,6 +508,39 @@ it('generate query with lock for update skip locked for postgresql', function ()
     expect($params)->toBe([]);
 });
 
+it('generate query with lock for update skip locked for postgresql using constants', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lock(Lock::FOR_UPDATE_SKIP_LOCKED)
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE SKIP LOCKED";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('remove locks from query', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lock(Lock::FOR_UPDATE_SKIP_LOCKED)
+        ->unlock()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
 it('generate query with lock for share for postgresql', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
@@ -614,6 +648,22 @@ it('generate query with lock for no key update no wait for postgresql', function
     [$dml, $params] = $sql;
 
     $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE NOWAIT";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
+
+it('tries to generate lock using sqlite', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lockForNoKeyUpdateNoWait()
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);
