@@ -21,7 +21,7 @@ it('handle task cancellation by timeout', function (): void {
     $task->setTimeout(1); // Set a short timeout
 
     $result = $task->output();
-    dump($result);
+
     expect($result->isFailure())->toBeTrue();
     expect($result->message())->toBe('The operation was cancelled');
 });
