@@ -338,3 +338,57 @@ it('clears the database queue', function (): void {
 
     Queue::clear();
 });
+
+it('cleans expired reservations in database task state', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result([["Query OK"]])));
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $state = new DatabaseTaskState();
+
+    $state->cleanupExpiredReservations();
+});
+
+it('returns null from getTaskState when task not found', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result([])));
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $state = new DatabaseTaskState();
+    $this->assertNull($state->getTaskState('missing-id'));
+});
+
+it('returns task state array from getTaskState when found', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $row = [
+        'id' => 'task-123',
+        'queue_name' => 'default',
+        'payload' => serialize(new BasicQueuableTask()),
+        'attempts' => 1,
+        'reserved_at' => null,
+        'available_at' => (new DateTime())->format('Y-m-d H:i:s'),
+        'created_at' => (new DateTime())->format('Y-m-d H:i:s'),
+    ];
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result([$row])));
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $state = new DatabaseTaskState();
+    $data = $state->getTaskState('task-123');
+    $this->assertIsArray($data);
+    $this->assertSame('task-123', $data['id']);
+    $this->assertSame('default', $data['queue_name']);
+    $this->assertArrayHasKey('payload', $data);
+});

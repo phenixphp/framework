@@ -256,3 +256,62 @@ it('retries a task with delay greater than zero by enqueuing into the delayed zs
     $queue = new RedisQueue($clientMock);
     $queue->getStateManager()->retry($task, 30);
 });
+
+it('cleans expired reservations via Lua script', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $clientMock->expects($this->once())
+        ->method('execute')
+        ->with(
+            $this->equalTo('EVAL'),
+            $this->isType('string'), // Lua script
+            $this->equalTo(0),
+            $this->isType('int'),    // now timestamp
+        )
+        ->willReturn(1);
+
+    $state = new RedisTaskState($clientMock);
+    $state->cleanupExpiredReservations();
+});
+
+it('returns null from getTaskState when no data exists', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $clientMock->expects($this->once())
+        ->method('execute')
+        ->with($this->equalTo('HGETALL'), $this->equalTo('task:data:task-nope'))
+        ->willReturn([]);
+
+    $state = new RedisTaskState($clientMock);
+    $this->assertNull($state->getTaskState('task-nope'));
+});
+
+it('returns task state array from getTaskState when data exists', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    // Simulate Redis HGETALL flat array response
+    $hgetAll = [
+        'attempts', 2,
+        'reserved_at', 1700000000,
+        'available_at', 1700000100,
+        'payload', serialize(new BasicQueuableTask()),
+    ];
+
+    $clientMock->expects($this->once())
+        ->method('execute')
+        ->with($this->equalTo('HGETALL'), $this->equalTo('task:data:task-123'))
+        ->willReturn($hgetAll);
+
+    $state = new RedisTaskState($clientMock);
+    $data = $state->getTaskState('task-123');
+
+    $this->assertIsArray($data);
+    $this->assertArrayHasKey('attempts', $data);
+    $this->assertArrayHasKey('reserved_at', $data);
+    $this->assertArrayHasKey('available_at', $data);
+    $this->assertArrayHasKey('payload', $data);
+    $this->assertSame(2, $data['attempts']);
+    $this->assertSame(1700000000, $data['reserved_at']);
+    $this->assertSame(1700000100, $data['available_at']);
+    $this->assertIsString($data['payload']);
+});
