@@ -527,13 +527,14 @@ it('generate query with lock for update skip locked for postgresql using constan
 it('remove locks from query', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $sql = $query->from('tasks')
+    $builder = $query->from('tasks')
         ->whereNull('reserved_at')
         ->lock(Lock::FOR_UPDATE_SKIP_LOCKED)
-        ->unlock()
-        ->get();
+        ->unlock();
 
-    [$dml, $params] = $sql;
+    expect($builder->isLocked())->toBeFalse();
+
+    [$dml, $params] = $builder->get();
 
     $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
 
