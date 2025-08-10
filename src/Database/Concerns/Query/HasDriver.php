@@ -15,16 +15,16 @@ trait HasDriver
     protected function resolveDriverFromConnectionPool(SqlCommonConnectionPool $pool): void
     {
         if ($pool instanceof MysqlConnectionPool) {
-            $this->driver = Driver::MYSQL;
+            $this->setDriver(Driver::MYSQL);
         } elseif ($pool instanceof PostgresConnectionPool) {
-            $this->driver = Driver::POSTGRESQL;
+            $this->setDriver(Driver::POSTGRESQL);
         } else {
-            $this->driver = Driver::MYSQL;
+            $this->setDriver(Driver::MYSQL);
         }
     }
 
     protected function resolveDriverFromConnection(string $connection): void
     {
-        $this->driver = Driver::tryFrom(Config::get("database.connections.{$connection}.driver")) ?? Driver::MYSQL;
+        $this->setDriver(Driver::tryFrom(Config::get("database.connections.{$connection}.driver")) ?? Driver::MYSQL);
     }
 }
