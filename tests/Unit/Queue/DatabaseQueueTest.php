@@ -176,6 +176,33 @@ it('returns a task', function (): void {
     expect($task)->not->toBeNull();
 });
 
+it('returns null when no queued task exists', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $databaseStatement = $this->getMockBuilder(Statement::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $databaseStatement->expects($this->once())
+        ->method('execute')
+        ->willReturn(new Result([[]]));
+
+    $transaction->expects($this->once())
+        ->method('prepare')
+        ->willReturn($databaseStatement);
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $task = Queue::pop();
+
+    expect($task)->toBeNull();
+});
+
 it('returns the queue size', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
