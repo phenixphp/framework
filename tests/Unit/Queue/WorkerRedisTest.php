@@ -9,7 +9,7 @@ use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Phenix\Redis\Contracts\Client as ClientContract;
 use Tests\Unit\Tasks\Internal\BadTask;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function () {
     Config::set('queue.default', QueueDriver::REDIS->value);
@@ -18,7 +18,7 @@ beforeEach(function () {
 it('processes a successful task', function (): void {
     $client = $this->getMockBuilder(ClientContract::class)->getMock();
 
-    $payload = serialize(new SampleQueuableTask());
+    $payload = serialize(new BasicQueuableTask());
 
     $client->expects($this->exactly(5))
         ->method('execute')

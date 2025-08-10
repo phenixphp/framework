@@ -13,7 +13,7 @@ use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
 use Tests\Unit\Tasks\Internal\BadTask;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function () {
     Config::set('queue.default', QueueDriver::DATABASE->value);
@@ -27,7 +27,7 @@ it('processes a successful task', function (): void {
         ->disableOriginalConstructor()
         ->getMock();
 
-    $queuableTask = new SampleQueuableTask();
+    $queuableTask = new BasicQueuableTask();
 
     $databaseStatement->expects($this->once())
         ->method('execute')

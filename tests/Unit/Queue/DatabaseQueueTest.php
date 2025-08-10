@@ -10,7 +10,7 @@ use Phenix\Util\Arr;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 it('pushes a task onto the queue', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
@@ -32,7 +32,7 @@ it('pushes a task onto the queue', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    SampleQueuableTask::dispatch();
+    BasicQueuableTask::dispatch();
 });
 
 it('pushes a task onto the queue with custom queue name', function (): void {
@@ -55,7 +55,7 @@ it('pushes a task onto the queue with custom queue name', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    SampleQueuableTask::dispatch()
+    BasicQueuableTask::dispatch()
         ->onQueue('custom-queue');
 });
 
@@ -79,7 +79,7 @@ it('pushes a task onto the queue with custom connection', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    SampleQueuableTask::dispatch()
+    BasicQueuableTask::dispatch()
         ->onConnection('default');
 });
 
@@ -103,7 +103,7 @@ it('calls Queue::push and enqueues the task', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    Queue::push(new SampleQueuableTask());
+    Queue::push(new BasicQueuableTask());
 });
 
 it('calls Queue::pushOn and enqueues the task on a custom queue', function (): void {
@@ -126,7 +126,7 @@ it('calls Queue::pushOn and enqueues the task on a custom queue', function (): v
 
     $this->app->swap(Connection::default(), $connection);
 
-    Queue::pushOn('custom-queue', new SampleQueuableTask());
+    Queue::pushOn('custom-queue', new BasicQueuableTask());
 });
 
 it('calls Queue::pop and returns a task', function (): void {
@@ -137,7 +137,7 @@ it('calls Queue::pop and returns a task', function (): void {
         ->disableOriginalConstructor()
         ->getMock();
 
-    $queuableTask = new SampleQueuableTask();
+    $queuableTask = new BasicQueuableTask();
 
     $databaseStatement->expects($this->once())
         ->method('execute')

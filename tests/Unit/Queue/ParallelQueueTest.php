@@ -9,8 +9,8 @@ use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\ParallelQueue;
 use Phenix\Queue\StateManagers\MemoryTaskState;
 use Tests\Unit\Tasks\Internal\BadTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 use Tests\Unit\Tasks\Internal\DelayableTask;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 use function Amp\async;
 use function Amp\delay;
@@ -21,27 +21,27 @@ beforeEach(function (): void {
 
 it('pushes a task onto the parallel queue', function (): void {
     Queue::clear();
-    Queue::push(new SampleQueuableTask());
+    Queue::push(new BasicQueuableTask());
 
     $task = Queue::pop();
 
     expect($task)->not->toBeNull();
-    expect($task)->toBeInstanceOf(SampleQueuableTask::class);
+    expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
 it('pushes a task onto a custom parallel queue', function (): void {
     Queue::clear();
-    Queue::pushOn('custom-parallel', new SampleQueuableTask());
+    Queue::pushOn('custom-parallel', new BasicQueuableTask());
 
     $task = Queue::pop('custom-parallel');
 
     expect($task)->not->toBeNull();
-    expect($task)->toBeInstanceOf(SampleQueuableTask::class);
+    expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
 it('returns the correct size for parallel queue', function (): void {
     Queue::clear();
-    Queue::push(new SampleQueuableTask());
+    Queue::push(new BasicQueuableTask());
 
     $this->assertSame(1, Queue::size());
 
@@ -51,7 +51,7 @@ it('returns the correct size for parallel queue', function (): void {
 });
 
 it('clears the parallel queue', function (): void {
-    Queue::push(new SampleQueuableTask());
+    Queue::push(new BasicQueuableTask());
     Queue::clear();
 
     $this->assertSame(0, Queue::size());
@@ -70,7 +70,7 @@ it('automatically starts processing when tasks are added', function (): void {
     $this->assertFalse($parallelQueue->isProcessing());
 
     // Adding a task should enable processing
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
 
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
@@ -80,7 +80,7 @@ it('can manually start and stop processing', function (): void {
     $parallelQueue = new ParallelQueue('test-manual-control');
 
     // Add tasks without automatic processing
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
     $parallelQueue->stop(); // Stop automatic processing
 
     $this->assertFalse($parallelQueue->isProcessing());
@@ -99,7 +99,7 @@ it('processes tasks using Interval without blocking', function (): void {
 
     // Add multiple tasks
     for ($i = 0; $i < 5; $i++) {
-        $parallelQueue->push(new SampleQueuableTask());
+        $parallelQueue->push(new BasicQueuableTask());
     }
 
     $this->assertSame(5, $parallelQueue->size());
@@ -126,7 +126,7 @@ it('automatically stops processing when no tasks remain', function (): void {
     $parallelQueue = new ParallelQueue('test-auto-stop');
 
     // Add a task
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
     $this->assertTrue($parallelQueue->isProcessing());
 
     // Give enough time to process all tasks (interval is 2.0s)
@@ -156,8 +156,8 @@ it('provides detailed processor status', function (): void {
     $this->assertSame(0, $status['total_tasks']);
 
     // After adding tasks
-    $parallelQueue->push(new SampleQueuableTask());
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
 
     $status = $parallelQueue->getProcessorStatus();
     $this->assertTrue($status['is_processing']);
@@ -173,7 +173,7 @@ it('works correctly with the HTTP server without blocking', function (): void {
     // Simulate multiple requests that add tasks
     for ($i = 0; $i < 10; $i++) {
         $futures[] = async(function () use ($parallelQueue, $i) {
-            $parallelQueue->push(new SampleQueuableTask());
+            $parallelQueue->push(new BasicQueuableTask());
 
             // Simulate request work
             delay(0.1);
@@ -241,7 +241,7 @@ it('automatically disables processing after all tasks complete', function (): vo
     $parallelQueue = new ParallelQueue('test-complete-all-tasks');
 
     // Add a single task
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertGreaterThan(0, $parallelQueue->size());
 
@@ -276,7 +276,7 @@ it('handles chunk processing when no available tasks exist', function (): void {
     $this->assertSame(0, $parallelQueue->size());
 
     // Add a task to verify it can resume processing
-    $parallelQueue->push(new SampleQueuableTask());
+    $parallelQueue->push(new BasicQueuableTask());
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertGreaterThan(0, $parallelQueue->size());
 });
@@ -287,7 +287,7 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
 
     // Add multiple tasks that will create a scenario where some might not be reservable
     for ($i = 0; $i < 5; $i++) {
-        $parallelQueue->push(new SampleQueuableTask());
+        $parallelQueue->push(new BasicQueuableTask());
     }
 
     $initialSize = $parallelQueue->size();
@@ -318,7 +318,7 @@ it('handles concurrent task reservation attempts correctly', function (): void {
 
     // Create multiple tasks to increase chances of reservation conflicts
     for ($i = 0; $i < 10; $i++) {
-        $parallelQueue->push(new SampleQueuableTask());
+        $parallelQueue->push(new BasicQueuableTask());
     }
 
     $this->assertTrue($parallelQueue->isProcessing());
@@ -370,7 +370,7 @@ it('handles task failures gracefully', function (): void {
 it('prevent reserve the same task in task state management', function (): void {
     $state = new MemoryTaskState();
 
-    $task = new SampleQueuableTask();
+    $task = new BasicQueuableTask();
     $state->reserve($task);
 
     // Attempt to reserve the same task again
@@ -380,7 +380,7 @@ it('prevent reserve the same task in task state management', function (): void {
 it('clean all expired reservations', function (): void {
     $state = new MemoryTaskState();
 
-    $task1 = new SampleQueuableTask();
+    $task1 = new BasicQueuableTask();
 
     $state->reserve($task1, 1);
 
@@ -399,7 +399,7 @@ it('returns null when next available task is not available', function (): void {
     $parallelQueue = new ParallelQueue('test-next-available-null', $stateManager);
 
     // Prepare a task and mark it as not available yet via state manager
-    $task = new SampleQueuableTask();
+    $task = new BasicQueuableTask();
     $parallelQueue->push($task);
 
     // Create state, then set a future availability to simulate a delay/retry window
@@ -423,7 +423,7 @@ it('re-enqueues the task when reservation fails inside getTaskChunk', function (
     $parallelQueue = new ParallelQueue('test-reserve-fails-reenqueue', $stateManager);
 
     // Add a task to the queue
-    $task = new SampleQueuableTask();
+    $task = new BasicQueuableTask();
     $parallelQueue->push($task);
 
     // Pre-reserve the same task so that a subsequent reserve() call fails

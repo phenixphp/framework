@@ -8,7 +8,7 @@ use Phenix\Queue\QueueManager;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Tests\Unit\Tasks\Internal\BadTask;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function () {
     Config::set('queue.default', QueueDriver::PARALLEL->value);
@@ -22,7 +22,7 @@ it('processes a successful task', function (): void {
     $queueManager->expects($this->once())
         ->method('pop')
         ->with('default')
-        ->willReturn(new SampleQueuableTask());
+        ->willReturn(new BasicQueuableTask());
 
     $worker = new Worker($queueManager);
 
@@ -37,7 +37,7 @@ it('processes a successful task in long running process', function (): void {
     $queueManager->expects($this->once())
         ->method('pop')
         ->with('custom-queue')
-        ->willReturn(new SampleQueuableTask());
+        ->willReturn(new BasicQueuableTask());
 
     $worker = new Worker($queueManager);
 

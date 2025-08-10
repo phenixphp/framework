@@ -9,7 +9,7 @@ use Amp\Sync\Channel;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
 
-class SampleQueuableTask extends QueuableTask
+class BasicQueuableTask extends QueuableTask
 {
     protected function handle(Channel $channel, Cancellation $cancellation): Result
     {

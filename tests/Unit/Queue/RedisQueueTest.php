@@ -7,7 +7,7 @@ use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Redis\Client;
 use Phenix\Redis\Contracts\Client as ClientContract;
-use Tests\Unit\Tasks\Internal\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::REDIS->value);
@@ -29,7 +29,7 @@ it('pushes a task onto the Redis queue', function (): void {
 
     $this->app->swap(ClientContract::class, $clientMock);
 
-    SampleQueuableTask::dispatch();
+    BasicQueuableTask::dispatch();
 });
 
 it('calls Queue::push and enqueues the task in Redis', function (): void {
@@ -46,7 +46,7 @@ it('calls Queue::push and enqueues the task in Redis', function (): void {
 
     $this->app->swap(ClientContract::class, $clientMock);
 
-    Queue::push(new SampleQueuableTask());
+    Queue::push(new BasicQueuableTask());
 });
 
 it('calls Queue::pushOn and enqueues the task on a custom queue in Redis', function (): void {
@@ -63,13 +63,13 @@ it('calls Queue::pushOn and enqueues the task on a custom queue in Redis', funct
 
     $this->app->swap(ClientContract::class, $clientMock);
 
-    Queue::pushOn('custom-queue', new SampleQueuableTask());
+    Queue::pushOn('custom-queue', new BasicQueuableTask());
 });
 
 it('calls Queue::pop and returns a task from Redis', function (): void {
     $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
 
-    $payload = serialize(new SampleQueuableTask());
+    $payload = serialize(new BasicQueuableTask());
 
 
 
@@ -103,7 +103,7 @@ it('calls Queue::pop and returns a task from Redis', function (): void {
 
     $task = Queue::pop();
     expect($task)->not()->toBeNull();
-    expect($task)->toBeInstanceOf(SampleQueuableTask::class);
+    expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
 it('calls Queue::size and returns the queue size from Redis', function (): void {
