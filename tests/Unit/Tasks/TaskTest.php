@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
+use Amp\CancelledException;
 use Phenix\Tasks\Exceptions\BootstrapAppException;
 use Phenix\Tasks\Task;
 use Tests\Unit\Tasks\Internal\BasicTask;
@@ -75,4 +77,32 @@ it('throw exception if PHENIX_BASE_PATH is not set', function (): void {
     } else {
         $_ENV['PHENIX_BASE_PATH'] = $originalServerEnv;
     }
+});
+
+it('cancel task due to timeout', function (): void {
+    $cancellationMock = $this->getMockBuilder(Cancellation::class)
+        ->getMock();
+
+    $cancellationMock->method('throwIfRequested')
+        ->willThrowException(new CancelledException());
+
+    $task = new BasicTask();
+
+    $result = $task->run($this->getFakeChannel(), $cancellationMock);
+
+    expect($result->isFailure())->toBeTrue();
+});
+
+it('cancel task due to any cancellation reason', function (): void {
+    $cancellationMock = $this->getMockBuilder(Cancellation::class)
+        ->getMock();
+
+    $cancellationMock->method('throwIfRequested')
+        ->willThrowException(new ErrorException());
+
+    $task = new BasicTask();
+
+    $result = $task->run($this->getFakeChannel(), $cancellationMock);
+
+    expect($result->isFailure())->toBeTrue();
 });
