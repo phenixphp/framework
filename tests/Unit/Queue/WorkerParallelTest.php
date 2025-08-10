@@ -7,6 +7,7 @@ use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\QueueManager;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
+use Phenix\Runtime\Log;
 use Tests\Unit\Tasks\Internal\BadTask;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
@@ -55,6 +56,35 @@ it('processes a failed task and retries', function (): void {
         ->willReturn(new BadTask());
 
     $worker = new Worker($queueManager);
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+});
+
+it('stop daemon when signal is received', function (): void {
+    $logMock = $this->getMockBuilder(Log::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $logMock->expects($this->exactly(3))
+        ->method('info')
+        ->withConsecutive(
+            [$this->equalTo('Worker daemon started')],
+            [$this->equalTo('Worker stopping gracefully')],
+            [$this->equalTo('Worker statistics')]
+        );
+
+    $this->app->swap(Log::class, $logMock);
+
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $worker = new class ($queueManager) extends Worker {
+        protected function listenForSignals(): void
+        {
+            $this->shouldQuit = true;
+        }
+    };
 
     $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
 });
