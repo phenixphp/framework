@@ -7,8 +7,8 @@ use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\QueueManager;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
-use Tests\Unit\Queue\Tasks\BadTask;
-use Tests\Unit\Queue\Tasks\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BadTask;
+use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 beforeEach(function () {
     Config::set('queue.default', QueueDriver::PARALLEL->value);

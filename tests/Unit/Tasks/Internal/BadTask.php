@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Queue\Tasks;
+namespace Tests\Unit\Tasks\Internal;
 
 use Amp\Cancellation;
 use Amp\Sync\Channel;

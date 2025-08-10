@@ -10,7 +10,7 @@ use Phenix\Util\Arr;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Tests\Unit\Queue\Tasks\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 it('pushes a task onto the queue', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();

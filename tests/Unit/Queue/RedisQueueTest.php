@@ -7,7 +7,7 @@ use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Redis\Client;
 use Phenix\Redis\Contracts\Client as ClientContract;
-use Tests\Unit\Queue\Tasks\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::REDIS->value);

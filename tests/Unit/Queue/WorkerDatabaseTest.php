@@ -12,8 +12,8 @@ use Phenix\Queue\WorkerOptions;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Tests\Unit\Queue\Tasks\BadTask;
-use Tests\Unit\Queue\Tasks\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BadTask;
+use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 beforeEach(function () {
     Config::set('queue.default', QueueDriver::DATABASE->value);

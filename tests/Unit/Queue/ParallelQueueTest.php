@@ -8,9 +8,9 @@ use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\ParallelQueue;
 use Phenix\Queue\StateManagers\MemoryTaskState;
-use Tests\Unit\Queue\Tasks\BadTask;
-use Tests\Unit\Queue\Tasks\DelayableTask;
-use Tests\Unit\Queue\Tasks\SampleQueuableTask;
+use Tests\Unit\Tasks\Internal\BadTask;
+use Tests\Unit\Tasks\Internal\DelayableTask;
+use Tests\Unit\Tasks\Internal\SampleQueuableTask;
 
 use function Amp\async;
 use function Amp\delay;
