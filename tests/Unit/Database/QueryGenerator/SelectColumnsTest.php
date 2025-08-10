@@ -656,6 +656,8 @@ it('generate query with lock for no key update no wait for postgresql', function
 it('tries to generate lock using sqlite', function () {
     $query = new QueryGenerator(Driver::SQLITE);
 
+    expect($query->getDriver())->toBe(Driver::SQLITE);
+
     $sql = $query->from('tasks')
         ->whereNull('reserved_at')
         ->lockForNoKeyUpdateNoWait()
