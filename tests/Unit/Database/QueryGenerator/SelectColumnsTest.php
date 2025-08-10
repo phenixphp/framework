@@ -670,3 +670,21 @@ it('tries to generate lock using sqlite', function () {
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);
 });
+
+it('tries to generate lock using sqlite with constants', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    expect($query->getDriver())->toBe(Driver::SQLITE);
+
+    $sql = $query->from('tasks')
+        ->whereNull('reserved_at')
+        ->lock(Lock::FOR_NO_KEY_UPDATE)
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([]);
+});
