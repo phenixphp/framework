@@ -149,3 +149,28 @@ it('gets and sets the connection name via Queue facade for Redis', function (): 
     expect(Queue::getConnectionName())->toBe('redis-connection');
     Queue::setConnectionName('redis-connection');
 });
+
+it('requeues the payload and returns null when reservation fails in Redis', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $payload = serialize(new BasicQueuableTask());
+
+    $clientMock->expects($this->exactly(3))
+        ->method('execute')
+        ->withConsecutive(
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload)],
+        )
+        ->willReturnOnConsecutiveCalls(
+            $payload, // LPOP returns a task payload
+            0,        // SETNX fails -> cannot reserve
+            1         // RPUSH requeues the same payload
+        );
+
+    $this->app->swap(ClientContract::class, $clientMock);
+
+    $task = Queue::pop();
+
+    expect($task)->toBeNull();
+});
