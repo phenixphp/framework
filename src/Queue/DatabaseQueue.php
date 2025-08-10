@@ -93,11 +93,6 @@ class DatabaseQueue extends Queue
         });
     }
 
-    public function getConnectionName(): string
-    {
-        return $this->connection;
-    }
-
     public function clear(): void
     {
         DB::connection($this->connection)
