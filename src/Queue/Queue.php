@@ -61,11 +61,6 @@ abstract class Queue implements QueueContract
         $this->queue = [];
     }
 
-    public function getConnectionName(): string
-    {
-        return $this->connectionName;
-    }
-
     public function setConnectionName(string $name): void
     {
         $this->connectionName = $name;
