@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 use Amp\Sql\SqlTransaction;
 use Phenix\Database\Constants\Connection;
+use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
+use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\QueueManager;
 use Phenix\Util\Arr;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
+
+beforeEach(function (): void {
+    Config::set('queue.default', QueueDriver::DATABASE->value);
+});
 
 it('pushes a task onto the queue', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
@@ -83,7 +89,7 @@ it('pushes a task onto the queue with custom connection', function (): void {
         ->onConnection('default');
 });
 
-it('calls Queue::push and enqueues the task', function (): void {
+it('enqueues the task', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $databaseStatement = $this->getMockBuilder(Statement::class)
@@ -106,7 +112,7 @@ it('calls Queue::push and enqueues the task', function (): void {
     Queue::push(new BasicQueuableTask());
 });
 
-it('calls Queue::pushOn and enqueues the task on a custom queue', function (): void {
+it('enqueues the task on a custom queue', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $databaseStatement = $this->getMockBuilder(Statement::class)
@@ -129,7 +135,7 @@ it('calls Queue::pushOn and enqueues the task on a custom queue', function (): v
     Queue::pushOn('custom-queue', new BasicQueuableTask());
 });
 
-it('calls Queue::pop and returns a task', function (): void {
+it('returns a task', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
     $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
 
@@ -170,21 +176,29 @@ it('calls Queue::pop and returns a task', function (): void {
     expect($task)->not->toBeNull();
 });
 
-it('calls Queue::size and returns the queue size', function (): void {
-    $managerMock = $this->getMockBuilder(QueueManager::class)
+it('returns the queue size', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $databaseStatement = $this->getMockBuilder(Statement::class)
         ->disableOriginalConstructor()
         ->getMock();
 
-    $managerMock->expects($this->once())
-        ->method('size')
-        ->willReturn(42);
+    $databaseStatement->expects($this->once())
+        ->method('execute')
+        ->with($this->isType('array'))
+        ->willReturn(new Result([[ 'count' => 42 ]]));
 
-    $this->app->swap(QueueManager::class, $managerMock);
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->with($this->isType('string'))
+        ->willReturn($databaseStatement);
+
+    $this->app->swap(Connection::default(), $connection);
 
     expect(Queue::size())->toBe(42);
 });
 
-it('calls Queue::clear and clears the queue', function (): void {
+it('clears the queue', function (): void {
     $managerMock = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
         ->getMock();
