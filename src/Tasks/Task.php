@@ -10,7 +10,7 @@ use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Facades\Config;
 use Phenix\Tasks\Contracts\Task as TaskContract;
-use RuntimeException;
+use Phenix\Tasks\Exceptions\BootstrapAppException;
 
 abstract class Task implements TaskContract
 {
@@ -50,7 +50,7 @@ abstract class Task implements TaskContract
         $basePath = $_ENV['PHENIX_BASE_PATH'] ?? getenv('PHENIX_BASE_PATH');
 
         if (! $basePath) {
-            throw new RuntimeException('App base path is not set, called by ' . static::class);
+            throw new BootstrapAppException('App base path is not set, called by ' . static::class);
         }
 
         return AppBuilder::build($basePath);
