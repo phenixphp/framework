@@ -174,3 +174,18 @@ it('requeues the payload and returns null when reservation fails in Redis', func
 
     expect($task)->toBeNull();
 });
+
+it('returns null when Redis queue is empty (LPOP returns null)', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $clientMock->expects($this->once())
+        ->method('execute')
+        ->with($this->equalTo('LPOP'), $this->equalTo('queues:default'))
+        ->willReturn(null);
+
+    $this->app->swap(ClientContract::class, $clientMock);
+
+    $task = Queue::pop();
+
+    expect($task)->toBeNull();
+});
