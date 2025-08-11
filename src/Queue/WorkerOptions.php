@@ -12,8 +12,8 @@ class WorkerOptions
         public readonly bool $once = false,
         public readonly int $retryDelay = 5,
         public readonly int $maxRetryDelay = 300,
-        public readonly int $batchSize = 1,
-        public readonly bool $processInBatch = false
+        public readonly int $chunkSize = 10,
+        public readonly bool $processInChunk = false
     ) {
     }
 }

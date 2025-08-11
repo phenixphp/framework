@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
+use Amp\Future;
+use Amp\Parallel\Worker as ParallelWorker;
+use Amp\Parallel\Worker\Execution;
 use Exception;
 use Phenix\Facades\Log;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
+use Phenix\Tasks\Result;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
@@ -59,20 +63,37 @@ class Worker
                 continue;
             }
 
-            $task = $this->getNextTask($connectionName, $queueName);
+            if ($options->processInChunk) {
+                $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
 
-            if ($task === null) {
-                $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+                if (empty($tasks)) {
+                    $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+                    $this->sleep($options->sleep);
 
-                $this->sleep($options->sleep);
+                    continue;
+                }
 
-                continue;
-            }
+                $this->processTaskChunk($tasks, $options, $output);
 
-            $this->processTask($task, $options, $output);
+                if ($options->once) {
+                    break;
+                }
+            } else {
+                $task = $this->getNextTask($connectionName, $queueName);
 
-            if ($options->once) {
-                break;
+                if ($task === null) {
+                    $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+
+                    $this->sleep($options->sleep);
+
+                    continue;
+                }
+
+                $this->processTask($task, $options, $output);
+
+                if ($options->once) {
+                    break;
+                }
             }
         }
 
@@ -81,10 +102,18 @@ class Worker
 
     public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
-        $task = $this->getNextTask($connectionName, $queueName);
+        if ($options->processInChunk) {
+            $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
 
-        if ($task !== null) {
-            $this->processTask($task, $options, $output);
+            if (! empty($tasks)) {
+                $this->processTaskChunk($tasks, $options, $output);
+            }
+        } else {
+            $task = $this->getNextTask($connectionName, $queueName);
+
+            if ($task !== null) {
+                $this->processTask($task, $options, $output);
+            }
         }
     }
 
@@ -113,6 +142,54 @@ class Worker
             $output?->writeln(sprintf('<error>danger: %s failed — %s</error>', $task::class, $exception->getMessage()));
 
             $this->handleFailedTask($task, $exception, $stateManager, $options);
+        }
+
+        $stateManager->cleanupExpiredReservations();
+    }
+
+    /**
+     * @param array<int, QueuableTask> $tasks
+     */
+    protected function processTaskChunk(array $tasks, WorkerOptions $options, OutputInterface|null $output = null): void
+    {
+        $stateManager = $this->queueManager->driver()->getStateManager();
+
+        foreach ($tasks as $task) {
+            $output?->writeln(sprintf(
+                '<info>Processing %s (queue=%s, attempt=%d)</info>',
+                $task::class,
+                (string) $task->getQueueName(),
+                $task->getAttempts(),
+            ));
+        }
+
+        $executions = array_map(
+            fn (QueuableTask $task): Execution => ParallelWorker\submit($task),
+            $tasks
+        );
+
+        /** @var array<int, Result> $results */
+        $results = Future\await(array_map(
+            fn (ParallelWorker\Execution $e): Future => $e->getFuture(),
+            $executions,
+        ));
+
+        foreach ($results as $index => $result) {
+            $task = $tasks[$index];
+
+            if ($result->isSuccess()) {
+                $stateManager->complete($task);
+
+                $this->processedTasks++;
+
+                $output?->writeln(sprintf('<info>success: %s processed</info>', $task::class));
+            } else {
+                $exception = new Exception($result->message() ?? 'Task failed');
+
+                $output?->writeln(sprintf('<error>danger: %s failed — %s</error>', $task::class, $exception->getMessage()));
+
+                $this->handleFailedTask($task, $exception, $stateManager, $options);
+            }
         }
 
         $stateManager->cleanupExpiredReservations();
@@ -191,5 +268,28 @@ class Worker
         }
 
         return null;
+    }
+
+    /**
+     * @return array<int, QueuableTask>
+     */
+    protected function getTaskChunk(string $connectionName, string $queueName, int $chunkSize): array
+    {
+        $tasks = [];
+        $attempts = 0;
+        $maxAttempts = max(1, $chunkSize * 2); // Avoid tight infinite loops
+
+        while (count($tasks) < $chunkSize && $attempts < $maxAttempts) {
+            $task = $this->getNextTask($connectionName, $queueName);
+
+            if ($task === null) {
+                break;
+            }
+
+            $tasks[] = $task;
+            $attempts++;
+        }
+
+        return $tasks;
     }
 }
