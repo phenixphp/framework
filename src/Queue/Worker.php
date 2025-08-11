@@ -99,8 +99,7 @@ class Worker
             'attempt' => $task->getAttempts(),
         ]);
 
-        /** @var Result $result */
-        [$result] = WorkerPool::batch([$task]);
+        $result = $task->output();
 
         if ($result->isSuccess()) {
             $stateManager->complete($task);
