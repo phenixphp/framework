@@ -32,6 +32,8 @@ class ParallelQueue extends Queue
 
     private Interval|null $processingInterval = null;
 
+    private float $interval;
+
     private bool $isEnabled = false;
 
     public function __construct(
@@ -43,6 +45,7 @@ class ParallelQueue extends Queue
         $this->stateManager = $stateManager;
         $this->maxConcurrency = Config::get('queue.drivers.parallel.max_concurrent', 10);
         $this->chunkSize = Config::get('queue.drivers.parallel.chunk_size', 10);
+        $this->interval = (float) Config::get('queue.drivers.parallel.interval', 2.0);
     }
 
     public function push(QueuableTask $task): void
@@ -92,7 +95,7 @@ class ParallelQueue extends Queue
     {
         $this->processingStarted = true;
 
-        $this->processingInterval = new Interval(2.0, function (): void {
+        $this->processingInterval = new Interval($this->interval, function (): void {
             $this->cleanupCompletedTasks();
 
             if (! empty($this->runningTasks)) {
