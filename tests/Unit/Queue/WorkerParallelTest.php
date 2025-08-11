@@ -188,6 +188,34 @@ it('processes a chunk of tasks in parallel when enabled', function (): void {
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
 });
 
+it('processes a chunk via runNextTask when chunk mode enabled', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $task1 = new BasicQueuableTask();
+    $task1->setQueueName('custom-queue');
+
+    $task2 = new BasicQueuableTask();
+    $task2->setQueueName('custom-queue');
+
+    $queueManager->expects($this->exactly(2))
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturnOnConsecutiveCalls($task1, $task2);
+
+    $parallelQueue = new ParallelQueue(queueName: 'custom-queue', stateManager: new MemoryTaskState());
+    $queueManager->method('driver')->willReturn($parallelQueue);
+
+    $worker = new Worker($queueManager);
+    $output = new BufferedOutput();
+
+    $worker->runNextTask('default', 'custom-queue', new WorkerOptions(processInChunk: true, chunkSize: 2), $output);
+
+    $buffer = $output->fetch();
+    $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
+});
+
 it('retries failing tasks in chunk mode', function (): void {
     $queueManager = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
