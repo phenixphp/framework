@@ -8,6 +8,7 @@ use Exception;
 use Phenix\Facades\Log;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
+use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 class Worker
@@ -33,7 +34,7 @@ class Worker
         sleep($seconds);
     }
 
-    public function daemon(string $connectionName, string $queueName, WorkerOptions $options): void
+    public function daemon(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         Log::info('Worker daemon started', [
             'connection' => $connectionName,
@@ -68,7 +69,7 @@ class Worker
                 continue;
             }
 
-            $this->processTask($task, $options);
+            $this->processTask($task, $options, $output);
 
             if ($options->once) {
                 break;
@@ -78,24 +79,25 @@ class Worker
         $this->logWorkerStats();
     }
 
-    public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options): void
+    public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         $task = $this->getNextTask($connectionName, $queueName);
 
         if ($task !== null) {
-            $this->processTask($task, $options);
+            $this->processTask($task, $options, $output);
         }
     }
 
-    protected function processTask(QueuableTask $task, WorkerOptions $options): void
+    protected function processTask(QueuableTask $task, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         $stateManager = $this->queueManager->driver()->getStateManager();
 
-        Log::info('Processing task', [
-            'task' => get_class($task),
-            'queue' => $task->getQueueName(),
-            'attempt' => $task->getAttempts(),
-        ]);
+        $output?->writeln(sprintf(
+            '<info>Processing %s (queue=%s, attempt=%d)</info>',
+            $task::class,
+            (string) $task->getQueueName(),
+            $task->getAttempts(),
+        ));
 
         $result = $task->output();
 
@@ -103,13 +105,16 @@ class Worker
             $stateManager->complete($task);
 
             $this->processedTasks++;
+
+            $output?->writeln(sprintf('<info>success: %s processed</info>', $task::class));
         } else {
             $exception = new Exception($result->message() ?? 'Task failed');
+
+            $output?->writeln(sprintf('<error>danger: %s failed — %s</error>', $task::class, $exception->getMessage()));
 
             $this->handleFailedTask($task, $exception, $stateManager, $options);
         }
 
-        // After handling a task, clean up any expired reservations
         $stateManager->cleanupExpiredReservations();
     }
 
@@ -121,31 +126,14 @@ class Worker
     ): void {
         $this->failedTasks++;
 
-        Log::error('Task failed', [
-            'task' => get_class($task),
-            'error' => $e->getMessage(),
-            'attempt' => $task->getAttempts(),
-        ]);
-
         $stateManager->release($task);
 
         $maxTries = $task->getMaxTries() ?? $options->maxTries;
 
         if ($task->getAttempts() < $maxTries) {
             $stateManager->retry($task, $options->retryDelay);
-
-            Log::info('Task scheduled for retry', [
-                'task' => get_class($task),
-                'attempt' => $task->getAttempts(),
-                'delay' => $options->retryDelay,
-            ]);
         } else {
             $stateManager->fail($task, $e);
-
-            Log::error('Task marked as permanently failed', [
-                'task' => get_class($task),
-                'attempts' => $task->getAttempts(),
-            ]);
         }
     }
 
