@@ -116,9 +116,14 @@ class DatabaseTaskState implements TaskState
     {
         $qb = $this->newScopedBuilder();
 
-        return $qb->table($this->table)
-                ->whereEqual('id', $taskId)
-                ->first();
+        $collection = $qb->table($this->table)
+            ->whereEqual('id', $taskId)
+            ->get();
+
+        /** @var array<string, mixed>|null $first */
+        $first = $collection->first();
+
+        return $first ?? null;
     }
 
     public function cleanupExpiredReservations(): void
