@@ -68,6 +68,7 @@ class Worker
 
                 if (empty($tasks)) {
                     $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+
                     $this->sleep($options->sleep);
 
                     continue;
