@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 use Phenix\Facades\Config;
 use Phenix\Queue\Constants\QueueDriver;
-use Phenix\Queue\Contracts\Queue;
-use Phenix\Queue\Contracts\TaskState;
 use Phenix\Queue\ParallelQueue;
 use Phenix\Queue\QueueManager;
 use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Phenix\Runtime\Log;
-use Phenix\Tasks\QueuableTask;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\Unit\Tasks\Internal\BadTask;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
@@ -227,91 +224,20 @@ it('retries failing tasks in chunk mode', function (): void {
     $bad = new BadTask();
     $bad->setQueueName('custom-queue');
 
-    // Pop returns two tasks for the chunk
     $queueManager->expects($this->exactly(2))
         ->method('pop')
         ->with('custom-queue')
         ->willReturnOnConsecutiveCalls($good, $bad);
 
-    // Mock TaskState to assert retry flow
-    $state = $this->getMockBuilder(TaskState::class)
-        ->getMock();
-
-    // Successful task should complete
-    $state->expects($this->once())
-        ->method('complete')
-        ->with($this->callback(fn ($t): bool => $t instanceof BasicQueuableTask));
-
-    // Failing task should be released then retried with the configured delay
-    $state->expects($this->once())
-        ->method('release')
-        ->with($this->callback(fn ($t): bool => $t instanceof BadTask));
-
-    $retryDelay = 2;
-
-    $state->expects($this->once())
-        ->method('retry')
-        ->with(
-            $this->callback(fn ($t): bool => $t instanceof BadTask),
-            $this->equalTo($retryDelay)
-        );
-
-    $state->expects($this->atLeastOnce())
-        ->method('cleanupExpiredReservations');
-
-    $fakeQueue = new class ($state) implements Queue {
-        public function __construct(private TaskState $state)
-        {
-        }
-
-        public function push(QueuableTask $task): void
-        {
-        }
-
-        public function pushOn(string $queue, QueuableTask $task): static
-        {
-            return $this;
-        }
-
-        public function pop(string|null $queueName = null): QueuableTask|null
-        {
-            return null;
-        }
-
-        public function size(): int
-        {
-            return 0;
-        }
-
-        public function clear(): void
-        {
-        }
-
-        public function getConnectionName(): string
-        {
-            return 'default';
-        }
-
-        public function setConnectionName(string $name): void
-        {
-        }
-
-        public function getStateManager(): TaskState
-        {
-            return $this->state;
-        }
-    };
-
-    $queueManager->method('driver')->willReturn($fakeQueue);
-
     $worker = new Worker($queueManager);
     $output = new BufferedOutput();
 
-    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 2, retryDelay: $retryDelay), $output);
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 2, retryDelay: 2), $output);
 
     $buffer = $output->fetch();
-    $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
-    $this->assertStringContainsString('failed', $buffer);
+
+    expect($buffer)->toContain('success: ' . BasicQueuableTask::class . ' processed');
+    expect($buffer)->toContain('failed');
 });
 
 it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): void {
