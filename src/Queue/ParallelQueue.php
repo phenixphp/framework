@@ -111,10 +111,11 @@ class ParallelQueue extends Queue
 
             $this->runningTasks = array_merge($this->runningTasks, $executions);
 
-            // Process results asynchronously
-            async(function () use ($reservedTasks, $executions): void {
+            $future = async(function () use ($reservedTasks, $executions): void {
                 $this->processTaskResults($reservedTasks, $executions);
             });
+
+            $future->await();
         });
 
         $this->processingInterval->disable();
