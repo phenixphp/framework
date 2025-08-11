@@ -8,8 +8,6 @@ use Exception;
 use Phenix\Facades\Log;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
-use Phenix\Tasks\Result;
-use Phenix\Tasks\WorkerPool;
 use Throwable;
 
 class Worker
