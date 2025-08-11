@@ -10,7 +10,9 @@ use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Phenix\Runtime\Log;
+use Phenix\Tasks\QueuableTask;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 use Tests\Unit\Tasks\Internal\BadTask;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
@@ -112,9 +114,7 @@ it('pauses processing', function (): void {
         {
             parent::sleep($seconds);
 
-            if ($this->paused) {
-                $this->paused = false;
-            }
+            $this->paused = false;
         }
     };
 
@@ -134,11 +134,6 @@ it('sleeps when no task, then processes when a task becomes available', function
     $worker = new class ($queueManager) extends Worker {
         public array $sleepCalls = [];
 
-        public function __construct(QueueManager $queueManager)
-        {
-            parent::__construct($queueManager);
-        }
-
         protected function supportsAsyncSignals(): bool
         {
             return false;
@@ -148,9 +143,16 @@ it('sleeps when no task, then processes when a task becomes available', function
         {
             $this->sleepCalls[] = $seconds;
         }
+
+        protected function processTask(QueuableTask $task, WorkerOptions $options, OutputInterface|null $output = null): void
+        {
+            parent::processTask($task, $options, $output);
+
+            $this->shouldQuit = true; // Stop after processing the task
+        }
     };
 
-    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, sleep: 1));
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: false, sleep: 1));
 
     expect($worker->sleepCalls)->toHaveCount(1);
     expect($worker->sleepCalls[0])->toBe(1);
