@@ -61,11 +61,11 @@ class Worker
                 continue;
             }
 
-            $processed = $options->processInChunk
-                ? $this->processChunks($connectionName, $queueName, $options, $output)
-                : $this->processSingle($connectionName, $queueName, $options, $output);
+            $method = $options->processInChunk ? 'processChunks' : 'processSingle';
 
-            if ($options->once && $processed) {
+            $this->{$method}($connectionName, $queueName, $options, $output);
+
+            if ($options->once) {
                 break;
             }
         }
@@ -84,36 +84,34 @@ class Worker
         return true;
     }
 
-    protected function processChunks(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): bool
+    protected function processChunks(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
 
         if (empty($tasks)) {
             $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+
             $this->sleep($options->sleep);
 
-            return false;
+            return;
         }
 
         $this->processTaskChunk($tasks, $options, $output);
-
-        return true;
     }
 
-    protected function processSingle(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): bool
+    protected function processSingle(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         $task = $this->getNextTask($connectionName, $queueName);
 
         if ($task === null) {
             $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+
             $this->sleep($options->sleep);
 
-            return false;
+            return;
         }
 
         $this->processTask($task, $options, $output);
-
-        return true;
     }
 
     public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
