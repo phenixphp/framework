@@ -53,6 +53,7 @@ class Worker
         while (true) {
             if ($this->shouldQuit) {
                 $this->logWorkerStopping();
+
                 break;
             }
 
