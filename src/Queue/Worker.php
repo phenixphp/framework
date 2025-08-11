@@ -53,52 +53,66 @@ class Worker
         while (true) {
             if ($this->shouldQuit) {
                 $this->logWorkerStopping();
-
                 break;
             }
 
-            if ($this->paused) {
-                $this->sleep($options->sleep);
-
+            if ($this->handlePause($options)) {
                 continue;
             }
 
-            if ($options->processInChunk) {
-                $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
+            $processed = $options->processInChunk
+                ? $this->processChunks($connectionName, $queueName, $options, $output)
+                : $this->processSingle($connectionName, $queueName, $options, $output);
 
-                if (empty($tasks)) {
-                    $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
-
-                    $this->sleep($options->sleep);
-
-                    continue;
-                }
-
-                $this->processTaskChunk($tasks, $options, $output);
-
-                if ($options->once) {
-                    break;
-                }
-            } else {
-                $task = $this->getNextTask($connectionName, $queueName);
-
-                if ($task === null) {
-                    $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
-
-                    $this->sleep($options->sleep);
-
-                    continue;
-                }
-
-                $this->processTask($task, $options, $output);
-
-                if ($options->once) {
-                    break;
-                }
+            if ($options->once && $processed) {
+                break;
             }
         }
 
         $this->logWorkerStats();
+    }
+
+    protected function handlePause(WorkerOptions $options): bool
+    {
+        if (! $this->paused) {
+            return false;
+        }
+
+        $this->sleep($options->sleep);
+
+        return true;
+    }
+
+    protected function processChunks(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): bool
+    {
+        $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
+
+        if (empty($tasks)) {
+            $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+            $this->sleep($options->sleep);
+
+            return false;
+        }
+
+        $this->processTaskChunk($tasks, $options, $output);
+
+        return true;
+    }
+
+    protected function processSingle(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): bool
+    {
+        $task = $this->getNextTask($connectionName, $queueName);
+
+        if ($task === null) {
+            $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
+            $this->sleep($options->sleep);
+
+            return false;
+        }
+
+        $this->processTask($task, $options, $output);
+
+        return true;
     }
 
     public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
