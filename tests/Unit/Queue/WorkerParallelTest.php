@@ -313,3 +313,36 @@ it('retries failing tasks in chunk mode', function (): void {
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
     $this->assertStringContainsString('failed', $buffer);
 });
+
+it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): void {
+    $queueManager = $this->getMockBuilder(QueueManager::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $queueManager->expects($this->atLeastOnce())
+        ->method('pop')
+        ->with('custom-queue')
+        ->willReturn(null);
+
+    $worker = new class ($queueManager) extends Worker {
+        public array $sleepCalls = [];
+
+        protected function supportsAsyncSignals(): bool
+        {
+            return false;
+        }
+
+        public function sleep(int $seconds): void
+        {
+            $this->sleepCalls[] = $seconds;
+            $this->shouldQuit = true;
+        }
+    };
+
+    $output = new BufferedOutput();
+
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 3, sleep: 1), $output);
+
+    expect($worker->sleepCalls)->toHaveCount(1);
+    expect($worker->sleepCalls[0])->toBe(1);
+});
