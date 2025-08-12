@@ -8,6 +8,7 @@ use Amp\Future;
 use Amp\Interval;
 use Amp\Parallel\Worker;
 use Amp\Parallel\Worker\Execution;
+use Amp\TimeoutCancellation;
 use Phenix\Facades\Config;
 use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Tasks\Exceptions\FailedTaskException;
@@ -110,7 +111,11 @@ class ParallelQueue extends Queue
                 return;
             }
 
-            $executions = array_map(fn (QueuableTask $task): Execution => Worker\submit($task), $reservedTasks);
+            $executions = array_map(function (QueuableTask $task): Execution {
+                $timeout = new TimeoutCancellation($task->getTimeout());
+
+                return Worker\submit($task, $timeout);
+            }, $reservedTasks);
 
             $this->runningTasks = array_merge($this->runningTasks, $executions);
 
