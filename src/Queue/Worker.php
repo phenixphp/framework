@@ -39,6 +39,23 @@ class Worker
         sleep($seconds);
     }
 
+    public function runOnce(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
+    {
+        if ($options->chunkProcessing) {
+            $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);
+
+            if (! empty($tasks)) {
+                $this->processTaskChunk($tasks, $options, $output);
+            }
+        } else {
+            $task = $this->getNextTask($connectionName, $queueName);
+
+            if ($task !== null) {
+                $this->processTask($task, $options, $output);
+            }
+        }
+    }
+
     public function daemon(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         Log::info('Worker daemon started', [
@@ -87,6 +104,8 @@ class Worker
 
     protected function processChunks(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
+        $this->queueManager->setConnectionName($connectionName);
+
         $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);
 
         if (empty($tasks)) {
@@ -113,23 +132,6 @@ class Worker
         }
 
         $this->processTask($task, $options, $output);
-    }
-
-    public function runOnce(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
-    {
-        if ($options->chunkProcessing) {
-            $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);
-
-            if (! empty($tasks)) {
-                $this->processTaskChunk($tasks, $options, $output);
-            }
-        } else {
-            $task = $this->getNextTask($connectionName, $queueName);
-
-            if ($task !== null) {
-                $this->processTask($task, $options, $output);
-            }
-        }
     }
 
     protected function processTask(QueuableTask $task, WorkerOptions $options, OutputInterface|null $output = null): void
