@@ -122,6 +122,24 @@ class ParallelQueue extends Queue
         ];
     }
 
+    public function await(): self
+    {
+        foreach ($this->runningTasks as $execution) {
+            $execution->await();
+        }
+
+        return $this;
+    }
+
+    public function clear(): void
+    {
+        parent::clear();
+
+        $this->await();
+
+        $this->runningTasks = [];
+    }
+
     private function initializeProcessor(): void
     {
         $this->processingStarted = true;

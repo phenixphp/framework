@@ -19,6 +19,16 @@ beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::PARALLEL->value);
 });
 
+afterEach(function (): void {
+    $driver = Queue::driver();
+
+    $driver->clear();
+
+    if ($driver instanceof ParallelQueue) {
+        $driver->stop();
+    }
+});
+
 it('pushes a task onto the parallel queue', function (): void {
     Queue::clear();
 
@@ -112,7 +122,7 @@ it('can manually start and stop processing', function (): void {
     $this->assertFalse($parallelQueue->isProcessing());
 });
 
-it('processes tasks using Interval without blocking', function (): void {
+it('processes tasks using interval without blocking', function (): void {
     $parallelQueue = new ParallelQueue('test-interval');
 
     // Add multiple tasks
@@ -233,6 +243,9 @@ it('skips processing new tasks when previous tasks are still running', function 
 
     // Processor should still be running
     expect($parallelQueue->isProcessing())->ToBeTrue();
+
+    $parallelQueue->clear();
+    $parallelQueue->stop();
 });
 
 it('automatically disables processing when no tasks are available to reserve', function (): void {
@@ -253,6 +266,8 @@ it('automatically disables processing when no tasks are available to reserve', f
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size());
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
+
+    $parallelQueue->clear();
 });
 
 it('automatically disables processing after all tasks complete', function (): void {
@@ -277,6 +292,8 @@ it('automatically disables processing after all tasks complete', function (): vo
     $this->assertSame(0, $status['pending_tasks']);
     $this->assertSame(0, $status['running_tasks']);
     $this->assertSame(0, $status['total_tasks']);
+
+    $parallelQueue->clear();
 });
 
 it('handles chunk processing when no available tasks exist', function (): void {
@@ -297,6 +314,9 @@ it('handles chunk processing when no available tasks exist', function (): void {
     $parallelQueue->push(new BasicQueuableTask());
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertGreaterThan(0, $parallelQueue->size());
+
+    $parallelQueue->clear();
+    $parallelQueue->stop();
 });
 
 it('re-enqueues tasks that cannot be reserved during chunk processing', function (): void {
@@ -329,6 +349,8 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
 
     // All tasks should eventually be processed or re-enqueued appropriately
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
+
+    $parallelQueue->clear();
 });
 
 it('handles concurrent task reservation attempts correctly', function (): void {
@@ -361,6 +383,8 @@ it('handles concurrent task reservation attempts correctly', function (): void {
     // Eventually all tasks should be processed
     $this->assertSame(0, $parallelQueue->size());
     $this->assertFalse($parallelQueue->isProcessing());
+
+    $parallelQueue->clear();
 });
 
 it('handles task failures gracefully', function (): void {
@@ -433,6 +457,8 @@ it('returns null when next available task is not available', function (): void {
     // Since the task isn't available yet, the processor should disable itself and re-enqueue the task
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
+
+    $parallelQueue->clear();
 });
 
 it('re-enqueues the task when reservation fails inside getTaskChunk', function (): void {
@@ -456,4 +482,20 @@ it('re-enqueues the task when reservation fails inside getTaskChunk', function (
     // Since reservation failed, it should have been re-enqueued and processing disabled
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
+
+    $parallelQueue->clear();
+});
+
+it('process task in single mode', function (): void {
+    Config::get('queue.drivers.parallel.chunk_processing', false);
+
+    $parallelQueue = new ParallelQueue('test-single-mode');
+
+    $parallelQueue->push(new BasicQueuableTask());
+    $parallelQueue->start();
+
+    delay(5.0);
+
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(0, $parallelQueue->size());
 });
