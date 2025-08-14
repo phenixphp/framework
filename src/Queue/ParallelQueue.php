@@ -29,6 +29,8 @@ class ParallelQueue extends Queue
 
     private int $chunkSize;
 
+    private bool $chunkProcessing;
+
     private bool $processingStarted = false;
 
     private Interval|null $processingInterval = null;
@@ -47,6 +49,7 @@ class ParallelQueue extends Queue
         $this->maxConcurrency = Config::get('queue.drivers.parallel.max_concurrent', 10);
         $this->chunkSize = Config::get('queue.drivers.parallel.chunk_size', 10);
         $this->interval = (float) Config::get('queue.drivers.parallel.interval', 2.0);
+        $this->chunkProcessing = (bool) Config::get('queue.drivers.parallel.chunk_processing', true);
     }
 
     public function push(QueuableTask $task): void
@@ -54,6 +57,33 @@ class ParallelQueue extends Queue
         parent::push($task);
 
         $this->enableProcessing();
+    }
+
+    /**
+     * @return array<int, QueuableTask>
+     */
+    public function popChunk(int $limit, string|null $queueName = null): array
+    {
+        $reservedTasks = [];
+
+        for ($i = 0; $i < $limit; $i++) {
+            $task = $this->getNextTask();
+
+            if ($task === null) {
+                break;
+            }
+
+            if ($this->stateManager->reserve($task)) {
+                $reservedTasks[] = $task;
+
+                continue;
+            }
+
+            // If reservation failed re-enqueue the task
+            parent::push($task);
+        }
+
+        return $reservedTasks;
     }
 
     public function start(): void
@@ -103,7 +133,9 @@ class ParallelQueue extends Queue
                 return; // Skip processing if tasks are still running
             }
 
-            $reservedTasks = $this->getTaskChunk();
+            $reservedTasks = $this->chunkProcessing
+                ? $this->popChunk($this->chunkSize)
+                : $this->processSingle();
 
             if (empty($reservedTasks)) {
                 $this->disableProcessing();
@@ -150,34 +182,24 @@ class ParallelQueue extends Queue
         }
     }
 
-    private function getTaskChunk(): array
+    private function processSingle(): array
     {
-        $reservedTasks = [];
-        $attempted = 0;
-        $maxAttempts = parent::size(); // Avoid infinite loop
+        $task = $this->getNextTask();
 
-        while (count($reservedTasks) < $this->chunkSize && $attempted < $maxAttempts) {
-            $task = $this->getNextAvailableTask();
-
-            if ($task === null) {
-                break;
-            }
-
-            // Reserve task immediately when found
-            if ($this->stateManager->reserve($task)) {
-                $reservedTasks[] = $task;
-            } else {
-                // If can't reserve, re-enqueue the task
-                parent::push($task);
-            }
-
-            $attempted++;
+        if ($task === null) {
+            return [];
         }
 
-        return $reservedTasks;
+        if ($this->stateManager->reserve($task)) {
+            return [$task];
+        }
+
+        parent::push($task);
+
+        return [];
     }
 
-    private function getNextAvailableTask(): QueuableTask|null
+    private function getNextTask(): QueuableTask|null
     {
         if (parent::size() > 0 && $task = parent::pop()) {
             $taskId = $task->getTaskId();

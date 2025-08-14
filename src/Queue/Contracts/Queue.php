@@ -14,6 +14,8 @@ interface Queue
 
     public function pop(string|null $queueName = null): QueuableTask|null;
 
+    public function popChunk(int $limit, string|null $queueName = null): array;
+
     public function size(): int;
 
     public function clear(): void;

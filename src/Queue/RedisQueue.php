@@ -64,6 +64,30 @@ class RedisQueue extends Queue
         return null;
     }
 
+    /**
+     * @return array<int, QueuableTask>
+     */
+    public function popChunk(int $limit, string|null $queueName = null): array
+    {
+        if ($limit <= 0) {
+            return [];
+        }
+
+        $tasks = [];
+
+        for ($i = 0; $i < $limit; $i++) {
+            $task = $this->pop($queueName);
+
+            if ($task === null) {
+                break;
+            }
+
+            $tasks[] = $task;
+        }
+
+        return $tasks;
+    }
+
     public function clear(): void
     {
         $this->redis->execute('DEL', $this->getQueueKey());

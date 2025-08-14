@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use Phenix\App;
-use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Tasks\QueuableTask;
 use Phenix\Queue\Contracts\Queue;
 use Phenix\Redis\Contracts\Client;
-use Phenix\Tasks\QueuableTask;
+use Phenix\Queue\Constants\QueueDriver;
 
 class QueueManager
 {
@@ -39,6 +39,14 @@ class QueueManager
     public function size(): int
     {
         return $this->driver()->size();
+    }
+
+    /**
+     * @return array<int, QueuableTask>
+     */
+    public function popChunk(int $limit, string|null $queueName = null): array
+    {
+        return $this->driver()->popChunk($limit, $queueName);
     }
 
     public function clear(): void

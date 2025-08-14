@@ -161,27 +161,25 @@ it('sleeps when no task, then processes when a task becomes available', function
 it('processes a chunk of tasks in parallel when enabled', function (): void {
     $queueManager = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
+        ->onlyMethods(['popChunk','driver'])
         ->getMock();
 
     $task1 = new BasicQueuableTask();
     $task1->setQueueName('custom-queue');
-
     $task2 = new BasicQueuableTask();
     $task2->setQueueName('custom-queue');
 
-    $queueManager->expects($this->exactly(2))
-        ->method('pop')
-        ->with('custom-queue')
-        ->willReturnOnConsecutiveCalls($task1, $task2);
+    $queueManager->expects($this->once())
+        ->method('popChunk')
+        ->with(2, 'custom-queue')
+        ->willReturn([$task1, $task2]);
 
     $parallelQueue = new ParallelQueue(queueName: 'custom-queue', stateManager: new MemoryTaskState());
     $queueManager->method('driver')->willReturn($parallelQueue);
 
     $worker = new Worker($queueManager);
-
     $output = new BufferedOutput();
-
-    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 2), $output);
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, chunkProcessing: true, chunkSize: 2), $output);
 
     $buffer = $output->fetch();
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
@@ -190,26 +188,25 @@ it('processes a chunk of tasks in parallel when enabled', function (): void {
 it('processes a chunk via runNextTask when chunk mode enabled', function (): void {
     $queueManager = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
+        ->onlyMethods(['popChunk','driver'])
         ->getMock();
 
     $task1 = new BasicQueuableTask();
     $task1->setQueueName('custom-queue');
-
     $task2 = new BasicQueuableTask();
     $task2->setQueueName('custom-queue');
 
-    $queueManager->expects($this->exactly(2))
-        ->method('pop')
-        ->with('custom-queue')
-        ->willReturnOnConsecutiveCalls($task1, $task2);
+    $queueManager->expects($this->once())
+        ->method('popChunk')
+        ->with(2, 'custom-queue')
+        ->willReturn([$task1, $task2]);
 
     $parallelQueue = new ParallelQueue(queueName: 'custom-queue', stateManager: new MemoryTaskState());
     $queueManager->method('driver')->willReturn($parallelQueue);
 
     $worker = new Worker($queueManager);
     $output = new BufferedOutput();
-
-    $worker->runNextTask('default', 'custom-queue', new WorkerOptions(processInChunk: true, chunkSize: 2), $output);
+    $worker->runNextTask('default', 'custom-queue', new WorkerOptions(chunkProcessing: true, chunkSize: 2), $output);
 
     $buffer = $output->fetch();
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
@@ -218,26 +215,27 @@ it('processes a chunk via runNextTask when chunk mode enabled', function (): voi
 it('retries failing tasks in chunk mode', function (): void {
     $queueManager = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
+        ->onlyMethods(['popChunk','driver'])
         ->getMock();
 
     $good = new BasicQueuableTask();
     $good->setQueueName('custom-queue');
-
     $bad = new BadTask();
     $bad->setQueueName('custom-queue');
 
-    $queueManager->expects($this->exactly(2))
-        ->method('pop')
-        ->with('custom-queue')
-        ->willReturnOnConsecutiveCalls($good, $bad);
+    $queueManager->expects($this->once())
+        ->method('popChunk')
+        ->with(2, 'custom-queue')
+        ->willReturn([$good, $bad]);
+
+    $parallelQueue = new ParallelQueue(queueName: 'custom-queue', stateManager: new MemoryTaskState());
+    $queueManager->method('driver')->willReturn($parallelQueue);
 
     $worker = new Worker($queueManager);
     $output = new BufferedOutput();
-
-    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 2, retryDelay: 2), $output);
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, chunkProcessing: true, chunkSize: 2, retryDelay: 2), $output);
 
     $buffer = $output->fetch();
-
     expect($buffer)->toContain('success: ' . BasicQueuableTask::class . ' processed');
     expect($buffer)->toContain('failed');
 });
@@ -247,18 +245,15 @@ it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): 
         ->disableOriginalConstructor()
         ->getMock();
 
-    $queueManager->expects($this->atLeastOnce())
-        ->method('pop')
-        ->with('custom-queue')
-        ->willReturn(null);
+    $queueManager->expects($this->once())
+        ->method('popChunk')
+        ->with(3, 'custom-queue')
+        ->willReturn([]);
 
     $worker = new class ($queueManager) extends Worker {
         public array $sleepCalls = [];
 
-        protected function supportsAsyncSignals(): bool
-        {
-            return false;
-        }
+    protected function supportsAsyncSignals(): bool { return false; }
 
         public function sleep(int $seconds): void
         {
@@ -269,7 +264,7 @@ it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): 
 
     $output = new BufferedOutput();
 
-    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, processInChunk: true, chunkSize: 3, sleep: 1), $output);
+    $worker->daemon('default', 'custom-queue', new WorkerOptions(once: true, chunkProcessing: true, chunkSize: 3, sleep: 1), $output);
 
     expect($worker->sleepCalls)->toHaveCount(1);
     expect($worker->sleepCalls[0])->toBe(1);

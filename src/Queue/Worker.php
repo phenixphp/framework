@@ -62,7 +62,7 @@ class Worker
                 continue;
             }
 
-            $method = $options->processInChunk ? 'processChunks' : 'processSingle';
+            $method = $options->chunkProcessing ? 'processChunks' : 'processSingle';
 
             $this->{$method}($connectionName, $queueName, $options, $output);
 
@@ -87,7 +87,7 @@ class Worker
 
     protected function processChunks(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
-        $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
+        $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);
 
         if (empty($tasks)) {
             $this->queueManager->driver()->getStateManager()->cleanupExpiredReservations();
@@ -117,8 +117,8 @@ class Worker
 
     public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
-        if ($options->processInChunk) {
-            $tasks = $this->getTaskChunk($connectionName, $queueName, $options->chunkSize);
+        if ($options->chunkProcessing) {
+            $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);
 
             if (! empty($tasks)) {
                 $this->processTaskChunk($tasks, $options, $output);
@@ -287,28 +287,5 @@ class Worker
         }
 
         return null;
-    }
-
-    /**
-     * @return array<int, QueuableTask>
-     */
-    protected function getTaskChunk(string $connectionName, string $queueName, int $chunkSize): array
-    {
-        $tasks = [];
-        $attempts = 0;
-        $maxAttempts = max(1, $chunkSize * 2); // Avoid tight infinite loops
-
-        while (count($tasks) < $chunkSize && $attempts < $maxAttempts) {
-            $task = $this->getNextTask($connectionName, $queueName);
-
-            if ($task === null) {
-                break;
-            }
-
-            $tasks[] = $task;
-            $attempts++;
-        }
-
-        return $tasks;
     }
 }

@@ -13,7 +13,7 @@ class WorkerOptions
         public readonly int $retryDelay = 5,
         public readonly int $maxRetryDelay = 300,
         public readonly int $chunkSize = 10,
-        public readonly bool $processInChunk = false
+        public readonly bool $chunkProcessing = false
     ) {
     }
 }
