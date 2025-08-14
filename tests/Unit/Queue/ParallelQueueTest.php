@@ -487,7 +487,7 @@ it('re-enqueues the task when reservation fails inside getTaskChunk', function (
 });
 
 it('process task in single mode', function (): void {
-    Config::get('queue.drivers.parallel.chunk_processing', false);
+    Config::set('queue.drivers.parallel.chunk_processing', false);
 
     $parallelQueue = new ParallelQueue('test-single-mode');
 
