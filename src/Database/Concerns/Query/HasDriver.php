@@ -11,7 +11,7 @@ use Phenix\Database\Constants\Driver;
 
 trait HasDriver
 {
-    protected function resolveDriverFromConnectionPool(SqlCommonConnectionPool $pool): void
+    protected function resolveDriverFromConnection(SqlCommonConnectionPool $pool): void
     {
         if ($pool instanceof MysqlConnectionPool) {
             $this->setDriver(Driver::MYSQL);

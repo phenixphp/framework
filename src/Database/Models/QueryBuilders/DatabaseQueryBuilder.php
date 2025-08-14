@@ -68,7 +68,7 @@ class DatabaseQueryBuilder extends QueryBase
         $this->relationships = [];
         $this->connection = App::make(Connection::default());
 
-        $this->resolveDriverFromConnectionPool($this->connection);
+        $this->resolveDriverFromConnection($this->connection);
     }
 
     public function connection(SqlCommonConnectionPool|string $connection): self
@@ -79,7 +79,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         $this->connection = $connection;
 
-        $this->resolveDriverFromConnectionPool($this->connection);
+        $this->resolveDriverFromConnection($this->connection);
 
         return $this;
     }
