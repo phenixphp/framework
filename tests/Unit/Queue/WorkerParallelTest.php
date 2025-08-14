@@ -32,7 +32,7 @@ it('processes a successful task', function (): void {
 
     $worker = new Worker($queueManager);
 
-    $worker->runNextTask('default', 'default', new WorkerOptions());
+    $worker->runOnce('default', 'default', new WorkerOptions());
 });
 
 it('processes a successful task in long running process', function (): void {
@@ -185,7 +185,7 @@ it('processes a chunk of tasks in parallel when enabled', function (): void {
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
 });
 
-it('processes a chunk via runNextTask when chunk mode enabled', function (): void {
+it('processes a chunk via runOnce when chunk mode enabled', function (): void {
     $queueManager = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
         ->onlyMethods(['popChunk','driver'])
@@ -206,7 +206,7 @@ it('processes a chunk via runNextTask when chunk mode enabled', function (): voi
 
     $worker = new Worker($queueManager);
     $output = new BufferedOutput();
-    $worker->runNextTask('default', 'custom-queue', new WorkerOptions(chunkProcessing: true, chunkSize: 2), $output);
+    $worker->runOnce('default', 'custom-queue', new WorkerOptions(chunkProcessing: true, chunkSize: 2), $output);
 
     $buffer = $output->fetch();
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);

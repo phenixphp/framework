@@ -33,7 +33,7 @@ it('run queue work command in once mode', function (): void {
         ->getMock();
 
     $worker->expects($this->once())
-        ->method('runNextTask')
+        ->method('runOnce')
         ->with(
             $this->equalTo('database'),
             $this->equalTo('default'),

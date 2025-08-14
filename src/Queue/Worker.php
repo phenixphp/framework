@@ -115,7 +115,7 @@ class Worker
         $this->processTask($task, $options, $output);
     }
 
-    public function runNextTask(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
+    public function runOnce(string $connectionName, string $queueName, WorkerOptions $options, OutputInterface|null $output = null): void
     {
         if ($options->chunkProcessing) {
             $tasks = $this->queueManager->popChunk($options->chunkSize, $queueName);

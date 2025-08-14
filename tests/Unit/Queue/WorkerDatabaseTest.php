@@ -66,7 +66,7 @@ it('processes a successful task', function (): void {
 
     $worker = new Worker($queueManager);
 
-    $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1));
+    $worker->runOnce('default', 'default', new WorkerOptions(once: true, sleep: 1));
 });
 
 it('processes a failed task and retries', function (): void {
@@ -117,7 +117,7 @@ it('processes a failed task and retries', function (): void {
 
     $worker = new Worker($queueManager);
 
-    $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1));
+    $worker->runOnce('default', 'default', new WorkerOptions(once: true, sleep: 1));
 });
 
 it('processes a failed task and last retry', function (): void {
@@ -168,5 +168,5 @@ it('processes a failed task and last retry', function (): void {
 
     $worker = new Worker($queueManager);
 
-    $worker->runNextTask('default', 'default', new WorkerOptions(once: true, sleep: 1, maxTries: 1));
+    $worker->runOnce('default', 'default', new WorkerOptions(once: true, sleep: 1, maxTries: 1));
 });

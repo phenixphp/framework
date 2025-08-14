@@ -36,6 +36,7 @@ class WorkCommand extends Command
             ->addArgument('connection', InputArgument::OPTIONAL, 'The name of the connection to use', (string) Config::get('queue.default'))
             ->addOption('queue', null, InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
             ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
+            ->addOption('chunks', null, InputOption::VALUE_NONE, 'Process the queue in chunks')
             ->addOption('sleep', 's', InputOption::VALUE_REQUIRED, 'The number of seconds to sleep when no tasks are available', 3);
     }
 
@@ -46,13 +47,14 @@ class WorkCommand extends Command
 
         $connection = $input->getArgument('connection') ?? Config::get('queue.default');
         $queue = $input->getOption('queue');
-        $method = $input->getOption('once') ? 'runNextTask' : 'daemon';
+        $method = $input->getOption('once') ? 'runOnce' : 'daemon';
 
         $worker->{$method}(
             $connection,
             $queue,
             new WorkerOptions(
-                sleep: (int) $input->getOption('sleep')
+                sleep: (int) $input->getOption('sleep'),
+                chunkProcessing: $input->getOption('chunks')
             )
         );
 
