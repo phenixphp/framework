@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use Phenix\App;
-use Phenix\Tasks\QueuableTask;
+use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
 use Phenix\Redis\Contracts\Client;
-use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Tasks\QueuableTask;
 
 class QueueManager
 {

@@ -253,7 +253,10 @@ it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): 
     $worker = new class ($queueManager) extends Worker {
         public array $sleepCalls = [];
 
-    protected function supportsAsyncSignals(): bool { return false; }
+        protected function supportsAsyncSignals(): bool
+        {
+            return false;
+        }
 
         public function sleep(int $seconds): void
         {
