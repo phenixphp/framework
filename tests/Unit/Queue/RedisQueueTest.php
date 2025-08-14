@@ -353,8 +353,14 @@ it('returns a chunk of tasks up to the limit', function (): void {
             [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
         )
         ->willReturnOnConsecutiveCalls(
-            $payload1, 1, 1, 1,
-            $payload2, 1, 1, 1,
+            $payload1,
+            1,
+            1,
+            1,
+            $payload2,
+            1,
+            1,
+            1,
             null,
         );
 
