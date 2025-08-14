@@ -15,7 +15,7 @@ use Phenix\Util\Arr;
 
 use function is_array;
 
-abstract class Clause extends GrammarDriver implements Builder
+abstract class Clause extends Grammar implements Builder
 {
     use HasWhereClause;
     use PrepareColumns;

@@ -6,7 +6,7 @@ namespace Phenix\Database;
 
 use Phenix\Database\Constants\Driver;
 
-abstract class GrammarDriver
+abstract class Grammar
 {
     protected Driver $driver;
 
