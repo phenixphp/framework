@@ -507,3 +507,24 @@ it('process task in single mode', function (): void {
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size());
 });
+
+it('re-enqueues the task when reservation fails in single processing mode', function (): void {
+    Config::set('queue.drivers.parallel.chunk_processing', false);
+
+    $stateManager = new MemoryTaskState();
+    $parallelQueue = new ParallelQueue('test-reserve-fails-single', $stateManager);
+
+    $task = new BasicQueuableTask();
+    $parallelQueue->push($task);
+
+    $stateManager->reserve($task, 60);
+
+    $parallelQueue->start();
+
+    delay(3.0);
+
+    $this->assertFalse($parallelQueue->isProcessing());
+    $this->assertSame(1, $parallelQueue->size());
+
+    $parallelQueue->clear();
+});
