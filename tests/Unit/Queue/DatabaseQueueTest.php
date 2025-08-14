@@ -392,3 +392,54 @@ it('returns task state array from getTaskState when found', function (): void {
     $this->assertSame('default', $data['queue_name']);
     $this->assertArrayHasKey('payload', $data);
 });
+
+it('returns a chunk of tasks up to the limit', function (): void {
+    $task1 = new BasicQueuableTask();
+    $task2 = new BasicQueuableTask();
+
+    $queue = $this->getMockBuilder(DatabaseQueue::class)
+        ->setConstructorArgs(['default', 'default', 'tasks', new DatabaseTaskState('default', 'tasks')])
+        ->onlyMethods(['pop'])
+        ->getMock();
+
+    $queue->expects($this->exactly(3))
+        ->method('pop')
+        ->with(null)
+        ->willReturnOnConsecutiveCalls($task1, $task2, null);
+
+    $chunk = $queue->popChunk(5);
+
+    expect($chunk)->toBeArray();
+    expect($chunk)->toHaveCount(2);
+    expect($chunk[0])->toBe($task1);
+    expect($chunk[1])->toBe($task2);
+});
+
+it('returns empty chunk when limit is zero (no pop calls)', function (): void {
+    $queue = $this->getMockBuilder(DatabaseQueue::class)
+        ->setConstructorArgs(['default', 'default', 'tasks', new DatabaseTaskState('default', 'tasks')])
+        ->onlyMethods(['pop'])
+        ->getMock();
+
+    $queue->expects($this->never())->method('pop');
+
+    $chunk = $queue->popChunk(0);
+
+    expect($chunk)->toBeArray()->toBeEmpty();
+});
+
+it('returns empty chunk when first pop returns null', function (): void {
+    $queue = $this->getMockBuilder(DatabaseQueue::class)
+        ->setConstructorArgs(['default', 'default', 'tasks', new DatabaseTaskState('default', 'tasks')])
+        ->onlyMethods(['pop'])
+        ->getMock();
+
+    $queue->expects($this->once())
+        ->method('pop')
+        ->with(null)
+        ->willReturn(null);
+
+    $chunk = $queue->popChunk(3);
+
+    expect($chunk)->toBeArray()->toBeEmpty();
+});
