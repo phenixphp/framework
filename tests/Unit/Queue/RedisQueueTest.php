@@ -315,3 +315,90 @@ it('returns task state array from getTaskState when data exists', function (): v
     $this->assertSame(1700000100, $data['available_at']);
     $this->assertIsString($data['payload']);
 });
+
+it('returns a chunk of tasks up to the limit', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $payload1 = serialize(new BasicQueuableTask());
+    $payload2 = serialize(new BasicQueuableTask());
+
+    $clientMock->expects($this->exactly(9))
+        ->method('execute')
+        ->withConsecutive(
+            // First task reservation success
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('string'),
+            ],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            // Second task reservation success
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [
+                $this->equalTo('HSET'),
+                $this->stringStartsWith('task:data:'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('int'),
+                $this->isType('string'), $this->isType('string'),
+            ],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            // Third iteration returns null (queue empty)
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+        )
+        ->willReturnOnConsecutiveCalls(
+            $payload1, 1, 1, 1,
+            $payload2, 1, 1, 1,
+            null,
+        );
+
+    $queue = new RedisQueue($clientMock);
+    $chunk = $queue->popChunk(3);
+
+    $this->assertCount(2, $chunk);
+    foreach ($chunk as $task) {
+        $this->assertInstanceOf(BasicQueuableTask::class, $task);
+    }
+});
+
+it('returns empty chunk when limit is zero', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock->expects($this->never())->method('execute');
+
+    $queue = new RedisQueue($clientMock);
+    $chunk = $queue->popChunk(0);
+
+    $this->assertIsArray($chunk);
+    $this->assertCount(0, $chunk);
+});
+
+it('returns empty chunk when first reservation fails', function (): void {
+    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+
+    $payload1 = serialize(new BasicQueuableTask()); // Will fail reservation
+
+    $clientMock->expects($this->exactly(3))
+        ->method('execute')
+        ->withConsecutive(
+            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload1)],
+        )
+        ->willReturnOnConsecutiveCalls(
+            $payload1, // LPOP
+            0,        // SETNX fails
+            1,        // RPUSH requeues payload
+        );
+
+    $queue = new RedisQueue($clientMock);
+    $chunk = $queue->popChunk(3);
+
+    $this->assertIsArray($chunk);
+    $this->assertCount(0, $chunk);
+});
