@@ -41,6 +41,14 @@ it('pushes a task onto the parallel queue', function (): void {
 
     expect($task)->not->toBeNull();
     expect($task)->toBeInstanceOf(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+
+    $tasks = Queue::popChunk(10);
+
+    expect($tasks)->toBeArray();
+    expect($tasks)->toHaveCount(1);
+    expect($tasks[0])->toBeInstanceOf(BasicQueuableTask::class);
 });
 
 it('dispatches a task conditionally', function (): void {
