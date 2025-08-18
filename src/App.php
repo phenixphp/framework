@@ -87,7 +87,7 @@ class App implements AppContract, Makeable
         $this->server->start($this->router, $this->errorHandler);
 
         if ($this->signalTrapping) {
-            $signal = \Amp\trapSignal([SIGINT, SIGTERM]);
+            $signal = \Amp\trapSignal([SIGHUP, SIGINT, SIGQUIT, SIGTERM]);
 
             $this->logger->info("Caught signal {$signal}, stopping server");
 
