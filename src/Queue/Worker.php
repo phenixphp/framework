@@ -7,8 +7,10 @@ namespace Phenix\Queue;
 use Amp\Future;
 use Amp\Parallel\Worker as ParallelWorker;
 use Amp\Parallel\Worker\Execution;
+use Amp\Parallel\Worker\WorkerPool;
 use Amp\TimeoutCancellation;
 use Exception;
+use Phenix\App;
 use Phenix\Facades\Log;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
@@ -182,9 +184,12 @@ class Worker
 
         $executions = array_map(
             function (QueuableTask $task): Execution {
+                /** @var WorkerPool $pool */
+                $pool = App::make(WorkerPool::class);
+
                 $timeout = new TimeoutCancellation($task->getTimeout());
 
-                return ParallelWorker\submit($task, $timeout);
+                return $pool->submit($task, $timeout);
             },
             $tasks
         );

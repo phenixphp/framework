@@ -6,9 +6,10 @@ namespace Phenix\Queue;
 
 use Amp\Future;
 use Amp\Interval;
-use Amp\Parallel\Worker;
 use Amp\Parallel\Worker\Execution;
+use Amp\Parallel\Worker\WorkerPool;
 use Amp\TimeoutCancellation;
+use Phenix\App;
 use Phenix\Facades\Config;
 use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Tasks\Exceptions\FailedTaskException;
@@ -162,9 +163,12 @@ class ParallelQueue extends Queue
             }
 
             $executions = array_map(function (QueuableTask $task): Execution {
+                /** @var WorkerPool $pool */
+                $pool = App::make(WorkerPool::class);
+
                 $timeout = new TimeoutCancellation($task->getTimeout());
 
-                return Worker\submit($task, $timeout);
+                return $pool->submit($task, $timeout);
             }, $reservedTasks);
 
             $this->runningTasks = array_merge($this->runningTasks, $executions);
