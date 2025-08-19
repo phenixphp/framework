@@ -55,7 +55,8 @@ class WorkCommand extends Command
             new WorkerOptions(
                 sleep: (int) $input->getOption('sleep'),
                 chunkProcessing: $input->getOption('chunks')
-            )
+            ),
+            $output
         );
 
         return Command::SUCCESS;
