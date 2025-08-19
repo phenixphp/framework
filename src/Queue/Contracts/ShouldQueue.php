@@ -17,7 +17,11 @@ interface ShouldQueue
 
     public function getQueueName(): string|null;
 
-    public static function dispatch(mixed ...$args): PendingTask;
+    public static function enqueue(mixed ...$args): PendingTask;
 
-    public static function dispatchIf(Closure|bool $condition, mixed ...$args): PendingTask|null;
+    public static function enqueueIf(Closure|bool $condition, mixed ...$args): PendingTask|null;
+
+    public static function dispatch(mixed ...$args): void;
+
+    public static function dispatchIf(Closure|bool $condition, mixed ...$args): void;
 }

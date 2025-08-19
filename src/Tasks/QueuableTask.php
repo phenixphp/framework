@@ -77,22 +77,32 @@ abstract class QueuableTask extends Task implements ShouldQueue
         return serialize($this);
     }
 
-    public static function dispatch(mixed ...$args): PendingTask
+    public static function enqueue(mixed ...$args): PendingTask
     {
         return new PendingTask(new static(...$args));
     }
 
-    public static function dispatchIf(Closure|bool $condition, mixed ...$args): PendingTask|null
+    public static function enqueueIf(Closure|bool $condition, mixed ...$args): PendingTask|null
     {
         if ($condition instanceof Closure) {
             $condition = $condition();
         }
 
         if ($condition) {
-            return static::dispatch(...$args);
+            return static::enqueue(...$args);
         }
 
         return null;
+    }
+
+    public static function dispatch(mixed ...$args): void
+    {
+        static::enqueue(...$args)->dispatch();
+    }
+
+    public static function dispatchIf(Closure|bool $condition, mixed ...$args): void
+    {
+        static::enqueueIf($condition, ...$args)?->dispatch();
     }
 
     protected function generateId(): string

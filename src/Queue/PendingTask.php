@@ -14,11 +14,6 @@ class PendingTask
     ) {
     }
 
-    public function __destruct()
-    {
-        Queue::push($this->task);
-    }
-
     public function onConnection(string $connection): static
     {
         $this->task->setConnectionName($connection);
@@ -31,5 +26,10 @@ class PendingTask
         $this->task->setQueueName($queue);
 
         return $this;
+    }
+
+    public function dispatch(): void
+    {
+        Queue::push($this->task);
     }
 }

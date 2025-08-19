@@ -65,8 +65,9 @@ it('pushes a task onto the queue with custom queue name', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    BasicQueuableTask::dispatch()
-        ->onQueue('custom-queue');
+    BasicQueuableTask::enqueue()
+        ->onQueue('custom-queue')
+        ->dispatch();
 });
 
 it('pushes a task onto the queue with custom connection', function (): void {
@@ -89,8 +90,9 @@ it('pushes a task onto the queue with custom connection', function (): void {
 
     $this->app->swap(Connection::default(), $connection);
 
-    BasicQueuableTask::dispatch()
-        ->onConnection('default');
+    BasicQueuableTask::enqueue()
+        ->onConnection('default')
+        ->dispatch();
 });
 
 it('enqueues the task', function (): void {

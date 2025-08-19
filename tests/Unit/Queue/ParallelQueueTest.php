@@ -53,7 +53,7 @@ it('pushes a task onto the parallel queue', function (): void {
 
 it('dispatches a task conditionally', function (): void {
     Queue::clear();
-    BasicQueuableTask::dispatchIf(fn () => true);
+    BasicQueuableTask::dispatchIf(fn (): bool => true);
 
     $task = Queue::pop();
 
@@ -62,7 +62,7 @@ it('dispatches a task conditionally', function (): void {
 });
 
 it('does not dispatch a task conditionally', function (): void {
-    expect(BasicQueuableTask::dispatchIf(fn () => false))->toBeNull();
+    expect(BasicQueuableTask::enqueueIf(fn (): bool => false))->toBeNull();
 });
 
 it('pushes a task onto a custom parallel queue', function (): void {
