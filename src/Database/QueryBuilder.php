@@ -81,9 +81,9 @@ class QueryBuilder extends QueryBase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null
      */
-    public function first(): array
+    public function first(): array|null
     {
         $this->action = Action::SELECT;
 
