@@ -19,6 +19,7 @@ use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::DATABASE->value);
+    Config::set('queue.drivers.database.connection', 'default'); // Set fake connection
 });
 
 it('pushes a task onto the queue', function (): void {
