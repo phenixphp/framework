@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Queue;
 
 use Phenix\App;
+use Phenix\Database\Constants\Driver as DatabaseDriver;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
 use Phenix\Redis\Contracts\Client;
@@ -95,7 +96,7 @@ class QueueManager
         $config = $this->config->getDriver(QueueDriver::DATABASE->value);
 
         return new DatabaseQueue(
-            connection: $config['connection'] ?? 'default',
+            connection: $config['connection'] ?? DatabaseDriver::MYSQL->value,
             queueName: $config['queue'] ?? 'default',
             table: $config['table'] ?? 'tasks'
         );

@@ -14,7 +14,7 @@ return [
         ],
 
         'database' => [
-            'connection' => env('DB_QUEUE_CONNECTION'),
+            'connection' => env('DB_QUEUE_CONNECTION', static fn (): string => 'mysql'),
             'table' => env('DB_QUEUE_TABLE', fn (): string => 'tasks'),
             'queue' => env('DB_QUEUE', fn (): string => 'default'),
         ],
