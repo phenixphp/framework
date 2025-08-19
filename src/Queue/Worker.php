@@ -143,7 +143,7 @@ class Worker
         $output?->writeln(sprintf(
             '<info>Processing %s (queue=%s, attempt=%d)</info>',
             $task::class,
-            (string) $task->getQueueName(),
+            (string) $task->getQueueName() ?? 'default',
             $task->getAttempts(),
         ));
 
@@ -154,11 +154,11 @@ class Worker
 
             $this->processedTasks++;
 
-            $output?->writeln(sprintf('<info>success: %s processed</info>', $task::class));
+            $output?->writeln(sprintf('<info>Processed %s</info>', $task::class));
         } else {
             $exception = new Exception($result->message() ?? 'Task failed');
 
-            $output?->writeln(sprintf('<error>danger: %s failed — %s</error>', $task::class, $exception->getMessage()));
+            $output?->writeln(sprintf('<error>Fail processing of %s: %s</error>', $task::class, $exception->getMessage()));
 
             $this->handleFailedTask($task, $exception, $stateManager, $options);
         }
