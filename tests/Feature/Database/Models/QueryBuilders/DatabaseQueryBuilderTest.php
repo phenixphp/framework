@@ -22,3 +22,18 @@ it('sets custom connection for database query builder', function () {
 
     expect($result[0]['id'])->toBe($data[0]['id']);
 });
+
+it('clone model query builder successfully', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $this->app->swap(Connection::name('mysql'), $connection);
+
+    $queryBuilder = new DatabaseQueryBuilder();
+    $queryBuilder->connection('mysql');
+    $queryBuilder->lockForUpdate();
+
+    $cloned = clone $queryBuilder;
+
+    expect($cloned)->toBeInstanceOf(DatabaseQueryBuilder::class);
+    expect($cloned->isLocked())->toBeFalse();
+});
