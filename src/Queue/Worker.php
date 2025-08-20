@@ -229,8 +229,6 @@ class Worker
     ): void {
         $this->failedTasks++;
 
-        $stateManager->release($task);
-
         $maxTries = $task->getMaxTries() ?? $options->maxTries;
 
         if ($task->getAttempts() < $maxTries) {

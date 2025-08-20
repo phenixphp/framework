@@ -45,7 +45,9 @@ class RedisQueue extends Queue
     public function pop(string|null $queueName = null): QueuableTask|null
     {
         $queueKey = $this->getQueueKey($queueName);
-        $payload = $this->redis->execute('LPOP', $queueKey);
+        $failedQueueKey = "queues:failed";
+
+        $payload = $this->redis->execute('EVAL', LuaScripts::pop(), 2, $queueKey, $failedQueueKey, time(), 60);
 
         if ($payload === null) {
             return null;
