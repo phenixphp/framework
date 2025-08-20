@@ -143,7 +143,7 @@ class Worker
         $output?->writeln(sprintf(
             '<info>Processing %s (queue=%s, attempt=%d)</info>',
             $task::class,
-            (string) $task->getQueueName() ?? 'default',
+            $task->getQueueName() ?? 'default',
             $task->getAttempts(),
         ));
 
