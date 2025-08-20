@@ -20,11 +20,10 @@ it('processes a successful task', function (): void {
 
     $payload = serialize(new BasicQueuableTask());
 
-    $client->expects($this->exactly(7))
+    $client->expects($this->exactly(6))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
-            [$this->equalTo('EXISTS'), $this->stringStartsWith('task:failed:')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [
                 $this->equalTo('HSET'),
@@ -43,13 +42,12 @@ it('processes a successful task', function (): void {
             [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
         )
         ->willReturnOnConsecutiveCalls(
-            $payload,
-            0, // EXISTS returns 0 (false) - task is not failed
-            1,
-            1,
-            1,
-            1,
-            1
+            $payload, // EVAL returns payload (script handles failed task checking)
+            1,        // SETNX succeeds
+            1,        // HSET succeeds
+            1,        // EXPIRE succeeds
+            1,        // DEL succeeds
+            1         // EVAL cleanup succeeds
         );
 
     $this->app->swap(ClientContract::class, $client);
@@ -65,11 +63,10 @@ it('processes a failed task and retries', function (): void {
 
     $payload = serialize(new BadTask());
 
-    $client->expects($this->exactly(9))
+    $client->expects($this->exactly(8))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('LPOP'), $this->equalTo('queues:default')],
-            [$this->equalTo('EXISTS'), $this->stringStartsWith('task:failed:')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [
                 $this->equalTo('HSET'),
@@ -88,15 +85,14 @@ it('processes a failed task and retries', function (): void {
             [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
         )
         ->willReturnOnConsecutiveCalls(
-            $payload,
-            0, // EXISTS returns 0 (false) - task is not failed
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1 // EVAL returns cleanup count
+            $payload, // EVAL returns payload (script handles failed task checking)
+            1,        // SETNX succeeds
+            1,        // HSET succeeds
+            1,        // EXPIRE succeeds
+            1,        // DEL succeeds (retry)
+            1,        // HSET succeeds (retry)
+            1,        // RPUSH succeeds (retry)
+            1         // EVAL returns cleanup count
         );
 
     $this->app->swap(ClientContract::class, $client);
