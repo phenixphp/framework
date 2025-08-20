@@ -71,6 +71,14 @@ class DatabaseQueryBuilder extends QueryBase
         $this->resolveDriverFromConnection($this->connection);
     }
 
+    public function __clone(): void
+    {
+        parent::__clone();
+        $this->relationships = [];
+        $this->isLocked = false;
+        $this->lockType = null;
+    }
+
     public function connection(SqlCommonConnectionPool|string $connection): self
     {
         if (is_string($connection)) {

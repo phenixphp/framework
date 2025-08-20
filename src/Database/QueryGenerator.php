@@ -32,6 +32,13 @@ class QueryGenerator extends QueryBase
         $this->driver = $driver;
     }
 
+    public function __clone(): void
+    {
+        parent::__clone();
+        $this->isLocked = false;
+        $this->lockType = null;
+    }
+
     public function insert(array $data): array
     {
         return $this->insertRows($data)->toSql();

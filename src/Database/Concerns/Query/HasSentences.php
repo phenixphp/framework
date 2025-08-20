@@ -19,13 +19,6 @@ trait HasSentences
 {
     protected SqlTransaction|null $transaction = null;
 
-    protected function exec(string $dml, array $params = []): mixed
-    {
-        $executor = isset($this->transaction) && $this->transaction !== null ? $this->transaction : $this->connection;
-
-        return $executor->prepare($dml)->execute($params);
-    }
-
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
         $this->action = Action::SELECT;
@@ -191,5 +184,17 @@ trait HasSentences
             $this->transaction->rollBack();
             $this->transaction = null;
         }
+    }
+
+    public function hasActiveTransaction(): bool
+    {
+        return isset($this->transaction) && $this->transaction !== null;
+    }
+
+    protected function exec(string $dml, array $params = []): mixed
+    {
+        $executor = $this->hasActiveTransaction() ? $this->transaction : $this->connection;
+
+        return $executor->prepare($dml)->execute($params);
     }
 }

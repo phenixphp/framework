@@ -43,6 +43,16 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
     {
         $this->ignore = false;
 
+        $this->resetBaseProperties();
+    }
+
+    public function __clone(): void
+    {
+        $this->resetBaseProperties();
+    }
+
+    protected function resetBaseProperties(): void
+    {
         $this->joins = [];
         $this->columns = [];
         $this->values = [];
