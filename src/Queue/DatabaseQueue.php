@@ -72,6 +72,7 @@ class DatabaseQueue extends Queue
                 ->table($this->table)
                 ->whereEqual('queue_name', $queueName)
                 ->whereNull('reserved_at')
+                ->whereNull('failed_at')
                 ->whereLessThanOrEqual('available_at', Date::now()->toDateTimeString())
                 ->orderBy('created_at', Order::ASC)
                 ->lockForUpdateSkipLocked()
