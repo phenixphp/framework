@@ -26,8 +26,11 @@ class RedisTaskState implements TaskState
         $reserved = $this->redis->execute('SETNX', $reservedKey, time() + $timeout);
 
         if ($reserved) {
+            $currentAttempts = $task->getAttempts();
+            $newAttempts = $currentAttempts === 0 ? $currentAttempts + 1 : $currentAttempts;
+
             $taskData = [
-                'attempts' => $task->getAttempts() + 1,
+                'attempts' => $newAttempts,
                 'reserved_at' => time(),
                 'reserved_until' => time() + $timeout,
                 'payload' => $task->getPayload(),
@@ -36,7 +39,9 @@ class RedisTaskState implements TaskState
             $this->redis->execute('HSET', $taskDataKey, ...$this->flattenArray($taskData));
             $this->redis->execute('EXPIRE', $taskDataKey, $timeout + 300);
 
-            $task->setAttempts($task->getAttempts() + 1);
+            if ($currentAttempts === 0) {
+                $task->setAttempts($newAttempts);
+            }
 
             return true;
         }
@@ -88,6 +93,9 @@ class RedisTaskState implements TaskState
         $queueKey = "queues:{$task->getQueueName()}";
         $delayedKey = "queues:delayed";
 
+        // Increment attempts before re-queuing for Redis-based queue
+        $task->setAttempts($task->getAttempts() + 1);
+
         $this->redis->execute(
             'EVAL',
             LuaScripts::retry(),
@@ -96,8 +104,8 @@ class RedisTaskState implements TaskState
             $taskDataKey,
             $queueKey,
             $delayedKey,
-            $task->getAttempts(), // ARGV[1]
-            $task->getPayload(),  // ARGV[2]
+            $task->getAttempts(), // ARGV[1] - now includes the incremented attempts
+            $task->getPayload(),  // ARGV[2] - updated payload with incremented attempts
             $delay,               // ARGV[3]
             time() + $delay       // ARGV[4]
         );

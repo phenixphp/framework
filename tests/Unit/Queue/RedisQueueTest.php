@@ -242,8 +242,12 @@ it('retries a task with delay greater than zero by enqueuing into the delayed zs
                 $this->equalTo('task:data:task-retry-1'),
                 $this->equalTo('queues:'),
                 $this->equalTo('queues:delayed'),
-                $this->isType('int'), // attempts
-                $this->identicalTo($task->getPayload()),
+                $this->equalTo(1), // attempts should be 1 after increment
+                $this->callback(function ($payload) {
+                    // The payload should contain a task with attempts = 1
+                    $task = unserialize($payload);
+                    return $task->getAttempts() === 1;
+                }),
                 $this->equalTo(30), // delay
                 $this->isType('int'), // execute_at timestamp
             ],
