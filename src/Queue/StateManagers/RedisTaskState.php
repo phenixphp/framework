@@ -84,21 +84,26 @@ class RedisTaskState implements TaskState
         $taskId = $this->getTaskId($task);
         $reservedKey = "task:reserved:{$taskId}";
         $taskDataKey = "task:data:{$taskId}";
+        $failedKey = "task:failed:{$taskId}";
+        $queueKey = "queues:{$task->getQueueName()}";
+        $delayedKey = "queues:delayed";
 
-        $this->redis->execute('DEL', $reservedKey);
+        $this->redis->execute(
+            'EVAL',
+            LuaScripts::retry(),
+            4, // number of keys
+            $reservedKey,
+            $taskDataKey,
+            $queueKey,
+            $delayedKey,
+            $task->getAttempts(), // ARGV[1]
+            $task->getPayload(),  // ARGV[2]
+            $delay,               // ARGV[3]
+            time() + $delay       // ARGV[4]
+        );
 
-        $this->redis->execute('HSET', $taskDataKey, 'attempts', $task->getAttempts());
-
-        if ($delay > 0) {
-            $delayedKey = "queues:delayed";
-            $executeAt = time() + $delay;
-
-            $this->redis->execute('ZADD', $delayedKey, $executeAt, $task->getPayload());
-        } else {
-            $queueKey = "queues:{$task->getQueueName()}";
-
-            $this->redis->execute('RPUSH', $queueKey, $task->getPayload());
-        }
+        $this->redis->execute('DEL', $failedKey);
+        $this->redis->execute('LREM', 'queues:failed', 0, $taskId);
     }
 
     public function getTaskState(string $taskId): array|null

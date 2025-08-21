@@ -77,22 +77,33 @@ it('processes a failed task and retries', function (): void {
                 $this->isType('string'), $this->isType('string'),
             ],
             [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            // retry() - no more release() call
-            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:')],
-            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->equalTo('attempts'), $this->isType('int')],
-            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->isType('string')],
-            // cleanupExpiredReservations()
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
+            // retry() - now uses Lua script
+            [
+                $this->equalTo('EVAL'),
+                $this->isType('string'), // Lua script
+                $this->equalTo(4), // number of keys
+                $this->stringStartsWith('task:reserved:'),
+                $this->stringStartsWith('task:data:'),
+                $this->equalTo('queues:default'),
+                $this->equalTo('queues:delayed'),
+                $this->isType('int'), // attempts
+                $this->isType('string'), // payload
+                $this->equalTo(0), // delay
+                $this->isType('int'), // execute_at timestamp
+            ],
+            [$this->equalTo('DEL'), $this->stringStartsWith('task:failed:')],
+            [$this->equalTo('LREM'), $this->equalTo('queues:failed'), $this->equalTo(0), $this->isType('string')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')], // cleanupExpiredReservations at end of processTask
         )
         ->willReturnOnConsecutiveCalls(
             $payload, // EVAL returns payload (script handles failed task checking)
             1,        // SETNX succeeds
             1,        // HSET succeeds
             1,        // EXPIRE succeeds
-            1,        // DEL succeeds (retry)
-            1,        // HSET succeeds (retry)
-            1,        // RPUSH succeeds (retry)
-            1         // EVAL returns cleanup count
+            1,        // EVAL succeeds (retry Lua script)
+            1,        // DEL succeeds (cleanup failed)
+            1,        // LREM succeeds (cleanup failed queue)
+            1         // EVAL cleanup succeeds
         );
 
     $this->app->swap(ClientContract::class, $client);

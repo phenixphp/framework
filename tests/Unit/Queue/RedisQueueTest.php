@@ -235,20 +235,27 @@ it('retries a task with delay greater than zero by enqueuing into the delayed zs
         ->method('execute')
         ->withConsecutive(
             [
-                $this->equalTo('DEL'),
+                $this->equalTo('EVAL'),
+                $this->isType('string'), // Lua script
+                $this->equalTo(4), // number of keys
                 $this->equalTo('task:reserved:task-retry-1'),
-            ],
-            [
-                $this->equalTo('HSET'),
                 $this->equalTo('task:data:task-retry-1'),
-                $this->equalTo('attempts'),
-                $this->isType('int'),
+                $this->equalTo('queues:'),
+                $this->equalTo('queues:delayed'),
+                $this->isType('int'), // attempts
+                $this->identicalTo($task->getPayload()),
+                $this->equalTo(30), // delay
+                $this->isType('int'), // execute_at timestamp
             ],
             [
-                $this->equalTo('ZADD'),
-                $this->equalTo('queues:delayed'),
-                $this->isType('int'),
-                $this->identicalTo($task->getPayload()),
+                $this->equalTo('DEL'),
+                $this->equalTo('task:failed:task-retry-1'),
+            ],
+            [
+                $this->equalTo('LREM'),
+                $this->equalTo('queues:failed'),
+                $this->equalTo(0),
+                $this->equalTo('task-retry-1'),
             ],
         )
         ->willReturnOnConsecutiveCalls(1, 1, 1);
