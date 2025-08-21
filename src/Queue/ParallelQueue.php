@@ -253,8 +253,6 @@ class ParallelQueue extends Queue
             if ($result->isSuccess()) {
                 $this->stateManager->complete($task);
             } else {
-                $this->stateManager->release($task);
-
                 $this->handleTaskFailure($task, $result->message());
             }
         }

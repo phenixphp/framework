@@ -11,8 +11,6 @@ interface TaskState
 {
     public function reserve(QueuableTask $task, int $timeout = 60): bool;
 
-    public function release(QueuableTask $task): void;
-
     public function complete(QueuableTask $task): void;
 
     public function fail(QueuableTask $task, Throwable $exception): void;

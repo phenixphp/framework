@@ -44,21 +44,6 @@ class RedisTaskState implements TaskState
         return false;
     }
 
-    public function release(QueuableTask $task): void
-    {
-        $taskId = $this->getTaskId($task);
-        $reservedKey = "task:reserved:{$taskId}";
-        $taskDataKey = "task:data:{$taskId}";
-
-        $this->redis->execute('DEL', $reservedKey);
-
-        $this->redis->execute('HSET', $taskDataKey, 'reserved_at', '', 'available_at', time());
-
-        $queueKey = "queues:{$task->getQueueName()}";
-
-        $this->redis->execute('RPUSH', $queueKey, $task->getPayload());
-    }
-
     public function complete(QueuableTask $task): void
     {
         $taskId = $this->getTaskId($task);

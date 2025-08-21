@@ -50,20 +50,6 @@ class DatabaseTaskState implements TaskState
         return false;
     }
 
-    public function release(QueuableTask $task): void
-    {
-        $taskId = $this->getTaskId($task);
-
-        $qb = $this->newScopedBuilder();
-
-        $qb->table($this->table)
-                ->whereEqual('id', $taskId)
-                ->update([
-                    'reserved_at' => null,
-                    'available_at' => Date::now(),
-                ]);
-    }
-
     public function complete(QueuableTask $task): void
     {
         $taskId = $this->getTaskId($task);

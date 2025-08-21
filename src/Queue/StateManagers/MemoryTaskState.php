@@ -36,18 +36,6 @@ class MemoryTaskState implements TaskState
         return true;
     }
 
-    public function release(QueuableTask $task): void
-    {
-        $taskId = $this->getTaskId($task);
-
-        unset($this->reservedTasks[$taskId]);
-
-        if (isset($this->taskStates[$taskId])) {
-            $this->taskStates[$taskId]['reserved_at'] = null;
-            $this->taskStates[$taskId]['available_at'] = time();
-        }
-    }
-
     public function complete(QueuableTask $task): void
     {
         $taskId = $this->getTaskId($task);
