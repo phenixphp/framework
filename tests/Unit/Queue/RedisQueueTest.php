@@ -246,6 +246,7 @@ it('retries a task with delay greater than zero by enqueuing into the delayed zs
                 $this->callback(function ($payload) {
                     // The payload should contain a task with attempts = 1
                     $task = unserialize($payload);
+
                     return $task->getAttempts() === 1;
                 }),
                 $this->equalTo(30), // delay
