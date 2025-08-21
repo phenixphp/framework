@@ -349,11 +349,20 @@ it('properly pops tasks in chunks with limited timeout', function (): void {
         )
         ->willReturnOnConsecutiveCalls(
             // First task returns
-            $payloads[0], 1, 1, 1,
+            $payloads[0],
+            1,
+            1,
+            1,
             // Second task returns
-            $payloads[1], 1, 1, 1,
+            $payloads[1],
+            1,
+            1,
+            1,
             // Third task returns
-            $payloads[2], 1, 1, 1
+            $payloads[2],
+            1,
+            1,
+            1
         );
 
     $task1 = $queue->pop();
