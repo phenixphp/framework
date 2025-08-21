@@ -327,68 +327,34 @@ it('properly pops tasks in chunks with limited timeout', function (): void {
         serialize(new BasicQueuableTask()),
     ];
 
-    // First chunk: Return multiple tasks from EVAL
-    $clientMock->expects($this->at(0))
+    // Expect 12 calls to execute method with specific order
+    $clientMock->expects($this->exactly(12))
         ->method('execute')
-        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60))
-        ->willReturn($payloads[0]);
-
-    $clientMock->expects($this->at(1))
-        ->method('execute')
-        ->with($this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(2))
-        ->method('execute')
-        ->with($this->equalTo('HSET'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(3))
-        ->method('execute')
-        ->with($this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
-
-    // Second chunk
-    $clientMock->expects($this->at(4))
-        ->method('execute')
-        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60))
-        ->willReturn($payloads[1]);
-
-    $clientMock->expects($this->at(5))
-        ->method('execute')
-        ->with($this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(6))
-        ->method('execute')
-        ->with($this->equalTo('HSET'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(7))
-        ->method('execute')
-        ->with($this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
-
-    // Third chunk
-    $clientMock->expects($this->at(8))
-        ->method('execute')
-        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60))
-        ->willReturn($payloads[2]);
-
-    $clientMock->expects($this->at(9))
-        ->method('execute')
-        ->with($this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(10))
-        ->method('execute')
-        ->with($this->equalTo('HSET'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
-
-    $clientMock->expects($this->at(11))
-        ->method('execute')
-        ->with($this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'))
-        ->willReturn(1);
+        ->withConsecutive(
+            // First task
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            // Second task
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
+            // Third task
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
+            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
+            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')]
+        )
+        ->willReturnOnConsecutiveCalls(
+            // First task returns
+            $payloads[0], 1, 1, 1,
+            // Second task returns
+            $payloads[1], 1, 1, 1,
+            // Third task returns
+            $payloads[2], 1, 1, 1
+        );
 
     $task1 = $queue->pop();
     $task2 = $queue->pop();
