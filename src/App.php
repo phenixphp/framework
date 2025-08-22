@@ -159,9 +159,7 @@ class App implements AppContract, Makeable
 
     private function getHost(): string
     {
-        $host = $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
-
-        return $host;
+        return $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
     }
 
     private function getPort(): int
