@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Closure;
-use Phenix\Contracts\Database\Builder;
 use Phenix\Database\Concerns\Query\HasWhereClause;
 use Phenix\Database\Concerns\Query\PrepareColumns;
 use Phenix\Database\Constants\LogicalOperator;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
+use Phenix\Database\Contracts\Builder;
 use Phenix\Util\Arr;
 
 use function is_array;
 
-abstract class Clause implements Builder
+abstract class Clause extends Grammar implements Builder
 {
     use HasWhereClause;
     use PrepareColumns;
@@ -48,7 +48,7 @@ abstract class Clause implements Builder
         Operator|null $operator = null,
         LogicalOperator $logicalConnector = LogicalOperator::AND
     ): void {
-        $builder = new Subquery();
+        $builder = new Subquery($this->driver);
         $builder->select(['*']);
 
         $subquery($builder);

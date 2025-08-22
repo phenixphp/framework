@@ -23,7 +23,7 @@ if (! function_exists('response')) {
 }
 
 if (! function_exists('env')) {
-    function env(string $key, Closure|null $default = null): array|string|int|bool|null
+    function env(string $key, Closure|null $default = null): array|string|float|int|bool|null
     {
         $value = $_ENV[$key] ?? null;
 
@@ -54,5 +54,12 @@ if (! function_exists('report')) {
             'line' => $e->getLine(),
             'trace' => $e->getTraceAsString(),
         ]);
+    }
+}
+
+if (! function_exists('e')) {
+    function e(Stringable|string|null $value, bool $doubleEncode = true): string
+    {
+        return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', $doubleEncode);
     }
 }

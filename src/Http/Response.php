@@ -7,8 +7,9 @@ namespace Phenix\Http;
 use Amp\ByteStream\ReadableStream;
 use Amp\Http\Server\Response as ServerResponse;
 use Amp\Http\Server\Trailers;
-use Phenix\Constants\HttpStatus;
 use Phenix\Contracts\Arrayable;
+use Phenix\Facades\View;
+use Phenix\Http\Constants\HttpStatus;
 
 class Response
 {
@@ -48,6 +49,19 @@ class Response
         $this->body = json_encode(['data' => $content]);
         $this->status = $status;
         $this->headers = [...['content-type' => 'application/json'], ...$headers];
+
+        return $this;
+    }
+
+    public function view(
+        string $template,
+        array $data = [],
+        HttpStatus $status = HttpStatus::OK,
+        array $headers = []
+    ): self {
+        $this->body = View::view($template, $data)->render();
+        $this->status = $status;
+        $this->headers = [...['content-type' => 'text/html; charset=utf-8'], ...$headers];
 
         return $this;
     }

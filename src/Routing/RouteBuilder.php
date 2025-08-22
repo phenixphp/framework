@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Routing;
 
 use Amp\Http\Server\Middleware;
-use Phenix\Constants\HttpMethod;
 use Phenix\Contracts\Arrayable;
+use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Requests\ClosureRequestHandler;
 
 class RouteBuilder implements Arrayable

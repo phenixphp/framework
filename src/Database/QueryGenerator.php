@@ -8,6 +8,7 @@ use Closure;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Driver;
 
 class QueryGenerator extends QueryBase
 {
@@ -23,6 +24,20 @@ class QueryGenerator extends QueryBase
         doesntExist as protected doesntExistRows;
     }
     use HasJoinClause;
+
+    public function __construct(Driver $driver = Driver::MYSQL)
+    {
+        parent::__construct();
+
+        $this->driver = $driver;
+    }
+
+    public function __clone(): void
+    {
+        parent::__clone();
+        $this->isLocked = false;
+        $this->lockType = null;
+    }
 
     public function insert(array $data): array
     {

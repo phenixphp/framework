@@ -69,6 +69,10 @@ it('creates a directory successfully', function () {
     $file->createDirectory($path);
 
     expect(file_exists($path))->toBeTrue();
+
+    $file->deleteDirectory($path);
+
+    expect(file_exists($path))->toBeFalse();
 });
 
 it('open a file for IO operations', function () {
@@ -79,4 +83,20 @@ it('open a file for IO operations', function () {
     $file = new File();
 
     expect($file->openFile($path))->toBeInstanceOf(FileHandler::class);
+    expect($file->getCreationTime($path))->toBe(filemtime($path));
+    expect($file->getModificationTime($path))->toBe(filemtime($path));
+});
+
+it('list files in a directory', function () {
+    $path = __DIR__;
+
+    $file = new File();
+
+    expect($file->listFiles($path, true))->toBe([
+        'FileTest.php',
+    ]);
+
+    expect($file->listFiles($path))->toBe([
+        $path . DIRECTORY_SEPARATOR . 'FileTest.php',
+    ]);
 });

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
-use Phenix\Contracts\Filesystem\File as FileContract;
+use Phenix\Filesystem\Contracts\File as FileContract;
 use Phenix\Runtime\Facade;
 
 /**
@@ -15,6 +15,11 @@ use Phenix\Runtime\Facade;
  * @method static bool isFile(string $path)
  * @method static void createDirectory(string $path, int $mode = 0755)
  * @method static \Amp\File\File openFile(string $path, string $mode = 'w')
+ * @method static int getCreationTime(string $path)
+ * @method static int getModificationTime(string $path)
+ * @method static array listFiles(string $path, bool $relativePath = false)
+ * @method static void deleteFile(string $path)
+ * @method static void deleteDirectory(string $path)
  *
  * @see \Phenix\Filesystem\File
  */

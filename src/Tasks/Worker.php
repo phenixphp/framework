@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Phenix\Tasks;
+
+use Amp\Parallel\Worker as Workers;
+use Amp\Parallel\Worker\Worker as WorkerContract;
+use Amp\TimeoutCancellation;
+use Phenix\Tasks\Contracts\Task;
+
+class Worker extends AbstractWorker
+{
+    protected WorkerContract $worker;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->worker = Workers\createWorker();
+    }
+
+    protected function submitTask(Task $parallelTask): Workers\Execution
+    {
+        $timeout = new TimeoutCancellation($parallelTask->getTimeout());
+
+        return $this->worker->submit($parallelTask, $timeout);
+    }
+
+    protected function finalize(): void
+    {
+        $this->worker->shutdown();
+    }
+}

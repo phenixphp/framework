@@ -10,7 +10,7 @@ use Amp\Http\Server\RequestBody;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\Trailers;
 use League\Uri\Http;
-use Phenix\Constants\HttpMethod;
+use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Request;
 use Phenix\Util\URL;
 use Psr\Http\Message\UriInterface;

@@ -25,12 +25,19 @@ use Phenix\Session\SessionMiddleware;
 class App implements AppContract, Makeable
 {
     private static string $path;
+
     private static Container $container;
+
     private string $host;
+
     private RequestHandler $router;
+
     private Logger $logger;
+
     private SocketHttpServer $server;
+
     private bool $signalTrapping = true;
+
     private DefaultErrorHandler $errorHandler;
 
     public function __construct(string $path)
@@ -73,14 +80,14 @@ class App implements AppContract, Makeable
 
         $this->setRouter();
 
-        $port = (int) Config::get('app.port');
+        $port = $this->getPort();
 
         $this->server->expose(new Socket\InternetAddress($this->host, $port));
 
         $this->server->start($this->router, $this->errorHandler);
 
         if ($this->signalTrapping) {
-            $signal = \Amp\trapSignal([SIGINT, SIGTERM]);
+            $signal = \Amp\trapSignal([SIGHUP, SIGINT, SIGQUIT, SIGTERM]);
 
             $this->logger->info("Caught signal {$signal}, stopping server");
 
@@ -152,8 +159,27 @@ class App implements AppContract, Makeable
 
     private function getHost(): string
     {
-        $uri = Uri::new(Config::get('app.url'));
+        return $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
+    }
 
-        return $uri->getHost();
+    private function getPort(): int
+    {
+        $port = $this->getPortFromOptions() ?? Config::get('app.port');
+
+        return (int) $port;
+    }
+
+    private function getHostFromOptions(): string|null
+    {
+        $options = getopt('', ['host:']);
+
+        return $options['host'] ?? null;
+    }
+
+    private function getPortFromOptions(): string|null
+    {
+        $options = getopt('', ['port:']);
+
+        return $options['port'] ?? null;
     }
 }

@@ -15,6 +15,9 @@ class AppBuilder implements Buildable
 
         Environment::load($env);
 
+        putenv('PHENIX_BASE_PATH=' . base_path());
+        $_ENV['PHENIX_BASE_PATH'] = base_path();
+
         $app->setup();
 
         return new AppProxy($app);

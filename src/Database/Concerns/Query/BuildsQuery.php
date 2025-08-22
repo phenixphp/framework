@@ -24,6 +24,8 @@ use function ksort;
 
 trait BuildsQuery
 {
+    use HasLock;
+
     public function table(string $table): static
     {
         $this->table = $table;
@@ -34,7 +36,7 @@ trait BuildsQuery
     public function from(Closure|string $table): static
     {
         if ($table instanceof Closure) {
-            $builder = new Subquery();
+            $builder = new Subquery($this->driver);
             $builder->selectAllColumns();
 
             $table($builder);
@@ -99,7 +101,7 @@ trait BuildsQuery
 
     public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): static
     {
-        $builder = new Subquery();
+        $builder = new Subquery($this->driver);
         $builder->selectAllColumns();
 
         $subquery($builder);
@@ -276,6 +278,10 @@ trait BuildsQuery
         if (isset($this->offset)) {
             $query[] = Arr::implodeDeeply($this->offset);
 
+        }
+
+        if (isset($this->lockType)) {
+            $query[] = $this->buildLock();
         }
 
         return Arr::implodeDeeply($query);

@@ -32,6 +32,7 @@
         "amphp/http-server-session": "^3.0",
         "amphp/log": "^v2.0.0",
         "amphp/mysql": "^v3.0.0",
+        "amphp/parallel": "^2.3",
         "amphp/postgres": "v2.0.0",
         "amphp/redis": "^2.0",
         "amphp/socket": "^2.1.0",
@@ -41,10 +42,14 @@
         "nesbot/carbon": "^3.0",
         "phenixphp/http-cors": "^0.1.0",
         "ramsey/collection": "^2.0",
+        "resend/resend-php": "^0.16.0",
         "robmorgan/phinx": "^0.15.2",
+        "symfony/amazon-mailer": "^7.2",
         "symfony/console": "^6.1",
+        "symfony/mailer": "^7.2",
+        "symfony/resend-mailer": "^7.2",
         "symfony/uid": "^7.1",
-        "symfony/var-dumper": "^7.0",
+        "symfony/var-dumper": "^7.2.0",
         "vlucas/phpdotenv": "^5.4"
     },
     "require-dev": {
@@ -52,7 +57,6 @@
         "friendsofphp/php-cs-fixer": "^3.11",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^6.3",
-        "nunomaduro/phpinsights": "^2.6",
         "pestphp/pest": "^1.22",
         "pestphp/pest-plugin-faker": "^1.0",
         "pestphp/pest-plugin-global-assertions": "^1.0",
@@ -84,7 +88,6 @@
         "test:coverage": "XDEBUG_MODE=coverage vendor/bin/pest --coverage",
         "test:parallel": "vendor/bin/pest --parallel",
         "format": "vendor/bin/php-cs-fixer fix",
-        "analyze": "vendor/bin/phpinsights",
-        "analyze:static": "vendor/bin/phpstan --memory-limit=1G"
+        "analyze": "vendor/bin/phpstan --memory-limit=1G"
     }
 }
