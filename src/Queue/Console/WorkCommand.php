@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Queue\Console;
 
 use Phenix\App;
-use Phenix\Facades\Config;
+use Phenix\Queue\Config;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Symfony\Component\Console\Command\Command;
@@ -33,7 +33,7 @@ class WorkCommand extends Command
     protected function configure(): void
     {
         $this->setHelp('This command allows you to process the queue...')
-            ->addArgument('connection', InputArgument::OPTIONAL, 'The name of the connection to use', (string) Config::get('queue.default'))
+            ->addArgument('connection', InputArgument::OPTIONAL, 'The name of the connection to use')
             ->addOption('queue', null, InputOption::VALUE_REQUIRED, 'The name of the queue to process', 'default')
             ->addOption('once', 'o', InputOption::VALUE_NONE, 'Process the queue only once')
             ->addOption('chunks', null, InputOption::VALUE_NONE, 'Process the queue in chunks')
@@ -45,7 +45,9 @@ class WorkCommand extends Command
         /** @var Worker $worker */
         $worker = App::make(Worker::class);
 
-        $connection = $input->getArgument('connection') ?? Config::get('queue.default');
+        $config = new Config();
+
+        $connection = $input->getArgument('connection') ?? $config->getConnection();
         $queue = $input->getOption('queue');
         $method = $input->getOption('once') ? 'runOnce' : 'daemon';
 

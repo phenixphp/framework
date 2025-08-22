@@ -27,4 +27,9 @@ class Config
 
         return $this->config['drivers'][$driverName] ?? [];
     }
+
+    public function getConnection(): string
+    {
+        return $this->getDriver()['connection'] ?? 'default';
+    }
 }

@@ -14,7 +14,7 @@ it('run queue work command in daemon mode', function (): void {
     $worker->expects($this->once())
         ->method('daemon')
         ->with(
-            $this->equalTo('database'),
+            $this->equalTo('mysql'),
             $this->equalTo('default'),
             $this->callback(fn (WorkerOptions $options): bool => $options->sleep === 3)
         );
@@ -35,7 +35,7 @@ it('run queue work command in once mode', function (): void {
     $worker->expects($this->once())
         ->method('runOnce')
         ->with(
-            $this->equalTo('database'),
+            $this->equalTo('mysql'),
             $this->equalTo('default'),
             $this->callback(fn (WorkerOptions $options): bool => $options->sleep === 3)
         );
