@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Phenix\Tasks;
 
 use Amp\Future;
-use Amp\Parallel\Worker as Workers;
-use Phenix\Tasks\Contracts\ParallelTask;
+use Amp\Parallel\Worker;
+use Phenix\Tasks\Contracts\Task;
 use Phenix\Tasks\Contracts\Worker as WorkerContract;
 
 /** @phpstan-consistent-constructor */
 abstract class AbstractWorker implements WorkerContract
 {
     /**
-     * @var Workers\Execution[]
+     * @var array<int, Worker\Execution>
      */
     protected array $tasks;
 
@@ -22,24 +22,9 @@ abstract class AbstractWorker implements WorkerContract
         $this->tasks = [];
     }
 
-    public function submit(ParallelTask $parallelTask): self
-    {
-        $this->tasks[] = $this->submitTask($parallelTask);
-
-        return $this;
-    }
-
-    public function run(): array
-    {
-        return Future\await(array_map(
-            fn (Workers\Execution $e) => $e->getFuture(),
-            $this->tasks,
-        ));
-    }
-
     /**
-     * @param ParallelTask[] $tasks
-     * @return array
+     * @param array<int, Task> $tasks
+     * @return array<int, Result>
      */
     public static function batch(array $tasks): array
     {
@@ -56,7 +41,22 @@ abstract class AbstractWorker implements WorkerContract
         return $results;
     }
 
-    abstract protected function submitTask(ParallelTask $parallelTask): Workers\Execution;
+    public function submit(Task $parallelTask): self
+    {
+        $this->tasks[] = $this->submitTask($parallelTask);
+
+        return $this;
+    }
+
+    public function run(): array
+    {
+        return Future\await(array_map(
+            fn (Worker\Execution $e): Future => $e->getFuture(),
+            $this->tasks,
+        ));
+    }
+
+    abstract protected function submitTask(Task $parallelTask): Worker\Execution;
 
     protected function finalize(): void
     {

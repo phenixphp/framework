@@ -10,6 +10,7 @@ use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\Redis\RedisClient;
 use Closure;
+use InvalidArgumentException;
 use Phenix\Database\Constants\Driver;
 use SensitiveParameter;
 
@@ -23,6 +24,9 @@ class ConnectionFactory
             Driver::MYSQL => self::createMySqlConnection($settings),
             Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
             Driver::REDIS => self::createRedisConnection($settings),
+            default => throw new InvalidArgumentException(
+                sprintf('Unsupported driver: %s', $driver->name)
+            ),
         };
     }
 

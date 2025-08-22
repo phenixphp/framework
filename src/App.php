@@ -25,12 +25,19 @@ use Phenix\Session\SessionMiddleware;
 class App implements AppContract, Makeable
 {
     private static string $path;
+
     private static Container $container;
+
     private string $host;
+
     private RequestHandler $router;
+
     private Logger $logger;
+
     private SocketHttpServer $server;
+
     private bool $signalTrapping = true;
+
     private DefaultErrorHandler $errorHandler;
 
     public function __construct(string $path)
@@ -80,7 +87,7 @@ class App implements AppContract, Makeable
         $this->server->start($this->router, $this->errorHandler);
 
         if ($this->signalTrapping) {
-            $signal = \Amp\trapSignal([SIGINT, SIGTERM]);
+            $signal = \Amp\trapSignal([SIGHUP, SIGINT, SIGQUIT, SIGTERM]);
 
             $this->logger->info("Caught signal {$signal}, stopping server");
 

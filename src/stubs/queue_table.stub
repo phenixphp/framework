@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+use Phenix\Database\Migration;
+use Phinx\Db\Adapter\MysqlAdapter;
+
+class CreateTasksTable extends Migration
+{
+    public function up(): void
+    {
+        $table = $this->table('tasks', ['id' => false, 'primary_key' => ['id']]);
+        $table->addColumn('id', 'string', ['limit' => 36, 'null' => false])
+            ->addColumn('queue_name', 'string', ['limit' => 100, 'default' => 'default', 'null' => false])
+            ->addColumn('payload', 'text', ['null' => false, 'limit' => MysqlAdapter::TEXT_LONG])
+            ->addColumn('attempts', 'smallinteger', ['signed' => false, 'default' => 0, 'null' => false])
+            ->addColumn('reserved_at', 'datetime', ['null' => true])
+            ->addColumn('available_at', 'datetime', ['null' => false])
+            ->addColumn('created_at', 'datetime', ['null' => false])
+            ->addColumn('failed_at', 'datetime', ['null' => true])
+            ->addColumn('exception', 'text', ['null' => true])
+            ->addIndex(['queue_name', 'available_at'], ['name' => 'idx_queue_available'])
+            ->addIndex(['reserved_at'], ['name' => 'idx_reserved_at'])
+            ->addIndex(['failed_at'], ['name' => 'idx_failed_at'])
+            ->addIndex(['attempts'], ['name' => 'idx_attempts'])
+            ->create();
+    }
+
+    public function down(): void
+    {
+        $this->table('tasks')->drop()->save();
+    }
+}

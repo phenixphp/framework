@@ -23,7 +23,7 @@ if (! function_exists('response')) {
 }
 
 if (! function_exists('env')) {
-    function env(string $key, Closure|null $default = null): array|string|int|bool|null
+    function env(string $key, Closure|null $default = null): array|string|float|int|bool|null
     {
         $value = $_ENV[$key] ?? null;
 

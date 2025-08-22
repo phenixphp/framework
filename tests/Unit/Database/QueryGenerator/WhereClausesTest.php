@@ -524,3 +524,16 @@ it('generates query with row subquery', function (string $method, string $operat
     ['whereRowIn', Operator::IN->value],
     ['whereRowNotIn', Operator::NOT_IN->value],
 ]);
+
+it('clone query generator successfully', function () {
+    $query = new QueryGenerator();
+
+    $queryBuilder = $query->table('users')
+        ->whereEqual('id', 1)
+        ->lockForUpdate();
+
+    $cloned = clone $queryBuilder;
+
+    expect($cloned)->toBeInstanceOf(QueryGenerator::class);
+    expect($cloned->isLocked())->toBeFalse();
+});

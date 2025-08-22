@@ -43,6 +43,15 @@ class QueryBuilder extends QueryBase
         parent::__construct();
 
         $this->connection = App::make(Connection::default());
+
+        $this->resolveDriverFromConnection($this->connection);
+    }
+
+    public function __clone(): void
+    {
+        parent::__clone();
+        $this->isLocked = false;
+        $this->lockType = null;
     }
 
     public function connection(SqlCommonConnectionPool|string $connection): self
@@ -52,6 +61,8 @@ class QueryBuilder extends QueryBase
         }
 
         $this->connection = $connection;
+
+        $this->resolveDriverFromConnection($this->connection);
 
         return $this;
     }
@@ -65,8 +76,7 @@ class QueryBuilder extends QueryBase
 
         [$dml, $params] = $this->toSql();
 
-        $result = $this->connection->prepare($dml)
-            ->execute($params);
+        $result = $this->exec($dml, $params);
 
         $collection = new Collection('array');
 
@@ -78,9 +88,9 @@ class QueryBuilder extends QueryBase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null
      */
-    public function first(): array
+    public function first(): array|null
     {
         $this->action = Action::SELECT;
 

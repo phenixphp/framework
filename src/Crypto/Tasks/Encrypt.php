@@ -7,12 +7,12 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Cipher;
-use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 use SensitiveParameter;
 use Throwable;
 
-class Encrypt extends ParallelTask
+class Encrypt extends Task
 {
     public function __construct(
         #[SensitiveParameter]
@@ -21,7 +21,6 @@ class Encrypt extends ParallelTask
         protected object|array|string $value,
         protected bool $serialize = true
     ) {
-        parent::__construct();
     }
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result

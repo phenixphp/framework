@@ -20,9 +20,12 @@ return [
         \Phenix\Console\CommandsServiceProvider::class,
         \Phenix\Routing\RouteServiceProvider::class,
         \Phenix\Database\DatabaseServiceProvider::class,
+        \Phenix\Redis\RedisServiceProvider::class,
         \Phenix\Filesystem\FilesystemServiceProvider::class,
+        \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
         \Phenix\Crypto\CryptoServiceProvider::class,
+        \Phenix\Queue\QueueServiceProvider::class,
     ],
 ];

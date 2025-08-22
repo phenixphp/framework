@@ -16,10 +16,9 @@ abstract class DatabaseCommand extends AbstractCommand
     {
         $defaultConnection = Config::get('database.default');
 
-        $settings = Config::get('database.connections.' . $defaultConnection);
+        $settings = Config::get("database.connections.{$defaultConnection}");
 
-        /** @var Driver $driver */
-        $driver = $settings['driver'];
+        $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
         $this->config = new MigrationConfig([
             'paths' => [

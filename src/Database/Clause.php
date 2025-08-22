@@ -15,7 +15,7 @@ use Phenix\Util\Arr;
 
 use function is_array;
 
-abstract class Clause implements Builder
+abstract class Clause extends Grammar implements Builder
 {
     use HasWhereClause;
     use PrepareColumns;
@@ -48,7 +48,7 @@ abstract class Clause implements Builder
         Operator|null $operator = null,
         LogicalOperator $logicalConnector = LogicalOperator::AND
     ): void {
-        $builder = new Subquery();
+        $builder = new Subquery($this->driver);
         $builder->select(['*']);
 
         $subquery($builder);

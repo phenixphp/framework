@@ -7,15 +7,14 @@ namespace Phenix\Crypto\Tasks;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Phenix\Crypto\Hasher;
-use Phenix\Tasks\ParallelTask;
 use Phenix\Tasks\Result;
+use Phenix\Tasks\Task;
 
-class CheckNeedsRehash extends ParallelTask
+class CheckNeedsRehash extends Task
 {
     public function __construct(
         protected string $hash,
     ) {
-        parent::__construct();
     }
 
     protected function handle(Channel $channel, Cancellation $cancellation): Result

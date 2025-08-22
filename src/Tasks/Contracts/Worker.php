@@ -6,12 +6,12 @@ namespace Phenix\Tasks\Contracts;
 
 interface Worker
 {
-    public function submit(ParallelTask $parallelTask): self;
+    public function submit(Task $parallelTask): self;
 
     public function run(): array;
 
     /**
-     * @param ParallelTask[] $tasks
+     * @param Task[] $tasks
      * @return array
      */
     public static function batch(array $tasks): array;
