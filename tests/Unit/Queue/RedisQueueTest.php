@@ -76,7 +76,7 @@ it('returns a task', function (): void {
     $clientMock->expects($this->exactly(4))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [
                 $this->equalTo('HSET'),
@@ -158,7 +158,7 @@ it('requeues the payload and returns null when reservation fails', function (): 
     $clientMock->expects($this->exactly(3))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload)],
         )
@@ -180,7 +180,7 @@ it('returns null when queue is empty', function (): void {
 
     $clientMock->expects($this->once())
         ->method('execute')
-        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60))
+        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60))
         ->willReturn(null); // EVAL returns null when queue is empty or all tasks are failed
 
     $queue = new RedisQueue($clientMock, 'default');
@@ -344,17 +344,17 @@ it('properly pops tasks in chunks with limited timeout', function (): void {
         ->method('execute')
         ->withConsecutive(
             // First task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
             [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
             // Second task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
             [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
             // Third task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
             [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')]
@@ -405,7 +405,7 @@ it('returns empty chunk when first reservation fails', function (): void {
     $clientMock->expects($this->exactly(3))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload1)],
         )

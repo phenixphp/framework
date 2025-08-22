@@ -11,8 +11,22 @@ class LuaScripts
         return <<<'LUA'
 -- KEYS[1] - queue key (e.g., "queues:default")
 -- KEYS[2] - failed tasks set key (e.g., "queues:failed")
+-- KEYS[3] - delayed queue key (e.g., "queues:delayed")
 -- ARGV[1] - current timestamp
 -- ARGV[2] - reservation timeout (seconds)
+
+-- First, move any delayed tasks that are ready back to the main queue
+local current_time = tonumber(ARGV[1])
+local ready_tasks = redis.call('ZRANGEBYSCORE', KEYS[3], 0, current_time)
+
+if #ready_tasks > 0 then
+    -- Move ready tasks from delayed queue to main queue
+    for i = 1, #ready_tasks do
+        redis.call('LPUSH', KEYS[1], ready_tasks[i])
+    end
+    -- Remove the tasks from delayed queue
+    redis.call('ZREMRANGEBYSCORE', KEYS[3], 0, current_time)
+end
 
 local function pop_next_task()
     local payload = redis.call('LPOP', KEYS[1])

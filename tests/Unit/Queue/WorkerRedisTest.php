@@ -23,7 +23,7 @@ it('processes a successful task', function (): void {
     $client->expects($this->exactly(6))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [
                 $this->equalTo('HSET'),
@@ -66,7 +66,7 @@ it('processes a failed task and retries', function (): void {
     $client->expects($this->exactly(8))
         ->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->isType('int'), $this->equalTo(60)],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
             [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
             [
                 $this->equalTo('HSET'),

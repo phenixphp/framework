@@ -46,8 +46,9 @@ class RedisQueue extends Queue
     {
         $queueKey = $this->getQueueKey($queueName);
         $failedQueueKey = "queues:failed";
+        $delayedQueueKey = "queues:delayed";
 
-        $payload = $this->redis->execute('EVAL', LuaScripts::pop(), 2, $queueKey, $failedQueueKey, time(), 60);
+        $payload = $this->redis->execute('EVAL', LuaScripts::pop(), 3, $queueKey, $failedQueueKey, $delayedQueueKey, time(), 60);
 
         if ($payload === null) {
             return null;
