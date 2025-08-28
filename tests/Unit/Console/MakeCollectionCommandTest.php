@@ -22,12 +22,12 @@ it('creates collection successfully', function () {
 
     /** @var CommandTester $command */
     $command = $this->phenix('make:collection', [
-        'name' => 'User',
+        'name' => 'UserCollection',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Collection [app/Collections/UserCollection.php] successfully generated!');
 });
 
 it('does not create the collection because it already exists', function () {
@@ -72,13 +72,13 @@ it('creates collection successfully with force option', function () {
 
     /** @var CommandTester $command */
     $command = $this->phenix('make:collection', [
-        'name' => 'User',
+        'name' => 'UserCollection',
         '--force' => true,
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Collection [app/Collections/UserCollection.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -101,5 +101,5 @@ it('creates collection successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Collection [app/Collections/Admin/User.php] successfully generated!');
 });
