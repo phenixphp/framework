@@ -36,7 +36,7 @@ class MakeSeeder extends Maker
 
     protected function outputDirectory(): string
     {
-        return 'database' . DIRECTORY_SEPARATOR . 'seeds';
+        return 'database' . DIRECTORY_SEPARATOR . 'seeders';
     }
 
     protected function stub(): string

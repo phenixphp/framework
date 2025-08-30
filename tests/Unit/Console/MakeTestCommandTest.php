@@ -28,7 +28,7 @@ it('creates test successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Test successfully generated!');
+    expect($command->getDisplay())->toContain('Test [tests/Feature/ExampleTest.php] successfully generated!');
 });
 
 it('does not create the test because it already exists', function () {
@@ -79,7 +79,7 @@ it('creates test successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Test successfully generated!');
+    expect($command->getDisplay())->toContain('Test [tests/Feature/ExampleTest.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -102,7 +102,7 @@ it('creates test successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Test successfully generated!');
+    expect($command->getDisplay())->toContain('Test [tests/Feature/Admin/ExampleTest.php] successfully generated!');
 });
 
 it('creates test successfully with unit option', function () {
@@ -129,5 +129,5 @@ it('creates test successfully with unit option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Test successfully generated!');
+    expect($command->getDisplay())->toContain('Test [tests/Unit/ExampleTest.php] successfully generated!');
 });

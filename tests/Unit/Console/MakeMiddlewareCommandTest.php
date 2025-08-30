@@ -28,7 +28,7 @@ it('creates middleware successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Middleware successfully generated!');
+    expect($command->getDisplay())->toContain('Middleware [app/Http/Middleware/AwesomeMiddleware.php] successfully generated!');
 });
 
 it('does not create the middleware because it already exists', function () {
@@ -79,7 +79,7 @@ it('creates middleware successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Middleware successfully generated!');
+    expect($command->getDisplay())->toContain('Middleware [app/Http/Middleware/TestMiddleware.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -106,5 +106,5 @@ it('creates middleware successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Middleware successfully generated!');
+    expect($command->getDisplay())->toContain('Middleware [app/Http/Middleware/Admin/TestMiddleware.php] successfully generated!');
 });

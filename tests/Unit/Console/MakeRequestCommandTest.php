@@ -28,7 +28,7 @@ it('creates form request successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request successfully generated!');
+    expect($command->getDisplay())->toContain('Request [app/Http/Requests/StoreUserRequest.php] successfully generated!');
 });
 
 it('does not create the form request because it already exists', function () {
@@ -79,7 +79,7 @@ it('creates form request successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request successfully generated!');
+    expect($command->getDisplay())->toContain('Request [app/Http/Requests/StoreUserRequest.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -106,5 +106,5 @@ it('creates form request successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request successfully generated!');
+    expect($command->getDisplay())->toContain('Request [app/Http/Requests/Admin/StoreUserRequest.php] successfully generated!');
 });

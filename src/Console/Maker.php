@@ -48,7 +48,9 @@ abstract class Maker extends Command
 
         File::put($filePath, $stub);
 
-        $output->writeln(["<info>{$this->commonName()} successfully generated!</info>", self::EMPTY_LINE]);
+        $outputPath = str_replace(base_path(), '', $filePath);
+
+        $output->writeln(["<info>{$this->commonName()} [{$outputPath}] successfully generated!</info>", self::EMPTY_LINE]);
 
         return Command::SUCCESS;
     }

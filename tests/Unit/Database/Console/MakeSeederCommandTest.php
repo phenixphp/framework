@@ -24,5 +24,5 @@ it('creates seeder successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Seeder successfully generated!');
+    expect($command->getDisplay())->toContain('Seeder [database/seeders/UsersSeeder.php] successfully generated!');
 });

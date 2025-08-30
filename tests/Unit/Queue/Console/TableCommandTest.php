@@ -27,5 +27,5 @@ it('creates queue table successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Queue table successfully generated!');
+    expect($command->getDisplay())->toContain('Queue table [database/migrations/20250101205638_create_tasks_table.php] successfully generated!');
 });
