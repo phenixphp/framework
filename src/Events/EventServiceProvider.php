@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Events;
 
 use Phenix\Events\Console\MakeEvent;
+use Phenix\Events\Console\MakeListener;
 use Phenix\Events\Contracts\EventEmitter as EventEmitterContract;
 use Phenix\Providers\ServiceProvider;
 
@@ -30,6 +31,7 @@ class EventServiceProvider extends ServiceProvider
     {
         $this->commands([
             MakeEvent::class,
+            MakeListener::class,
         ]);
     }
 }
