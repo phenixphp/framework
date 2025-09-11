@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Events;
 
-use League\Container\ServiceProvider\AbstractServiceProvider;
+use Phenix\Events\Console\MakeEvent;
 use Phenix\Events\Contracts\EventEmitter as EventEmitterContract;
+use Phenix\Providers\ServiceProvider;
 
-class EventServiceProvider extends AbstractServiceProvider
+class EventServiceProvider extends ServiceProvider
 {
     protected $provides = [
         EventEmitter::class,
@@ -23,5 +24,12 @@ class EventServiceProvider extends AbstractServiceProvider
     {
         $this->getContainer()->addShared(EventEmitter::class, EventEmitter::class);
         $this->getContainer()->add(EventEmitterContract::class, EventEmitter::class);
+    }
+
+    public function boot(): void
+    {
+        $this->commands([
+            MakeEvent::class,
+        ]);
     }
 }
