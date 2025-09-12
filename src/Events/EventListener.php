@@ -19,24 +19,21 @@ class EventListener extends AbstractListener
 
     public function handle(Event $event): mixed
     {
-        if ($this->handler instanceof Closure) {
-            return ($this->handler)($event);
-        }
+        $result = null;
 
-        // Handle string-based class listeners
-        if (is_string($this->handler)) {
+        if ($this->handler instanceof Closure) {
+            $result = ($this->handler)($event);
+        } elseif (is_string($this->handler)) {
             $listener = App::make($this->handler);
 
             if (method_exists($listener, 'handle')) {
-                return $listener->handle($event);
-            }
-
-            if (is_callable($listener)) {
-                return $listener($event);
+                $result = $listener->handle($event);
+            } elseif (is_callable($listener)) {
+                $result = $listener($event);
             }
         }
 
-        return null;
+        return $result;
     }
 
     public function getHandler(): Closure|string
