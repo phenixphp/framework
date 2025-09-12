@@ -12,6 +12,8 @@ interface EventListener
 
     public function getPriority(): int;
 
+    public function setPriority(int $priority): self;
+
     public function shouldHandle(Event $event): bool;
 
     public function isOnce(): bool;
