@@ -10,8 +10,6 @@ use Phenix\Events\Contracts\Event;
 
 class EventListener extends AbstractListener
 {
-    protected bool $once = false;
-
     public function __construct(
         protected Closure|string $handler,
         int $priority = 0
@@ -39,18 +37,6 @@ class EventListener extends AbstractListener
         }
 
         return null;
-    }
-
-    public function isOnce(): bool
-    {
-        return $this->once;
-    }
-
-    public function setOnce(bool $once = true): self
-    {
-        $this->once = $once;
-
-        return $this;
     }
 
     public function getHandler(): Closure|string

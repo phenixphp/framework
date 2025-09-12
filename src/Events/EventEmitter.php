@@ -18,7 +18,7 @@ use function Amp\async;
 class EventEmitter implements EventEmitterContract
 {
     /**
-     * @var array<string, array<int, EventListener>>
+     * @var array<string, array<int, EventListenerContract>>
      */
     protected array $listeners = [];
 
@@ -75,7 +75,7 @@ class EventEmitter implements EventEmitterContract
 
         $this->listeners[$event] = array_filter(
             $this->listeners[$event],
-            fn (EventListener $eventListener): bool => ! $this->isSameListener($eventListener, $listener)
+            fn (EventListenerContract $eventListener): bool => ! $this->isSameListener($eventListener, $listener)
         );
 
         $this->listenerCounts[$event] = count($this->listeners[$event]);
@@ -166,7 +166,7 @@ class EventEmitter implements EventEmitterContract
         });
     }
 
-    protected function handleListenerAsync(EventListener $listener, EventContract $eventObject): Future
+    protected function handleListenerAsync(EventListenerContract $listener, EventContract $eventObject): Future
     {
         return async(function () use ($listener, $eventObject): mixed {
             try {
@@ -200,7 +200,7 @@ class EventEmitter implements EventEmitterContract
     }
 
     /**
-     * @return array<int, EventListener>
+     * @return array<int, EventListenerContract>
      */
     public function getListeners(string $event): array
     {
@@ -243,7 +243,7 @@ class EventEmitter implements EventEmitterContract
         return array_keys($this->listeners);
     }
 
-    protected function createEventListener(Closure|EventListenerContract|string $listener, int $priority): EventListener
+    protected function createEventListener(Closure|EventListenerContract|string $listener, int $priority): EventListenerContract
     {
         if ($listener instanceof EventListenerContract) {
             return $listener;
@@ -267,7 +267,7 @@ class EventEmitter implements EventEmitterContract
             return;
         }
 
-        usort($this->listeners[$event], function (EventListener $a, EventListener $b): int {
+        usort($this->listeners[$event], function (EventListenerContract $a, EventListenerContract $b): int {
             return $b->getPriority() <=> $a->getPriority();
         });
     }
@@ -285,18 +285,18 @@ class EventEmitter implements EventEmitterContract
         }
     }
 
-    protected function isSameListener(EventListener $eventListener, Closure|EventListenerContract|string $listener): bool
+    protected function isSameListener(EventListenerContract $eventListener, Closure|EventListenerContract|string $listener): bool
     {
         $handler = $eventListener->getHandler();
 
         if ($listener instanceof EventListenerContract) {
-            return $eventListener === $listener;
+            return $eventListener::class === $listener::class;
         }
 
         return $handler === $listener;
     }
 
-    protected function removeListener(string $event, EventListener $listener): void
+    protected function removeListener(string $event, EventListenerContract $listener): void
     {
         if (! isset($this->listeners[$event])) {
             return;
@@ -304,7 +304,7 @@ class EventEmitter implements EventEmitterContract
 
         $this->listeners[$event] = array_filter(
             $this->listeners[$event],
-            fn (EventListener $eventListener) => $eventListener !== $listener
+            fn (EventListenerContract $eventListener): bool => ! $this->isSameListener($eventListener, $listener)
         );
 
         $this->listenerCounts[$event] = count($this->listeners[$event]);
