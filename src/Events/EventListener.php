@@ -14,7 +14,7 @@ class EventListener extends AbstractListener
         protected Closure|string $handler,
         int $priority = 0
     ) {
-        $this->priority = $priority;
+        $this->priority = $this->normalizePriority($priority);
     }
 
     public function handle(Event $event): mixed

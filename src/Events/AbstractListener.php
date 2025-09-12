@@ -18,7 +18,7 @@ abstract class AbstractListener implements EventListenerContract
 
     public function setPriority(int $priority): self
     {
-        $this->priority = $priority;
+        $this->priority = $this->normalizePriority($priority);
 
         return $this;
     }
@@ -48,5 +48,10 @@ abstract class AbstractListener implements EventListenerContract
     public function getHandler(): Closure|static|string
     {
         return $this;
+    }
+
+    protected function normalizePriority(int $priority): int
+    {
+        return max(0, min($priority, 100));
     }
 }
