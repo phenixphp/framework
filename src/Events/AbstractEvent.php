@@ -8,15 +8,9 @@ use Phenix\Events\Contracts\Event as EventContract;
 
 abstract class AbstractEvent implements EventContract
 {
+    protected mixed $payload = null;
+
     protected bool $propagationStopped = false;
-
-    protected float $timestamp;
-
-    public function __construct(
-        protected mixed $payload = null
-    ) {
-        $this->timestamp = microtime(true);
-    }
 
     public function getName(): string
     {
@@ -36,11 +30,6 @@ abstract class AbstractEvent implements EventContract
     public function stopPropagation(): void
     {
         $this->propagationStopped = true;
-    }
-
-    public function getTimestamp(): float
-    {
-        return $this->timestamp;
     }
 
     public function __toString(): string

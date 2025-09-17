@@ -13,6 +13,4 @@ interface Event
     public function isPropagationStopped(): bool;
 
     public function stopPropagation(): void;
-
-    public function getTimestamp(): float;
 }

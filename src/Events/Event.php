@@ -6,11 +6,19 @@ namespace Phenix\Events;
 
 class Event extends AbstractEvent
 {
+    protected float $timestamp;
+
     public function __construct(
         protected string $name,
-        protected mixed $payload = null
+        mixed $payload = null
     ) {
+        $this->payload = $payload;
         $this->timestamp = microtime(true);
+    }
+
+    public function getTimestamp(): float
+    {
+        return $this->timestamp;
     }
 
     public function getName(): string
