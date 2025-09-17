@@ -15,9 +15,6 @@ class {name} extends AbstractListener
         //
     }
 
-    /**
-     * Determine if the listener should handle the event.
-     */
     public function shouldHandle(Event $event): bool
     {
         return true;
