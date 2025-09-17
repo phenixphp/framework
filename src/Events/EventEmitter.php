@@ -150,6 +150,7 @@ class EventEmitter implements EventEmitterContract
             }
 
             $results = [];
+
             foreach ($futures as $future) {
                 try {
                     $results[] = $future->await();
@@ -158,6 +159,7 @@ class EventEmitter implements EventEmitterContract
                         'event' => $eventObject->getName(),
                         'error' => $e->getMessage(),
                     ]);
+
                     $results[] = null;
                 }
             }
