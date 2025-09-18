@@ -8,9 +8,5 @@ use Phenix\Events\AbstractEvent;
 
 class {name} extends AbstractEvent
 {
-    public function __construct(
-        mixed $payload = null
-    ) {
-        parent::__construct($payload);
-    }
+    //
 }
