@@ -104,6 +104,19 @@ it('can remove listeners', function (): void {
     expect($called)->toBeFalse();
 });
 
+it('tries to remove non registered event', function (): void {
+    $emitter = new EventEmitter();
+    $called = false;
+
+    $listener = function () use (&$called): void {
+        $called = true;
+    };
+
+    $emitter->off('removable.event', $listener);
+
+    expect($called)->toBeFalse();
+});
+
 it('can remove all listeners for an event', function (): void {
     $emitter = new EventEmitter();
     $count = 0;
