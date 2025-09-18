@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
+use Mockery\Expectation;
+use Mockery\ExpectationInterface;
+use Mockery\HigherOrderMessage;
+use Phenix\App;
 use Phenix\Runtime\Facade;
+use Phenix\Testing\Mockery;
 
 /**
  * @method static void info(string $message, array $context = [])
@@ -23,5 +28,14 @@ class Log extends Facade
     public static function getKeyName(): string
     {
         return \Phenix\Runtime\Log::class;
+    }
+
+    public static function shouldReceive(string $method): Expectation|ExpectationInterface|HigherOrderMessage
+    {
+        $mock = Mockery::mock(self::getKeyName())->shouldAllowMockingProtectedMethods()->makePartial();
+
+        App::fake(self::getKeyName(), $mock);
+
+        return $mock->shouldReceive($method);
     }
 }
