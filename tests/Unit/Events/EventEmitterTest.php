@@ -26,6 +26,18 @@ it('can register and emit basic events', function (): void {
     expect($called)->toBeTrue();
 });
 
+it('can register and emit async events', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on('test.event', fn (EventContract $event): string => $event->getPayload());
+
+    $future = $emitter->emitAsync('test.event', 'test data');
+
+    $results = $future->await();
+
+    expect($results)->toBe(['test data']);
+});
+
 it('can register and emit events with facade syntax', function (): void {
     $called = false;
 
