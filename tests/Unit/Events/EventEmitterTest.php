@@ -5,7 +5,10 @@ declare(strict_types=1);
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
+use Phenix\Events\Exceptions\EventException;
+use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Event as EventFacade;
+use Phenix\Facades\Log;
 use Tests\Unit\Events\Internal\StandardListener;
 
 it('can register and emit basic events', function (): void {
@@ -200,6 +203,19 @@ it('skip listener when shouldHandle returns false', function (): void {
 
     $emitter->emit('custom.event', 'data');
 });
+
+it('handle listener error gracefully', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on('error.event', function (): never {
+        throw new RuntimeError('Listener error');
+    });
+
+    Log::shouldReceive('error')
+        ->once();
+
+    $emitter->emit('error.event');
+})->throws(EventException::class);
 
 it('can check if event has listeners', function (): void {
     $emitter = new EventEmitter();
