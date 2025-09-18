@@ -6,6 +6,7 @@ use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
 use Phenix\Facades\Event as EventFacade;
+use Tests\Unit\Events\Internal\StandardListener;
 
 it('can register and emit basic events', function (): void {
     $emitter = new EventEmitter();
@@ -179,6 +180,25 @@ it('can handle Event objects', function (): void {
     $emitter->emit($event);
 
     expect($called)->toBeTrue();
+});
+
+it('skip listener when shouldHandle returns false', function (): void {
+    $emitter = new EventEmitter();
+
+    $listener = $this->getMockBuilder(StandardListener::class)
+        ->onlyMethods(['shouldHandle', 'handle'])
+        ->getMock();
+
+    $listener->expects($this->once())
+        ->method('shouldHandle')
+        ->willReturn(false);
+
+    $listener->expects($this->never())
+        ->method('handle');
+
+    $emitter->on('custom.event', $listener);
+
+    $emitter->emit('custom.event', 'data');
 });
 
 it('can check if event has listeners', function (): void {
