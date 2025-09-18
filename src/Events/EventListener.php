@@ -7,6 +7,11 @@ namespace Phenix\Events;
 use Closure;
 use Phenix\App;
 use Phenix\Events\Contracts\Event;
+use Phenix\Events\Contracts\EventListener as EventListenerContract;
+use Phenix\Events\Exceptions\EventListenerException;
+
+use function class_exists;
+use function is_callable;
 
 class EventListener extends AbstractListener
 {
@@ -19,21 +24,23 @@ class EventListener extends AbstractListener
 
     public function handle(Event $event): mixed
     {
-        $result = null;
-
         if ($this->handler instanceof Closure) {
-            $result = ($this->handler)($event);
-        } elseif (is_string($this->handler)) {
-            $listener = App::make($this->handler);
-
-            if (method_exists($listener, 'handle')) {
-                $result = $listener->handle($event);
-            } elseif (is_callable($listener)) {
-                $result = $listener($event);
-            }
+            return ($this->handler)($event);
         }
 
-        return $result;
+        $listener = null;
+
+        if (App::has($this->handler)) {
+            $listener = App::make($this->handler);
+        } elseif (class_exists($this->handler)) {
+            $listener = new $this->handler();
+        }
+
+        if (! $listener || ! $listener instanceof EventListenerContract && ! is_callable($listener)) {
+            throw new EventListenerException("Resolved listener is invalid: {$this->handler}");
+        }
+
+        return $listener instanceof EventListenerContract ? $listener->handle($event) : $listener($event);
     }
 
     public function getHandler(): Closure|string
