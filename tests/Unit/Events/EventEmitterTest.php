@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
+use Phenix\Facades\Event as EventFacade;
 
 it('can register and emit basic events', function (): void {
     $emitter = new EventEmitter();
@@ -17,6 +18,20 @@ it('can register and emit basic events', function (): void {
     });
 
     $emitter->emit('test.event', 'test data');
+
+    expect($called)->toBeTrue();
+});
+
+it('can register and emit events with facade syntax', function (): void {
+    $called = false;
+
+    EventFacade::on('facade.event', function (EventContract $event) use (&$called): void {
+        $called = true;
+        expect($event->getName())->toBe('facade.event');
+        expect($event->getPayload())->toBe('facade data');
+    });
+
+    EventFacade::emit('facade.event', 'facade data');
 
     expect($called)->toBeTrue();
 });
