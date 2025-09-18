@@ -14,9 +14,4 @@ class {name} extends AbstractListener
     {
         //
     }
-
-    public function shouldHandle(Event $event): bool
-    {
-        return true;
-    }
 }
