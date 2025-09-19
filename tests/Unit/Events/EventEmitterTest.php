@@ -236,6 +236,25 @@ it('skip the listener when this should not be handled', function (): void {
     $emitter->emit('custom.event', 'data');
 });
 
+it('skip the listener when this should not be handled in async event', function (): void {
+    $emitter = new EventEmitter();
+
+    $listener = $this->getMockBuilder(StandardListener::class)
+        ->onlyMethods(['shouldHandle', 'handle'])
+        ->getMock();
+
+    $listener->expects($this->once())
+        ->method('shouldHandle')
+        ->willReturn(false);
+
+    $listener->expects($this->never())
+        ->method('handle');
+
+    $emitter->on('custom.event', $listener);
+
+    $emitter->emitAsync('custom.event', 'data');
+});
+
 it('handle listener error gracefully', function (): void {
     $emitter = new EventEmitter();
 
