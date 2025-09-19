@@ -217,7 +217,7 @@ it('can handle Event objects', function (): void {
     expect($called)->toBeTrue();
 });
 
-it('skip listener when shouldHandle returns false', function (): void {
+it('skip the listener when this should not be handled', function (): void {
     $emitter = new EventEmitter();
 
     $listener = $this->getMockBuilder(StandardListener::class)
