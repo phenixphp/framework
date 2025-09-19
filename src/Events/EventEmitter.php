@@ -138,10 +138,6 @@ class EventEmitter implements EventEmitterContract
             $futures = [];
 
             foreach ($listeners as $listener) {
-                if ($eventObject->isPropagationStopped()) {
-                    break;
-                }
-
                 if (! $listener->shouldHandle($eventObject)) {
                     continue;
                 }
@@ -172,6 +168,10 @@ class EventEmitter implements EventEmitterContract
     {
         return async(function () use ($listener, $eventObject): mixed {
             try {
+                if ($eventObject->isPropagationStopped()) {
+                    return null;
+                }
+
                 $result = $listener->handle($eventObject);
 
                 // Remove one-time listeners after execution

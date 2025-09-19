@@ -169,6 +169,26 @@ it('can stop event propagation', function (): void {
     expect($count)->toBe(1);
 });
 
+it('can stop async event propagation', function (): void {
+    $emitter = new EventEmitter();
+    $count = 0;
+
+    $emitter->on('stop.event', function (EventContract $event) use (&$count): void {
+        $count++;
+        $event->stopPropagation();
+    });
+
+    $emitter->on('stop.event', function (EventContract $event) use (&$count): void {
+        $count++;
+    });
+
+    $future = $emitter->emitAsync('stop.event');
+
+    $future->await();
+
+    expect($count)->toBe(1);
+});
+
 it('returns results from listeners', function (): void {
     $emitter = new EventEmitter();
 
