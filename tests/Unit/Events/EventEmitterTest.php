@@ -252,7 +252,9 @@ it('skip the listener when this should not be handled in async event', function 
 
     $emitter->on('custom.event', $listener);
 
-    $emitter->emitAsync('custom.event', 'data');
+    $future = $emitter->emitAsync('custom.event', 'data');
+
+    $future->await();
 });
 
 it('handle listener error gracefully', function (): void {
@@ -267,6 +269,21 @@ it('handle listener error gracefully', function (): void {
 
     $emitter->emit('error.event');
 })->throws(EventException::class);
+
+it('handle listener error gracefully in async event', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on('error.event', function (): never {
+        throw new RuntimeError('Listener error');
+    });
+
+    Log::shouldReceive('error')
+        ->times(2);
+
+    $future = $emitter->emitAsync('error.event');
+
+    $future->await();
+});
 
 it('can check if event has listeners', function (): void {
     $emitter = new EventEmitter();
