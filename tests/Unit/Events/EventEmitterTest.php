@@ -272,6 +272,7 @@ it('handle listener error gracefully', function (): void {
 
 it('handle listener error gracefully in async event', function (): void {
     $emitter = new EventEmitter();
+    $emitter->setEmitWarnings(true);
 
     $emitter->on('error.event', function (): never {
         throw new RuntimeError('Listener error');
