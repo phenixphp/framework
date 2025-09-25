@@ -38,6 +38,16 @@ it('can register and emit async events', function (): void {
     expect($results)->toBe(['test data']);
 });
 
+it('can register and emit basic events with string-class listeners', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on('test.event', StandardListener::class);
+
+    $results = $emitter->emit('test.event', 'test data');
+    dump($results);
+    expect($results)->toBe(['Event name: test.event']);
+});
+
 it('can register and emit events with facade syntax', function (): void {
     $called = false;
 
