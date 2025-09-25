@@ -406,3 +406,17 @@ it('warns when exceeding the maximum number of listeners for an event', function
 
     expect($emitter->getListenerCount('warn.event'))->toBe(2);
 });
+
+it('does not warn when exceeding maximum listeners if warnings disabled', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->setMaxListeners(1);
+    $emitter->setEmitWarnings(false);
+
+    Log::shouldReceive('warning')->never();
+
+    $emitter->on('warn.event', fn (): null => null);
+    $emitter->on('warn.event', fn (): null => null);
+
+    expect($emitter->getListenerCount('warn.event'))->toBe(2);
+});
