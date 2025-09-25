@@ -296,10 +296,6 @@ class EventEmitter implements EventEmitterContract
 
     protected function removeListener(string $event, EventListenerContract $listener): void
     {
-        if (! isset($this->listeners[$event])) {
-            return;
-        }
-
         $this->listeners[$event] = array_filter(
             $this->listeners[$event],
             fn (EventListenerContract $eventListener): bool => ! $this->isSameListener($eventListener, $listener)
