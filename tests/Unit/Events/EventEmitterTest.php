@@ -60,6 +60,19 @@ it('can register and emit basic events with string-class listeners', function ()
     expect($results)->toBe(['Event name: test.event']);
 });
 
+it('can register and emit basic events and listener with custom priority', function (): void {
+    $emitter = new EventEmitter();
+
+    $listener = new StandardListener();
+    $listener->setPriority(10);
+
+    $emitter->on('test.event', $listener);
+
+    $results = $emitter->emit('test.event', 'test data');
+
+    expect($results)->toBe(['Event name: test.event']);
+});
+
 it('returns null for invalid listeners', function (): void {
     $emitter = new EventEmitter();
 
