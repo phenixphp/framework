@@ -265,10 +265,6 @@ class EventEmitter implements EventEmitterContract
 
     protected function sortListenersByPriority(string $event): void
     {
-        if (! isset($this->listeners[$event])) {
-            return;
-        }
-
         usort($this->listeners[$event], function (EventListenerContract $a, EventListenerContract $b): int {
             return $b->getPriority() <=> $a->getPriority();
         });
