@@ -313,6 +313,21 @@ it('handle listener error gracefully in async event', function (): void {
     $future->await();
 });
 
+it('handle listener error gracefully in async event without warnings', function (): void {
+    $emitter = new EventEmitter();
+    $emitter->setEmitWarnings(false);
+
+    $emitter->on('error.event', function (): never {
+        throw new RuntimeError('Listener error');
+    });
+
+    Log::shouldReceive('error')->once();
+
+    $future = $emitter->emitAsync('error.event');
+
+    $future->await();
+});
+
 it('can check if event has listeners', function (): void {
     $emitter = new EventEmitter();
 
