@@ -31,9 +31,4 @@ abstract class AbstractEvent implements EventContract
     {
         $this->propagationStopped = true;
     }
-
-    public function __toString(): string
-    {
-        return $this->getName();
-    }
 }
