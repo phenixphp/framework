@@ -257,6 +257,33 @@ it('skip the listener when this should not be handled in async event', function 
     $future->await();
 });
 
+it('uses listener once and removes this after use', function (): void {
+    $emitter = new EventEmitter();
+
+    $listener = $this->getMockBuilder(StandardListener::class)
+        ->onlyMethods(['shouldHandle', 'isOnce', 'handle'])
+        ->getMock();
+
+    $listener->expects($this->once())
+        ->method('shouldHandle')
+        ->willReturn(true);
+
+    $listener->expects($this->once())
+        ->method('handle')
+        ->willReturn('Event name: custom.event');
+
+    $listener->expects($this->once())
+        ->method('isOnce')
+        ->willReturn(true);
+
+
+    $emitter->on('custom.event', $listener);
+
+    $future = $emitter->emitAsync('custom.event', 'data');
+
+    $future->await();
+});
+
 it('handle listener error gracefully', function (): void {
     $emitter = new EventEmitter();
 
