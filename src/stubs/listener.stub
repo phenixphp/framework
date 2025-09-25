@@ -6,7 +6,6 @@ namespace {namespace};
 
 use Phenix\Events\AbstractListener;
 use Phenix\Events\Contracts\Event;
-use Phenix\Facades\Log;
 
 class {name} extends AbstractListener
 {
