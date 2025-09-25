@@ -392,3 +392,16 @@ it('can clear all listeners', function (): void {
 
     expect($emitter->getEventNames())->toBeEmpty();
 });
+
+it('warns when exceeding the maximum number of listeners for an event', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->setMaxListeners(1);
+
+    Log::shouldReceive('warning')->once();
+
+    $emitter->on('warn.event', fn (): null => null);
+    $emitter->on('warn.event', fn (): null => null); // This pushes it over the limit and should log a warning
+
+    expect($emitter->getListenerCount('warn.event'))->toBe(2);
+});
