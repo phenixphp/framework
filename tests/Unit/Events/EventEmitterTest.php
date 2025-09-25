@@ -44,7 +44,7 @@ it('can register and emit basic events with string-class listeners', function ()
     $emitter->on('test.event', StandardListener::class);
 
     $results = $emitter->emit('test.event', 'test data');
-    dump($results);
+
     expect($results)->toBe(['Event name: test.event']);
 });
 
