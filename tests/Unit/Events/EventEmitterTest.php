@@ -10,6 +10,7 @@ use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Event as EventFacade;
 use Phenix\Facades\Log;
 use Tests\Unit\Events\Internal\InvalidListener;
+use Tests\Unit\Events\Internal\StandardEvent;
 use Tests\Unit\Events\Internal\StandardListener;
 
 it('can register and emit basic events', function (): void {
@@ -25,6 +26,16 @@ it('can register and emit basic events', function (): void {
     $emitter->emit('test.event', 'test data');
 
     expect($called)->toBeTrue();
+});
+
+it('can register and emit string-class events', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on(StandardEvent::class, fn (EventContract $event): string => 'string result');
+
+    $results = $emitter->emit(StandardEvent::class, 'test data');
+
+    expect($results)->toBe(['string result']);
 });
 
 it('can register and emit async events', function (): void {
