@@ -9,6 +9,7 @@ use Phenix\Events\Exceptions\EventException;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Event as EventFacade;
 use Phenix\Facades\Log;
+use Tests\Unit\Events\Internal\InvalidListener;
 use Tests\Unit\Events\Internal\StandardListener;
 
 it('can register and emit basic events', function (): void {
@@ -46,6 +47,16 @@ it('can register and emit basic events with string-class listeners', function ()
     $results = $emitter->emit('test.event', 'test data');
 
     expect($results)->toBe(['Event name: test.event']);
+});
+
+it('returns null for invalid listeners', function (): void {
+    $emitter = new EventEmitter();
+
+    $emitter->on('test.event', InvalidListener::class);
+
+    $results = $emitter->emit('test.event', 'test data');
+
+    expect($results)->toBe([null]);
 });
 
 it('can register and emit events with facade syntax', function (): void {
