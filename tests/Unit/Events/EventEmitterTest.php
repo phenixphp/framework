@@ -397,6 +397,7 @@ it('warns when exceeding the maximum number of listeners for an event', function
     $emitter = new EventEmitter();
 
     $emitter->setMaxListeners(1);
+    $emitter->setEmitWarnings(true);
 
     Log::shouldReceive('warning')->once();
 
