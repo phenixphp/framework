@@ -29,7 +29,7 @@ class EventListener extends AbstractListener
 
         $listener = $this->resolveListener();
 
-        if (! $listener || ! method_exists($listener, 'handle') || ! is_callable($listener)) {
+        if (! $listener || ! (method_exists($listener, 'handle') || is_callable($listener))) {
             return null;
         }
 
@@ -43,14 +43,8 @@ class EventListener extends AbstractListener
 
     private function resolveListener(): object|null
     {
-        if (App::has($this->handler)) {
-            $listener = App::make($this->handler);
-        } elseif (class_exists($this->handler)) {
-            $listener = new $this->handler();
-        } else {
-            $listener = null;
-        }
-
-        return $listener;
+        return class_exists($this->handler)
+            ? new $this->handler()
+            : null;
     }
 }
