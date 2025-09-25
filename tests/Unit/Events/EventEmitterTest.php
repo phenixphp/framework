@@ -260,6 +260,7 @@ it('can handle Event objects', function (): void {
     $emitter->emit($event);
 
     expect($called)->toBeTrue();
+    expect($event->getTimestamp())->toBeFloat();
 });
 
 it('skip the listener when this should not be handled', function (): void {
