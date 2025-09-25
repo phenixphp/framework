@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Events;
 
 use Closure;
-use Phenix\App;
 use Phenix\Events\Contracts\Event;
 
 use function class_exists;
