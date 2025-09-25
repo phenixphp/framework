@@ -27,5 +27,6 @@ return [
         \Phenix\Mail\MailServiceProvider::class,
         \Phenix\Crypto\CryptoServiceProvider::class,
         \Phenix\Queue\QueueServiceProvider::class,
+        \Phenix\Events\EventServiceProvider::class,
     ],
 ];

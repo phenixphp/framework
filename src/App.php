@@ -12,6 +12,8 @@ use Amp\Http\Server\SocketHttpServer;
 use Amp\Socket;
 use League\Container\Container;
 use League\Uri\Uri;
+use Mockery\LegacyMockInterface;
+use Mockery\MockInterface;
 use Monolog\Logger;
 use Phenix\Console\Phenix;
 use Phenix\Contracts\App as AppContract;
@@ -103,6 +105,11 @@ class App implements AppContract, Makeable
     public static function make(string $key): object
     {
         return self::$container->get($key);
+    }
+
+    public static function fake(string $key, LegacyMockInterface|MockInterface $concrete): void
+    {
+        self::$container->extend($key)->setConcrete($concrete);
     }
 
     public static function path(): string
