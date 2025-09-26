@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Phenix\Filesystem\Contracts\File;
 use Phenix\Testing\Mock;
 
-it('creates form request successfully', function () {
+it('creates event successfully', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => false,
         get: fn (string $path) => '',
         put: function (string $path) {
-            expect($path)->toBe(base_path('app/Http/Requests/StoreUserRequest.php'));
+            expect($path)->toBe(base_path('app/Events/AwesomeEvent.php'));
 
             return true;
         },
@@ -22,39 +22,39 @@ it('creates form request successfully', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var \Symfony\Component\Console\Tester\CommandTester $command */
-    $command = $this->phenix('make:request', [
-        'name' => 'StoreUserRequest',
+    $command = $this->phenix('make:event', [
+        'name' => 'AwesomeEvent',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request [app/Http/Requests/StoreUserRequest.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Event [app/Events/AwesomeEvent.php] successfully generated!');
 });
 
-it('does not create the form request because it already exists', function () {
+it('does not create the event because it already exists', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => true,
     );
 
     $this->app->swap(File::class, $mock);
 
-    $this->phenix('make:request', [
-        'name' => 'StoreUserRequest',
+    $this->phenix('make:event', [
+        'name' => 'TestEvent',
     ]);
 
     /** @var \Symfony\Component\Console\Tester\CommandTester $command */
-    $command = $this->phenix('make:request', [
-        'name' => 'StoreUserRequest',
+    $command = $this->phenix('make:event', [
+        'name' => 'TestEvent',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request already exists!');
+    expect($command->getDisplay())->toContain('Event already exists!');
 });
 
-it('creates form request successfully with force option', function () {
+it('creates event successfully with force option', function () {
     $tempDir = sys_get_temp_dir();
-    $tempPath = $tempDir . DIRECTORY_SEPARATOR . 'StoreUserRequest.php';
+    $tempPath = $tempDir . DIRECTORY_SEPARATOR . 'TestEvent.php';
 
     file_put_contents($tempPath, 'old content');
 
@@ -72,23 +72,23 @@ it('creates form request successfully with force option', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var \Symfony\Component\Console\Tester\CommandTester $command */
-    $command = $this->phenix('make:request', [
-        'name' => 'StoreUserRequest',
+    $command = $this->phenix('make:event', [
+        'name' => 'TestEvent',
         '--force' => true,
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request [app/Http/Requests/StoreUserRequest.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Event [app/Events/TestEvent.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
-it('creates form request successfully in nested namespace', function () {
+it('creates event successfully in nested namespace', function () {
     $mock = Mock::of(File::class)->expect(
         exists: fn (string $path) => false,
         get: fn (string $path) => '',
         put: function (string $path) {
-            expect($path)->toBe(base_path('app/Http/Requests/Admin/StoreUserRequest.php'));
+            expect($path)->toBe(base_path('app/Events/Admin/TestEvent.php'));
 
             return true;
         },
@@ -100,11 +100,11 @@ it('creates form request successfully in nested namespace', function () {
     $this->app->swap(File::class, $mock);
 
     /** @var \Symfony\Component\Console\Tester\CommandTester $command */
-    $command = $this->phenix('make:request', [
-        'name' => 'Admin/StoreUserRequest',
+    $command = $this->phenix('make:event', [
+        'name' => 'Admin/TestEvent',
     ]);
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Request [app/Http/Requests/Admin/StoreUserRequest.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Event [app/Events/Admin/TestEvent.php] successfully generated!');
 });

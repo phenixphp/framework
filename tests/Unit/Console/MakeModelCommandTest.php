@@ -27,7 +27,7 @@ it('creates model successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
 });
 
 it('does not create the model because it already exists', function () {
@@ -78,7 +78,7 @@ it('creates model successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -101,7 +101,7 @@ it('creates model successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/Admin/User.php] successfully generated!');
 });
 
 it('creates model with custom collection', function () {
@@ -139,8 +139,8 @@ it('creates model with custom collection', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Collection [app/Collections/UserCollection.php] successfully generated!');
 });
 
 it('creates model with custom query builder', function () {
@@ -178,8 +178,8 @@ it('creates model with custom query builder', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
-    expect($command->getDisplay())->toContain('Query successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Query [app/Queries/UserQuery.php] successfully generated!');
 });
 
 it('creates model with all', function () {
@@ -223,9 +223,9 @@ it('creates model with all', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
-    expect($command->getDisplay())->toContain('Query successfully generated!');
-    expect($command->getDisplay())->toContain('Collection successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Query [app/Queries/UserQuery.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Collection [app/Collections/UserCollection.php] successfully generated!');
 });
 
 it('creates model with migration', function () {
@@ -261,8 +261,9 @@ it('creates model with migration', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
-    expect($command->getDisplay())->toContain('Migration successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Migration [database/migrations/');
+    expect($command->getDisplay())->toContain('_create_users_table.php] successfully generated!');
 });
 
 it('creates model with controller', function () {
@@ -298,6 +299,6 @@ it('creates model with controller', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Model successfully generated!');
-    expect($command->getDisplay())->toContain('Controller successfully generated!');
+    expect($command->getDisplay())->toContain('Model [app/Models/User.php] successfully generated!');
+    expect($command->getDisplay())->toContain('Controller [app/Http/Controllers/UserController.php] successfully generated!');
 });

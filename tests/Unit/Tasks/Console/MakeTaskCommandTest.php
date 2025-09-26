@@ -28,7 +28,7 @@ it('creates task successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Task successfully generated!');
+    expect($command->getDisplay())->toContain('Task [app/Tasks/AwesomeTask.php] successfully generated!');
 });
 
 it('creates queuable task successfully', function () {
@@ -55,7 +55,7 @@ it('creates queuable task successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Task successfully generated!');
+    expect($command->getDisplay())->toContain('Task [app/Tasks/AwesomeTask.php] successfully generated!');
 });
 
 it('does not create the task because it already exists', function () {
@@ -106,7 +106,7 @@ it('creates task successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Task successfully generated!');
+    expect($command->getDisplay())->toContain('Task [app/Tasks/TestTask.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -133,5 +133,5 @@ it('creates task successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Task successfully generated!');
+    expect($command->getDisplay())->toContain('Task [app/Tasks/Admin/TestTask.php] successfully generated!');
 });

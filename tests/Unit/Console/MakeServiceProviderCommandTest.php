@@ -28,5 +28,5 @@ it('creates service provider successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Service provider successfully generated!');
+    expect($command->getDisplay())->toContain('Service provider [app/Providers/SlackServiceProvider.php] successfully generated!');
 });

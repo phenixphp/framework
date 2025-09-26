@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Events\AbstractListener;
+use Phenix\Events\Contracts\Event;
+
+class {name} extends AbstractListener
+{
+    public function handle(Event $event): mixed
+    {
+        //
+    }
+}

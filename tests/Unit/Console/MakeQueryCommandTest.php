@@ -27,7 +27,7 @@ it('creates query successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Query successfully generated!');
+    expect($command->getDisplay())->toContain('Query [app/Queries/UserQuery.php] successfully generated!');
 });
 
 it('does not create the query because it already exists', function () {
@@ -78,7 +78,7 @@ it('creates query successfully with force option', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Query successfully generated!');
+    expect($command->getDisplay())->toContain('Query [app/Queries/UserQuery.php] successfully generated!');
     expect('new content')->toBe(file_get_contents($tempPath));
 });
 
@@ -101,5 +101,5 @@ it('creates query successfully in nested namespace', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Query successfully generated!');
+    expect($command->getDisplay())->toContain('Query [app/Queries/Domain/UserQuery.php] successfully generated!');
 });

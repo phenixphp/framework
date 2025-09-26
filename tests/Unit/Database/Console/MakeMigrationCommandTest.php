@@ -24,5 +24,6 @@ it('creates migration successfully', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('Migration successfully generated!');
+    expect($command->getDisplay())->toContain('Migration [database/migrations/');
+    expect($command->getDisplay())->toContain('_create_products_table.php] successfully generated!');
 });
