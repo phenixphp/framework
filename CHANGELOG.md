@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# Release Notes for 0.7.x
+
+## [v0.7.0 (2025-09-26)](https://github.com/phenixphp/framework/compare/0.6.0...0.7.0)
+
+### Added
+
+- Event system. ([#67](https://github.com/phenixphp/framework/pull/67))
+
 # Release Notes for 0.6.x
 
 ## [v0.6.0 (2025-08-22)](https://github.com/phenixphp/framework/compare/0.5.2...0.6.0)
