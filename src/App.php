@@ -117,6 +117,16 @@ class App implements AppContract, Makeable
         return self::$path;
     }
 
+    public static function isLocal(): bool
+    {
+        return Config::get('app.env') === 'local';
+    }
+
+    public static function isProduction(): bool
+    {
+        return Config::get('app.env') === 'production';
+    }
+
     public function swap(string $key, object $concrete): void
     {
         self::$container->extend($key)->setConcrete($concrete);
