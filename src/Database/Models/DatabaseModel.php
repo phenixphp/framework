@@ -7,6 +7,7 @@ namespace Phenix\Database\Models;
 use Phenix\Contracts\Arrayable;
 use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Attributes\DateTime;
+use Phenix\Database\Models\Attributes\Hidden;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Concerns\BuildModelData;
 use Phenix\Database\Models\Properties\ModelProperty;
@@ -139,6 +140,10 @@ abstract class DatabaseModel implements Arrayable
         $data = [];
 
         foreach ($this->getPropertyBindings() as $property) {
+            if ($property->getAttribute() instanceof Hidden) {
+                continue;
+            }
+
             $propertyName = $property->getName();
 
             $value = isset($this->{$propertyName}) ? $this->{$propertyName} : null;

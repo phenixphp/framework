@@ -15,6 +15,7 @@ use Tests\Feature\Database\Models\Comment;
 use Tests\Feature\Database\Models\Invoice;
 use Tests\Feature\Database\Models\Post;
 use Tests\Feature\Database\Models\Product;
+use Tests\Feature\Database\Models\SecureUser;
 use Tests\Feature\Database\Models\User;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
@@ -805,6 +806,31 @@ it('throws an exception when column in invalid on create instance', function () 
         ModelException::class,
         "Property other_date not found for model " . User::class,
     );
+});
+
+it('excludes hidden attributes from array and json output', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([[ 'Query OK' ]])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = new SecureUser();
+    $model->name = 'John Hidden';
+    $model->password = 'secret';
+
+    expect($model->save())->toBeTrue();
+
+    $array = $model->toArray();
+    expect(isset($array['password']))->toBeFalse();
+    expect($array['name'])->toBe('John Hidden');
+
+    $json = $model->toJson();
+    expect($json)->not->toContain('password');
 });
 
 it('finds a model successfully', function () {
