@@ -10,6 +10,6 @@ class Unique extends Exists
     {
         return $this->queryBuilder
             ->whereEqual($this->column ?? $this->field, $this->getValue())
-            ->count() === 1;
+            ->count() === 0;
     }
 }
