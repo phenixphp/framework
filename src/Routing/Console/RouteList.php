@@ -9,7 +9,6 @@ use Phenix\Http\Constants\HttpMethod;
 use Phenix\Routing\Route;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -118,12 +117,7 @@ class RouteList extends Command
      */
     private function renderTable(OutputInterface $output, array $routes): void
     {
-        $style = (new TableStyle())
-            ->setVerticalBorderChars(' ')
-            ->setHorizontalBorderChars('')
-            ->setCrossingChars('+', '-', '+', '+', '+', '-', '+', '+', '+');
-
-        $table = (new Table($output))->setStyle($style);
+        $table = new Table($output);
         $table->setHeaders(['Method', 'Path', 'Name', 'Middleware', 'Params']);
 
         foreach ($routes as $route) {
