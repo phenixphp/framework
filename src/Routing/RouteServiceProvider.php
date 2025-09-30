@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Routing;
 
 use Phenix\Providers\ServiceProvider;
+use Phenix\Routing\Console\RouteList;
 use Phenix\Util\Directory;
 use Phenix\Util\NamespaceResolver;
 
@@ -13,6 +14,10 @@ class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->bind(Route::class)->setShared(true);
+
+        $this->commands([
+            RouteList::class,
+        ]);
 
         $this->registerControllers();
         $this->loadRoutes();
