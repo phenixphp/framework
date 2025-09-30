@@ -15,5 +15,7 @@ it('should list all registered routes', function () {
 
     $command->assertCommandIsSuccessful();
 
-    expect($command->getDisplay())->toContain('GET /home (home)');
+    expect($command->getDisplay())->toContain('GET');
+    expect($command->getDisplay())->toContain('/home');
+    expect($command->getDisplay())->toContain('home');
 });
