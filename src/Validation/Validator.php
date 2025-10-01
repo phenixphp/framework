@@ -22,11 +22,21 @@ use function is_null;
 class Validator
 {
     protected Dot $data;
+
     protected ArrayIterator $rules;
+
     protected bool $stopOnFail = false;
+
     protected array $failing = [];
+
     protected array $validated = [];
+
     protected array $errors = [];
+
+    public function __construct(array $data = [], array $rules = []) {
+        $this->setData($data);
+        $this->setRules($rules);
+    }
 
     public function setRules(array $rules = []): self
     {
