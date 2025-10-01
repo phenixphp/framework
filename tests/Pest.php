@@ -131,7 +131,8 @@ if (getenv('PHENIX_DIAG') === '1') {
                 ], JSON_PRETTY_PRINT));
 
                 // Echo minimal line to stderr to keep CI from marking step idle
-                file_put_contents($___phenixStderr, sprintf("[PHENIX_DIAG] heartbeat(time=%s children=%d new=%d peak=%.2fMB)\n",
+                file_put_contents($___phenixStderr, sprintf(
+                    "[PHENIX_DIAG] heartbeat(time=%s children=%d new=%d peak=%.2fMB)\n",
                     $now,
                     count($children),
                     count($new),
