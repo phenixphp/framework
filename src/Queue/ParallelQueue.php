@@ -15,6 +15,7 @@ use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Tasks\Exceptions\FailedTaskException;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
+use Throwable;
 
 use function Amp\async;
 use function Amp\delay;
@@ -132,7 +133,7 @@ class ParallelQueue extends Queue
         if ($this->getRunningTasksCount() > 0) {
             try {
                 $this->await();
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // Swallow: diagnostics context should not fail tests hard.
             }
         }

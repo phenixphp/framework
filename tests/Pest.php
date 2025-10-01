@@ -171,6 +171,7 @@ if (getenv('PHENIX_DIAG') === '1') {
 
         $queueStatusCapture = static function () use ($dir): void {
             $queueStatus = null;
+
             try {
                 if (class_exists(\Phenix\Facades\Queue::class)) {
                     $driver = \Phenix\Facades\Queue::driver();
@@ -205,51 +206,51 @@ if (getenv('PHENIX_DIAG') === '1') {
         };
 
         $drainQueue = static function () use ($dir) {
-        $drainResult = [];
-        $attemptDrain = static function ($driver) {
-            $out = [];
-            $sizeFn = is_callable([$driver, 'size']);
-            $runningFn = is_callable([$driver, 'getRunningTasksCount']);
-            $drainFn = is_callable([$driver, 'drain']);
-            $out['capabilities'] = [
-                'size' => $sizeFn,
-                'running' => $runningFn,
-                'drain' => $drainFn,
-            ];
-            $before = [
-                'size' => $sizeFn ? $driver->size() : null,
-                'running' => $runningFn ? $driver->getRunningTasksCount() : null,
-            ];
-            if ($drainFn) {
-                try {
-                    $driver->drain(10, 0.02);
-                } catch (\Throwable $e) {
-                    $out['drain_error'] = $e->getMessage();
+            $drainResult = [];
+            $attemptDrain = static function ($driver) {
+                $out = [];
+                $sizeFn = is_callable([$driver, 'size']);
+                $runningFn = is_callable([$driver, 'getRunningTasksCount']);
+                $drainFn = is_callable([$driver, 'drain']);
+                $out['capabilities'] = [
+                    'size' => $sizeFn,
+                    'running' => $runningFn,
+                    'drain' => $drainFn,
+                ];
+                $before = [
+                    'size' => $sizeFn ? $driver->size() : null,
+                    'running' => $runningFn ? $driver->getRunningTasksCount() : null,
+                ];
+                if ($drainFn) {
+                    try {
+                        $driver->drain(10, 0.02);
+                    } catch (\Throwable $e) {
+                        $out['drain_error'] = $e->getMessage();
+                    }
                 }
-            }
-            $after = [
-                'size' => $sizeFn ? $driver->size() : null,
-                'running' => $runningFn ? $driver->getRunningTasksCount() : null,
-            ];
-            $out['before'] = $before;
-            $out['after'] = $after;
+                $after = [
+                    'size' => $sizeFn ? $driver->size() : null,
+                    'running' => $runningFn ? $driver->getRunningTasksCount() : null,
+                ];
+                $out['before'] = $before;
+                $out['after'] = $after;
 
-            return $out;
-        };
+                return $out;
+            };
 
-        try {
-            if (class_exists(\Phenix\Facades\Queue::class)) {
-                $driver = \Phenix\Facades\Queue::driver();
-                if (is_object($driver)) {
-                    $drainResult = $attemptDrain($driver);
+            try {
+                if (class_exists(\Phenix\Facades\Queue::class)) {
+                    $driver = \Phenix\Facades\Queue::driver();
+                    if (is_object($driver)) {
+                        $drainResult = $attemptDrain($driver);
+                    }
                 }
+            } catch (\Throwable $e) {
+                $drainResult['error'] = $e->getMessage();
             }
-        } catch (\Throwable $e) {
-            $drainResult['error'] = $e->getMessage();
-        }
-        if (! empty($drainResult)) {
-            @file_put_contents($dir . '/drain_result.json', json_encode($drainResult, JSON_PRETTY_PRINT));
-        }
+            if (! empty($drainResult)) {
+                @file_put_contents($dir . '/drain_result.json', json_encode($drainResult, JSON_PRETTY_PRINT));
+            }
         };
 
         // Execute segmented helpers
