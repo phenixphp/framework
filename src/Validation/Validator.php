@@ -33,7 +33,7 @@ class Validator
 
     protected array $errors = [];
 
-    public function __construct(array $data = [], array $rules = [])
+    public function __construct(Arrayable|array $data = [], array $rules = [])
     {
         $this->setData($data);
         $this->setRules($rules);
@@ -46,8 +46,12 @@ class Validator
         return $this;
     }
 
-    public function setData(array $data = []): self
+    public function setData(Arrayable|array $data = []): self
     {
+        if ($data instanceof Arrayable) {
+            $data = $data->toArray();
+        }
+
         $this->data = new Dot($data);
 
         return $this;
