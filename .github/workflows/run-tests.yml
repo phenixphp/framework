@@ -42,10 +42,14 @@ jobs:
 
       - name: Execute tests
         run: |
+          mkdir -p build/diagnostics
           cp phpunit.xml.dist phpunit.xml
           vendor/bin/pest --coverage
         env:
           PHENIX_DIAG: 1
+          PHENIX_DIAG_FLUSH_INTERVAL: 5
+          PHENIX_DIAG_HEARTBEAT_SEC: 30
+          PHENIX_DIAG_WATCHDOG_SEC: 180
 
       - name: Upload diagnostics
         if: always()
