@@ -33,7 +33,8 @@ class Validator
 
     protected array $errors = [];
 
-    public function __construct(array $data = [], array $rules = []) {
+    public function __construct(array $data = [], array $rules = [])
+    {
         $this->setData($data);
         $this->setRules($rules);
     }
