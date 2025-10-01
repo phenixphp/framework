@@ -77,6 +77,16 @@ if (getenv('PHENIX_DIAG') === '1') {
     }));
     @file_put_contents($___phenixDiagDir . '/baseline_children.log', implode(PHP_EOL, $___phenixBaselineChildren));
 
+    // Write meta file identifying this process (expected to be the main test runner)
+    $meta = [
+        'pid' => $parentPid,
+        'time' => date(DATE_ATOM),
+        'type' => 'test-runner-init',
+        'flush_interval' => $___phenixFlushInterval,
+        'baseline_children_count' => count($___phenixBaselineChildren),
+    ];
+    @file_put_contents($___phenixDiagDir . '/pid_' . $parentPid . '.meta.json', json_encode($meta, JSON_PRETTY_PRINT));
+
     beforeEach(function () use (&$___phenixTestStartTimes): void {
         // Pest current test id reference
         $name = test()->getFile() . '::' . test()->getName();
@@ -93,6 +103,14 @@ if (getenv('PHENIX_DIAG') === '1') {
         ];
 
         $___phenixTestCounter++;
+
+        // Append lightweight rolling progress marker
+        @file_put_contents($___phenixDiagDir . '/progress.json', json_encode([
+            'last_test' => $name,
+            'counter' => $___phenixTestCounter,
+            'time' => date(DATE_ATOM),
+            'peak_memory' => memory_get_peak_usage(true),
+        ], JSON_PRETTY_PRINT));
 
         // Periodic snapshot flush to disk for early artifact availability & heartbeat
         if ($___phenixTestCounter % $___phenixFlushInterval === 0) {
@@ -129,70 +147,125 @@ if (getenv('PHENIX_DIAG') === '1') {
         }
     });
 
-    afterAll(function () use (&$___phenixTestDurations, $___phenixDiagDir, $parentPid, $___phenixBaselineChildren, $___phenixPsCmd, $___phenixStderr): void {
+    $___phenixAfterAllHandler = static function () use (&$___phenixTestDurations, $___phenixDiagDir, $parentPid, $___phenixBaselineChildren, $___phenixPsCmd, $___phenixStderr): void {
         $dir = $___phenixDiagDir;
 
-        // 1. Persist per-test durations
-        $durationFile = $dir . '/test_durations.json';
-        @file_put_contents($durationFile, json_encode($___phenixTestDurations, JSON_PRETTY_PRINT));
+        $persistDurations = static function () use ($dir, &$___phenixTestDurations): void {
+            @file_put_contents($dir . '/test_durations.json', json_encode($___phenixTestDurations, JSON_PRETTY_PRINT));
+        };
 
-        // 2. Capture child processes (potential worker pool processes)
-        $psOutput = [];
-        @exec($___phenixPsCmd, $psOutput);
-        $children = array_values(array_filter($psOutput, static function (string $line) use ($parentPid): bool {
-            return preg_match(PHENIX_CHILD_PROC_REGEX . $parentPid . '\s+/', $line) === 1;
-        }));
-        @file_put_contents($dir . '/child_processes.log', implode(PHP_EOL, $children));
-        $newChildren = array_diff($children, $___phenixBaselineChildren);
-        if (! empty($newChildren)) {
-            @file_put_contents($dir . '/child_processes_new.log', implode(PHP_EOL, $newChildren));
-        }
-
-        // 3. Queue driver status (if container & facade available)
-        $queueStatus = null;
-
-        try {
-            if (class_exists(Phenix\Facades\Queue::class)) {
-                /** @var mixed $driver */
-                $driver = Phenix\Facades\Queue::driver();
-                $queueStatus = [
-                    'driver_class' => is_object($driver) ? get_class($driver) : gettype($driver),
-                ];
-                if (is_object($driver) && method_exists($driver, 'getProcessorStatus')) {
-                    try {
-                        $queueStatus['processor'] = $driver->getProcessorStatus();
-                    } catch (\Throwable $e) {
-                        $queueStatus['processor_error'] = $e->getMessage();
-                    }
-                }
+        $captureChildren = static function () use ($dir, $___phenixPsCmd, $parentPid, $___phenixBaselineChildren): array {
+            $psOutput = [];
+            @exec($___phenixPsCmd, $psOutput);
+            $children = array_values(array_filter($psOutput, static function (string $line) use ($parentPid): bool {
+                return preg_match(PHENIX_CHILD_PROC_REGEX . $parentPid . '\s+/', $line) === 1;
+            }));
+            @file_put_contents($dir . '/child_processes.log', implode(PHP_EOL, $children));
+            $newChildren = array_diff($children, $___phenixBaselineChildren);
+            if (! empty($newChildren)) {
+                @file_put_contents($dir . '/child_processes_new.log', implode(PHP_EOL, $newChildren));
             }
-        } catch (\Throwable $e) {
-            $queueStatus = ['error' => $e->getMessage()];
-        }
-        @file_put_contents($dir . '/queue_status.json', json_encode($queueStatus, JSON_PRETTY_PRINT));
 
-        // 4. Memory summary
-        $mem = [
-            'peak_memory_bytes' => memory_get_peak_usage(true),
-            'time' => date(DATE_ATOM),
-        ];
-        @file_put_contents($dir . '/memory.json', json_encode($mem, JSON_PRETTY_PRINT));
+            return $children;
+        };
 
-        // 5. Highlight slow tests ( > 5s ) in stderr for quick scan
-        $slow = array_filter($___phenixTestDurations, static fn ($d) => ($d['duration_sec'] ?? 0) > 5);
-        if (! empty($slow)) {
+        $queueStatusCapture = static function () use ($dir): void {
+            $queueStatus = null;
+            try {
+                if (class_exists(\Phenix\Facades\Queue::class)) {
+                    $driver = \Phenix\Facades\Queue::driver();
+                    $queueStatus = [
+                        'driver_class' => is_object($driver) ? get_class($driver) : gettype($driver),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $queueStatus = ['error' => $e->getMessage()];
+            }
+            @file_put_contents($dir . '/queue_status.json', json_encode($queueStatus, JSON_PRETTY_PRINT));
+        };
+
+        $memorySummary = static function () use ($dir): void {
+            $mem = [
+                'peak_memory_bytes' => memory_get_peak_usage(true),
+                'time' => date(DATE_ATOM),
+            ];
+            @file_put_contents($dir . '/memory.json', json_encode($mem, JSON_PRETTY_PRINT));
+        };
+
+        $slowTestsReport = static function () use (&$___phenixTestDurations): void {
+            $slow = array_filter($___phenixTestDurations, static fn ($d) => ($d['duration_sec'] ?? 0) > 5);
+            if (empty($slow)) {
+                return;
+            }
             $lines = ["[PHENIX_DIAG] Slow tests (>5s):"]; // phpcs:ignore
             foreach ($slow as $testName => $data) {
                 $lines[] = sprintf('%s — %.2fs', $testName, $data['duration_sec']);
             }
             file_put_contents('php://stderr', implode(PHP_EOL, $lines) . PHP_EOL);
-        }
+        };
 
-        // 6. Flag if child processes still present (indication of leaked workers)
+        $drainQueue = static function () use ($dir) {
+        $drainResult = [];
+        $attemptDrain = static function ($driver) {
+            $out = [];
+            $sizeFn = is_callable([$driver, 'size']);
+            $runningFn = is_callable([$driver, 'getRunningTasksCount']);
+            $drainFn = is_callable([$driver, 'drain']);
+            $out['capabilities'] = [
+                'size' => $sizeFn,
+                'running' => $runningFn,
+                'drain' => $drainFn,
+            ];
+            $before = [
+                'size' => $sizeFn ? $driver->size() : null,
+                'running' => $runningFn ? $driver->getRunningTasksCount() : null,
+            ];
+            if ($drainFn) {
+                try {
+                    $driver->drain(10, 0.02);
+                } catch (\Throwable $e) {
+                    $out['drain_error'] = $e->getMessage();
+                }
+            }
+            $after = [
+                'size' => $sizeFn ? $driver->size() : null,
+                'running' => $runningFn ? $driver->getRunningTasksCount() : null,
+            ];
+            $out['before'] = $before;
+            $out['after'] = $after;
+
+            return $out;
+        };
+
+        try {
+            if (class_exists(\Phenix\Facades\Queue::class)) {
+                $driver = \Phenix\Facades\Queue::driver();
+                if (is_object($driver)) {
+                    $drainResult = $attemptDrain($driver);
+                }
+            }
+        } catch (\Throwable $e) {
+            $drainResult['error'] = $e->getMessage();
+        }
+        if (! empty($drainResult)) {
+            @file_put_contents($dir . '/drain_result.json', json_encode($drainResult, JSON_PRETTY_PRINT));
+        }
+        };
+
+        // Execute segmented helpers
+        $persistDurations();
+        $children = $captureChildren();
+        $queueStatusCapture();
+        $memorySummary();
+        $slowTestsReport();
+        $drainQueue();
+
         if (! empty($children)) {
             file_put_contents($___phenixStderr, "[PHENIX_DIAG] Detected " . count($children) . " child process(es) still alive after tests. See build/diagnostics/child_processes.log\n");
         }
-    });
+    };
+
+    afterAll($___phenixAfterAllHandler);
 
     // Fallback: if process is killed before afterAll runs, still dump minimal snapshot.
     register_shutdown_function(function () use (&$___phenixTestDurations, $___phenixDiagDir, $parentPid, $___phenixPsCmd): void {
@@ -204,6 +277,7 @@ if (getenv('PHENIX_DIAG') === '1') {
             'time' => date(DATE_ATOM),
             'peak_memory' => memory_get_peak_usage(true),
             'shutdown' => true,
+            'pid' => getmypid(),
         ];
         @file_put_contents($___phenixDiagDir . '/shutdown_summary.json', json_encode($summary, JSON_PRETTY_PRINT));
 

@@ -112,6 +112,34 @@ class ParallelQueue extends Queue
         return count($this->runningTasks);
     }
 
+    /**
+     * Drains the queue: keeps processing until there are no pending or running tasks
+     * or a timeout is reached. Intended for diagnostics / test shutdown to reduce
+     * risk of orphaned worker processes prolonging CI jobs.
+     */
+    public function drain(int $timeoutSeconds = 30, float $pollIntervalSeconds = 0.05): void
+    {
+        $deadline = microtime(true) + $timeoutSeconds;
+        $this->enableProcessing();
+
+        while (($this->size() > 0 || $this->getRunningTasksCount() > 0) && microtime(true) < $deadline) {
+            // Allow running tasks to complete
+            $this->cleanupCompletedTasks();
+            delay($pollIntervalSeconds);
+        }
+
+        // Final await for any remaining tasks (best-effort, non-block beyond timeout)
+        if ($this->getRunningTasksCount() > 0) {
+            try {
+                $this->await();
+            } catch (\Throwable) {
+                // Swallow: diagnostics context should not fail tests hard.
+            }
+        }
+
+        $this->disableProcessing();
+    }
+
     public function getProcessorStatus(): array
     {
         return [
