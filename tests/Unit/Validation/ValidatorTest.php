@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Contracts\Arrayable;
 use Phenix\Util\Date as Dates;
 use Phenix\Validation\Exceptions\InvalidCollectionDefinition;
 use Phenix\Validation\Exceptions\InvalidData;
@@ -27,6 +28,28 @@ it('runs successfully validation with scalar data', function () {
         'name' => 'John',
         'last_name' => 'Doe',
     ]);
+
+    expect($validator->passes())->toBeTrue();
+    expect($validator->validated())->toBe([
+        'name' => 'John',
+    ]);
+});
+
+it('runs successfully validation using arrayable objects', function () {
+    $validator = new Validator();
+
+    $validator->setRules([
+        'name' => Str::required(),
+    ]);
+    $validator->setData(new class () implements Arrayable {
+        public function toArray(): array
+        {
+            return [
+                'name' => 'John',
+                'last_name' => 'Doe',
+            ];
+        }
+    });
 
     expect($validator->passes())->toBeTrue();
     expect($validator->validated())->toBe([
