@@ -90,6 +90,7 @@ if (getenv('PHENIX_DIAG') === '1') {
 
         // 3. Queue driver status (if container & facade available)
         $queueStatus = null;
+
         try {
             if (class_exists(Phenix\Facades\Queue::class)) {
                 /** @var mixed $driver */
