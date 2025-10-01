@@ -87,6 +87,106 @@ if (getenv('PHENIX_DIAG') === '1') {
     ];
     @file_put_contents($___phenixDiagDir . '/pid_' . $parentPid . '.meta.json', json_encode($meta, JSON_PRETTY_PRINT));
 
+    // Initial snapshot_0 and progress (even before any test) for early artifact visibility
+    @file_put_contents($___phenixDiagDir . '/snapshot_0.json', json_encode([
+        'count' => 0,
+        'time' => date(DATE_ATOM),
+        'peak_memory' => memory_get_peak_usage(true),
+        'pid' => $parentPid,
+    ], JSON_PRETTY_PRINT));
+    if (! defined('PHENIX_PROGRESS_FILE')) {
+        define('PHENIX_PROGRESS_FILE', $___phenixDiagDir . '/progress.json');
+    }
+    @file_put_contents(PHENIX_PROGRESS_FILE, json_encode([
+        'last_test' => null,
+        'counter' => 0,
+        'time' => date(DATE_ATOM),
+        'peak_memory' => memory_get_peak_usage(true),
+    ], JSON_PRETTY_PRINT));
+
+    // Heartbeat & Watchdog setup
+    $___phenixHeartbeatSec = (int) (getenv('PHENIX_DIAG_HEARTBEAT_SEC') ?: 30);
+    $___phenixWatchdogSec = (int) (getenv('PHENIX_DIAG_WATCHDOG_SEC') ?: 0);
+    $___phenixLastProgressFile = PHENIX_PROGRESS_FILE;
+    $___phenixLoopIterationsLimit = (int) (getenv('PHENIX_DIAG_LOOP_LIMIT') ?: 0); // 0 => infinite
+
+    if ($___phenixHeartbeatSec > 0) {
+        // Use async loop so it doesn't block test execution; Amp\delay is safe inside fiber.
+        Amp\async(function () use ($___phenixHeartbeatSec, $___phenixDiagDir, $___phenixStderr, $parentPid, $___phenixPsCmd, $___phenixBaselineChildren, $___phenixLastProgressFile, $___phenixLoopIterationsLimit): void {
+            $iter = 0;
+            while (true) {
+                Amp\delay($___phenixHeartbeatSec);
+                $now = date(DATE_ATOM);
+                $psOutput = [];
+                @exec($___phenixPsCmd, $psOutput);
+                $children = array_values(array_filter($psOutput, static function (string $line) use ($parentPid): bool {
+                    return preg_match(PHENIX_CHILD_PROC_REGEX . $parentPid . '\s+/', $line) === 1;
+                }));
+                $new = array_diff($children, $___phenixBaselineChildren);
+                @file_put_contents($___phenixDiagDir . '/heartbeat.json', json_encode([
+                    'time' => $now,
+                    'children' => count($children),
+                    'new_children' => count($new),
+                    'peak_memory' => memory_get_peak_usage(true),
+                ], JSON_PRETTY_PRINT));
+
+                // Echo minimal line to stderr to keep CI from marking step idle
+                file_put_contents($___phenixStderr, sprintf("[PHENIX_DIAG] heartbeat(time=%s children=%d new=%d peak=%.2fMB)\n",
+                    $now,
+                    count($children),
+                    count($new),
+                    memory_get_peak_usage(true) / 1024 / 1024
+                ));
+
+                // Touch progress file if still zero tests to show liveness
+                if (is_file($___phenixLastProgressFile)) {
+                    $progress = @json_decode(@file_get_contents($___phenixLastProgressFile), true) ?: [];
+                    $progress['heartbeat_at'] = $now;
+                    @file_put_contents($___phenixLastProgressFile, json_encode($progress, JSON_PRETTY_PRINT));
+                }
+                if ($___phenixLoopIterationsLimit > 0 && ++$iter >= $___phenixLoopIterationsLimit) {
+                    break; // safeguard for static analysis / linter
+                }
+            }
+        });
+    }
+
+    if ($___phenixWatchdogSec > 0) {
+        Amp\async(function () use ($___phenixWatchdogSec, $___phenixDiagDir, $___phenixStderr, $___phenixLastProgressFile, $parentPid, $___phenixPsCmd, $___phenixLoopIterationsLimit): void {
+            $lastTrigger = 0;
+            $iter = 0;
+            while (true) {
+                Amp\delay(5); // check frequently
+                $now = time();
+                $lastProgressTime = null;
+                if (is_file($___phenixLastProgressFile)) {
+                    $progress = @json_decode(@file_get_contents($___phenixLastProgressFile), true) ?: [];
+                    $lastProgressTime = isset($progress['time']) ? strtotime($progress['time']) : null;
+                }
+                if ($lastProgressTime !== null && ($now - $lastProgressTime) > $___phenixWatchdogSec && ($now - $lastTrigger) > $___phenixWatchdogSec) {
+                    $lastTrigger = $now;
+                    $psOutput = [];
+                    @exec($___phenixPsCmd, $psOutput);
+                    $children = array_values(array_filter($psOutput, static function (string $line) use ($parentPid): bool {
+                        return preg_match(PHENIX_CHILD_PROC_REGEX . $parentPid . '\s+/', $line) === 1;
+                    }));
+                    $watchdogFile = $___phenixDiagDir . '/watchdog_' . $now . '.json';
+                    @file_put_contents($watchdogFile, json_encode([
+                        'triggered_at' => date(DATE_ATOM, $now),
+                        'since_progress_sec' => $now - $lastProgressTime,
+                        'children' => $children,
+                        'peak_memory' => memory_get_peak_usage(true),
+                        'pid' => $parentPid,
+                    ], JSON_PRETTY_PRINT));
+                    file_put_contents($___phenixStderr, "[PHENIX_DIAG] watchdog triggered after inactivity {$___phenixWatchdogSec}s (see " . basename($watchdogFile) . ")\n");
+                }
+                if ($___phenixLoopIterationsLimit > 0 && ++$iter >= $___phenixLoopIterationsLimit) {
+                    break; // safeguard for static analysis / linter
+                }
+            }
+        });
+    }
+
     beforeEach(function () use (&$___phenixTestStartTimes): void {
         // Pest current test id reference
         $name = test()->getFile() . '::' . test()->getName();
