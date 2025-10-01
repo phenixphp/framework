@@ -119,7 +119,8 @@ if (getenv('PHENIX_DIAG') === '1') {
             }
 
             // Heartbeat to stderr (keeps CI step from thinking it's idle if something else becomes quiet)
-            file_put_contents($___phenixStderr, sprintf("[PHENIX_DIAG] heartbeat tests=%d peak_mem=%.2fMB children=%d new_children=%d\n",
+            file_put_contents($___phenixStderr, sprintf(
+                "[PHENIX_DIAG] heartbeat tests=%d peak_mem=%.2fMB children=%d new_children=%d\n",
                 $___phenixTestCounter,
                 memory_get_peak_usage(true) / 1024 / 1024,
                 count($currentChildren),
