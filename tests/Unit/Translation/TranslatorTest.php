@@ -39,6 +39,7 @@ it('loads catalogue and retrieves translations with replacements & pluralization
 
 it('facade translation works', function () {
     expect(Translator::get('users.greeting'))->toBe('Hello');
+    expect(Translator::getLocale())->toBe('en');
 });
 
 it('can translate choice using helper functions', function (): void {
