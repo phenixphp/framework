@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Facades\File;
-use Phenix\Util\Directory;
+use Phenix\Facades\Translator;
 use Phenix\Translation\Translator as Trans;
 
 it('returns key when translation missing', function (): void {
@@ -36,4 +35,13 @@ it('can load simple catalogue and retrieve translation', function (): void {
     expect($one)->toBe('One apple');
     expect($many)->toBe('5 apples');
     expect($welcome)->toBe('Welcome, John');
+});
+
+it('can translate using facade', function (): void {
+    expect(Translator::get('users.greeting'))->toBe('Hello');
+});
+
+it('can translate choice using functions', function (): void {
+    expect(trans('users.greeting'))->toBe('Hello');
+    expect(trans_choice('users.apples', 1))->toBe('users.apples');
 });
