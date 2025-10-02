@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Phenix\Facades\Translator;
+use Phenix\Filesystem\Contracts\File;
+use Phenix\Testing\Mock;
 use Phenix\Translation\Translator as Trans;
 
 it('returns key when translation missing', function (): void {
@@ -132,4 +134,14 @@ it('setLocale switches active catalogue', function () {
     $translator->setLocale('es');
 
     expect($translator->get('ui.yes'))->toBe('Sí');
+});
+
+it('works when lang directory does not exist', function () {
+    $mock = Mock::of(File::class)->expect(
+        exists: fn (): bool => false,
+    );
+
+    $this->app->swap(File::class, $mock);
+
+    expect(Translator::get('users.greeting'))->toBe('users.greeting');
 });
