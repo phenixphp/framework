@@ -13,7 +13,7 @@ it('returns key when translation missing', function (): void {
     expect($missing)->toBe('missing.key');
 });
 
-it('can load simple catalogue and retrieve translation', function (): void {
+it('loads catalogue and retrieves translations with replacements & pluralization', function () {
     $translator = new Trans('en', 'en', [
         'en' => [
             'users' => [
@@ -37,11 +37,98 @@ it('can load simple catalogue and retrieve translation', function (): void {
     expect($welcome)->toBe('Welcome, John');
 });
 
-it('can translate using facade', function (): void {
+it('facade translation works', function () {
     expect(Translator::get('users.greeting'))->toBe('Hello');
 });
 
-it('can translate choice using functions', function (): void {
+it('can translate choice using helper functions', function (): void {
     expect(trans('users.greeting'))->toBe('Hello');
     expect(trans_choice('users.apples', 1))->toBe('users.apples');
+});
+
+it('placeholder variant replacements', function () {
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'messages' => [
+                'hello' => 'Hello :name :Name :NAME',
+            ],
+        ],
+    ]);
+
+    expect($translator->get('messages.hello', ['name' => 'john']))->toBe('Hello john John JOHN');
+});
+
+it('pluralization three forms', function () {
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'stats' => [
+                'apples' => 'No apples|One apple|:count apples',
+            ],
+        ],
+    ]);
+
+    expect($translator->choice('stats.apples', 0))->toBe('No apples');
+    expect($translator->choice('stats.apples', 1))->toBe('One apple');
+    expect($translator->choice('stats.apples', 7))->toBe('7 apples');
+});
+
+it('pluralization two forms', function () {
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'stats' => [
+                'files' => 'One file|:count files',
+            ],
+        ],
+    ]);
+
+    expect($translator->choice('stats.files', 0))->toBe('0 files');
+    expect($translator->choice('stats.files', 1))->toBe('One file');
+    expect($translator->choice('stats.files', 2))->toBe('2 files');
+});
+
+it('accepts array for count parameter', function () {
+    $items = ['a','b','c','d'];
+
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'stats' => [
+                'items' => 'No items|One item|:count items',
+            ],
+        ],
+    ]);
+
+    expect($translator->choice('stats.items', $items))->toBe('4 items');
+});
+
+it('fallback locale used when key missing', function () {
+    $translator = new Trans('en', 'es', [
+        'en' => ['app' => []],
+        'es' => ['app' => ['title' => 'Application']],
+    ]);
+
+    expect($translator->get('app.title'))->toBe('Application');
+});
+
+it('has considers primary and fallback', function () {
+    $translator = new Trans('en', 'es', [
+        'en' => ['blog' => ['post' => 'Post']],
+        'es' => ['blog' => ['comment' => 'Comment']],
+    ]);
+
+    expect($translator->has('blog.post'))->toBeTrue();
+    expect($translator->has('blog.comment'))->toBeTrue();
+    expect($translator->has('blog.missing'))->toBeFalse();
+});
+
+it('setLocale switches active catalogue', function () {
+    $translator = new Trans('en', 'es', [
+        'en' => ['ui' => ['yes' => 'Yes']],
+        'es' => ['ui' => ['yes' => 'Sí']],
+    ]);
+
+    expect($translator->get('ui.yes'))->toBe('Yes');
+
+    $translator->setLocale('es');
+
+    expect($translator->get('ui.yes'))->toBe('Sí');
 });
