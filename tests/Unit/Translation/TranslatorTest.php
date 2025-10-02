@@ -20,6 +20,7 @@ it('can load simple catalogue and retrieve translation', function (): void {
             'users' => [
                 'greeting' => 'Hello',
                 'apples' => 'No apples|One apple|:count apples',
+                'welcome' => 'Welcome, :name',
             ],
         ],
     ]);
@@ -28,9 +29,11 @@ it('can load simple catalogue and retrieve translation', function (): void {
     $zero = $translator->choice('users.apples', 0);
     $one = $translator->choice('users.apples', 1);
     $many = $translator->choice('users.apples', 5);
+    $welcome = $translator->get('users.welcome', ['name' => 'John']);
 
     expect($greeting)->toBe('Hello');
     expect($zero)->toBe('No apples');
     expect($one)->toBe('One apple');
     expect($many)->toBe('5 apples');
+    expect($welcome)->toBe('Welcome, John');
 });
