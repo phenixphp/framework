@@ -152,10 +152,6 @@ class Translator
      */
     private function makeReplacements(string $line, array $replace): string
     {
-        if ($replace === []) {
-            return $line;
-        }
-
         $search = [];
         $replaceWith = [];
 
