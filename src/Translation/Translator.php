@@ -6,8 +6,8 @@ namespace Phenix\Translation;
 
 use Adbar\Dot;
 use Countable;
-use Phenix\Facades\File;
 use Phenix\Facades\Config;
+use Phenix\Facades\File;
 use Resend\Contracts\Stringable;
 
 class Translator
