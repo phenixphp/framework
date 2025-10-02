@@ -99,12 +99,15 @@ class Translator
     {
         $index = 0;
 
-        if ($available > 1) {
-            if ($count === 1) {
-                $index = min(1, $available - 1);
-            } elseif (! ($count === 0 && $available >= 3)) {
-                $index = $available - 1;
-            }
+        if ($available <= 1) {
+            $index = 0;
+        } elseif ($count === 0 && $available >= 3) {
+            $index = 0; // assume first is zero form if 3+ provided
+        } elseif ($count === 1) {
+            $index = min(1, $available - 1); // second segment if exists
+        } else {
+            // plural (last segment)
+            $index = $available - 1;
         }
 
         return $index;
