@@ -97,23 +97,23 @@ class Translator
 
     private function resolvePluralIndex(int $count, int $available): int
     {
-        if ($available <= 1) {
-            return 0;
+        $index = 0;
+
+        if ($available > 1) {
+            if ($available === 2) {
+                $index = ($count === 1) ? 0 : 1;
+            } else {
+                if ($count === 0) {
+                    $index = 0;
+                } elseif ($count === 1) {
+                    $index = 1;
+                } else {
+                    $index = $available - 1;
+                }
+            }
         }
 
-        if ($available === 2) {
-            return $count === 1 ? 0 : 1;
-        }
-
-        if ($count === 0) {
-            return 0;
-        }
-
-        if ($count === 1) {
-            return 1;
-        }
-
-        return $available - 1;
+        return $index;
     }
 
     /**
