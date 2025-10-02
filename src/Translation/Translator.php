@@ -97,20 +97,17 @@ class Translator
 
     private function resolvePluralIndex(int $count, int $available): int
     {
-        if ($available <= 1) {
-            return 0;
+        $index = 0;
+
+        if ($available > 1) {
+            if ($count === 1) {
+                $index = min(1, $available - 1);
+            } elseif (! ($count === 0 && $available >= 3)) {
+                $index = $available - 1;
+            }
         }
 
-        if ($count === 0 && $available >= 3) {
-            return 0; // assume first is zero form if 3+ provided
-        }
-
-        if ($count === 1) {
-            return min(1, $available - 1); // second segment if exists
-        }
-
-        // plural (last segment)
-        return $available - 1;
+        return $index;
     }
 
     /**
