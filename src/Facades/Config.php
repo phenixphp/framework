@@ -9,6 +9,7 @@ use Phenix\Runtime\Facade;
 /**
  * @method static array|string|int|bool|null get(string $key, mixed $default = null)
  * @method static void set(string $key, array|string|int|bool|null $value)
+ * @method static bool has(string $key)
  *
  * @see \Phenix\Runtime\Config
  */
