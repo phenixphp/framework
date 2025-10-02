@@ -145,3 +145,27 @@ it('works when lang directory does not exist', function () {
 
     expect(Translator::get('users.greeting'))->toBe('users.greeting');
 });
+
+it('returns line unchanged when no replacements provided', function () {
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'users' => [
+                'welcome' => 'Welcome, :name',
+            ],
+        ],
+    ]);
+
+    expect($translator->get('users.welcome'))->toBe('Welcome, :name');
+});
+
+it('returns line unchanged when replacement is null', function () {
+    $translator = new Trans('en', 'en', [
+        'en' => [
+            'users' => [
+                'welcome' => 'Welcome, :name',
+            ],
+        ],
+    ]);
+
+    expect($translator->get('users.welcome', ['name' => null]))->toBe('Welcome, :name');
+});
