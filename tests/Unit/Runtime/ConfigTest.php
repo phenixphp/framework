@@ -8,6 +8,7 @@ it('can get environment configurations successfully', function () {
     $config = Config::build();
 
     expect($config->get('app.name'))->toBe('Phenix');
+    expect($config->has('app.name'))->toBeTrue();
 });
 
 it('can set environment configurations successfully', function () {

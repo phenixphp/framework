@@ -48,6 +48,11 @@ class Config
         $this->settings->set($key, $value);
     }
 
+    public function has(string $key): bool
+    {
+        return $this->settings->has($key);
+    }
+
     private static function getKey(string $path): string
     {
         $path = explode(DIRECTORY_SEPARATOR, $path);
