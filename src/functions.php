@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Phenix\App;
 use Phenix\Facades\Log;
+use Phenix\Facades\Translator;
 use Phenix\Http\Response;
 
 if (! function_exists('base_path()')) {
@@ -61,5 +62,19 @@ if (! function_exists('e')) {
     function e(Stringable|string|null $value, bool $doubleEncode = true): string
     {
         return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', $doubleEncode);
+    }
+}
+
+if (! function_exists('trans')) {
+    function trans(string $key, array $replace = []): array|string
+    {
+        return Translator::get($key, $replace);
+    }
+}
+
+if (! function_exists('trans_choice')) {
+    function trans_choice(string $key, int $number, array $replace = []): string
+    {
+        return Translator::choice($key, $number, $replace);
     }
 }
