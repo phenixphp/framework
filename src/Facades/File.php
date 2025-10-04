@@ -18,6 +18,7 @@ use Phenix\Runtime\Facade;
  * @method static int getCreationTime(string $path)
  * @method static int getModificationTime(string $path)
  * @method static array listFiles(string $path, bool $relativePath = false)
+ * @method static array listFilesRecursively(string $path, string|null $extension = null)
  * @method static void deleteFile(string $path)
  * @method static void deleteDirectory(string $path)
  *

@@ -100,3 +100,13 @@ it('list files in a directory', function () {
         $path . DIRECTORY_SEPARATOR . 'FileTest.php',
     ]);
 });
+
+it('list files in a directory recursively', function () {
+    $path = __DIR__;
+
+    $file = new File();
+
+    expect($file->listFilesRecursively($path, 'php'))->toBe([
+        $path . DIRECTORY_SEPARATOR . 'FileTest.php',
+    ]);
+});

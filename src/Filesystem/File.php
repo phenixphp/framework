@@ -77,6 +77,25 @@ class File implements FileContract
         }, $this->driver->listFiles($path));
     }
 
+    public function listFilesRecursively(string $path, string|null $extension = null): array
+    {
+        $paths = [];
+
+        foreach ($this->listFiles($path) as $file) {
+            if ($this->driver->isDirectory($file)) {
+                $paths = array_merge($paths, $this->listFilesRecursively($file, $extension));
+
+                continue;
+            }
+
+            if ($this->driver->isFile($file) && ($extension === null || str_ends_with($file, $extension))) {
+                $paths[] = $file;
+            }
+        }
+
+        return $paths;
+    }
+
     public function deleteFile(string $path): void
     {
         $this->driver->deleteFile($path);
