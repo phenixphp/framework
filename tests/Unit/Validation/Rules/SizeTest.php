@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 use Phenix\Validation\Rules\Size;
 
+it('fails size for string length mismatch', function () {
+    $rule = new Size(5);
+    $rule->setField('name')->setData(['name' => 'John']);
+
+    assertFalse($rule->passes());
+    assertStringContainsString('must be 5 characters', (string) $rule->message());
+});
+
+it('passes size for exact string length', function () {
+    $rule = new Size(4);
+    $rule->setField('name')->setData(['name' => 'John']);
+
+    assertTrue($rule->passes());
+});
+
 it('checks size according to data type', function (
     float|int $limit,
     string $field,
@@ -47,3 +62,4 @@ it('checks size according to data type', function (
         false,
     ],
 ]);
+

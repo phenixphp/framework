@@ -1,9 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 use Phenix\Validation\Rules\Ulid;
 use Phenix\Validation\Rules\Uuid;
-
-declare(strict_types=1);
 
 it('uuid ulid messages', function () {
     $uuid = (new Uuid())->setField('id')->setData(['id' => 'not-uuid']);
