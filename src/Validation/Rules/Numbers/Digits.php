@@ -21,4 +21,12 @@ class Digits extends Rule
 
         return strlen($digits) === $this->digits;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.digits', [
+            'field' => $this->field,
+            'digits' => $this->digits,
+        ]);
+    }
 }
