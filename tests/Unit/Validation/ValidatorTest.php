@@ -99,7 +99,7 @@ it('runs failed validation with scalar data', function () {
     expect($validator->passes())->toBeFalse();
 
     expect($validator->failing())->toBe([
-        'name' => ['validation.required'],
+        'name' => ['The name field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -171,8 +171,8 @@ it('runs data failed validation with dictionary data', function () {
     expect($validator->passes())->toBeFalsy();
 
     expect($validator->failing())->toBe([
-        'customer' => ['validation.dictionary'],
-        'customer.email' => ['validation.string'],
+        'customer' => ['The customer field must be a dictionary.'],
+        'customer.email' => ['The customer.email must be a string.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -271,7 +271,7 @@ it('does not stop validating all types when one of them fails', function () {
     expect($validator->passes())->toBeFalsy();
 
     expect($validator->failing())->toBe([
-        'date' => ['validation.required'],
+        'date' => ['The date field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -305,7 +305,7 @@ it('stops validating all types when one of them fails', function () {
     expect($validator->passes())->toBeFalse();
 
     expect($validator->failing())->toBe([
-        'date' => ['validation.required'],
+        'date' => ['The date field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([
