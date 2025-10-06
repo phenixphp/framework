@@ -48,4 +48,22 @@ class Size extends Rule
 
         return $count;
     }
+
+    public function message(): string|null
+    {
+        $value = $this->data->get($this->field) ?? null;
+        $type = gettype($value);
+
+        $key = match ($type) {
+            'string' => 'validation.size.string',
+            'array' => 'validation.size.array',
+            'object' => 'validation.size.file', // treat countable / file objects as file
+            default => 'validation.size.numeric',
+        };
+
+        return trans($key, [
+            'field' => $this->field,
+            'size' => $this->limit,
+        ]);
+    }
 }

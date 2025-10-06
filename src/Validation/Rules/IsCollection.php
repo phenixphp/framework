@@ -17,4 +17,9 @@ class IsCollection extends IsList
             && array_is_list($value)
             && ! $this->isScalar($value);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.collection', ['field' => $this->field]);
+    }
 }

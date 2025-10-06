@@ -10,4 +10,22 @@ class Max extends Min
     {
         return $this->getValue() <= $this->limit;
     }
+
+    public function message(): string|null
+    {
+        $value = $this->data->get($this->field) ?? null;
+        $type = gettype($value);
+
+        $key = match ($type) {
+            'string' => 'validation.max.string',
+            'array' => 'validation.max.array',
+            'object' => 'validation.max.file',
+            default => 'validation.max.numeric',
+        };
+
+        return trans($key, [
+            'field' => $this->field,
+            'max' => $this->limit,
+        ]);
+    }
 }

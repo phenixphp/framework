@@ -20,4 +20,12 @@ class Confirmed extends Rule
             && $confirmation !== null
             && $original === $confirmation;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.confirmed', [
+            'field' => $this->field,
+            'other' => $this->confirmationField,
+        ]);
+    }
 }

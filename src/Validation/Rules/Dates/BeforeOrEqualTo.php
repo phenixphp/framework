@@ -15,4 +15,12 @@ class BeforeOrEqualTo extends RelatedTo
 
         return  Date::parse($date)->lessThanOrEqualTo($relatedDate);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.before_or_equal_to', [
+            'field' => $this->field,
+            'other' => $this->relatedField,
+        ]);
+    }
 }

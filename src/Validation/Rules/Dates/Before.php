@@ -12,4 +12,9 @@ class Before extends After
     {
         return Date::parse($this->getValue())->lessThan($this->date);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.before', ['field' => $this->field]);
+    }
 }

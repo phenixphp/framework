@@ -10,4 +10,12 @@ class EndsWith extends StartsWith
     {
         return str_ends_with($this->getValue(), $this->needle);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.ends_with', [
+            'field' => $this->field,
+            'values' => $this->needle,
+        ]);
+    }
 }

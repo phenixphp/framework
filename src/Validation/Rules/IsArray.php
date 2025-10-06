@@ -12,4 +12,9 @@ class IsArray extends TypeRule
     {
         return is_array($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.array', ['field' => $this->field]);
+    }
 }

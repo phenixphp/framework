@@ -51,4 +51,9 @@ abstract class Rule implements RuleContract
     {
         return gettype($this->data->get($this->field) ?? null);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.rule', ['field' => $this->field]);
+    }
 }

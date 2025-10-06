@@ -12,4 +12,9 @@ class BeforeOrEqual extends Before
     {
         return Date::parse($this->getValue())->lessThanOrEqualTo($this->date);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.before_or_equal', ['field' => $this->field]);
+    }
 }

@@ -15,4 +15,12 @@ class StartsWith extends Rule
     {
         return str_starts_with($this->getValue(), $this->needle);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.starts_with', [
+            'field' => $this->field,
+            'values' => $this->needle,
+        ]);
+    }
 }

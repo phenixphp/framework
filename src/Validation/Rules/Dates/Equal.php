@@ -21,4 +21,9 @@ class Equal extends Rule
     {
         return Date::parse($this->getValue())->equalTo($this->date);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.equal', ['field' => $this->field]);
+    }
 }

@@ -15,4 +15,12 @@ class EqualTo extends RelatedTo
 
         return $date->equalTo($relatedDate);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.equal_to', [
+            'field' => $this->field,
+            'other' => $this->relatedField,
+        ]);
+    }
 }

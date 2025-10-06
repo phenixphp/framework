@@ -21,4 +21,23 @@ class Between extends Size
 
         return $value >= $this->min && $value <= $this->max;
     }
+
+    public function message(): string|null
+    {
+        $value = $this->data->get($this->field) ?? null;
+        $type = gettype($value);
+
+        $key = match ($type) {
+            'string' => 'validation.between.string',
+            'array' => 'validation.between.array',
+            'object' => 'validation.between.file',
+            default => 'validation.between.numeric',
+        };
+
+        return trans($key, [
+            'field' => $this->field,
+            'min' => $this->min,
+            'max' => $this->max,
+        ]);
+    }
 }

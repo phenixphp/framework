@@ -10,4 +10,12 @@ class NotIn extends In
     {
         return ! parent::passes();
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.not_in', [
+            'field' => $this->field,
+            'values' => implode(', ', $this->haystack),
+        ]);
+    }
 }

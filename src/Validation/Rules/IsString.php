@@ -12,4 +12,9 @@ class IsString extends TypeRule
     {
         return is_string($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.string', ['field' => $this->field]);
+    }
 }

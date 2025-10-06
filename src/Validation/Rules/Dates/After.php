@@ -12,4 +12,9 @@ class After extends Equal
     {
         return Date::parse($this->getValue())->greaterThan($this->date);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.after', ['field' => $this->field]);
+    }
 }

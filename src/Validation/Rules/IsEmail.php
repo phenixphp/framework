@@ -35,4 +35,9 @@ class IsEmail extends IsString
 
         return $this;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.email', ['field' => $this->field]);
+    }
 }

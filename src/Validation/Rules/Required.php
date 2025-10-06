@@ -32,4 +32,9 @@ class Required extends Requirement
     {
         return false;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.required', ['field' => $this->field]);
+    }
 }

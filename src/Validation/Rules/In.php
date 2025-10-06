@@ -17,4 +17,12 @@ class In extends Rule
     {
         return in_array($this->getValue(), $this->haystack, true);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.in', [
+            'field' => $this->field,
+            'values' => implode(', ', $this->haystack),
+        ]);
+    }
 }

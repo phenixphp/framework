@@ -15,4 +15,12 @@ class AfterTo extends RelatedTo
 
         return  Date::parse($date)->greaterThan($relatedDate);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.after_to', [
+            'field' => $this->field,
+            'other' => $this->relatedField,
+        ]);
+    }
 }

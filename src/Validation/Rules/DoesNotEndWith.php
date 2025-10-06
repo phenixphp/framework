@@ -10,4 +10,12 @@ class DoesNotEndWith extends EndsWith
     {
         return ! parent::passes();
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.does_not_end_with', [
+            'field' => $this->field,
+            'values' => $this->needle,
+        ]);
+    }
 }
