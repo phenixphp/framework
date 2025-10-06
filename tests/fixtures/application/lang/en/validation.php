@@ -14,6 +14,7 @@ return [
     'integer' => 'The :field must be an integer.',
     'numeric' => 'The :field must be a number.',
     'float' => 'The :field must be a float.',
+    'dictionary' => 'The :field field must be a dictionary.',
     'confirmed' => 'The :field does not match :other.',
     'in' => 'The selected :field is invalid. Allowed: :values.',
     'not_in' => 'The selected :field is invalid. Disallowed: :values.',
