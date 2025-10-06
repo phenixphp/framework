@@ -62,4 +62,3 @@ it('checks size according to data type', function (
         false,
     ],
 ]);
-
