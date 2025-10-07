@@ -70,7 +70,7 @@ return [
     ],
 
     'fields' => [
-        'full_name' => 'Full name',
+        'last_name' => 'last name',
         'customer.email' => 'customer email address',
     ],
 ];
