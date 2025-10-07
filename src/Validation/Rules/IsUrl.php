@@ -14,6 +14,6 @@ class IsUrl extends IsString
 
     public function message(): string|null
     {
-        return trans('validation.url', ['field' => $this->field]);
+        return trans('validation.url', ['field' => $this->getFieldForHumans()]);
     }
 }

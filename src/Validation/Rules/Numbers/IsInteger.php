@@ -17,6 +17,6 @@ class IsInteger extends TypeRule
 
     public function message(): string|null
     {
-        return trans('validation.integer', ['field' => $this->field]);
+        return trans('validation.integer', ['field' => $this->getFieldForHumans()]);
     }
 }

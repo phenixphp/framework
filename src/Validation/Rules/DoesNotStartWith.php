@@ -14,7 +14,7 @@ class DoesNotStartWith extends StartsWith
     public function message(): string|null
     {
         return trans('validation.does_not_start_with', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'values' => $this->needle,
         ]);
     }

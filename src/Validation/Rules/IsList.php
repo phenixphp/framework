@@ -31,6 +31,6 @@ class IsList extends TypeRule
 
     public function message(): string|null
     {
-        return trans('validation.list', ['field' => $this->field]);
+        return trans('validation.list', ['field' => $this->getFieldForHumans()]);
     }
 }

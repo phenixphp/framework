@@ -35,7 +35,7 @@ class Between extends Size
         };
 
         return trans($key, [
-            'field' => $this->field,
+              'field' => $this->getFieldForHumans(),
             'min' => $this->min,
             'max' => $this->max,
         ]);

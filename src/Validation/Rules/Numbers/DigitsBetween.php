@@ -23,7 +23,7 @@ class DigitsBetween extends Between
     public function message(): string|null
     {
         return trans('validation.digits_between', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'min' => $this->min,
             'max' => $this->max,
         ]);

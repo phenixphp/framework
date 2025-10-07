@@ -24,7 +24,7 @@ class Max extends Min
         };
 
         return trans($key, [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'max' => $this->limit,
         ]);
     }

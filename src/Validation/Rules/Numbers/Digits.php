@@ -25,7 +25,7 @@ class Digits extends Rule
     public function message(): string|null
     {
         return trans('validation.digits', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'digits' => $this->digits,
         ]);
     }

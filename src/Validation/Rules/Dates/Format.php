@@ -23,6 +23,6 @@ class Format extends Rule
 
     public function message(): string|null
     {
-        return trans('validation.date.format', ['field' => $this->field, 'format' => $this->format]);
+        return trans('validation.date.format', ['field' => $this->getFieldForHumans(), 'format' => $this->format]);
     }
 }

@@ -15,6 +15,6 @@ class AfterOrEqual extends After
 
     public function message(): string|null
     {
-        return trans('validation.date.after_or_equal', ['field' => $this->field]);
+        return trans('validation.date.after_or_equal', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -35,6 +35,6 @@ class Required extends Requirement
 
     public function message(): string|null
     {
-        return trans('validation.required', ['field' => $this->field]);
+        return trans('validation.required', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -24,7 +24,7 @@ class Confirmed extends Rule
     public function message(): string|null
     {
         return trans('validation.confirmed', [
-            'field' => $this->field,
+              'field' => $this->getFieldForHumans(),
             'other' => $this->confirmationField,
         ]);
     }

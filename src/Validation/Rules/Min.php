@@ -24,7 +24,7 @@ class Min extends Size
         };
 
         return trans($key, [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'min' => $this->limit,
         ]);
     }

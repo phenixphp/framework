@@ -14,7 +14,7 @@ class DoesNotEndWith extends EndsWith
     public function message(): string|null
     {
         return trans('validation.does_not_end_with', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'values' => $this->needle,
         ]);
     }

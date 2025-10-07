@@ -15,6 +15,6 @@ class Before extends After
 
     public function message(): string|null
     {
-        return trans('validation.date.before', ['field' => $this->field]);
+        return trans('validation.date.before', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -24,7 +24,7 @@ class Exists extends Rule
     public function message(): string|null
     {
         return trans('validation.exists', [
-            'field' => $this->field,
+              'field' => $this->getFieldForHumans(),
         ]);
     }
 }

@@ -15,6 +15,6 @@ class Uuid extends Rule
 
     public function message(): string|null
     {
-        return trans('validation.uuid', ['field' => $this->field]);
+    return trans('validation.uuid', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -68,4 +68,9 @@ return [
         'before_to' => 'The :field must be a date before :other.',
         'before' => 'The :field must be a date before the specified date.',
     ],
+
+    'fields' => [
+        'full_name' => 'Full name',
+        'customer.email' => 'customer email address',
+    ],
 ];

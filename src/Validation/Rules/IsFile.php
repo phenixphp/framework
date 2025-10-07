@@ -17,6 +17,6 @@ class IsFile extends TypeRule
 
     public function message(): string|null
     {
-        return trans('validation.file', ['field' => $this->field]);
+        return trans('validation.file', ['field' => $this->getFieldForHumans()]);
     }
 }

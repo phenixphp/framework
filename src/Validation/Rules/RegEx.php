@@ -19,7 +19,7 @@ class RegEx extends Rule
     public function message(): string|null
     {
         return trans('validation.regex', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
         ]);
     }
 }

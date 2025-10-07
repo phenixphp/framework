@@ -19,7 +19,7 @@ class AfterOrEqualTo extends RelatedTo
     public function message(): string|null
     {
         return trans('validation.date.after_or_equal_to', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'other' => $this->relatedField,
         ]);
     }

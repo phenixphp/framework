@@ -62,7 +62,7 @@ class Size extends Rule
         };
 
         return trans($key, [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'size' => $this->limit,
         ]);
     }

@@ -16,7 +16,7 @@ class Unique extends Exists
     public function message(): string|null
     {
         return trans('validation.unique', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
         ]);
     }
 }

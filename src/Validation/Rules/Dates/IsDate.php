@@ -30,6 +30,6 @@ class IsDate extends IsString
 
     public function message(): string|null
     {
-        return trans('validation.date.is_date', ['field' => $this->field]);
+        return trans('validation.date.is_date', ['field' => $this->getFieldForHumans()]);
     }
 }

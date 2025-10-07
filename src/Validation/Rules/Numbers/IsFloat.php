@@ -17,6 +17,6 @@ class IsFloat extends TypeRule
 
     public function message(): string|null
     {
-        return trans('validation.float', ['field' => $this->field]);
+        return trans('validation.float', ['field' => $this->getFieldForHumans()]);
     }
 }

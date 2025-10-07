@@ -15,6 +15,6 @@ class BeforeOrEqual extends Before
 
     public function message(): string|null
     {
-        return trans('validation.date.before_or_equal', ['field' => $this->field]);
+        return trans('validation.date.before_or_equal', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -14,7 +14,7 @@ class EndsWith extends StartsWith
     public function message(): string|null
     {
         return trans('validation.ends_with', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'values' => $this->needle,
         ]);
     }

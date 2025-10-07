@@ -20,6 +20,6 @@ class IsCollection extends IsList
 
     public function message(): string|null
     {
-        return trans('validation.collection', ['field' => $this->field]);
+        return trans('validation.collection', ['field' => $this->getFieldForHumans()]);
     }
 }

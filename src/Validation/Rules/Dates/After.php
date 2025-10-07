@@ -15,6 +15,6 @@ class After extends Equal
 
     public function message(): string|null
     {
-        return trans('validation.date.after', ['field' => $this->field]);
+        return trans('validation.date.after', ['field' => $this->getFieldForHumans()]);
     }
 }

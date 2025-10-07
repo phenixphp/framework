@@ -24,6 +24,6 @@ class Equal extends Rule
 
     public function message(): string|null
     {
-        return trans('validation.date.equal', ['field' => $this->field]);
+    return trans('validation.date.equal', ['field' => $this->getFieldForHumans()]);
     }
 }

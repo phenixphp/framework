@@ -20,6 +20,6 @@ class IsDictionary extends IsList
 
     public function message(): string|null
     {
-        return trans('validation.dictionary', ['field' => $this->field]);
+        return trans('validation.dictionary', ['field' => $this->getFieldForHumans()]);
     }
 }

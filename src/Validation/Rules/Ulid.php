@@ -16,6 +16,6 @@ class Ulid extends Rule
 
     public function message(): string|null
     {
-        return trans('validation.ulid', ['field' => $this->field]);
+    return trans('validation.ulid', ['field' => $this->getFieldForHumans()]);
     }
 }

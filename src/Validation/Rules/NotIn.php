@@ -14,7 +14,7 @@ class NotIn extends In
     public function message(): string|null
     {
         return trans('validation.not_in', [
-            'field' => $this->field,
+            'field' => $this->getFieldForHumans(),
             'values' => implode(', ', $this->haystack),
         ]);
     }
