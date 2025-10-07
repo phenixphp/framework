@@ -9,7 +9,7 @@ it('fails when digits count is below minimum', function () {
     $rule->setField('value')->setData(['value' => 12]); // 2 digits
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.digits_between', (string) $rule->message());
+    assertStringContainsString('must be between 3 and 5 digits', (string) $rule->message());
 });
 
 it('fails when digits count is above maximum', function () {

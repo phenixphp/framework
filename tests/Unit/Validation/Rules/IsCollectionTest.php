@@ -16,7 +16,7 @@ it('fails for scalar-only list (should be a list, not collection)', function () 
     $rule->setField('items')->setData(['items' => ['a', 'b', 'c']]);
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.collection', (string) $rule->message());
+    assertStringContainsString('must be a collection', (string) $rule->message());
 });
 
 it('fails for associative array where not list', function () {

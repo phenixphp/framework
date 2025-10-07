@@ -12,7 +12,7 @@ it('fails when date is not strictly after related date', function () {
     ]);
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.date.after_to', (string) $rule->message());
+    assertStringContainsString('must be a date after end_date', (string) $rule->message());
 });
 
 it('passes when date is after related date', function () {

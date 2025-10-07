@@ -9,7 +9,8 @@ it('fails when date is not after or equal to date', function () {
     $rule->setField('date')->setData(['date' => '2023-12-31']);
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.date.after_or_equal', (string) $rule->message());
+    // Ahora la traducción existe, verificamos el mensaje traducido
+    assertStringContainsString('The date must be a date after or equal to the specified date.', (string) $rule->message());
 });
 
 it('passes when date is equal', function () {

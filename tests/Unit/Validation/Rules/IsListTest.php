@@ -16,7 +16,7 @@ it('fails for non list array (associative)', function () {
     $rule->setField('items')->setData(['items' => ['a' => 'value', 'b' => 'v']]);
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.list', (string) $rule->message());
+    assertStringContainsString('must be a list', (string) $rule->message());
 });
 
 it('fails when list contains non scalar values', function () {

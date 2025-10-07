@@ -9,7 +9,7 @@ it('fails when date is not before given date', function () {
     $rule->setField('date')->setData(['date' => '2024-01-01']);
 
     assertFalse($rule->passes());
-    assertStringContainsString('validation.date.before', (string) $rule->message());
+    assertStringContainsString('The date must be a date before the specified date.', (string) $rule->message());
 });
 
 it('passes when date is before given date', function () {
