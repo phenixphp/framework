@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Validation\Rules\IsString; // Change to desired base rule
+use Phenix\Validation\Rules\TypeRule;
+use Phenix\Validation\Types\Scalar;
+
+class {name} extends Scalar
+{
+    protected function defineType(): TypeRule
+    {
+        // Use a base type rule that defines the primitive type of this custom type
+        return IsString::new();
+    }
+}

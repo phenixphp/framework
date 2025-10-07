@@ -31,5 +31,6 @@ return [
         \Phenix\Queue\QueueServiceProvider::class,
         \Phenix\Events\EventServiceProvider::class,
         \Phenix\Translation\TranslationServiceProvider::class,
+        \Phenix\Validation\ValidationServiceProvider::class,
     ],
 ];
