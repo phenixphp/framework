@@ -15,6 +15,6 @@ class IsString extends TypeRule
 
     public function message(): string|null
     {
-    return trans('validation.string', ['field' => $this->getFieldForHumans()]);
+        return trans('validation.string', ['field' => $this->getFieldForHumans()]);
     }
 }

@@ -15,6 +15,6 @@ class IsBool extends TypeRule
 
     public function message(): string|null
     {
-    return trans('validation.boolean', ['field' => $this->getFieldForHumans()]);
+        return trans('validation.boolean', ['field' => $this->getFieldForHumans()]);
     }
 }

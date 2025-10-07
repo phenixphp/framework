@@ -15,6 +15,6 @@ class IsArray extends TypeRule
 
     public function message(): string|null
     {
-    return trans('validation.array', ['field' => $this->getFieldForHumans()]);
+        return trans('validation.array', ['field' => $this->getFieldForHumans()]);
     }
 }
