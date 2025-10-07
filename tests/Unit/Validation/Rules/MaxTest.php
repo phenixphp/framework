@@ -47,3 +47,19 @@ it('checks maximum values according to data type', function (
         false,
     ],
 ]);
+
+it('builds proper max messages for each type', function (int|float $limit, string $field, array $data, string $expectedFragment): void {
+    $rule = new Max($limit);
+    $rule->setField($field)->setData($data);
+
+    expect($rule->passes())->toBeFalse();
+
+    $message = $rule->message();
+
+    expect($message)->toBeString();
+    expect($message)->toContain($expectedFragment);
+})->with([
+    'numeric' => [1, 'value', ['value' => 2], 'greater than'],
+    'string' => [3, 'name', ['name' => 'John'], 'greater than 3 characters'],
+    'array' => [1, 'items', ['items' => ['a','b']], 'more than 1 items'],
+]);

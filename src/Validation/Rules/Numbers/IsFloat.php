@@ -14,4 +14,9 @@ class IsFloat extends TypeRule
     {
         return is_float($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.float', ['field' => $this->getFieldForHumans()]);
+    }
 }

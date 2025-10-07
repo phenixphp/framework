@@ -12,4 +12,9 @@ class Uuid extends Rule
     {
         return Str::isUuid($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.uuid', ['field' => $this->getFieldForHumans()]);
+    }
 }

@@ -7,9 +7,6 @@ use Phenix\Util\Date as Dates;
 use Phenix\Validation\Exceptions\InvalidCollectionDefinition;
 use Phenix\Validation\Exceptions\InvalidData;
 use Phenix\Validation\Exceptions\InvalidDictionaryDefinition;
-use Phenix\Validation\Rules\IsDictionary;
-use Phenix\Validation\Rules\IsString;
-use Phenix\Validation\Rules\Required;
 use Phenix\Validation\Types\Arr;
 use Phenix\Validation\Types\ArrList;
 use Phenix\Validation\Types\Collection;
@@ -102,7 +99,7 @@ it('runs failed validation with scalar data', function () {
     expect($validator->passes())->toBeFalse();
 
     expect($validator->failing())->toBe([
-        'name' => [Required::class],
+        'name' => ['The name field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -174,8 +171,8 @@ it('runs data failed validation with dictionary data', function () {
     expect($validator->passes())->toBeFalsy();
 
     expect($validator->failing())->toBe([
-        'customer' => [IsDictionary::class],
-        'customer.email' => [IsString::class],
+        'customer' => ['The customer field must be a dictionary.'],
+        'customer.email' => ['The customer.email must be a string.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -274,7 +271,7 @@ it('does not stop validating all types when one of them fails', function () {
     expect($validator->passes())->toBeFalsy();
 
     expect($validator->failing())->toBe([
-        'date' => [Required::class],
+        'date' => ['The date field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([
@@ -308,7 +305,7 @@ it('stops validating all types when one of them fails', function () {
     expect($validator->passes())->toBeFalse();
 
     expect($validator->failing())->toBe([
-        'date' => [Required::class],
+        'date' => ['The date field is required.'],
     ]);
 
     expect($validator->invalid())->toBe([

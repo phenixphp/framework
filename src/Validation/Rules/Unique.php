@@ -12,4 +12,11 @@ class Unique extends Exists
             ->whereEqual($this->column ?? $this->field, $this->getValue())
             ->count() === 0;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.unique', [
+            'field' => $this->getFieldForHumans(),
+        ]);
+    }
 }

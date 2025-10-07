@@ -20,4 +20,11 @@ class Exists extends Rule
             ->whereEqual($this->column ?? $this->field, $this->getValue())
             ->exists();
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.exists', [
+              'field' => $this->getFieldForHumans(),
+        ]);
+    }
 }

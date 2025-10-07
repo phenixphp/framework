@@ -10,4 +10,12 @@ class DoesNotStartWith extends StartsWith
     {
         return ! parent::passes();
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.does_not_start_with', [
+            'field' => $this->getFieldForHumans(),
+            'values' => $this->needle,
+        ]);
+    }
 }

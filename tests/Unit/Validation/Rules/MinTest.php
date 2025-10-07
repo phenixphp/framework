@@ -47,3 +47,19 @@ it('checks minimum values according to data type', function (
         false,
     ],
 ]);
+
+it('builds proper min messages for each type', function (int|float $limit, string $field, array $data, string $expectedFragment): void {
+    $rule = new Min($limit);
+    $rule->setField($field)->setData($data);
+
+    expect($rule->passes())->toBeFalse();
+
+    $message = $rule->message();
+
+    expect($message)->toBeString();
+    expect($message)->toContain($expectedFragment);
+})->with([
+    'numeric' => [3, 'value', ['value' => 2], 'The value must be at least 3'],
+    'string' => [5, 'name', ['name' => 'John'], 'The name must be at least 5 characters'],
+    'array' => [3, 'items', ['items' => ['a','b']], 'The items must have at least 3 items'],
+]);

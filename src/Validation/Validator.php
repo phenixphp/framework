@@ -177,7 +177,7 @@ class Validator
         $passes = $rule->passes();
 
         if (! $passes) {
-            $this->failing[$field][] = $rule::class;
+            $this->failing[$field][] = $rule->message();
         }
 
         $this->validated[] = $field;

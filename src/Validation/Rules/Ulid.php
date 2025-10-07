@@ -13,4 +13,9 @@ class Ulid extends Rule
         return Str::isUlid($this->getValue());
 
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.ulid', ['field' => $this->getFieldForHumans()]);
+    }
 }
