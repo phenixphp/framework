@@ -22,19 +22,19 @@ class MakeType extends Maker
      *
      * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint
      */
-    protected static $defaultDescription = 'Creates a new validation type.';
+    protected static $defaultDescription = 'Creates a new data type for validation.';
 
     protected function configure(): void
     {
-        $this->setHelp('This command allows you to create a new validation type.');
-
         $this->addArgument('name', InputArgument::REQUIRED, 'The type class name');
         $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force to create type');
+
+        $this->setHelp('This command allows you to create a new data type for validation.');
     }
 
-    protected function outputDirectory(): string
+    protected function commonName(): string
     {
-        return 'app' . DIRECTORY_SEPARATOR . 'Validation' . DIRECTORY_SEPARATOR . 'Types';
+        return 'Type';
     }
 
     protected function stub(): string
@@ -42,8 +42,8 @@ class MakeType extends Maker
         return 'type.stub';
     }
 
-    protected function commonName(): string
+    protected function outputDirectory(): string
     {
-        return 'Type';
+        return 'app' . DIRECTORY_SEPARATOR . 'Validation' . DIRECTORY_SEPARATOR . 'Types';
     }
 }
