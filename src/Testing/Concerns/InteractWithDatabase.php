@@ -4,49 +4,56 @@ declare(strict_types=1);
 
 namespace Phenix\Testing\Concerns;
 
+use Closure;
 use Phenix\Facades\DB;
 use PHPUnit\Framework\Assert;
 
 trait InteractWithDatabase
 {
     /**
-     * @param  array<string, scalar|bool|int|string|null>  $data
+     * @param  Closure|array<string, scalar|bool|int|string|null>  $criteria
      */
-    public function assertDatabaseHas(string $table, array $data): void
+    public function assertDatabaseHas(string $table, Closure|array $criteria): void
     {
-        $count = $this->getRecordCount($table, $data);
+        $count = $this->getRecordCount($table, $criteria);
 
         Assert::assertGreaterThan(0, $count, 'Failed asserting that table has matching record.');
     }
 
     /**
-     * @param  array<string, scalar|bool|int|string|null>  $data
+     * @param  Closure|array<string, scalar|bool|int|string|null>  $criteria
      */
-    public function assertDatabaseMissing(string $table, array $data): void
+    public function assertDatabaseMissing(string $table, Closure|array $criteria): void
     {
-        $count = $this->getRecordCount($table, $data);
+        $count = $this->getRecordCount($table, $criteria);
 
         Assert::assertSame(0, $count, 'Failed asserting that table is missing the provided record.');
     }
 
     /**
-     * @param  array<string, scalar|bool|int|string|null>  $data
+     * @param  Closure|array<string, scalar|bool|int|string|null>  $criteria
      */
-    public function assertDatabaseCount(string $table, int $expected, array $data = []): void
+    public function assertDatabaseCount(string $table, int $expected, Closure|array $criteria = []): void
     {
-        $count = $this->getRecordCount($table, $data);
+        $count = $this->getRecordCount($table, $criteria);
 
         Assert::assertSame($expected, $count, 'Failed asserting the expected database record count.');
     }
 
     /**
-     * @param  array<string, scalar|bool|int|string|null>  $data
+     * @param  Closure|array<string, scalar|bool|int|string|null>  $criteria
      */
-    protected function getRecordCount(string $table, array $data): int
+    protected function getRecordCount(string $table, Closure|array $criteria): int
     {
         $query = DB::from($table);
 
-        foreach ($data as $column => $value) {
+        if ($criteria instanceof Closure) {
+            $criteria($query);
+
+            return $query->count();
+        }
+
+        foreach ($criteria as $column => $value) {
             if ($value === null) {
                 $query->whereNull($column);
 

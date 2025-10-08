@@ -35,3 +35,19 @@ it('check if record exists in the database', function (): void {
         'email' => 'test@example.com',
     ]);
 });
+
+it('supports closure criteria', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['COUNT(*)' => 2]])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $this->assertDatabaseCount('users', 2, function ($query) {
+        $query->whereEqual('active', 1);
+    });
+});
