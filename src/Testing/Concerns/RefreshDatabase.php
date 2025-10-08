@@ -70,53 +70,95 @@ trait RefreshDatabase
         /** @var SqlCommonConnectionPool $connection */
         $connection = App::make(Connection::default());
 
-        $defaultConnection = Config::get('database.default');
-        $settings = Config::get("database.connections.{$defaultConnection}");
-        $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
-
-        $tables = [];
+        $driver = $this->resolveDriver();
 
         try {
-            if ($driver === Driver::MYSQL) {
-                $result = $connection->prepare('SHOW TABLES')->execute();
-                foreach ($result as $row) {
-                    $table = array_values($row)[0] ?? null;
-                    if ($table) {
-                        $tables[] = $table;
-                    }
-                }
-            } elseif ($driver === Driver::POSTGRESQL) {
-                $result = $connection->prepare("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")->execute();
-                foreach ($result as $row) {
-                    $table = $row['tablename'] ?? null;
-                    if ($table) {
-                        $tables[] = $table;
-                    }
-                }
-            } else {
-                // Unsupported driver for automatic truncation (sqlite, redis, etc.)
-                return;
-            }
+            $tables = $this->getDatabaseTables($connection, $driver);
         } catch (Throwable) {
-            // If we can't list tables (e.g., no real connection in current test) just exit silently.
             return;
         }
 
-        $tables = array_filter($tables, static fn (string $t): bool => $t !== 'migrations');
+        $tables = $this->filterTruncatableTables($tables);
 
         if (empty($tables)) {
-            return; // Nothing to truncate
+            return;
         }
 
+        $this->truncateTables($connection, $driver, $tables);
+    }
+
+    protected function resolveDriver(): Driver
+    {
+        $defaultConnection = Config::get('database.default');
+        $settings = Config::get("database.connections.{$defaultConnection}");
+
+        return Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getDatabaseTables(SqlCommonConnectionPool $connection, Driver $driver): array
+    {
+        $tables = [];
+
+        if ($driver === Driver::MYSQL) {
+            $result = $connection->prepare('SHOW TABLES')->execute();
+
+            foreach ($result as $row) {
+                $table = array_values($row)[0] ?? null;
+
+                if ($table) {
+                    $tables[] = $table;
+                }
+            }
+        } elseif ($driver === Driver::POSTGRESQL) {
+            $result = $connection->prepare("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")->execute();
+
+            foreach ($result as $row) {
+                $table = $row['tablename'] ?? null;
+
+                if ($table) {
+                    $tables[] = $table;
+                }
+            }
+        } else {
+            // Unsupported driver (sqlite, etc.) – return empty so caller exits gracefully.
+            return [];
+        }
+
+        return $tables;
+    }
+
+    /**
+     * @param array<int, string> $tables
+     * @return array<int, string>
+     */
+    protected function filterTruncatableTables(array $tables): array
+    {
+        return array_values(array_filter(
+            $tables,
+            static fn (string $t): bool => $t !== 'migrations'
+        ));
+    }
+
+    /**
+     * @param array<int, string> $tables
+     */
+    protected function truncateTables(SqlCommonConnectionPool $connection, Driver $driver, array $tables): void
+    {
         try {
             if ($driver === Driver::MYSQL) {
                 $connection->prepare('SET FOREIGN_KEY_CHECKS=0')->execute();
+
                 foreach ($tables as $table) {
                     $connection->prepare('TRUNCATE TABLE `'.$table.'`')->execute();
                 }
+
                 $connection->prepare('SET FOREIGN_KEY_CHECKS=1')->execute();
             } elseif ($driver === Driver::POSTGRESQL) {
                 $quoted = array_map(static fn (string $t): string => '"' . str_replace('"', '""', $t) . '"', $tables);
+
                 $connection->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
             }
         } catch (Throwable $e) {
