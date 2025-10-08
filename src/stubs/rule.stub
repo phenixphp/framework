@@ -10,7 +10,6 @@ class {name} extends Rule
 {
     public function passes(): bool
     {
-        // Implement validation logic
         return true;
     }
 
