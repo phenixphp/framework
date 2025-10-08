@@ -10,7 +10,10 @@ use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
 use Phenix\Testing\Concerns\InteractWithResponses;
+use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
+
+use function in_array;
 
 abstract class TestCase extends AsyncTestCase
 {
@@ -28,6 +31,12 @@ abstract class TestCase extends AsyncTestCase
         if (! isset($this->app)) {
             $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
             $this->app->enableTestingMode();
+        }
+
+        $uses = class_uses_recursive($this);
+
+        if (in_array(RefreshDatabase::class, $uses, true)) {
+            $this->refreshDatabase();
         }
     }
 
