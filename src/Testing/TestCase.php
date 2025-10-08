@@ -35,7 +35,7 @@ abstract class TestCase extends AsyncTestCase
 
         $uses = class_uses_recursive($this);
 
-        if (in_array(RefreshDatabase::class, $uses, true)) {
+        if (in_array(RefreshDatabase::class, $uses, true) && method_exists($this, 'refreshDatabase')) {
             $this->refreshDatabase();
         }
     }
