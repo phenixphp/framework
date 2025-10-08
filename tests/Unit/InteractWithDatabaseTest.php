@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Constants\Connection;
+use Phenix\Testing\Concerns\InteractWithDatabase;
+use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Phenix\Database\Constants\Connection;
-use Tests\Mocks\Database\MysqlConnectionPool;
-use Phenix\Testing\Concerns\InteractWithDatabase;
 
 uses(InteractWithDatabase::class);
 
