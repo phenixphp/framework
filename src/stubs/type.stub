@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Validation\Rules\IsString;
+use Phenix\Validation\Rules\TypeRule;
+use Phenix\Validation\Types\Scalar;
+
+class {name} extends Scalar
+{
+    protected function defineType(): TypeRule
+    {
+        return IsString::new();
+    }
+}
