@@ -504,3 +504,27 @@ it('can assert nothing dispatched', function (): void {
 
     EventFacade::expect('any.event')->toDispatchNothing();
 });
+
+it('supports closure predicate', function (): void {
+    EventFacade::log();
+
+    EventFacade::emit('closure.event', ['foo' => 'bar']);
+
+    EventFacade::expect('closure.event')->toBeDispatched(function ($event): bool {
+        return $event !== null && $event->getPayload()['foo'] === 'bar';
+    });
+});
+
+it('supports closure predicate with existing event', function (): void {
+    EventFacade::log();
+
+    EventFacade::emit('neg.event', 'value');
+
+    EventFacade::expect('neg.event')->toNotBeDispatched(fn ($event): bool => false);
+});
+
+it('supports closure predicate with absent event', function (): void {
+    EventFacade::log();
+
+    EventFacade::expect('absent.event')->toNotBeDispatched(fn ($event): bool => false);
+});
