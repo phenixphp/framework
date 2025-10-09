@@ -9,7 +9,7 @@ use Phenix\Data\Collection;
 use Phenix\Events\Contracts\Event as EventContract;
 use PHPUnit\Framework\Assert;
 
-class TestEvents
+class TestEvent
 {
     public readonly Collection $log;
 

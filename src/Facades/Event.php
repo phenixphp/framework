@@ -10,7 +10,7 @@ use Phenix\App;
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Contracts\EventListener;
 use Phenix\Runtime\Facade;
-use Phenix\Testing\TestEvents;
+use Phenix\Testing\TestEvent;
 
 /**
  * @method static void on(string $event, Closure|EventListener|string $listener, int $priority = 0)
@@ -29,7 +29,7 @@ use Phenix\Testing\TestEvents;
  * @method static void log()
  * @method static void fake()
  * @method static array getEventLog()
- * @method static \Phenix\Testing\TestEvents expect()
+ * @method static \Phenix\Testing\TestEvent expect()
  *
  * @see \Phenix\Events\EventEmitter
  */
@@ -40,11 +40,11 @@ class Event extends Facade
         return \Phenix\Events\EventEmitter::class;
     }
 
-    public static function expect(string $event): TestEvents
+    public static function expect(string $event): TestEvent
     {
         /** @var \Phenix\Events\EventEmitter $emitter */
         $emitter = App::make(self::getKeyName());
 
-        return new TestEvents($event, $emitter->getEventLog());
+        return new TestEvent($event, $emitter->getEventLog());
     }
 }
