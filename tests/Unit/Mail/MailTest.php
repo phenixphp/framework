@@ -142,14 +142,14 @@ it('send email successfully using smtp mailer', function (): void {
 
     Mail::to($email)->send($mailable);
 
-    Mail::expect()->toBeSent($mailable);
+    Mail::expect($mailable)->toBeSent();
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         return $matches['success'] === true;
     });
 
-    Mail::expect()->toBeSentTimes($mailable, 1);
-    Mail::expect()->toNotBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSentTimes(1);
+    Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
         return $matches['success'] === false;
     });
 });
@@ -178,14 +178,14 @@ it('send email successfully using smtps', function (): void {
 
     Mail::to($email)->send($mailable);
 
-    Mail::expect()->toBeSent($mailable);
+    Mail::expect($mailable)->toBeSent();
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         return $matches['success'] === true;
     });
 
-    Mail::expect()->toBeSentTimes($mailable, 1);
-    Mail::expect()->toNotBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSentTimes(1);
+    Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
         return $matches['success'] === false;
     });
 });
@@ -213,7 +213,7 @@ it('send email successfully using smtp mailer with sender defined in mailable', 
 
     Mail::send($mailable);
 
-    Mail::expect()->toBeSent($mailable);
+    Mail::expect($mailable)->toBeSent();
 });
 
 it('merge sender defined from facade and mailer', function (): void {
@@ -241,7 +241,7 @@ it('merge sender defined from facade and mailer', function (): void {
 
     Mail::to($email)->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
         if (! $email) {
@@ -282,7 +282,7 @@ it('send email successfully using cc', function (): void {
         ->cc($cc)
         ->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches) use ($cc): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches) use ($cc): bool {
         $email = $matches['email'] ?? null;
 
         if (! $email) {
@@ -324,7 +324,7 @@ it('send email successfully using bcc', function (): void {
         ->bcc($bcc)
         ->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches) use ($bcc): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches) use ($bcc): bool {
         $email = $matches['email'] ?? null;
 
         if (! $email) {
@@ -365,7 +365,7 @@ it('send email successfully using reply to', function (): void {
     Mail::to($to)
         ->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
         if (! $email) {
@@ -410,7 +410,7 @@ it('send email with multi attachments', function (): void {
 
     Mail::to($to)->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         $email = $matches['email'] ?? null;
         if (! $email) {
             return false;
@@ -456,7 +456,7 @@ it('throw exception when file attachment does not exists', function (): void {
 
     Mail::to($to)->send($mailable);
 
-    Mail::expect()->toNotBeSent($mailable);
+    Mail::expect($mailable)->toNotBeSent();
 })->throws(InvalidArgumentException::class);
 
 it('run parallel task to send email', function (): void {
@@ -530,7 +530,7 @@ it('send email with custom headers', function (): void {
 
     Mail::to($to)->send($mailable);
 
-    Mail::expect()->toBeSent($mailable, function (array $matches): bool {
+    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
         $email = $matches['email'] ?? null;
 
         if (! $email) {
