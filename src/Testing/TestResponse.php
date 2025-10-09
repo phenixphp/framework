@@ -6,6 +6,7 @@ namespace Phenix\Testing;
 
 use Amp\Http\Client\Response;
 use Phenix\Http\Constants\HttpStatus;
+use PHPUnit\Framework\Assert;
 
 class TestResponse
 {
@@ -33,28 +34,28 @@ class TestResponse
 
     public function assertOk(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::OK->value);
+        Assert::assertEquals(HttpStatus::OK->value, $this->response->getStatus());
 
         return $this;
     }
 
     public function assertNotFound(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::NOT_FOUND->value);
+        Assert::assertEquals(HttpStatus::NOT_FOUND->value, $this->response->getStatus());
 
         return $this;
     }
 
     public function assertNotAcceptable(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::NOT_ACCEPTABLE->value);
+        Assert::assertEquals(HttpStatus::NOT_ACCEPTABLE->value, $this->response->getStatus());
 
         return $this;
     }
 
     public function assertUnprocessableEntity(): self
     {
-        expect($this->response->getStatus())->toBe(HttpStatus::UNPROCESSABLE_ENTITY->value);
+        Assert::assertEquals(HttpStatus::UNPROCESSABLE_ENTITY->value, $this->response->getStatus());
 
         return $this;
     }
@@ -67,7 +68,9 @@ class TestResponse
     {
         $needles = (array) $needles;
 
-        expect($this->body)->toContain(...$needles);
+        foreach ($needles as $needle) {
+            Assert::assertStringContainsString($needle, $this->body);
+        }
 
         return $this;
     }
@@ -77,8 +80,8 @@ class TestResponse
         $needles = (array) $needles;
 
         foreach ($needles as $header => $value) {
-            expect($this->response->getHeader($header))->not->toBeNull();
-            expect($this->response->getHeader($header))->toBe($value);
+            Assert::assertNotNull($this->response->getHeader($header));
+            Assert::assertEquals($value, $this->response->getHeader($header));
         }
 
         return $this;
