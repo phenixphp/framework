@@ -51,3 +51,40 @@ it('supports closure criteria', function (): void {
         $query->whereEqual('active', 1);
     });
 });
+
+it('supports null value criteria', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([[ 'COUNT(*)' => 1 ]])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $this->assertDatabaseHas('users', [
+        'deleted_at' => null,
+    ]);
+});
+
+it('normalizes boolean criteria to integers', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([[ 'COUNT(*)' => 1 ]])), // active => true
+            new Statement(new Result([[ 'COUNT(*)' => 0 ]])), // active => false
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $this->assertDatabaseHas('users', [
+        'active' => true,
+    ]);
+
+    $this->assertDatabaseMissing('users', [
+        'active' => false,
+    ]);
+});
