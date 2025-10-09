@@ -6,6 +6,7 @@ namespace Phenix\Events;
 
 use Amp\Future;
 use Closure;
+use Phenix\App;
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Contracts\EventEmitter as EventEmitterContract;
 use Phenix\Events\Contracts\EventListener as EventListenerContract;
@@ -36,6 +37,15 @@ class EventEmitter implements EventEmitterContract
      * Whether to emit warnings for too many listeners.
      */
     protected bool $emitWarnings = true;
+
+    protected bool $logging = false;
+
+    protected bool $faking = false;
+
+    /**
+     * @var array<int, array{name: string, event: EventContract, payload: mixed, timestamp: float}>
+     */
+    protected array $dispatched = [];
 
     public function on(string $event, Closure|EventListenerContract|string $listener, int $priority = 0): void
     {
@@ -88,6 +98,13 @@ class EventEmitter implements EventEmitterContract
     public function emit(string|EventContract $event, mixed $payload = null): array
     {
         $eventObject = $this->createEvent($event, $payload);
+
+        $this->recordDispatched($eventObject);
+
+        if ($this->faking) {
+            return [];
+        }
+
         $results = [];
 
         $listeners = $this->getListeners($eventObject->getName());
@@ -134,6 +151,13 @@ class EventEmitter implements EventEmitterContract
     {
         return async(function () use ($event, $payload): array {
             $eventObject = $this->createEvent($event, $payload);
+
+            $this->recordDispatched($eventObject);
+
+            if ($this->faking) {
+                return [];
+            }
+
             $listeners = $this->getListeners($eventObject->getName());
             $futures = [];
 
@@ -162,6 +186,44 @@ class EventEmitter implements EventEmitterContract
 
             return $results;
         });
+    }
+
+    public function log(): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->logging = true;
+    }
+
+    public function fake(): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->logging = true;
+        $this->faking = true;
+    }
+
+    public function getEventLog(): array
+    {
+        return $this->dispatched;
+    }
+
+    protected function recordDispatched(EventContract $event): void
+    {
+        if (! $this->logging && ! $this->faking) {
+            return;
+        }
+
+        $this->dispatched[] = [
+            'name' => $event->getName(),
+            'event' => $event,
+            'payload' => $event->getPayload(),
+            'timestamp' => microtime(true),
+        ];
     }
 
     protected function handleListenerAsync(EventListenerContract $listener, EventContract $eventObject): Future

@@ -466,3 +466,41 @@ it('does not warn when exceeding maximum listeners if warnings disabled', functi
 
     expect($emitter->getListenerCount('warn.event'))->toBe(2);
 });
+
+it('logs dispatched events while still processing listeners', function (): void {
+    EventFacade::log();
+
+    $called = false;
+    EventFacade::on('logged.event', function () use (&$called): void {
+        $called = true;
+    });
+
+    EventFacade::emit('logged.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    EventFacade::expect('logged.event')->toBeDispatched();
+    EventFacade::expect('logged.event')->toBeDispatchedTimes(1);
+});
+
+it('fakes events preventing listener execution', function (): void {
+    EventFacade::fake();
+
+    $called = false;
+    EventFacade::on('fake.event', function () use (&$called): void {
+        $called = true;
+    });
+
+    EventFacade::emit('fake.event', 'payload');
+
+    expect($called)->toBeFalse();
+
+    EventFacade::expect('fake.event')->toBeDispatched();
+    EventFacade::expect('fake.event')->toBeDispatchedTimes(1);
+});
+
+it('can assert nothing dispatched', function (): void {
+    EventFacade::log();
+
+    EventFacade::expect('any.event')->toDispatchNothing();
+});
