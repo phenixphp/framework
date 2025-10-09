@@ -7,6 +7,7 @@ namespace Phenix\Testing;
 use Closure;
 use Phenix\Data\Collection;
 use Phenix\Events\Contracts\Event as EventContract;
+use PHPUnit\Framework\Assert;
 
 class TestEvents
 {
@@ -27,9 +28,9 @@ class TestEvents
         $matches = $this->filterByName($this->event);
 
         if ($closure) {
-            expect($closure($matches->first()['event'] ?? null))->toBeTrue();
+            Assert::assertTrue($closure($matches->first()['event'] ?? null));
         } else {
-            expect($matches)->not->toBeEmpty();
+            Assert::assertNotEmpty($matches, "Failed asserting that event '{$this->event}' was dispatched at least once.");
         }
     }
 
@@ -38,9 +39,9 @@ class TestEvents
         $matches = $this->filterByName($this->event);
 
         if ($closure) {
-            expect($closure($matches->first()['event'] ?? null))->toBeFalse();
+            Assert::assertFalse($closure($matches->first()['event'] ?? null));
         } else {
-            expect($matches)->toBeEmpty();
+            Assert::assertEmpty($matches, "Failed asserting that event '{$this->event}' was NOT dispatched.");
         }
     }
 
@@ -48,12 +49,12 @@ class TestEvents
     {
         $matches = $this->filterByName($this->event);
 
-        expect($matches)->toHaveCount($times);
+        Assert::assertCount($times, $matches, "Failed asserting that event '{$this->event}' was dispatched {$times} times. Actual: {$matches->count()}.");
     }
 
     public function toDispatchNothing(): void
     {
-        expect($this->log)->toBeEmpty();
+        Assert::assertEmpty($this->log, "Failed asserting that no events were dispatched.");
     }
 
     private function filterByName(string $event): Collection
