@@ -17,6 +17,16 @@ class QueueManager
 
     protected Config $config;
 
+
+    protected bool $logging = false;
+
+    protected bool $faking = false;
+
+    /**
+     * @var array<int, array{task_class: class-string<\Phenix\Tasks\QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
+     */
+    protected array $pushed = [];
+
     public function __construct(Config|null $config = null)
     {
         $this->config = $config ?? new Config();
@@ -24,11 +34,24 @@ class QueueManager
 
     public function push(QueuableTask $task): void
     {
+        $this->recordPush($task);
+
+        if ($this->faking) {
+            return;
+        }
+
         $this->driver()->push($task);
     }
 
     public function pushOn(string $queueName, QueuableTask $task): void
     {
+        $task->setQueueName($queueName);
+        $this->recordPush($task);
+
+        if ($this->faking) {
+            return;
+        }
+
         $this->driver()->pushOn($queueName, $task);
     }
 
@@ -70,6 +93,48 @@ class QueueManager
         $driverName = $this->resolveDriverName($driverName);
 
         return $this->drivers[$driverName->value] ??= $this->resolveDriver($driverName);
+    }
+
+    public function log(): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->logging = true;
+    }
+
+    public function fake(): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->logging = true;
+        $this->faking = true;
+    }
+
+    /**
+     * @return array<int, array{task_class: class-string<\Phenix\Tasks\QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
+     */
+    public function getQueueLog(): array
+    {
+        return $this->pushed;
+    }
+
+    protected function recordPush(QueuableTask $task): void
+    {
+        if (! $this->logging && ! $this->faking) {
+            return;
+        }
+
+        $this->pushed[] = [
+            'task_class' => $task::class,
+            'task' => $task,
+            'queue' => $task->getQueueName(),
+            'connection' => $task->getConnectionName(),
+            'timestamp' => microtime(true),
+        ];
     }
 
     protected function resolveDriverName(QueueDriver|null $driverName = null): QueueDriver

@@ -528,3 +528,51 @@ it('re-enqueues the task when reservation fails in single processing mode', func
 
     $parallelQueue->clear();
 });
+
+it('logs pushed tasks when logging is enabled', function (): void {
+    Queue::log();
+
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushed();
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+});
+
+it('does not log tasks when logging is disabled', function (): void {
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+});
+
+it('fakes queue pushes and prevents tasks from actually being enqueued', function (): void {
+    Queue::fake();
+
+    Queue::push(new BasicQueuableTask());
+    Queue::pushOn('custom', new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(2);
+
+    $this->assertSame(0, Queue::size());
+});
+
+it('asserts a task was not pushed', function (): void {
+    Queue::log();
+
+    Queue::expect(BasicQueuableTask::class)->toNotBePushed();
+});
+
+it('asserts tasks pushed on a custom queue', function (): void {
+    Queue::fake();
+
+    Queue::pushOn('emails', new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushed(function ($task) {
+        return $task !== null && $task->getQueueName() === 'emails';
+    });
+});
+
+it('asserts no tasks were pushed', function (): void {
+    Queue::log();
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+});
