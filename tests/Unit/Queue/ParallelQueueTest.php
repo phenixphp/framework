@@ -576,3 +576,17 @@ it('asserts no tasks were pushed', function (): void {
 
     Queue::expect(BasicQueuableTask::class)->toPushNothing();
 });
+
+it('fakes only specific tasks and consumes them after first fake', function (): void {
+    Queue::fake([BasicQueuableTask::class]);
+
+    Queue::push(new BasicQueuableTask()); // faked
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    $this->assertSame(0, Queue::size());
+
+    Queue::push(new BasicQueuableTask()); // now enqueued
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(2);
+
+    $this->assertSame(1, Queue::size());
+});

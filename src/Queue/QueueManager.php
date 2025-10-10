@@ -22,6 +22,13 @@ class QueueManager
 
     protected bool $faking = false;
 
+    protected bool $hasFakeTasks = false;
+
+    /**
+     * @var array<string,bool>
+     */
+    protected array $fakeTasks = [];
+
     /**
      * @var array<int, array{task_class: class-string<\Phenix\Tasks\QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
      */
@@ -36,7 +43,9 @@ class QueueManager
     {
         $this->recordPush($task);
 
-        if ($this->faking) {
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
             return;
         }
 
@@ -48,7 +57,9 @@ class QueueManager
         $task->setQueueName($queueName);
         $this->recordPush($task);
 
-        if ($this->faking) {
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
             return;
         }
 
@@ -104,7 +115,7 @@ class QueueManager
         $this->logging = true;
     }
 
-    public function fake(): void
+    public function fake(string|array|null $tasks = null): void
     {
         if (App::isProduction()) {
             return;
@@ -112,6 +123,13 @@ class QueueManager
 
         $this->logging = true;
         $this->faking = true;
+        $this->hasFakeTasks = $tasks !== null;
+
+        if ($tasks !== null) {
+            foreach ((array) $tasks as $name) {
+                $this->fakeTasks[$name] = true;
+            }
+        }
     }
 
     /**
@@ -149,6 +167,26 @@ class QueueManager
             QueueDriver::DATABASE => $this->createDatabaseDriver(),
             QueueDriver::REDIS => $this->createRedisDriver(),
         };
+    }
+
+    protected function shouldFakeTask(QueuableTask $task): bool
+    {
+        if (! $this->faking) {
+            return false;
+        }
+
+        if ($this->hasFakeTasks) {
+            return isset($this->fakeTasks[$task::class]);
+        }
+
+        return true;
+    }
+
+    protected function consumeFakedTask(QueuableTask $task): void
+    {
+        if (isset($this->fakeTasks[$task::class])) {
+            unset($this->fakeTasks[$task::class]);
+        }
     }
 
     protected function createParallelDriver(): Queue

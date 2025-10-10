@@ -42,6 +42,13 @@ class EventEmitter implements EventEmitterContract
 
     protected bool $faking = false;
 
+    protected bool $hasFakeEvents = false;
+
+    /**
+     * @var array<string,bool>
+     */
+    protected array $fakeEvents = [];
+
     /**
      * @var array<int, array{name: string, event: EventContract, payload: mixed, timestamp: float}>
      */
@@ -100,8 +107,9 @@ class EventEmitter implements EventEmitterContract
         $eventObject = $this->createEvent($event, $payload);
 
         $this->recordDispatched($eventObject);
+        if ($this->shouldFakeEvent($eventObject->getName())) {
+            $this->consumeFakedEvent($eventObject->getName());
 
-        if ($this->faking) {
             return [];
         }
 
@@ -153,8 +161,9 @@ class EventEmitter implements EventEmitterContract
             $eventObject = $this->createEvent($event, $payload);
 
             $this->recordDispatched($eventObject);
+            if ($this->shouldFakeEvent($eventObject->getName())) {
+                $this->consumeFakedEvent($eventObject->getName());
 
-            if ($this->faking) {
                 return [];
             }
 
@@ -197,7 +206,7 @@ class EventEmitter implements EventEmitterContract
         $this->logging = true;
     }
 
-    public function fake(): void
+    public function fake(string|array|null $events = null): void
     {
         if (App::isProduction()) {
             return;
@@ -205,6 +214,13 @@ class EventEmitter implements EventEmitterContract
 
         $this->logging = true;
         $this->faking = true;
+        $this->hasFakeEvents = $events !== null;
+
+        if ($events !== null) {
+            foreach ((array) $events as $name) {
+                $this->fakeEvents[$name] = true;
+            }
+        }
     }
 
     public function getEventLog(): array
@@ -367,6 +383,26 @@ class EventEmitter implements EventEmitterContract
 
         if ($this->listenerCounts[$event] === 0) {
             unset($this->listeners[$event]);
+        }
+    }
+
+    protected function shouldFakeEvent(string $name): bool
+    {
+        if (! $this->faking) {
+            return false;
+        }
+
+        if ($this->hasFakeEvents) {
+            return isset($this->fakeEvents[$name]);
+        }
+
+        return true;
+    }
+
+    protected function consumeFakedEvent(string $name): void
+    {
+        if (isset($this->fakeEvents[$name])) {
+            unset($this->fakeEvents[$name]);
         }
     }
 }

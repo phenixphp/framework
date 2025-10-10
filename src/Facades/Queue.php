@@ -23,7 +23,7 @@ use Phenix\Testing\TestQueue;
  * @method static void setConnectionName(string $name)
  * @method static QueueContract driver(QueueDriver|null $driverName = null)
  * @method static void log()
- * @method static void fake()
+ * @method static void fake(string|array|null $tasks = null)
  * @method static array getQueueLog()
  * @method static TestQueue expect(string $taskClass)
  *

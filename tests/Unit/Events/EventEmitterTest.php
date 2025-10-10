@@ -528,3 +528,36 @@ it('supports closure predicate with absent event', function (): void {
 
     EventFacade::expect('absent.event')->toNotBeDispatched(fn ($event): bool => false);
 });
+
+it('fakes only specific events when an array is provided and consumes them after first fake', function (): void {
+    $calledSpecific = false;
+    $calledOther = false;
+
+    EventFacade::on('specific.event', function () use (&$calledSpecific): void {
+        $calledSpecific = true; // Should NOT run because faked
+    });
+
+    EventFacade::on('other.event', function () use (&$calledOther): void {
+        $calledOther = true; // Should run
+    });
+
+    EventFacade::fake(['specific.event']);
+
+    EventFacade::emit('specific.event', 'payload-1');
+
+    $this->assertFalse($calledSpecific);
+
+    EventFacade::expect('specific.event')->toBeDispatchedTimes(1);
+
+    EventFacade::emit('specific.event', 'payload-2');
+
+    $this->assertTrue($calledSpecific);
+
+    EventFacade::expect('specific.event')->toBeDispatchedTimes(2);
+
+    EventFacade::emit('other.event', 'payload');
+
+    $this->assertTrue($calledOther);
+
+    EventFacade::expect('other.event')->toBeDispatched();
+});
