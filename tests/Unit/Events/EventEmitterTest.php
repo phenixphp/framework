@@ -541,23 +541,92 @@ it('fakes only specific events when an array is provided and consumes them after
         $calledOther = true; // Should run
     });
 
-    EventFacade::fake(['specific.event']);
+    EventFacade::fake(['specific.event' => 1]);
 
     EventFacade::emit('specific.event', 'payload-1');
 
-    $this->assertFalse($calledSpecific);
+    expect($calledSpecific)->toBeFalse();
 
     EventFacade::expect('specific.event')->toBeDispatchedTimes(1);
 
     EventFacade::emit('specific.event', 'payload-2');
 
-    $this->assertTrue($calledSpecific);
+    expect($calledSpecific)->toBeTrue();
 
     EventFacade::expect('specific.event')->toBeDispatchedTimes(2);
 
     EventFacade::emit('other.event', 'payload');
 
-    $this->assertTrue($calledOther);
+    expect($calledOther)->toBeTrue();
 
     EventFacade::expect('other.event')->toBeDispatched();
+});
+
+it('supports infinite fake for single event with no times argument', function (): void {
+    $called = 0;
+
+    EventFacade::on('always.event', function () use (&$called): void {
+        $called++;
+    });
+
+    EventFacade::fake('always.event');
+
+    EventFacade::emit('always.event');
+    EventFacade::emit('always.event');
+    EventFacade::emit('always.event');
+
+    expect($called)->toBe(0);
+
+    EventFacade::expect('always.event')->toBeDispatchedTimes(3);
+});
+
+it('supports limited fake with times argument then processes listeners', function (): void {
+    $called = 0;
+
+    EventFacade::on('limited.event', function () use (&$called): void {
+        $called++;
+    });
+
+    EventFacade::fake('limited.event', 2);
+
+    EventFacade::emit('limited.event'); // fake
+    EventFacade::emit('limited.event'); // fake
+    EventFacade::emit('limited.event'); // real
+    EventFacade::emit('limited.event'); // real
+
+    expect($called)->toBe(2);
+
+    EventFacade::expect('limited.event')->toBeDispatchedTimes(4);
+});
+
+it('supports associative array with mixed counts and infinite entries', function (): void {
+    $limitedCalled = 0;
+    $infiniteCalled = 0;
+    $globalCalled = 0;
+
+    EventFacade::on('assoc.limited', function () use (&$limitedCalled): void { $limitedCalled++; });
+    EventFacade::on('assoc.infinite', function () use (&$infiniteCalled): void { $infiniteCalled++; });
+    EventFacade::on('assoc.global', function () use (&$globalCalled): void { $globalCalled++; });
+
+    EventFacade::fake([
+        'assoc.limited' => 1,
+        'assoc.infinite' => null,
+        'assoc.global',
+    ]);
+
+    EventFacade::emit('assoc.limited'); // fake
+    EventFacade::emit('assoc.limited'); // real
+    EventFacade::emit('assoc.infinite'); // fake
+    EventFacade::emit('assoc.infinite'); // fake
+    EventFacade::emit('assoc.global'); // fake
+    EventFacade::emit('assoc.global'); // fake
+    EventFacade::emit('assoc.limited'); // real
+
+    expect($limitedCalled)->toBe(2);
+    expect($infiniteCalled)->toBe(0);
+    expect($globalCalled)->toBe(0);
+
+    EventFacade::expect('assoc.limited')->toBeDispatchedTimes(3);
+    EventFacade::expect('assoc.infinite')->toBeDispatchedTimes(2);
+    EventFacade::expect('assoc.global')->toBeDispatchedTimes(2);
 });

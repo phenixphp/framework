@@ -27,7 +27,7 @@ interface EventEmitter
 
     public function log(): void;
 
-    public function fake(): void;
+    public function fake(string|array|null $events = null, int|null $times = null): void;
 
     /**
      * @return array<int, array{name: string, event: Event, payload: mixed, timestamp: float}>

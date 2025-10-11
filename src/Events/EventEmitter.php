@@ -28,24 +28,21 @@ class EventEmitter implements EventEmitterContract
      */
     protected array $listenerCounts = [];
 
-    /**
-     * Maximum number of listeners per event.
-     */
     protected int $maxListeners = 10;
 
-    /**
-     * Whether to emit warnings for too many listeners.
-     */
     protected bool $emitWarnings = true;
 
     protected bool $logging = false;
 
     protected bool $faking = false;
 
-    protected bool $hasFakeEvents = false;
+    protected bool $fakeAll = false;
 
     /**
-     * @var array<string,bool>
+     * null => always fake
+     * int  => number of remaining times to fake; when it reaches 0, it is removed.
+     *
+     * @var array<string,int|null>
      */
     protected array $fakeEvents = [];
 
@@ -206,7 +203,7 @@ class EventEmitter implements EventEmitterContract
         $this->logging = true;
     }
 
-    public function fake(string|array|null $events = null): void
+    public function fake(string|array|null $events = null, int|null $times = null): void
     {
         if (App::isProduction()) {
             return;
@@ -214,12 +211,43 @@ class EventEmitter implements EventEmitterContract
 
         $this->logging = true;
         $this->faking = true;
-        $this->hasFakeEvents = $events !== null;
 
-        if ($events !== null) {
-            foreach ((array) $events as $name) {
-                $this->fakeEvents[$name] = true;
+        if ($events === null) {
+            $this->fakeAll = true;
+
+            return;
+        }
+
+        $this->fakeAll = false;
+
+        $normalized = [];
+
+        if (is_string($events)) {
+            $normalized[$events] = $times !== null ? max(0, abs($times)) : null;
+        } elseif (is_array($events) && array_is_list($events)) {
+            foreach ($events as $event) {
+                $normalized[$event] = null;
             }
+        } else {
+            foreach ($events as $name => $value) {
+                if (is_int($name)) {
+                    $normalized[(string)$value] = null;
+
+                    continue;
+                }
+
+                $normalized[$name] = is_int($value) ? max(0, abs($value)) : null;
+            }
+        }
+
+        foreach ($normalized as $eventName => $count) {
+            if ($count === 0) {
+                unset($normalized[$eventName]);
+            }
+        }
+
+        foreach ($normalized as $name => $count) {
+            $this->fakeEvents[$name] = $count;
         }
     }
 
@@ -391,18 +419,41 @@ class EventEmitter implements EventEmitterContract
         if (! $this->faking) {
             return false;
         }
-
-        if ($this->hasFakeEvents) {
-            return isset($this->fakeEvents[$name]);
+        if ($this->fakeAll) {
+            return true;
         }
 
-        return true;
+        if (empty($this->fakeEvents)) {
+            return false;
+        }
+
+        if (! array_key_exists($name, $this->fakeEvents)) {
+            return false;
+        }
+
+        $remaining = $this->fakeEvents[$name];
+
+        return $remaining === null || $remaining > 0;
     }
 
     protected function consumeFakedEvent(string $name): void
     {
-        if (isset($this->fakeEvents[$name])) {
+        if (! isset($this->fakeEvents[$name])) {
+            return;
+        }
+
+        $remaining = $this->fakeEvents[$name];
+
+        if ($remaining === null) {
+            return;
+        }
+
+        $remaining--;
+
+        if ($remaining <= 0) {
             unset($this->fakeEvents[$name]);
+        } else {
+            $this->fakeEvents[$name] = $remaining;
         }
     }
 }
