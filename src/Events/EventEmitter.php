@@ -217,47 +217,66 @@ class EventEmitter implements EventEmitterContract
 
         $this->fakeAll = false;
 
-        $normalized = [];
+        $normalized = $this->normalizeFakeEvents($events, $times);
 
+        foreach ($normalized as $name => $config) {
+            if ($config === 0) {
+                continue;
+            }
+
+            $this->fakeEvents[$name] = $config;
+        }
+    }
+
+    /**
+     * @param string|array $events
+     * @param int|Closure|null $times
+     * @return array<string, int|Closure|null>
+     */
+    protected function normalizeFakeEvents(string|array $events, int|Closure|null $times): array
+    {
         if (is_string($events)) {
             if ($times instanceof Closure) {
-                $normalized[$events] = $times;
-            } elseif (is_int($times)) {
-                $normalized[$events] = max(0, abs($times));
-            } else {
-                $normalized[$events] = null;
+                return [$events => $times];
             }
-        } elseif (is_array($events) && array_is_list($events)) {
+
+            if (is_int($times)) {
+                return [$events => max(0, abs($times))];
+            }
+
+            return [$events => null];
+        }
+
+        $normalized = [];
+
+        if (array_is_list($events)) {
             foreach ($events as $event) {
                 $normalized[$event] = null;
             }
-        } else {
-            foreach ($events as $name => $value) {
-                if (is_int($name)) {
-                    $normalized[(string)$value] = null;
 
-                    continue;
-                }
+            return $normalized;
+        }
 
-                if (is_int($value)) {
-                    $normalized[$name] = max(0, abs($value));
-                } elseif ($value instanceof Closure) {
-                    $normalized[$name] = $value;
-                } else {
-                    $normalized[$name] = null;
-                }
+        foreach ($events as $name => $value) {
+            if (is_int($name)) {
+                $normalized[(string) $value] = null;
+                continue;
             }
-        }
 
-        foreach ($normalized as $eventName => $count) {
-            if ($count === 0) {
-                unset($normalized[$eventName]);
+            if (is_int($value)) {
+                $normalized[$name] = max(0, abs($value));
+                continue;
             }
+
+            if ($value instanceof Closure) {
+                $normalized[$name] = $value;
+                continue;
+            }
+
+            $normalized[$name] = null;
         }
 
-        foreach ($normalized as $name => $config) {
-            $this->fakeEvents[$name] = $config;
-        }
+        return $normalized;
     }
 
     public function getEventLog(): array
