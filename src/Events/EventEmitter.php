@@ -200,7 +200,7 @@ class EventEmitter implements EventEmitterContract
         $this->logging = true;
     }
 
-    public function fake(string|array|null $events = null, int|null $times = null): void
+    public function fake(string|array|null $events = null, int|Closure|null $times = null): void
     {
         if (App::isProduction()) {
             return;
@@ -220,7 +220,13 @@ class EventEmitter implements EventEmitterContract
         $normalized = [];
 
         if (is_string($events)) {
-            $normalized[$events] = $times !== null ? max(0, abs($times)) : null;
+            if ($times instanceof Closure) {
+                $normalized[$events] = $times;
+            } elseif (is_int($times)) {
+                $normalized[$events] = max(0, abs($times));
+            } else {
+                $normalized[$events] = null;
+            }
         } elseif (is_array($events) && array_is_list($events)) {
             foreach ($events as $event) {
                 $normalized[$event] = null;

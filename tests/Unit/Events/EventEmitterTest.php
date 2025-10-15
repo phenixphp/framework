@@ -594,7 +594,7 @@ it('supports limited fake with times argument then processes listeners', functio
     EventFacade::emit('limited.event'); // real
     EventFacade::emit('limited.event'); // real
 
-    expect($called)->toBe(2);
+    expect($called)->toEqual(2);
 
     EventFacade::expect('limited.event')->toBeDispatchedTimes(4);
 });
@@ -634,8 +634,6 @@ it('supports associative array with mixed counts and infinite entries', function
 it('supports conditional closure based faking', function (): void {
     $called = 0;
 
-    EventFacade::on('conditional.event', function () use (&$called): void { $called++; });
-
     EventFacade::fake([
         'conditional.event' => function (array $log): bool {
             $count = 0;
@@ -650,6 +648,8 @@ it('supports conditional closure based faking', function (): void {
         },
     ]);
 
+    EventFacade::on('conditional.event', function () use (&$called): void { $called++; });
+
     EventFacade::emit('conditional.event');
     EventFacade::emit('conditional.event');
     EventFacade::emit('conditional.event');
@@ -658,4 +658,30 @@ it('supports conditional closure based faking', function (): void {
     expect($called)->toBe(2);
 
     EventFacade::expect('conditional.event')->toBeDispatchedTimes(4);
+});
+
+it('supports single event closure in times parameter for fake', function (): void {
+    $called = 0;
+
+    EventFacade::fake('single.closure.event', function (array $log): bool {
+        $count = 0;
+        foreach ($log as $entry) {
+            if (($entry['name'] ?? null) === 'single.closure.event') {
+                $count++;
+            }
+        }
+
+        return $count <= 2;
+    });
+
+    EventFacade::on('single.closure.event', function () use (&$called): void { $called++; });
+
+    EventFacade::emit('single.closure.event'); // fake
+    EventFacade::emit('single.closure.event'); // fake
+    EventFacade::emit('single.closure.event'); // real
+    EventFacade::emit('single.closure.event'); // real
+
+    expect($called)->toBe(2);
+
+    EventFacade::expect('single.closure.event')->toBeDispatchedTimes(4);
 });

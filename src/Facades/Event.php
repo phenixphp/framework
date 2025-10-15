@@ -27,7 +27,7 @@ use Phenix\Testing\TestEvent;
  * @method static int getListenerCount(string $event)
  * @method static array getEventNames()
  * @method static void log()
- * @method static void fake(string|array|null $events = null, int|null $times = null)
+ * @method static void fake(string|array|null $events = null, int|Closure|null $times = null)
  * @method static array getEventLog()
  * @method static \Phenix\Testing\TestEvent expect()
  *
