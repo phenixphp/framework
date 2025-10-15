@@ -29,6 +29,7 @@ use Phenix\Testing\TestEvent;
  * @method static void log()
  * @method static void fake(string|array|null $events = null, int|Closure|null $times = null)
  * @method static array getEventLog()
+ * @method static void resetEventLog()
  * @method static \Phenix\Testing\TestEvent expect()
  *
  * @see \Phenix\Events\EventEmitter

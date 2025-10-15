@@ -284,6 +284,15 @@ class EventEmitter implements EventEmitterContract
         return $this->dispatched;
     }
 
+    public function resetEventLog(): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->dispatched = [];
+    }
+
     protected function recordDispatched(EventContract $event): void
     {
         if (! $this->logging && ! $this->faking) {

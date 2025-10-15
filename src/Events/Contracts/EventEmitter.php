@@ -37,4 +37,6 @@ interface EventEmitter
      * @return array<int, array{name: string, event: Event, payload: mixed, timestamp: float}>
      */
     public function getEventLog(): array;
+
+    public function resetEventLog(): void;
 }

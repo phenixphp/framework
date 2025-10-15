@@ -481,6 +481,15 @@ it('logs dispatched events while still processing listeners', function (): void 
 
     EventFacade::expect('logged.event')->toBeDispatched();
     EventFacade::expect('logged.event')->toBeDispatchedTimes(1);
+
+    expect(EventFacade::getEventLog())->toHaveCount(1);
+
+    EventFacade::resetEventLog();
+
+    expect(EventFacade::getEventLog())->toHaveCount(0);
+
+    EventFacade::emit('logged.event', 'payload-2');
+    EventFacade::expect('logged.event')->toBeDispatchedTimes(1);
 });
 
 it('fakes events preventing listener execution', function (): void {
