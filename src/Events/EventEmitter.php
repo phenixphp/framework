@@ -124,7 +124,6 @@ class EventEmitter implements EventEmitterContract
                 $result = $listener->handle($eventObject);
                 $results[] = $result;
 
-                // Remove one-time listeners after execution
                 if ($listener->isOnce()) {
                     $this->removeListener($eventObject->getName(), $listener);
                 }
@@ -260,16 +259,19 @@ class EventEmitter implements EventEmitterContract
         foreach ($events as $name => $value) {
             if (is_int($name)) {
                 $normalized[(string) $value] = null;
+
                 continue;
             }
 
             if (is_int($value)) {
                 $normalized[$name] = max(0, abs($value));
+
                 continue;
             }
 
             if ($value instanceof Closure) {
                 $normalized[$name] = $value;
+
                 continue;
             }
 
