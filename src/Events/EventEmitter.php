@@ -39,10 +39,7 @@ class EventEmitter implements EventEmitterContract
     protected bool $fakeAll = false;
 
     /**
-     * null => always fake
-     * int  => number of remaining times to fake; when it reaches 0, it is removed.
-     *
-     * @var array<string,int|null>
+     * @var array<string, int|null|Closure>
      */
     protected array $fakeEvents = [];
 
@@ -236,7 +233,13 @@ class EventEmitter implements EventEmitterContract
                     continue;
                 }
 
-                $normalized[$name] = is_int($value) ? max(0, abs($value)) : null;
+                if (is_int($value)) {
+                    $normalized[$name] = max(0, abs($value));
+                } elseif ($value instanceof Closure) {
+                    $normalized[$name] = $value;
+                } else {
+                    $normalized[$name] = null;
+                }
             }
         }
 
@@ -246,8 +249,8 @@ class EventEmitter implements EventEmitterContract
             }
         }
 
-        foreach ($normalized as $name => $count) {
-            $this->fakeEvents[$name] = $count;
+        foreach ($normalized as $name => $config) {
+            $this->fakeEvents[$name] = $config;
         }
     }
 
@@ -431,9 +434,19 @@ class EventEmitter implements EventEmitterContract
             return false;
         }
 
-        $remaining = $this->fakeEvents[$name];
+        $config = $this->fakeEvents[$name];
 
-        return $remaining === null || $remaining > 0;
+        if ($config instanceof Closure) {
+            try {
+                return (bool) $config($this->dispatched);
+            } catch (Throwable $e) {
+                report($e);
+
+                return false;
+            }
+        }
+
+        return $config === null || $config > 0;
     }
 
     protected function consumeFakedEvent(string $name): void
@@ -444,7 +457,7 @@ class EventEmitter implements EventEmitterContract
 
         $remaining = $this->fakeEvents[$name];
 
-        if ($remaining === null) {
+        if ($remaining === null || $remaining instanceof Closure) {
             return;
         }
 

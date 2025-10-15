@@ -630,3 +630,32 @@ it('supports associative array with mixed counts and infinite entries', function
     EventFacade::expect('assoc.infinite')->toBeDispatchedTimes(2);
     EventFacade::expect('assoc.global')->toBeDispatchedTimes(2);
 });
+
+it('supports conditional closure based faking', function (): void {
+    $called = 0;
+
+    EventFacade::on('conditional.event', function () use (&$called): void { $called++; });
+
+    EventFacade::fake([
+        'conditional.event' => function (array $log): bool {
+            $count = 0;
+
+            foreach ($log as $entry) {
+                if (($entry['name'] ?? null) === 'conditional.event') {
+                    $count++;
+                }
+            }
+
+            return $count <= 2;
+        },
+    ]);
+
+    EventFacade::emit('conditional.event');
+    EventFacade::emit('conditional.event');
+    EventFacade::emit('conditional.event');
+    EventFacade::emit('conditional.event');
+
+    expect($called)->toBe(2);
+
+    EventFacade::expect('conditional.event')->toBeDispatchedTimes(4);
+});

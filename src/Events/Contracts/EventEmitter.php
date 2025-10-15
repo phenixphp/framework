@@ -27,6 +27,10 @@ interface EventEmitter
 
     public function log(): void;
 
+    /**
+     * @param string|array<string,int|null|Closure>|null $events
+     * @param int|null $times
+     */
     public function fake(string|array|null $events = null, int|null $times = null): void;
 
     /**
