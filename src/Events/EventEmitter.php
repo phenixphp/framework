@@ -493,7 +493,7 @@ class EventEmitter implements EventEmitterContract
 
         $remaining = $this->fakeEvents[$name];
 
-        if ($remaining === null || $remaining instanceof Closure) {
+        if (!$remaining || $remaining instanceof Closure) {
             return;
         }
 
