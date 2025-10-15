@@ -590,3 +590,49 @@ it('fakes only specific tasks and consumes them after first fake', function (): 
 
     $this->assertSame(1, Queue::size());
 });
+
+it('fakes a task multiple times using times parameter', function (): void {
+    Queue::fake(BasicQueuableTask::class, 2);
+
+    Queue::push(new BasicQueuableTask()); // faked
+    $this->assertSame(0, Queue::size());
+
+    Queue::push(new BasicQueuableTask()); // faked
+    $this->assertSame(0, Queue::size());
+
+    Queue::push(new BasicQueuableTask()); // real
+    $this->assertSame(1, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(3);
+});
+
+it('fakes tasks with per-task counts array', function (): void {
+    Queue::fake([
+        BasicQueuableTask::class => 2,
+    ]);
+
+    Queue::push(new BasicQueuableTask()); // faked
+    Queue::push(new BasicQueuableTask()); // faked
+    $this->assertSame(0, Queue::size());
+
+    Queue::push(new BasicQueuableTask()); // real
+    $this->assertSame(1, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(3);
+});
+
+it('conditionally fakes tasks using a closure configuration', function (): void {
+    Queue::fake([
+        BasicQueuableTask::class => function (array $log): bool {
+            return count($log) <= 3;
+        },
+    ]);
+
+    for ($i = 0; $i < 5; $i++) {
+        Queue::push(new BasicQueuableTask());
+    }
+
+    $this->assertSame(2, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(5);
+});

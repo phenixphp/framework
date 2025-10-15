@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
+use Closure;
 use Phenix\App;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue as QueueContract;
@@ -23,8 +24,9 @@ use Phenix\Testing\TestQueue;
  * @method static void setConnectionName(string $name)
  * @method static QueueContract driver(QueueDriver|null $driverName = null)
  * @method static void log()
- * @method static void fake(string|array|null $tasks = null)
+ * @method static void fake(string|array|null $tasks = null, int|Closure|null $times = null)
  * @method static array getQueueLog()
+ * @method static void resetQueueLog()
  * @method static TestQueue expect(string $taskClass)
  *
  * @see \Phenix\Queue\QueueManager
