@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Events\Concerns;
 
 use Closure;
+use Throwable;
 use Phenix\App;
 use Phenix\Events\Contracts\Event as EventContract;
 
@@ -84,48 +85,39 @@ trait CaptureEvents
      */
     protected function normalizeFakeEvents(string|array $events, int|Closure|null $times): array
     {
-        if (is_string($events)) {
-            if ($times instanceof Closure) {
-                return [$events => $times];
-            }
-
-            if (is_int($times)) {
-                return [$events => max(0, abs($times))];
-            }
-
-            return [$events => null];
-        }
-
         $normalized = [];
 
-        if (array_is_list($events)) {
+        if (is_string($events)) {
+            $normalized[$events] = $times instanceof Closure
+                ? $times
+                : (is_int($times) ? max(0, abs($times)) : null);
+        } elseif (array_is_list($events)) {
             foreach ($events as $event) {
                 $normalized[$event] = null;
             }
+        } else {
+            foreach ($events as $name => $value) {
+                if (is_int($name)) {
+                    $normalized[(string) $value] = null;
 
-            return $normalized;
-        }
 
-        foreach ($events as $name => $value) {
-            if (is_int($name)) {
-                $normalized[(string) $value] = null;
+                    continue;
+                }
 
-                continue;
+                if (is_int($value)) {
+                    $normalized[$name] = max(0, abs($value));
+
+                    continue;
+                }
+
+                if ($value instanceof Closure) {
+                    $normalized[$name] = $value;
+
+                    continue;
+                }
+
+                $normalized[$name] = null;
             }
-
-            if (is_int($value)) {
-                $normalized[$name] = max(0, abs($value));
-
-                continue;
-            }
-
-            if ($value instanceof Closure) {
-                $normalized[$name] = $value;
-
-                continue;
-            }
-
-            $normalized[$name] = null;
         }
 
         return $normalized;
