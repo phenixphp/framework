@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Events\Concerns;
 
 use Closure;
-use Throwable;
 use Phenix\App;
 use Phenix\Events\Contracts\Event as EventContract;
+use Throwable;
 
 trait CaptureEvents
 {
@@ -141,7 +141,7 @@ trait CaptureEvents
     {
         $result = false;
 
-        if (!$this->faking) {
+        if (! $this->faking) {
             return $result;
         }
 
