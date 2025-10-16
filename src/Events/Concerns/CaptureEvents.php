@@ -139,34 +139,31 @@ trait CaptureEvents
 
     protected function shouldFakeEvent(string $name): bool
     {
-        if (! $this->faking) {
-            return false;
+        $result = false;
+
+        if (!$this->faking) {
+            return $result;
         }
+
         if ($this->fakeAll) {
-            return true;
-        }
+            $result = true;
+        } elseif (! empty($this->fakeEvents) && array_key_exists($name, $this->fakeEvents)) {
+            $config = $this->fakeEvents[$name];
 
-        if (empty($this->fakeEvents)) {
-            return false;
-        }
+            if ($config instanceof Closure) {
+                try {
+                    $result = (bool) $config($this->dispatched);
+                } catch (Throwable $e) {
+                    report($e);
 
-        if (! array_key_exists($name, $this->fakeEvents)) {
-            return false;
-        }
-
-        $config = $this->fakeEvents[$name];
-
-        if ($config instanceof Closure) {
-            try {
-                return (bool) $config($this->dispatched);
-            } catch (Throwable $e) {
-                report($e);
-
-                return false;
+                    $result = false;
+                }
+            } else {
+                $result = $config === null || $config > 0;
             }
         }
 
-        return $config === null || $config > 0;
+        return $result;
     }
 
     protected function consumeFakedEvent(string $name): void
