@@ -781,3 +781,21 @@ it('does not fake when closure throws exception', function (): void {
 
     EventFacade::expect('closure.exception.event')->toBeDispatchedTimes(1);
 });
+
+it('fakes async emits correctly', function (): void {
+    EventFacade::fake();
+
+    $called = false;
+
+    EventFacade::on('async.fake.event', function () use (&$called): void {
+        $called = true;
+    });
+
+    $future = EventFacade::emitAsync('async.fake.event', 'payload');
+
+    $future->await();
+
+    expect($called)->toBeFalse();
+
+    EventFacade::expect('async.fake.event')->toBeDispatched();
+});
