@@ -587,6 +587,9 @@ it('asserts a task was not pushed', function (): void {
     Queue::log();
 
     Queue::expect(BasicQueuableTask::class)->toNotBePushed();
+    Queue::expect(BasicQueuableTask::class)->toNotBePushed(function ($task) {
+        return $task !== null && $task->getQueueName() === 'default';
+    });
 });
 
 it('asserts tasks pushed on a custom queue', function (): void {
