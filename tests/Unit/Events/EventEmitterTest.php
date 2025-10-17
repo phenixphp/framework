@@ -7,6 +7,7 @@ use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
 use Phenix\Events\Exceptions\EventException;
 use Phenix\Exceptions\RuntimeError;
+use Phenix\Facades\Config;
 use Phenix\Facades\Event as EventFacade;
 use Phenix\Facades\Log;
 use Tests\Unit\Events\Internal\InvalidListener;
@@ -693,4 +694,90 @@ it('supports single event closure in times parameter for fake', function (): voi
     expect($called)->toBe(2);
 
     EventFacade::expect('single.closure.event')->toBeDispatchedTimes(4);
+});
+
+it('does not log events in production environment', function (): void {
+    Config::set('app.env', 'production');
+
+    EventFacade::log();
+
+    EventFacade::emit('prod.logged.event', 'payload');
+
+    expect(EventFacade::getEventLog())->toHaveCount(0);
+
+    Config::set('app.env', 'local');
+});
+
+it('does not fake events in production environment', function (): void {
+    Config::set('app.env', 'production');
+
+    $called = false;
+    EventFacade::on('prod.fake.event', function () use (&$called): void {
+        $called = true;
+    });
+
+    EventFacade::fake('prod.fake.event');
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    Config::set('app.env', 'local');
+});
+
+it('fakes all events provided as a list array', function (): void {
+    EventFacade::on('list.one', function (): never { throw new RuntimeError('Should not run'); });
+    EventFacade::on('list.two', function (): never { throw new RuntimeError('Should not run'); });
+
+    $executedThree = false;
+
+    EventFacade::on('list.three', function () use (&$executedThree): void { $executedThree = true; });
+
+    EventFacade::fake(['list.one', 'list.two']);
+
+    EventFacade::emit('list.one');
+    EventFacade::emit('list.one');
+    EventFacade::emit('list.two');
+    EventFacade::emit('list.two');
+
+    EventFacade::emit('list.three');
+
+    expect($executedThree)->toEqual(true);
+
+    EventFacade::expect('list.one')->toBeDispatchedTimes(2);
+    EventFacade::expect('list.two')->toBeDispatchedTimes(2);
+    EventFacade::expect('list.three')->toBeDispatchedTimes(1);
+});
+
+it('ignores events configured with zero count', function (): void {
+    $executed = 0;
+
+    EventFacade::on('zero.count.event', function () use (&$executed): void { $executed++; });
+
+    EventFacade::fake(['zero.count.event' => 0]);
+
+    EventFacade::emit('zero.count.event');
+    EventFacade::emit('zero.count.event');
+
+    expect($executed)->toEqual(2);
+
+    EventFacade::expect('zero.count.event')->toBeDispatchedTimes(2);
+});
+
+it('does not fake when closure throws exception', function (): void {
+    $executed = false;
+
+    EventFacade::on('closure.exception.event', function () use (&$executed): void { $executed = true; });
+
+    EventFacade::fake([
+        'closure.exception.event' => function (): never {
+            throw new RuntimeError('Predicate error');
+        },
+    ]);
+
+    EventFacade::emit('closure.exception.event');
+
+    expect($executed)->toEqual(true);
+
+    EventFacade::expect('closure.exception.event')->toBeDispatchedTimes(1);
 });

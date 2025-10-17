@@ -71,10 +71,6 @@ trait CaptureEvents
 
     public function resetEventLog(): void
     {
-        if (App::isProduction()) {
-            return;
-        }
-
         $this->dispatched = [];
     }
 
