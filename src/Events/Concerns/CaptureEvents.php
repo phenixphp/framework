@@ -85,39 +85,72 @@ trait CaptureEvents
      */
     protected function normalizeFakeEvents(string|array $events, int|Closure|null $times): array
     {
+        if (is_string($events)) {
+            return $this->normalizeSingleEvent($events, $times);
+        }
+
+        if (array_is_list($events)) {
+            return $this->normalizeListEvents($events);
+        }
+
+        return $this->normalizeMapEvents($events);
+    }
+
+    /**
+     * @return array<string, int|Closure|null>
+     */
+    private function normalizeSingleEvent(string $event, int|Closure|null $times): array
+    {
+        return [
+            $event => $times instanceof Closure
+                ? $times
+                : (is_int($times) ? max(0, abs($times)) : null),
+        ];
+    }
+
+    /**
+     * @param array<int, string> $events
+     * @return array<string, null>
+     */
+    private function normalizeListEvents(array $events): array
+    {
         $normalized = [];
 
-        if (is_string($events)) {
-            $normalized[$events] = $times instanceof Closure
-                ? $times
-                : (is_int($times) ? max(0, abs($times)) : null);
-        } elseif (array_is_list($events)) {
-            foreach ($events as $event) {
-                $normalized[$event] = null;
+        foreach ($events as $event) {
+            $normalized[$event] = null;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param array<string|int, mixed> $events
+     * @return array<string, int|Closure|null>
+     */
+    private function normalizeMapEvents(array $events): array
+    {
+        $normalized = [];
+
+        foreach ($events as $name => $value) {
+            if (is_int($name)) {
+                $normalized[(string) $value] = null;
+
+                continue;
             }
-        } else {
-            foreach ($events as $name => $value) {
-                if (is_int($name)) {
-                    $normalized[(string) $value] = null;
 
+            if ($value instanceof Closure) {
+                $normalized[$name] = $value;
 
-                    continue;
-                }
-
-                if (is_int($value)) {
-                    $normalized[$name] = max(0, abs($value));
-
-                    continue;
-                }
-
-                if ($value instanceof Closure) {
-                    $normalized[$name] = $value;
-
-                    continue;
-                }
-
-                $normalized[$name] = null;
+                continue;
             }
+
+            if (is_int($value)) {
+                $normalized[$name] = max(0, abs($value));
+
+                continue;
+            }
+
+            $normalized[$name] = null;
         }
 
         return $normalized;
