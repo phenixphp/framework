@@ -77,10 +77,6 @@ trait CaptureTasks
 
     public function resetQueueLog(): void
     {
-        if (App::isProduction()) {
-            return;
-        }
-
         $this->pushed = [];
     }
 
