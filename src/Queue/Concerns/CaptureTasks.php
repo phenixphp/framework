@@ -9,6 +9,8 @@ use Phenix\App;
 use Phenix\Tasks\QueuableTask;
 use Throwable;
 
+use function array_is_list;
+
 trait CaptureTasks
 {
     protected bool $logging = false;
@@ -158,46 +160,76 @@ trait CaptureTasks
      */
     protected function normalizeFakeTasks(string|array $tasks, int|Closure|null $times): array
     {
-        $normalized = [];
-
         if (is_string($tasks)) {
-            if ($times instanceof Closure) {
-                $normalized[$tasks] = $times;
-            } elseif (is_int($times)) {
-                $normalized[$tasks] = max(0, abs($times));
-            } else {
-                $normalized[$tasks] = 1;
-            }
-
-            return $normalized;
+            return $this->normalizeSingleTask($tasks, $times);
         }
 
         if (array_is_list($tasks)) {
-            foreach ($tasks as $class) {
-                $normalized[$class] = 1;
+            return $this->normalizeListTasks($tasks);
+        }
+
+        return $this->normalizeMapTasks($tasks);
+    }
+
+    /**
+     * @return array<string, int|Closure|null>
+     */
+    private function normalizeSingleTask(string $taskClass, int|Closure|null $times): array
+    {
+        $config = 1;
+
+        if ($times instanceof Closure) {
+            $config = $times;
+        } elseif (is_int($times)) {
+            $config = max(0, abs($times));
+        }
+
+        return [$taskClass => $config];
+    }
+
+    /**
+     * @param array<int, string> $tasks
+     * @return array<string, int>
+     */
+    private function normalizeListTasks(array $tasks): array
+    {
+        $normalized = [];
+
+        foreach ($tasks as $class) {
+            $normalized[$class] = 1;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param array<string|int, mixed> $tasks
+     * @return array<string, int|Closure|null>
+     */
+    private function normalizeMapTasks(array $tasks): array
+    {
+        $normalized = [];
+
+        foreach ($tasks as $class => $value) {
+            if (is_int($class)) {
+                $normalized[(string) $value] = 1;
+
+                continue;
             }
-        } else {
-            foreach ($tasks as $class => $value) {
-                if (is_int($class)) {
-                    $normalized[(string) $value] = 1;
 
-                    continue;
-                }
+            if ($value instanceof Closure) {
+                $normalized[$class] = $value;
 
-                if ($value instanceof Closure) {
-                    $normalized[$class] = $value;
-
-                    continue;
-                }
-
-                if (is_int($value)) {
-                    $normalized[$class] = max(0, abs($value));
-
-                    continue;
-                }
-
-                $normalized[$class] = $value === null ? null : 1;
+                continue;
             }
+
+            if (is_int($value)) {
+                $normalized[$class] = max(0, abs($value));
+
+                continue;
+            }
+
+            $normalized[$class] = ($value === null) ? null : 1;
         }
 
         return $normalized;
