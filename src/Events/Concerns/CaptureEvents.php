@@ -101,11 +101,15 @@ trait CaptureEvents
      */
     private function normalizeSingleEvent(string $event, int|Closure|null $times): array
     {
-        return [
-            $event => $times instanceof Closure
-                ? $times
-                : (is_int($times) ? max(0, abs($times)) : null),
-        ];
+        $config = null;
+
+        if ($times instanceof Closure) {
+            $config = $times;
+        } elseif (is_int($times)) {
+            $config = max(0, abs($times));
+        }
+
+        return [$event => $config];
     }
 
     /**
