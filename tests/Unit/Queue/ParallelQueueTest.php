@@ -538,6 +538,34 @@ it('logs pushed tasks when logging is enabled', function (): void {
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
 });
 
+it('does not log pushes in production environment', function (): void {
+    Config::set('app.env', 'production');
+
+    Queue::log();
+
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+
+    Config::set('app.env', 'local');
+});
+
+it('does not fake tasks in production environment', function (): void {
+    Config::set('app.env', 'production');
+
+    Queue::fake(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+    Queue::push(new BasicQueuableTask());
+
+    $this->assertSame(2, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+
+    Config::set('app.env', 'local');
+    Queue::clear();
+});
+
 it('does not log tasks when logging is disabled', function (): void {
     Queue::push(new BasicQueuableTask());
 
@@ -621,7 +649,7 @@ it('fakes tasks with per-task counts array', function (): void {
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(3);
 });
 
-it('conditionally fakes tasks using a closure configuration', function (): void {
+it('conditionally fakes tasks using array and a closure configuration', function (): void {
     Queue::fake([
         BasicQueuableTask::class => function (array $log): bool {
             return count($log) <= 3;
@@ -635,4 +663,30 @@ it('conditionally fakes tasks using a closure configuration', function (): void 
     $this->assertSame(2, Queue::size());
 
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(5);
+});
+
+it('conditionally fakes tasks using only a closure configuration', function (): void {
+    Queue::fake(BasicQueuableTask::class, function (array $log): bool {
+        return count($log) <= 2;
+    });
+
+    for ($i = 0; $i < 4; $i++) {
+        Queue::push(new BasicQueuableTask());
+    }
+
+    $this->assertSame(2, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(4);
+});
+
+it('does not fake when closure throws an exception', function (): void {
+    Queue::fake(BasicQueuableTask::class, function (array $log): bool {
+        throw new RuntimeException('Closure exception');
+    });
+
+    Queue::push(new BasicQueuableTask());
+
+    $this->assertSame(1, Queue::size());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
 });
