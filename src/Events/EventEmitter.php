@@ -87,6 +87,7 @@ class EventEmitter implements EventEmitterContract
         $eventObject = $this->createEvent($event, $payload);
 
         $this->recordDispatched($eventObject);
+
         if ($this->shouldFakeEvent($eventObject->getName())) {
             $this->consumeFakedEvent($eventObject->getName());
 
@@ -140,6 +141,7 @@ class EventEmitter implements EventEmitterContract
             $eventObject = $this->createEvent($event, $payload);
 
             $this->recordDispatched($eventObject);
+
             if ($this->shouldFakeEvent($eventObject->getName())) {
                 $this->consumeFakedEvent($eventObject->getName());
 
