@@ -24,19 +24,4 @@ interface EventEmitter
     public function hasListeners(string $event): bool;
 
     public function removeAllListeners(): void;
-
-    public function log(): void;
-
-    /**
-     * @param string|array<string,int|null|Closure>|null $events
-     * @param int|null $times
-     */
-    public function fake(string|array|null $events = null, int|Closure|null $times = null): void;
-
-    /**
-     * @return array<int, array{name: string, event: Event, payload: mixed, timestamp: float}>
-     */
-    public function getEventLog(): array;
-
-    public function resetEventLog(): void;
 }
