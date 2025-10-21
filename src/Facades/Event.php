@@ -7,6 +7,7 @@ namespace Phenix\Facades;
 use Amp\Future;
 use Closure;
 use Phenix\App;
+use Phenix\Data\Collection;
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Contracts\EventListener;
 use Phenix\Runtime\Facade;
@@ -27,10 +28,15 @@ use Phenix\Testing\TestEvent;
  * @method static int getListenerCount(string $event)
  * @method static array getEventNames()
  * @method static void log()
- * @method static void fake(string|array|null $events = null, int|Closure|null $times = null)
- * @method static array getEventLog()
+ * @method static void fake()
+ * @method static void fakeWhen(string $event, Closure $callback)
+ * @method static void fakeTimes(string $event, int $times)
+ * @method static void fakeOnce(string $event)
+ * @method static void fakeOnly(string $event)
+ * @method static void fakeExcept(string $event)
+ * @method static Collection getEventLog()
  * @method static void resetEventLog()
- * @method static \Phenix\Testing\TestEvent expect()
+ * @method static void resetFaking()
  *
  * @see \Phenix\Events\EventEmitter
  */

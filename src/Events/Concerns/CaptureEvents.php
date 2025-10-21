@@ -6,16 +6,17 @@ namespace Phenix\Events\Concerns;
 
 use Closure;
 use Phenix\App;
+use Phenix\Data\Collection;
 use Phenix\Events\Contracts\Event as EventContract;
+use Phenix\Testing\Constants\FakeMode;
+use Phenix\Util\Date;
 use Throwable;
 
 trait CaptureEvents
 {
     protected bool $logging = false;
 
-    protected bool $faking = false;
-
-    protected bool $fakeAll = false;
+    protected FakeMode $fakeMode = FakeMode::NONE;
 
     /**
      * @var array<string, int|null|Closure>
@@ -23,9 +24,9 @@ trait CaptureEvents
     protected array $fakeEvents = [];
 
     /**
-     * @var array<int, array{name: string, event: EventContract, payload: mixed, timestamp: float}>
+     * @var Collection<int, array{name: string, event: EventContract, timestamp: float}>
      */
-    protected array $dispatched = [];
+    protected Collection $dispatched;
 
     public function log(): void
     {
@@ -33,154 +34,121 @@ trait CaptureEvents
             return;
         }
 
-        $this->logging = true;
+        $this->enableLog();
     }
 
-    public function fake(string|array|null $events = null, int|Closure|null $times = null): void
+    public function fake(): void
     {
         if (App::isProduction()) {
             return;
         }
 
-        $this->logging = true;
-        $this->faking = true;
+        $this->enableFake(FakeMode::ALL);
+    }
 
-        if ($events === null) {
-            $this->fakeAll = true;
-
+    public function fakeWhen(string $event, Closure $callback): void
+    {
+        if (App::isProduction()) {
             return;
         }
 
-        $this->fakeAll = false;
+        $this->enableFake(FakeMode::SCOPED);
 
-        $normalized = $this->normalizeFakeEvents($events, $times);
-
-        foreach ($normalized as $name => $config) {
-            if ($config === 0) {
-                continue;
-            }
-
-            $this->fakeEvents[$name] = $config;
-        }
+        $this->fakeEvents[$event] = $callback;
     }
 
-    public function getEventLog(): array
+    public function fakeTimes(string $event, int $times): void
     {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeEvents[$event] = $times;
+    }
+
+    public function fakeOnce(string $event): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeEvents[$event] = 1;
+    }
+
+    public function fakeOnly(string $event): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeEvents = [
+            $event => null,
+        ];
+    }
+
+    public function fakeExcept(string $event): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeEvents = [
+            $event => fn (Collection $log): bool => $log->filter(fn (array $entry): bool => $entry['name'] === $event)->isEmpty(),
+        ];
+    }
+
+    public function getEventLog(): Collection
+    {
+        if (! isset($this->dispatched)) {
+            $this->dispatched = Collection::fromArray([]);
+        }
+
         return $this->dispatched;
     }
 
     public function resetEventLog(): void
     {
-        $this->dispatched = [];
+        $this->dispatched = Collection::fromArray([]);
     }
 
-    /**
-     * @param string|array $events
-     * @param int|Closure|null $times
-     * @return array<string, int|Closure|null>
-     */
-    protected function normalizeFakeEvents(string|array $events, int|Closure|null $times): array
+    public function resetFaking(): void
     {
-        if (is_string($events)) {
-            return $this->normalizeSingleEvent($events, $times);
-        }
-
-        if (array_is_list($events)) {
-            return $this->normalizeListEvents($events);
-        }
-
-        return $this->normalizeMapEvents($events);
-    }
-
-    /**
-     * @return array<string, int|Closure|null>
-     */
-    private function normalizeSingleEvent(string $event, int|Closure|null $times): array
-    {
-        $config = null;
-
-        if ($times instanceof Closure) {
-            $config = $times;
-        } elseif (is_int($times)) {
-            $config = max(0, abs($times));
-        }
-
-        return [$event => $config];
-    }
-
-    /**
-     * @param array<int, string> $events
-     * @return array<string, null>
-     */
-    private function normalizeListEvents(array $events): array
-    {
-        $normalized = [];
-
-        foreach ($events as $event) {
-            $normalized[$event] = null;
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * @param array<string|int, mixed> $events
-     * @return array<string, int|Closure|null>
-     */
-    private function normalizeMapEvents(array $events): array
-    {
-        $normalized = [];
-
-        foreach ($events as $name => $value) {
-            if (is_int($name)) {
-                $normalized[(string) $value] = null;
-
-                continue;
-            }
-
-            if ($value instanceof Closure) {
-                $normalized[$name] = $value;
-
-                continue;
-            }
-
-            if (is_int($value)) {
-                $normalized[$name] = max(0, abs($value));
-
-                continue;
-            }
-
-            $normalized[$name] = null;
-        }
-
-        return $normalized;
+        $this->logging = false;
+        $this->fakeMode = FakeMode::NONE;
+        $this->fakeEvents = [];
+        $this->dispatched = Collection::fromArray([]);
     }
 
     protected function recordDispatched(EventContract $event): void
     {
-        if (! $this->logging && ! $this->faking) {
+        if (! $this->logging) {
             return;
         }
 
-        $this->dispatched[] = [
+        $this->dispatched->add([
             'name' => $event->getName(),
             'event' => $event,
-            'payload' => $event->getPayload(),
-            'timestamp' => microtime(true),
-        ];
+            'timestamp' => Date::now(),
+        ]);
     }
 
     protected function shouldFakeEvent(string $name): bool
     {
-        $result = false;
-
-        if (! $this->faking) {
-            return $result;
+        if ($this->fakeMode === FakeMode::ALL) {
+            return true;
         }
 
-        if ($this->fakeAll) {
-            $result = true;
-        } elseif (! empty($this->fakeEvents) && array_key_exists($name, $this->fakeEvents)) {
+        $result = false;
+
+        if (! empty($this->fakeEvents) && array_key_exists($name, $this->fakeEvents)) {
             $config = $this->fakeEvents[$name];
 
             if ($config instanceof Closure) {
@@ -218,5 +186,19 @@ trait CaptureEvents
         } else {
             $this->fakeEvents[$name] = $remaining;
         }
+    }
+
+    protected function enableLog(): void
+    {
+        if (! $this->logging) {
+            $this->logging = true;
+            $this->dispatched = Collection::fromArray([]);
+        }
+    }
+
+    protected function enableFake(FakeMode $fakeMode): void
+    {
+        $this->enableLog();
+        $this->fakeMode = $fakeMode;
     }
 }

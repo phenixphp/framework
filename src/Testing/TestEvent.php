@@ -6,21 +6,14 @@ namespace Phenix\Testing;
 
 use Closure;
 use Phenix\Data\Collection;
-use Phenix\Events\Contracts\Event as EventContract;
 use PHPUnit\Framework\Assert;
 
 class TestEvent
 {
-    public readonly Collection $log;
-
-    /**
-     * @param array<int, array{name: string, event: EventContract, payload: mixed, timestamp: float}> $log
-     */
     public function __construct(
-        protected string $event,
-        array $log = []
+        public readonly string $event,
+        public readonly Collection $log
     ) {
-        $this->log = Collection::fromArray($log);
     }
 
     public function toBeDispatched(Closure|null $closure = null): void
@@ -59,14 +52,8 @@ class TestEvent
 
     private function filterByName(string $event): Collection
     {
-        $filtered = [];
-
-        foreach ($this->log as $record) {
-            if ($record['name'] === $event) {
-                $filtered[] = $record;
-            }
-        }
-
-        return Collection::fromArray($filtered);
+        return $this->log->filter(function (array $record) use ($event): bool {
+            return $record['name'] === $event;
+        });
     }
 }

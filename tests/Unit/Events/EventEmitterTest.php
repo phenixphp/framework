@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Data\Collection;
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
@@ -483,11 +484,11 @@ it('logs dispatched events while still processing listeners', function (): void 
     EventFacade::expect('logged.event')->toBeDispatched();
     EventFacade::expect('logged.event')->toBeDispatchedTimes(1);
 
-    expect(EventFacade::getEventLog())->toHaveCount(1);
+    expect(EventFacade::getEventLog()->count())->toEqual(1);
 
     EventFacade::resetEventLog();
 
-    expect(EventFacade::getEventLog())->toHaveCount(0);
+    expect(EventFacade::getEventLog()->count())->toEqual(0);
 
     EventFacade::emit('logged.event', 'payload-2');
     EventFacade::expect('logged.event')->toBeDispatchedTimes(1);
@@ -498,6 +499,7 @@ it('fakes events preventing listener execution', function (): void {
 
     $called = false;
     EventFacade::on('fake.event', function () use (&$called): void {
+        dump('FAILING');
         $called = true;
     });
 
@@ -539,7 +541,7 @@ it('supports closure predicate with absent event', function (): void {
     EventFacade::expect('absent.event')->toNotBeDispatched(fn ($event): bool => false);
 });
 
-it('fakes only specific events when an array is provided and consumes them after first fake', function (): void {
+it('fakes only specific events when a single event is provided and consumes it after first fake', function (): void {
     $calledSpecific = false;
     $calledOther = false;
 
@@ -551,7 +553,7 @@ it('fakes only specific events when an array is provided and consumes them after
         $calledOther = true; // Should run
     });
 
-    EventFacade::fake(['specific.event' => 1]);
+    EventFacade::fakeTimes('specific.event', 1);
 
     EventFacade::emit('specific.event', 'payload-1');
 
@@ -579,7 +581,7 @@ it('supports infinite fake for single event with no times argument', function ()
         $called++;
     });
 
-    EventFacade::fake('always.event');
+    EventFacade::fakeOnly('always.event');
 
     EventFacade::emit('always.event');
     EventFacade::emit('always.event');
@@ -597,7 +599,7 @@ it('supports limited fake with times argument then processes listeners', functio
         $called++;
     });
 
-    EventFacade::fake('limited.event', 2);
+    EventFacade::fakeTimes('limited.event', 2);
 
     EventFacade::emit('limited.event'); // fake
     EventFacade::emit('limited.event'); // fake
@@ -609,54 +611,46 @@ it('supports limited fake with times argument then processes listeners', functio
     EventFacade::expect('limited.event')->toBeDispatchedTimes(4);
 });
 
-it('supports associative array with mixed counts and infinite entries', function (): void {
+it('supports limited fake then switching to only one infinite event', function (): void {
     $limitedCalled = 0;
-    $infiniteCalled = 0;
-    $globalCalled = 0;
+    $onlyCalled = 0;
 
     EventFacade::on('assoc.limited', function () use (&$limitedCalled): void { $limitedCalled++; });
-    EventFacade::on('assoc.infinite', function () use (&$infiniteCalled): void { $infiniteCalled++; });
-    EventFacade::on('assoc.global', function () use (&$globalCalled): void { $globalCalled++; });
+    EventFacade::on('assoc.only', function () use (&$onlyCalled): void { $onlyCalled++; });
 
-    EventFacade::fake([
-        'assoc.limited' => 1,
-        'assoc.infinite' => null,
-        'assoc.global',
-    ]);
+    EventFacade::fakeTimes('assoc.limited', 1); // fake first occurrence only
 
     EventFacade::emit('assoc.limited'); // fake
     EventFacade::emit('assoc.limited'); // real
-    EventFacade::emit('assoc.infinite'); // fake
-    EventFacade::emit('assoc.infinite'); // fake
-    EventFacade::emit('assoc.global'); // fake
-    EventFacade::emit('assoc.global'); // fake
+
+    EventFacade::fakeOnly('assoc.only');
+
+    EventFacade::emit('assoc.only'); // fake
+    EventFacade::emit('assoc.only'); // fake
+
     EventFacade::emit('assoc.limited'); // real
 
     expect($limitedCalled)->toBe(2);
-    expect($infiniteCalled)->toBe(0);
-    expect($globalCalled)->toBe(0);
+    expect($onlyCalled)->toBe(0);
 
-    EventFacade::expect('assoc.limited')->toBeDispatchedTimes(3);
-    EventFacade::expect('assoc.infinite')->toBeDispatchedTimes(2);
-    EventFacade::expect('assoc.global')->toBeDispatchedTimes(2);
+    EventFacade::expect('assoc.limited')->toBeDispatchedTimes(3); // recorded 3 emits
+    EventFacade::expect('assoc.only')->toBeDispatchedTimes(2); // recorded but never executed
 });
 
 it('supports conditional closure based faking', function (): void {
     $called = 0;
 
-    EventFacade::fake([
-        'conditional.event' => function (array $log): bool {
-            $count = 0;
-
-            foreach ($log as $entry) {
-                if (($entry['name'] ?? null) === 'conditional.event') {
-                    $count++;
-                }
+    EventFacade::log();
+    EventFacade::fakeWhen('conditional.event', function (Collection $log): bool {
+        $count = 0;
+        foreach ($log as $entry) {
+            if (($entry['name'] ?? null) === 'conditional.event') {
+                $count++;
             }
+        }
 
-            return $count <= 2;
-        },
-    ]);
+        return $count <= 2;
+    });
 
     EventFacade::on('conditional.event', function () use (&$called): void { $called++; });
 
@@ -670,10 +664,10 @@ it('supports conditional closure based faking', function (): void {
     EventFacade::expect('conditional.event')->toBeDispatchedTimes(4);
 });
 
-it('supports single event closure in times parameter for fake', function (): void {
+it('supports single event closure predicate faking', function (): void {
     $called = 0;
 
-    EventFacade::fake('single.closure.event', function (array $log): bool {
+    EventFacade::fakeWhen('single.closure.event', function (Collection $log): bool {
         $count = 0;
         foreach ($log as $entry) {
             if (($entry['name'] ?? null) === 'single.closure.event') {
@@ -703,7 +697,7 @@ it('does not log events in production environment', function (): void {
 
     EventFacade::emit('prod.logged.event', 'payload');
 
-    expect(EventFacade::getEventLog())->toHaveCount(0);
+    expect(EventFacade::getEventLog()->count())->toEqual(0);
 
     Config::set('app.env', 'local');
 });
@@ -716,7 +710,7 @@ it('does not fake events in production environment', function (): void {
         $called = true;
     });
 
-    EventFacade::fake('prod.fake.event');
+    EventFacade::fakeOnly('prod.fake.event');
 
     EventFacade::emit('prod.fake.event', 'payload');
 
@@ -725,7 +719,7 @@ it('does not fake events in production environment', function (): void {
     Config::set('app.env', 'local');
 });
 
-it('fakes all events provided as a list array', function (): void {
+it('fakes multiple events provided sequentially', function (): void {
     EventFacade::on('list.one', function (): never { throw new RuntimeError('Should not run'); });
     EventFacade::on('list.two', function (): never { throw new RuntimeError('Should not run'); });
 
@@ -733,7 +727,8 @@ it('fakes all events provided as a list array', function (): void {
 
     EventFacade::on('list.three', function () use (&$executedThree): void { $executedThree = true; });
 
-    EventFacade::fake(['list.one', 'list.two']);
+    EventFacade::fakeOnly('list.one');
+    EventFacade::fakeTimes('list.two', PHP_INT_MAX);
 
     EventFacade::emit('list.one');
     EventFacade::emit('list.one');
@@ -754,7 +749,7 @@ it('ignores events configured with zero count', function (): void {
 
     EventFacade::on('zero.count.event', function () use (&$executed): void { $executed++; });
 
-    EventFacade::fake(['zero.count.event' => 0]);
+    EventFacade::fakeTimes('zero.count.event', 0);
 
     EventFacade::emit('zero.count.event');
     EventFacade::emit('zero.count.event');
@@ -769,11 +764,9 @@ it('does not fake when closure throws exception', function (): void {
 
     EventFacade::on('closure.exception.event', function () use (&$executed): void { $executed = true; });
 
-    EventFacade::fake([
-        'closure.exception.event' => function (): never {
-            throw new RuntimeError('Predicate error');
-        },
-    ]);
+    EventFacade::fakeWhen('closure.exception.event', function (Collection $log): bool {
+        throw new RuntimeError('Predicate error');
+    });
 
     EventFacade::emit('closure.exception.event');
 

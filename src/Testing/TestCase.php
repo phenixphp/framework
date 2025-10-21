@@ -9,6 +9,7 @@ use Phenix\App;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
+use Phenix\Facades\Event;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -43,6 +44,8 @@ abstract class TestCase extends AsyncTestCase
     protected function tearDown(): void
     {
         parent::tearDown();
+
+        Event::resetFaking();
 
         $this->app = null;
     }
