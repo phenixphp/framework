@@ -553,7 +553,7 @@ it('does not log pushes in production environment', function (): void {
 it('does not fake tasks in production environment', function (): void {
     Config::set('app.env', 'production');
 
-    Queue::fake(BasicQueuableTask::class);
+    Queue::fake();
 
     Queue::push(new BasicQueuableTask());
     Queue::push(new BasicQueuableTask());
@@ -609,7 +609,7 @@ it('asserts no tasks were pushed', function (): void {
 });
 
 it('fakes only specific tasks and consumes them after first fake', function (): void {
-    Queue::fake([BasicQueuableTask::class]);
+    Queue::fakeOnce(BasicQueuableTask::class);
 
     Queue::push(new BasicQueuableTask()); // faked
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
@@ -623,7 +623,7 @@ it('fakes only specific tasks and consumes them after first fake', function (): 
 });
 
 it('fakes a task multiple times using times parameter', function (): void {
-    Queue::fake(BasicQueuableTask::class, 2);
+    Queue::fakeTimes(BasicQueuableTask::class, 2);
 
     Queue::push(new BasicQueuableTask()); // faked
     $this->assertSame(0, Queue::size());
@@ -638,9 +638,7 @@ it('fakes a task multiple times using times parameter', function (): void {
 });
 
 it('fakes tasks with per-task counts array', function (): void {
-    Queue::fake([
-        BasicQueuableTask::class => 2,
-    ]);
+    Queue::fakeTimes(BasicQueuableTask::class, 2);
 
     Queue::push(new BasicQueuableTask()); // faked
     Queue::push(new BasicQueuableTask()); // faked
@@ -653,11 +651,9 @@ it('fakes tasks with per-task counts array', function (): void {
 });
 
 it('conditionally fakes tasks using array and a closure configuration', function (): void {
-    Queue::fake([
-        BasicQueuableTask::class => function (array $log): bool {
-            return count($log) <= 3;
-        },
-    ]);
+    Queue::fakeWhen(BasicQueuableTask::class, function ($log) {
+        return $log->count() <= 3;
+    });
 
     for ($i = 0; $i < 5; $i++) {
         Queue::push(new BasicQueuableTask());
@@ -669,8 +665,8 @@ it('conditionally fakes tasks using array and a closure configuration', function
 });
 
 it('conditionally fakes tasks using only a closure configuration', function (): void {
-    Queue::fake(BasicQueuableTask::class, function (array $log): bool {
-        return count($log) <= 2;
+    Queue::fakeWhen(BasicQueuableTask::class, function ($log) {
+        return $log->count() <= 2;
     });
 
     for ($i = 0; $i < 4; $i++) {
@@ -683,7 +679,7 @@ it('conditionally fakes tasks using only a closure configuration', function (): 
 });
 
 it('does not fake when closure throws an exception', function (): void {
-    Queue::fake(BasicQueuableTask::class, function (array $log): bool {
+    Queue::fakeWhen(BasicQueuableTask::class, function ($log) {
         throw new RuntimeException('Closure exception');
     });
 

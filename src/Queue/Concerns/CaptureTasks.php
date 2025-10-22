@@ -6,18 +6,16 @@ namespace Phenix\Queue\Concerns;
 
 use Closure;
 use Phenix\App;
+use Phenix\Data\Collection;
 use Phenix\Tasks\QueuableTask;
+use Phenix\Testing\Constants\FakeMode;
 use Throwable;
-
-use function array_is_list;
 
 trait CaptureTasks
 {
     protected bool $logging = false;
 
-    protected bool $faking = false;
-
-    protected bool $fakeAll = false;
+    protected FakeMode $fakeMode = FakeMode::NONE;
 
     /**
      * @var array<string, int|null|Closure>
@@ -25,9 +23,9 @@ trait CaptureTasks
     protected array $fakeTasks = [];
 
     /**
-     * @var array<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
+     * @var Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
      */
-    protected array $pushed = [];
+    protected Collection $pushed;
 
     public function log(): void
     {
@@ -35,92 +33,136 @@ trait CaptureTasks
             return;
         }
 
-        $this->logging = true;
+        $this->enableLog();
     }
 
-    /**
-     * @param string|array<class-string<QueuableTask>, int|Closure|null>|class-string<QueuableTask>|null $tasks
-     * @param int|Closure|null $times
-     */
-    public function fake(string|array|null $tasks = null, int|Closure|null $times = null): void
+    public function fake(): void
     {
         if (App::isProduction()) {
             return;
         }
 
-        $this->logging = true;
-        $this->faking = true;
-        $this->fakeAll = $tasks === null;
+        $this->enableFake(FakeMode::ALL);
+    }
 
-        if ($this->fakeAll) {
+    public function fakeWhen(string $taskClass, Closure $callback): void
+    {
+        if (App::isProduction()) {
             return;
         }
 
-        $normalized = $this->normalizeFakeTasks($tasks, $times);
+        $this->enableFake(FakeMode::SCOPED);
 
-        foreach ($normalized as $taskClass => $config) {
-            if ($config === 0) {
-                continue;
-            }
-
-            $this->fakeTasks[$taskClass] = $config;
-        }
+        $this->fakeTasks[$taskClass] = $callback;
     }
 
-    /**
-     * @return array<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
-     */
-    public function getQueueLog(): array
+    public function fakeTimes(string $taskClass, int $times): void
     {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeTasks[$taskClass] = $times;
+    }
+
+    public function fakeOnce(string $taskClass): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeTasks[$taskClass] = 1;
+    }
+
+    public function fakeOnly(string $taskClass): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeTasks = [
+            $taskClass => null,
+        ];
+    }
+
+    public function fakeExcept(string $taskClass): void
+    {
+        if (App::isProduction()) {
+            return;
+        }
+
+        $this->enableFake(FakeMode::SCOPED);
+
+        $this->fakeTasks = [
+            $taskClass => fn (Collection $log): bool => $log->filter(fn (array $entry): bool => $entry['task_class'] === $taskClass)->isEmpty(),
+        ];
+    }
+
+    public function getQueueLog(): Collection
+    {
+        if (! isset($this->pushed)) {
+            $this->pushed = Collection::fromArray([]);
+        }
+
         return $this->pushed;
     }
 
     public function resetQueueLog(): void
     {
-        $this->pushed = [];
+        $this->pushed = Collection::fromArray([]);
+    }
+
+    public function resetFaking(): void
+    {
+        $this->logging = false;
+        $this->fakeMode = FakeMode::NONE;
+        $this->fakeTasks = [];
+        $this->pushed = Collection::fromArray([]);
     }
 
     protected function recordPush(QueuableTask $task): void
     {
-        if (! $this->logging && ! $this->faking) {
+        if (! $this->logging) {
             return;
         }
 
-        $this->pushed[] = [
+        $this->pushed->add([
             'task_class' => $task::class,
             'task' => $task,
             'queue' => $task->getQueueName(),
             'connection' => $task->getConnectionName(),
             'timestamp' => microtime(true),
-        ];
+        ]);
     }
 
     protected function shouldFakeTask(QueuableTask $task): bool
     {
-        if (! $this->faking) {
-            return false;
+        if ($this->fakeMode === FakeMode::ALL) {
+            return true;
         }
 
         $result = false;
+        $class = $task::class;
 
-        if ($this->fakeAll) {
-            $result = true;
-        } else {
-            $class = $task::class;
+        if (! empty($this->fakeTasks) && array_key_exists($class, $this->fakeTasks)) {
+            $config = $this->fakeTasks[$class];
 
-            if (! empty($this->fakeTasks) && array_key_exists($class, $this->fakeTasks)) {
-                $config = $this->fakeTasks[$class];
+            if ($config instanceof Closure) {
+                try {
+                    $result = (bool) $config($this->pushed);
+                } catch (Throwable $e) {
+                    report($e);
 
-                if ($config instanceof Closure) {
-                    try {
-                        $result = (bool) $config($this->pushed);
-                    } catch (Throwable $e) {
-                        report($e);
-                        $result = false;
-                    }
-                } else {
-                    $result = $config === null || $config > 0;
+                    $result = false;
                 }
+            } else {
+                $result = $config === null || $config > 0;
             }
         }
 
@@ -137,11 +179,12 @@ trait CaptureTasks
 
         $remaining = $this->fakeTasks[$class];
 
-        if ($remaining === null || $remaining instanceof Closure) {
+        if (! $remaining || $remaining instanceof Closure) {
             return;
         }
 
         $remaining--;
+
         if ($remaining <= 0) {
             unset($this->fakeTasks[$class]);
         } else {
@@ -149,85 +192,17 @@ trait CaptureTasks
         }
     }
 
-    /**
-     * @param string|array $tasks
-     * @param int|Closure|null $times
-     * @return array<string, int|Closure|null>
-     */
-    protected function normalizeFakeTasks(string|array $tasks, int|Closure|null $times): array
+    protected function enableLog(): void
     {
-        if (is_string($tasks)) {
-            return $this->normalizeSingleTask($tasks, $times);
+        if (! $this->logging) {
+            $this->logging = true;
+            $this->pushed = Collection::fromArray([]);
         }
-
-        if (array_is_list($tasks)) {
-            return $this->normalizeListTasks($tasks);
-        }
-
-        return $this->normalizeMapTasks($tasks);
     }
 
-    /**
-     * @return array<string, int|Closure|null>
-     */
-    private function normalizeSingleTask(string $taskClass, int|Closure|null $times): array
+    protected function enableFake(FakeMode $fakeMode): void
     {
-        $config = 1;
-
-        if ($times instanceof Closure) {
-            $config = $times;
-        } elseif (is_int($times)) {
-            $config = max(0, abs($times));
-        }
-
-        return [$taskClass => $config];
-    }
-
-    /**
-     * @param array<int, string> $tasks
-     * @return array<string, int>
-     */
-    private function normalizeListTasks(array $tasks): array
-    {
-        $normalized = [];
-
-        foreach ($tasks as $class) {
-            $normalized[$class] = 1;
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * @param array<string|int, mixed> $tasks
-     * @return array<string, int|Closure|null>
-     */
-    private function normalizeMapTasks(array $tasks): array
-    {
-        $normalized = [];
-
-        foreach ($tasks as $class => $value) {
-            if (is_int($class)) {
-                $normalized[(string) $value] = 1;
-
-                continue;
-            }
-
-            if ($value instanceof Closure) {
-                $normalized[$class] = $value;
-
-                continue;
-            }
-
-            if (is_int($value)) {
-                $normalized[$class] = max(0, abs($value));
-
-                continue;
-            }
-
-            $normalized[$class] = ($value === null) ? null : 1;
-        }
-
-        return $normalized;
+        $this->enableLog();
+        $this->fakeMode = $fakeMode;
     }
 }

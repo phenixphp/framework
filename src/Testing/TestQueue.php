@@ -11,16 +11,14 @@ use PHPUnit\Framework\Assert;
 
 class TestQueue
 {
-    public readonly Collection $log;
-
     /**
-     * @param array<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $log
+     * @param class-string<QueuableTask> $taskClass
+     * @param Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $log
      */
     public function __construct(
         protected string $taskClass,
-        array $log = []
+        public readonly Collection $log
     ) {
-        $this->log = Collection::fromArray($log);
     }
 
     public function toBePushed(Closure|null $closure = null): void
@@ -69,14 +67,11 @@ class TestQueue
 
     private function filterByTaskClass(string $taskClass): Collection
     {
-        $filtered = [];
+        /** @var Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $filtered */
+        $filtered = $this->log->filter(function (array $record) use ($taskClass): bool {
+            return $record['task_class'] === $taskClass;
+        });
 
-        foreach ($this->log as $record) {
-            if ($record['task_class'] === $taskClass) {
-                $filtered[] = $record;
-            }
-        }
-
-        return Collection::fromArray($filtered);
+        return $filtered;
     }
 }
