@@ -578,6 +578,26 @@ it('does not fake tasks in production environment', function (): void {
 
     Queue::expect(BasicQueuableTask::class)->toPushNothing();
 
+    Queue::fakeOnce(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+
+    Queue::fakeOnly(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+
+    Queue::fakeExcept(BasicQueuableTask::class);
+
+    Queue::push(new BadTask());
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BadTask::class)->toPushNothing();
+    Queue::expect(BasicQueuableTask::class)->toPushNothing();
+
     Config::set('app.env', 'local');
     Queue::clear();
 });
