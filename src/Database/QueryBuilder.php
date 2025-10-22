@@ -68,7 +68,7 @@ class QueryBuilder extends QueryBase
     }
 
     /**
-     * @return Collection<int, array>
+     * @return Collection<array<string, mixed>>
      */
     public function get(): Collection
     {
