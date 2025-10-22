@@ -52,9 +52,6 @@ class TestEvent
 
     private function filterByName(string $event): Collection
     {
-        /** @var Collection<int, array{name: string, event: object, timestamp: float}> $filtered */
-        $filtered = $this->log->filter(fn (array $record) => $record['name'] === $event);
-
-        return $filtered;
+        return $this->log->filter(fn (array $record) => $record['name'] === $event);
     }
 }

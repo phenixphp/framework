@@ -13,7 +13,7 @@ class TestQueue
 {
     /**
      * @param class-string<QueuableTask> $taskClass
-     * @param Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $log
+     * @param Collection<array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $log
      */
     public function __construct(
         protected string $taskClass,
@@ -67,9 +67,6 @@ class TestQueue
 
     private function filterByTaskClass(string $taskClass): Collection
     {
-        /** @var Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $filtered */
-        $filtered = $this->log->filter(fn (array $record) => $record['task_class'] === $taskClass);
-
-        return $filtered;
+        return $this->log->filter(fn (array $record) => $record['task_class'] === $taskClass);
     }
 }
