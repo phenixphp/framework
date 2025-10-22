@@ -536,6 +536,22 @@ it('logs pushed tasks when logging is enabled', function (): void {
 
     Queue::expect(BasicQueuableTask::class)->toBePushed();
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::getQueueLog()->count())->toBe(1);
+
+    Queue::resetQueueLog();
+
+    expect(Queue::getQueueLog()->count())->toBe(0);
+
+    Queue::push(new BasicQueuableTask());
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    Queue::resetFaking();
+
+    Queue::push(new BasicQueuableTask());
+
+    expect(Queue::getQueueLog()->count())->toBe(1);
 });
 
 it('does not log pushes in production environment', function (): void {
