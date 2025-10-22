@@ -24,7 +24,7 @@ trait CaptureEvents
     protected array $fakeEvents = [];
 
     /**
-     * @var Collection<int, array{name: string, event: EventContract, timestamp: float}>
+     * @var Collection<array{name: string, event: EventContract, timestamp: Date}>
      */
     protected Collection $dispatched;
 

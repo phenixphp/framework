@@ -9,6 +9,7 @@ use Phenix\App;
 use Phenix\Data\Collection;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Testing\Constants\FakeMode;
+use Phenix\Util\Date;
 use Throwable;
 
 trait CaptureTasks
@@ -23,7 +24,7 @@ trait CaptureTasks
     protected array $fakeTasks = [];
 
     /**
-     * @var Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}>
+     * @var Collection<array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: Date}>
      */
     protected Collection $pushed;
 
@@ -137,7 +138,7 @@ trait CaptureTasks
             'task' => $task,
             'queue' => $task->getQueueName(),
             'connection' => $task->getConnectionName(),
-            'timestamp' => microtime(true),
+            'timestamp' => Date::now(),
         ]);
     }
 
