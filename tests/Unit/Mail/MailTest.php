@@ -128,7 +128,7 @@ it('send email successfully using smtp mailer', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $email = faker()->freeEmail();
 
@@ -164,7 +164,7 @@ it('send email successfully using smtps', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $email = faker()->freeEmail();
 
@@ -200,7 +200,7 @@ it('send email successfully using smtp mailer with sender defined in mailable', 
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $mailable = new class () extends Mailable {
         public function build(): self
@@ -226,7 +226,7 @@ it('merge sender defined from facade and mailer', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $email = faker()->freeEmail();
 
@@ -265,7 +265,7 @@ it('send email successfully using cc', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
     $cc = faker()->freeEmail();
@@ -307,7 +307,7 @@ it('send email successfully using bcc', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
     $bcc = faker()->freeEmail();
@@ -349,7 +349,7 @@ it('send email successfully using reply to', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
 
@@ -389,7 +389,7 @@ it('send email with multi attachments', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
     $mailable = new class () extends Mailable {
@@ -442,7 +442,7 @@ it('throw exception when file attachment does not exists', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
     $mailable = new class () extends Mailable {
@@ -511,7 +511,7 @@ it('send email with custom headers', function (): void {
         'password' => 'password',
     ]);
 
-    Mail::log();
+    Mail::fake();
 
     $to = faker()->freeEmail();
 
