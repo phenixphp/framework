@@ -32,12 +32,8 @@ class Collection extends GenericCollection implements Arrayable
 {
     public static function fromArray(array $data): self
     {
-        $data = SplFixedArray::fromArray($data);
-        $collection = new self('array');
-
-        foreach ($data as $value) {
-            $collection->add($value);
-        }
+        $collection = new self(self::getDataType($data));
+        $collection->data = $data;
 
         return $collection;
     }
@@ -224,5 +220,31 @@ class Collection extends GenericCollection implements Arrayable
             'double' => 'float',
             default => $collection->getType(),
         };
+    }
+
+    /**
+     * @param array<mixed> $data
+     *
+     * @return string
+     */
+    private static function getDataType(array $data): string
+    {
+        if (empty($data)) {
+            return 'mixed';
+        }
+
+        $firstType = gettype(reset($data));
+
+        if (count($data) === 1) {
+            return $firstType;
+        }
+
+        foreach ($data as $item) {
+            if (gettype($item) !== $firstType) {
+                return 'mixed';
+            }
+        }
+
+        return $firstType;
     }
 }
