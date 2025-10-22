@@ -68,9 +68,7 @@ class TestQueue
     private function filterByTaskClass(string $taskClass): Collection
     {
         /** @var Collection<int, array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: float}> $filtered */
-        $filtered = $this->log->filter(function (array $record) use ($taskClass): bool {
-            return $record['task_class'] === $taskClass;
-        });
+        $filtered = $this->log->filter(fn (array $record) => $record['task_class'] === $taskClass);
 
         return $filtered;
     }
