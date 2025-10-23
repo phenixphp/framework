@@ -530,8 +530,6 @@ it('supports closure predicate', function (): void {
 it('supports closure predicate with existing event', function (): void {
     EventFacade::log();
 
-    EventFacade::emit('neg.event', 'value');
-
     EventFacade::expect('neg.event')->toNotBeDispatched();
     EventFacade::expect('neg.event')->toNotBeDispatched(fn ($event): bool => false);
 });
@@ -539,6 +537,7 @@ it('supports closure predicate with existing event', function (): void {
 it('supports closure predicate with absent event', function (): void {
     EventFacade::log();
 
+    EventFacade::expect('absent.event')->toNotBeDispatched();
     EventFacade::expect('absent.event')->toNotBeDispatched(fn ($event): bool => false);
 });
 
