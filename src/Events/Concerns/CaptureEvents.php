@@ -24,6 +24,11 @@ trait CaptureEvents
     protected array $fakeEvents = [];
 
     /**
+     * @var array<string>
+     */
+    protected array $fakeExceptEvents = [];
+
+    /**
      * @var Collection<array{name: string, event: EventContract, timestamp: Date}>
      */
     protected Collection $dispatched;
@@ -98,11 +103,9 @@ trait CaptureEvents
             return;
         }
 
-        $this->enableFake(FakeMode::SCOPED);
+        $this->enableFake(FakeMode::EXCEPT);
 
-        $this->fakeEvents = [
-            $event => fn (Collection $log): bool => $log->filter(fn (array $entry): bool => $entry['name'] === $event)->isEmpty(),
-        ];
+        $this->fakeExceptEvents[] = $event;
     }
 
     public function getEventLog(): Collection
@@ -124,6 +127,7 @@ trait CaptureEvents
         $this->logging = false;
         $this->fakeMode = FakeMode::NONE;
         $this->fakeEvents = [];
+        $this->fakeExceptEvents = [];
         $this->dispatched = Collection::fromArray([]);
     }
 
@@ -144,6 +148,10 @@ trait CaptureEvents
     {
         if ($this->fakeMode === FakeMode::ALL) {
             return true;
+        }
+
+        if ($this->fakeMode === FakeMode::EXCEPT) {
+            return ! in_array($name, $this->fakeExceptEvents, true);
         }
 
         $result = false;
