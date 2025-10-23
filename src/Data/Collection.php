@@ -204,7 +204,15 @@ class Collection extends GenericCollection implements Arrayable
                 $b = spl_object_id($b);
             }
 
-            return $a === $b ? 0 : ($a < $b ? 1 : -1);
+            if ($a === $b) {
+                return 0;
+            }
+
+            if ($a < $b) {
+                return 1;
+            }
+
+            return -1;
         };
     }
 
@@ -233,10 +241,6 @@ class Collection extends GenericCollection implements Arrayable
         }
 
         $firstType = gettype(reset($data));
-
-        if (count($data) === 1) {
-            return $firstType;
-        }
 
         foreach ($data as $item) {
             if (gettype($item) !== $firstType) {
