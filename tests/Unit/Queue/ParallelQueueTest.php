@@ -644,18 +644,37 @@ it('asserts no tasks were pushed', function (): void {
     Queue::expect(BasicQueuableTask::class)->toPushNothing();
 });
 
-it('fakes only specific tasks and consumes them after first fake', function (): void {
-    Queue::fakeOnce(BasicQueuableTask::class);
+it('fakeOnly fakes only the specified task class', function (): void {
+    Queue::fakeOnly(BasicQueuableTask::class);
 
-    Queue::push(new BasicQueuableTask()); // faked
+    Queue::push(new BasicQueuableTask());
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
 
-    $this->assertSame(0, Queue::size());
+    expect(Queue::size())->toBe(0);
 
-    Queue::push(new BasicQueuableTask()); // now enqueued
-    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(2);
+    Queue::push(new BadTask());
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
 
-    $this->assertSame(1, Queue::size());
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new DelayableTask(1));
+    Queue::expect(DelayableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(2);
+});
+
+it('fakeExcept fakes the specified task until it appears in the log', function (): void {
+    Queue::fakeExcept(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new BadTask());
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
 });
 
 it('fakes a task multiple times using times parameter', function (): void {
