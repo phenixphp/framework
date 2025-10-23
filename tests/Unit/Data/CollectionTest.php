@@ -348,4 +348,3 @@ it('stops checking types early when mixed is detected', function () {
     expect($collection->getType())->toBe('mixed');
     expect($duration)->toBeLessThan(0.1);
 });
-

@@ -10,7 +10,6 @@ use Ramsey\Collection\Collection as GenericCollection;
 use Ramsey\Collection\CollectionInterface;
 use Ramsey\Collection\Exception\CollectionMismatchException;
 use Ramsey\Collection\Sort;
-use SplFixedArray;
 
 use function array_filter;
 use function array_key_first;
