@@ -149,6 +149,7 @@ it('send email successfully using smtp mailer', function (): void {
     });
 
     Mail::expect($mailable)->toBeSentTimes(1);
+    Mail::expect($mailable)->toNotBeSent();
     Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
         return $matches['success'] === false;
     });
