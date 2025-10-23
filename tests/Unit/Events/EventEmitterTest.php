@@ -710,7 +710,39 @@ it('does not fake events in production environment', function (): void {
         $called = true;
     });
 
+    EventFacade::fake();
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
     EventFacade::fakeOnly('prod.fake.event');
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    EventFacade::fakeWhen('prod.fake.event', function (): bool {
+        return true;
+    });
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    EventFacade::fakeTimes('prod.fake.event', 10);
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    EventFacade::fakeOnce('prod.fake.event');
+
+    EventFacade::emit('prod.fake.event', 'payload');
+
+    expect($called)->toBeTrue();
+
+    EventFacade::fakeExcept('prod.fake.event');
 
     EventFacade::emit('prod.fake.event', 'payload');
 
@@ -791,4 +823,49 @@ it('fakes async emits correctly', function (): void {
     expect($called)->toBeFalse();
 
     EventFacade::expect('async.fake.event')->toBeDispatched();
+});
+
+it('fakes once correctly', function (): void {
+    $called = 0;
+
+    EventFacade::on('fake.once.event', function () use (&$called): void {
+        $called++;
+    });
+
+    EventFacade::fakeOnce('fake.once.event');
+
+    EventFacade::emit('fake.once.event');
+    EventFacade::emit('fake.once.event');
+    EventFacade::emit('fake.once.event');
+
+    expect($called)->toBe(2);
+
+    EventFacade::expect('fake.once.event')->toBeDispatchedTimes(3);
+});
+
+it('fakes all except specified events', function (): void {
+    $calledFaked = 0;
+    $calledNotFaked = 0;
+
+    EventFacade::on('not.faked.event', function () use (&$calledNotFaked): void {
+        $calledNotFaked++;
+    });
+
+    EventFacade::on('faked.event', function () use (&$calledFaked): void {
+        $calledFaked++;
+    });
+
+    EventFacade::fakeExcept('not.faked.event');
+
+    EventFacade::emit('faked.event');
+    EventFacade::emit('faked.event');
+
+    EventFacade::emit('not.faked.event');
+    EventFacade::emit('not.faked.event');
+
+    expect($calledFaked)->toBe(0);
+    expect($calledNotFaked)->toBe(2);
+
+    EventFacade::expect('faked.event')->toBeDispatchedTimes(2);
+    EventFacade::expect('not.faked.event')->toBeDispatchedTimes(2);
 });
