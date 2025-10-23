@@ -24,6 +24,11 @@ trait CaptureTasks
     protected array $fakeTasks = [];
 
     /**
+     * @var array<string>
+     */
+    protected array $fakeExceptTasks = [];
+
+    /**
      * @var Collection<array{task_class: class-string<QueuableTask>, task: QueuableTask, queue: string|null, connection: string|null, timestamp: Date}>
      */
     protected Collection $pushed;
@@ -98,11 +103,10 @@ trait CaptureTasks
             return;
         }
 
-        $this->enableFake(FakeMode::SCOPED);
+        $this->enableFake(FakeMode::EXCEPT);
 
-        $this->fakeTasks = [
-            $taskClass => fn (Collection $log): bool => $log->filter(fn (array $entry): bool => $entry['task_class'] === $taskClass)->isEmpty(),
-        ];
+        $this->fakeExceptTasks[] = $taskClass;
+        $this->fakeTasks = [];
     }
 
     public function getQueueLog(): Collection
@@ -124,6 +128,7 @@ trait CaptureTasks
         $this->logging = false;
         $this->fakeMode = FakeMode::NONE;
         $this->fakeTasks = [];
+        $this->fakeExceptTasks = [];
         $this->pushed = Collection::fromArray([]);
     }
 
@@ -148,11 +153,14 @@ trait CaptureTasks
             return true;
         }
 
-        $result = false;
-        $class = $task::class;
+        if ($this->fakeMode === FakeMode::EXCEPT) {
+            return ! in_array($task::class, $this->fakeExceptTasks, true);
+        }
 
-        if (! empty($this->fakeTasks) && array_key_exists($class, $this->fakeTasks)) {
-            $config = $this->fakeTasks[$class];
+        $result = false;
+
+        if (! empty($this->fakeTasks) && array_key_exists($task::class, $this->fakeTasks)) {
+            $config = $this->fakeTasks[$task::class];
 
             if ($config instanceof Closure) {
                 try {

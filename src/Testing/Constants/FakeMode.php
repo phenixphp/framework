@@ -11,4 +11,6 @@ enum FakeMode
     case ALL;
 
     case SCOPED;
+
+    case EXCEPT;
 }

@@ -744,3 +744,97 @@ it('does not fake when closure throws an exception', function (): void {
 
     Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
 });
+
+it('fakes only the specified task class', function (): void {
+    Queue::fakeOnly(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(0);
+
+    Queue::push(new BadTask());
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new DelayableTask(1));
+    Queue::expect(DelayableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(2);
+});
+
+it('fakes all tasks except the specified class', function (): void {
+    Queue::fakeExcept(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new BadTask());
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new DelayableTask(1));
+    Queue::expect(DelayableTask::class)->toBePushedTimes(1);
+
+    expect(Queue::size())->toBe(1);
+});
+
+it('fakeOnly resets previous fake configurations', function (): void {
+    Queue::fakeTimes(BadTask::class, 2);
+    Queue::fakeTimes(DelayableTask::class, 1);
+
+    Queue::fakeOnly(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+
+    expect(Queue::size())->toBe(0);
+
+    Queue::push(new BadTask());
+    Queue::push(new DelayableTask(1));
+
+    expect(Queue::size())->toBe(2);
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
+    Queue::expect(DelayableTask::class)->toBePushedTimes(1);
+});
+
+it('fakeExcept resets previous fake configurations', function (): void {
+    Queue::fakeTimes(BasicQueuableTask::class, 1);
+    Queue::fakeTimes(DelayableTask::class, 1);
+
+    Queue::fakeExcept(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask());
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::push(new BadTask());
+    Queue::push(new DelayableTask(1));
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(1);
+    Queue::expect(DelayableTask::class)->toBePushedTimes(1);
+    Queue::expect(BadTask::class)->toBePushedTimes(1);
+});
+
+it('fakeOnly continues to fake the same task multiple times', function (): void {
+    Queue::fakeOnly(BasicQueuableTask::class);
+
+    for ($i = 0; $i < 5; $i++) {
+        Queue::push(new BasicQueuableTask());
+    }
+
+    expect(Queue::size())->toBe(0);
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(5);
+
+    Queue::push(new BadTask());
+
+    expect(Queue::size())->toBe(1);
+});
