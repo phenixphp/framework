@@ -45,6 +45,8 @@ class TestMail
         if ($closure) {
             Assert::assertFalse($closure($matches->first()));
         } else {
+            $matches = $matches->filter(fn (array $item): bool => $item['success'] === false);
+
             Assert::assertEmpty($matches, "Failed asserting that mailable '{$this->mailable}' was NOT sent.");
         }
     }
