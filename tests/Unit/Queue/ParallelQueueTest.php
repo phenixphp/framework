@@ -852,3 +852,17 @@ it('fakeOnly continues to fake the same task multiple times', function (): void 
 
     expect(Queue::size())->toBe(1);
 });
+
+it('fake once fakes only the next push of the specified task class', function (): void {
+    Queue::fakeOnce(BasicQueuableTask::class);
+
+    Queue::push(new BasicQueuableTask()); // faked
+
+    expect(Queue::size())->toBe(0);
+
+    Queue::push(new BasicQueuableTask()); // real
+
+    expect(Queue::size())->toBe(1);
+
+    Queue::expect(BasicQueuableTask::class)->toBePushedTimes(2);
+});
