@@ -239,7 +239,7 @@ it('skips processing new tasks when previous tasks are still running', function 
     $parallelQueue = new ParallelQueue('test-skip-processing');
 
     // Add initial task that will take 6 seconds to process
-    $parallelQueue->push(new DelayableTask(3));
+    $parallelQueue->push(new DelayableTask(6));
 
     $this->assertTrue($parallelQueue->isProcessing());
 
