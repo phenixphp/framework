@@ -240,9 +240,6 @@ class TestResponse
         return $this;
     }
 
-    /**
-     * @return self
-     */
     public function assertIsJson(): self
     {
         $contentType = $this->response->getHeader('content-type');
@@ -278,7 +275,6 @@ class TestResponse
      */
     protected function hasFragment(array $data, array $fragment): bool
     {
-        // Check if fragment matches at the current level
         $matches = true;
         foreach ($fragment as $key => $value) {
             if (! array_key_exists($key, $data) || $data[$key] !== $value) {
@@ -292,7 +288,6 @@ class TestResponse
             return true;
         }
 
-        // Recursively check nested arrays
         foreach ($data as $value) {
             if (is_array($value) && $this->hasFragment($value, $fragment)) {
                 return true;
