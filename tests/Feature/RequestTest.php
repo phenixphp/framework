@@ -8,6 +8,7 @@ use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\RequestBody;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\ContentType;
+use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
@@ -383,13 +384,12 @@ it('can assert json count', function (): void {
 
     $this->app->run();
 
-    $response = $this->get('/api/items');
-    $data = $response->getDecodedBody();
-
-    $response->assertOk()
+    $this->get('/api/items')
+        ->assertOk()
         ->assertJsonPath('data.0.id', 1)
         ->assertJsonPath('data.1.id', 2)
-        ->assertJsonPath('data.2.id', 3);
+        ->assertJsonPath('data.2.id', 3)
+        ->assertJsonCount(3, 'data');
 });
 
 it('can chain multiple json assertions', function (): void {
@@ -424,4 +424,35 @@ it('can chain multiple json assertions', function (): void {
         ])
         ->assertJsonPathNotEquals('data.status', 'error')
         ->assertJsonMissingFragment(['error' => 'Something went wrong']);
+});
+
+it('can assert record was created', function (): void {
+    Route::post('/api/users', function (): Response {
+        return response()->json([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ], HttpStatus::CREATED);
+    });
+
+    $this->app->run();
+
+    $this->post('/api/users', [
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+    ])
+        ->assertCreated()
+        ->assertStatusCode(HttpStatus::CREATED)
+        ->assertJsonFragment(['name' => 'John Doe'])
+        ->assertJsonPath('data.id', 1)
+        ->assertJsonPath('data.email', 'john@example.com')
+        ->assertJsonContains([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ], 'data')
+        ->assertJsonDoesNotContain([
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+        ], 'data');
 });
