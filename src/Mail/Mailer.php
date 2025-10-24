@@ -90,6 +90,11 @@ abstract class Mailer implements MailerContract
         return $this->sendingLog;
     }
 
+    public function resetSendingLog(): void
+    {
+        $this->sendingLog = [];
+    }
+
     protected function serviceConfig(): array
     {
         return [];

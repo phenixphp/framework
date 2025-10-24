@@ -8,6 +8,7 @@ use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\RequestBody;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\ContentType;
+use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
@@ -17,7 +18,7 @@ afterEach(function () {
     $this->app->stop();
 });
 
-it('can send requests to server', function () {
+it('can send requests to server', function (): void {
     Route::get('/', fn () => response()->plain('Hello'))
         ->middleware(AcceptJsonResponses::class);
 
@@ -46,7 +47,7 @@ it('can send requests to server', function () {
         ->assertNotFound();
 });
 
-it('can decode x-www-form-urlencode body', function () {
+it('can decode x-www-form-urlencode body', function (): void {
     Route::post('/posts', function (Request $request) {
         expect($request->body()->has('title'))->toBeTruthy();
         expect($request->body('title'))->toBe('Post title');
@@ -75,7 +76,7 @@ it('can decode x-www-form-urlencode body', function () {
         ->assertOk();
 });
 
-it('can decode multipart form data body', function () {
+it('can decode multipart form data body', function (): void {
     Route::post('/files', function (Request $request) {
         expect($request->body()->has('description'))->toBeTruthy();
         expect($request->body()->has('file'))->toBeTruthy();
@@ -104,7 +105,7 @@ it('can decode multipart form data body', function () {
         ->assertOk();
 });
 
-it('responds with a view', function () {
+it('responds with a view', function (): void {
     Route::get('/users', function (): Response {
         return response()->view('users.index', [
             'title' => 'New title',
@@ -120,4 +121,338 @@ it('responds with a view', function () {
         ->assertHeaderContains(['Content-Type' => 'text/html; charset=utf-8'])
         ->assertBodyContains('<body>')
         ->assertBodyContains('User index');
+});
+
+it('can assert response is html', function (): void {
+    Route::get('/page', function (): Response {
+        return response()->view('users.index', [
+            'title' => 'Test Page',
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/page')
+        ->assertOk()
+        ->assertIsHtml()
+        ->assertBodyContains('<body>');
+});
+
+it('can assert response is plain text', function (): void {
+    Route::get('/text', function (): Response {
+        return response()->plain('This is plain text content');
+    });
+
+    $this->app->run();
+
+    $this->get('/text')
+        ->assertOk()
+        ->assertIsPlainText()
+        ->assertBodyContains('plain text');
+});
+
+it('can assert json contains', function (): void {
+    Route::get('/api/user', function (): Response {
+        return response()->json([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'role' => 'admin',
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/user')
+        ->assertOk()
+        ->assertIsJson()
+        ->assertJsonPath('data.id', 1)
+        ->assertJsonPath('data.name', 'John Doe');
+});
+
+it('can assert json does not contain', function (): void {
+    Route::get('/api/user', function (): Response {
+        return response()->json([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/user')
+        ->assertOk()
+        ->assertJsonDoesNotContain([
+            'name' => 'Jane Doe',
+            'password' => 'secret',
+        ])
+        ->assertJsonPathNotEquals('data.name', 'Jane Doe');
+});
+
+it('can assert json fragment', function (): void {
+    Route::get('/api/posts', function (): Response {
+        return response()->json([
+            [
+                'id' => 1,
+                'title' => 'First Post',
+                'author' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                ],
+            ],
+            [
+                'id' => 2,
+                'title' => 'Second Post',
+                'author' => [
+                    'name' => 'Jane Smith',
+                    'email' => 'jane@example.com',
+                ],
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/posts')
+        ->assertOk()
+        ->assertJsonFragment([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ])
+        ->assertJsonFragment([
+            'id' => 2,
+            'title' => 'Second Post',
+        ]);
+});
+
+it('can assert json missing fragment', function (): void {
+    Route::get('/api/posts', function (): Response {
+        return response()->json([
+            [
+                'id' => 1,
+                'title' => 'First Post',
+                'author' => [
+                    'name' => 'John Doe',
+                ],
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/posts')
+        ->assertOk()
+        ->assertJsonMissingFragment([
+            'name' => 'Jane Smith',
+        ])
+        ->assertJsonMissingFragment([
+            'title' => 'Third Post',
+        ]);
+});
+
+it('can assert json path', function (): void {
+    Route::get('/api/profile', function (): Response {
+        return response()->json([
+            'user' => [
+                'profile' => [
+                    'name' => 'John Doe',
+                    'age' => 30,
+                ],
+                'settings' => [
+                    'theme' => 'dark',
+                    'notifications' => true,
+                ],
+            ],
+            'posts' => [
+                ['id' => 1, 'title' => 'First'],
+                ['id' => 2, 'title' => 'Second'],
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/profile')
+        ->assertOk()
+        ->assertJsonPath('data.user.profile.name', 'John Doe')
+        ->assertJsonPath('data.user.profile.age', 30)
+        ->assertJsonPath('data.user.settings.theme', 'dark')
+        ->assertJsonPath('data.user.settings.notifications', true)
+        ->assertJsonPath('data.posts.0.title', 'First')
+        ->assertJsonPath('data.posts.1.id', 2);
+});
+
+it('can assert json path not equals', function (): void {
+    Route::get('/api/user', function (): Response {
+        return response()->json([
+            'user' => [
+                'name' => 'John Doe',
+                'role' => 'admin',
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/user')
+        ->assertOk()
+        ->assertJsonPathNotEquals('data.user.name', 'Jane Doe')
+        ->assertJsonPathNotEquals('data.user.role', 'user');
+});
+
+it('can assert json structure', function (): void {
+    Route::get('/api/users', function (): Response {
+        return response()->json([
+            'users' => [
+                [
+                    'id' => 1,
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com',
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'Jane Smith',
+                    'email' => 'jane@example.com',
+                ],
+            ],
+            'meta' => [
+                'total' => 2,
+                'page' => 1,
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/users')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [
+                'users' => [
+                    '*' => ['id', 'name', 'email'],
+                ],
+                'meta' => ['total', 'page'],
+            ],
+        ]);
+});
+
+it('can assert json structure with nested arrays', function (): void {
+    Route::get('/api/posts', function (): Response {
+        return response()->json([
+            [
+                'id' => 1,
+                'title' => 'First Post',
+                'author' => [
+                    'name' => 'John',
+                    'email' => 'john@example.com',
+                ],
+                'comments' => [
+                    ['id' => 1, 'body' => 'Great!'],
+                    ['id' => 2, 'body' => 'Nice!'],
+                ],
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/posts')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'title',
+                    'author' => ['name', 'email'],
+                    'comments' => [
+                        '*' => ['id', 'body'],
+                    ],
+                ],
+            ],
+        ]);
+});
+
+it('can assert json count', function (): void {
+    Route::get('/api/items', function (): Response {
+        return response()->json([
+            ['id' => 1, 'name' => 'Item 1'],
+            ['id' => 2, 'name' => 'Item 2'],
+            ['id' => 3, 'name' => 'Item 3'],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/items')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', 1)
+        ->assertJsonPath('data.1.id', 2)
+        ->assertJsonPath('data.2.id', 3)
+        ->assertJsonCount(3, 'data');
+});
+
+it('can chain multiple json assertions', function (): void {
+    Route::get('/api/data', function (): Response {
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'user' => [
+                'id' => 1,
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+            ],
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/api/data')
+        ->assertOk()
+        ->assertIsJson()
+        ->assertJsonFragment(['name' => 'John Doe'])
+        ->assertJsonPath('data.status', 'success')
+        ->assertJsonPath('data.code', 200)
+        ->assertJsonPath('data.user.id', 1)
+        ->assertJsonPath('data.user.email', 'john@example.com')
+        ->assertJsonStructure([
+            'data' => [
+                'status',
+                'code',
+                'user' => ['id', 'name', 'email'],
+            ],
+        ])
+        ->assertJsonPathNotEquals('data.status', 'error')
+        ->assertJsonMissingFragment(['error' => 'Something went wrong']);
+});
+
+it('can assert record was created', function (): void {
+    Route::post('/api/users', function (): Response {
+        return response()->json([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ], HttpStatus::CREATED);
+    });
+
+    $this->app->run();
+
+    $this->post('/api/users', [
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+    ])
+        ->assertCreated()
+        ->assertStatusCode(HttpStatus::CREATED)
+        ->assertJsonFragment(['name' => 'John Doe'])
+        ->assertJsonPath('data.id', 1)
+        ->assertJsonPath('data.email', 'john@example.com')
+        ->assertJsonContains([
+            'id' => 1,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ], 'data')
+        ->assertJsonDoesNotContain([
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+        ], 'data');
 });

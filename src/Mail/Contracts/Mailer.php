@@ -17,4 +17,6 @@ interface Mailer
     public function send(Mailable $mailable): void;
 
     public function getSendingLog(): array;
+
+    public function resetSendingLog(): void;
 }

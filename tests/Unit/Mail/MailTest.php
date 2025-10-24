@@ -153,6 +153,10 @@ it('send email successfully using smtp mailer', function (): void {
     Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
         return $matches['success'] === false;
     });
+
+    Mail::resetSendingLog();
+
+    expect(Mail::getSendingLog())->toBeEmpty();
 });
 
 it('send email successfully using smtps', function (): void {
