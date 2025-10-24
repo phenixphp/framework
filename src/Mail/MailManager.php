@@ -58,6 +58,20 @@ class MailManager
         $this->config->setLogTransport($mailerType);
     }
 
+    public function getSendingLog(MailerType|null $mailerType = null): array
+    {
+        $mailerType ??= MailerType::from($this->config->default());
+
+        return $this->mailer($mailerType)->getSendingLog();
+    }
+
+    public function resetSendingLog(MailerType|null $mailerType = null): void
+    {
+        $mailerType ??= MailerType::from($this->config->default());
+
+        $this->mailer($mailerType)->resetSendingLog();
+    }
+
     protected function resolveMailer(MailerType $mailer): MailerContract
     {
         return match ($mailer) {

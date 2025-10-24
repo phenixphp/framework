@@ -10,6 +10,7 @@ use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
 use Phenix\Facades\Event;
+use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
@@ -48,6 +49,7 @@ abstract class TestCase extends AsyncTestCase
 
         Event::resetFaking();
         Queue::resetFaking();
+        Mail::resetSendingLog();
 
         $this->app = null;
     }
