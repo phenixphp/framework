@@ -254,6 +254,34 @@ class TestResponse
         return $this;
     }
 
+    public function assertIsHtml(): self
+    {
+        $contentType = $this->response->getHeader('content-type');
+
+        Assert::assertNotNull($contentType, 'Response does not have a Content-Type header.');
+        Assert::assertStringContainsString(
+            'text/html',
+            $contentType,
+            'Response does not have an HTML content type.'
+        );
+
+        return $this;
+    }
+
+    public function assertIsPlainText(): self
+    {
+        $contentType = $this->response->getHeader('content-type');
+
+        Assert::assertNotNull($contentType, 'Response does not have a Content-Type header.');
+        Assert::assertStringContainsString(
+            'text/plain',
+            $contentType,
+            'Response does not have a plain text content type.'
+        );
+
+        return $this;
+    }
+
     /**
      * @param int $count
      * @return self

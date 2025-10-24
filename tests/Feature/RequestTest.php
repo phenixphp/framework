@@ -122,6 +122,34 @@ it('responds with a view', function (): void {
         ->assertBodyContains('User index');
 });
 
+it('can assert response is html', function (): void {
+    Route::get('/page', function (): Response {
+        return response()->view('users.index', [
+            'title' => 'Test Page',
+        ]);
+    });
+
+    $this->app->run();
+
+    $this->get('/page')
+        ->assertOk()
+        ->assertIsHtml()
+        ->assertBodyContains('<body>');
+});
+
+it('can assert response is plain text', function (): void {
+    Route::get('/text', function (): Response {
+        return response()->plain('This is plain text content');
+    });
+
+    $this->app->run();
+
+    $this->get('/text')
+        ->assertOk()
+        ->assertIsPlainText()
+        ->assertBodyContains('plain text');
+});
+
 it('can assert json contains', function (): void {
     Route::get('/api/user', function (): Response {
         return response()->json([
