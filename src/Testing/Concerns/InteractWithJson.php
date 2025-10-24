@@ -230,42 +230,109 @@ trait InteractWithJson
     protected function assertStructure(array $structure, array $data, string $path = ''): void
     {
         foreach ($structure as $key => $value) {
-            $currentPath = $path ? "{$path}.{$key}" : (string) $key;
+            $currentPath = $this->buildPath($path, $key);
 
             if (is_array($value)) {
-                if ($key === '*') {
-                    Assert::assertIsArray(
-                        $data,
-                        "Expected array at path '{$path}' but got " . gettype($data)
-                    );
-
-                    foreach ($data as $index => $item) {
-                        $itemPath = $path ? "{$path}.{$index}" : (string) $index;
-                        Assert::assertIsArray(
-                            $item,
-                            "Expected array at path '{$itemPath}' but got " . gettype($item)
-                        );
-                        $this->assertStructure($value, $item, $itemPath);
-                    }
-                } else {
-                    Assert::assertArrayHasKey(
-                        $key,
-                        $data,
-                        "Missing key '{$key}' at path '{$currentPath}'"
-                    );
-                    Assert::assertIsArray(
-                        $data[$key],
-                        "Expected array at path '{$currentPath}' but got " . gettype($data[$key])
-                    );
-                    $this->assertStructure($value, $data[$key], $currentPath);
-                }
+                $this->assertNestedStructure($key, $value, $data, $path, $currentPath);
             } else {
-                Assert::assertArrayHasKey(
-                    $value,
-                    $data,
-                    "Missing key '{$value}' at path '{$currentPath}'"
-                );
+                $this->assertScalarKey($value, $data, $currentPath);
             }
         }
+    }
+
+    /**
+     * @param string $path
+     * @param string|int $key
+     * @return string
+     */
+    protected function buildPath(string $path, string|int $key): string
+    {
+        return $path ? "{$path}.{$key}" : (string) $key;
+    }
+
+    /**
+     * @param string|int $key
+     * @param array<string, mixed> $value
+     * @param array<string, mixed> $data
+     * @param string $path
+     * @param string $currentPath
+     * @return void
+     */
+    protected function assertNestedStructure(
+        string|int $key,
+        array $value,
+        array $data,
+        string $path,
+        string $currentPath
+    ): void {
+        if ($key === '*') {
+            $this->assertWildcardStructure($value, $data, $path);
+        } else {
+            $this->assertKeyedNestedStructure($key, $value, $data, $currentPath);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     * @param array<string, mixed> $data
+     * @param string $path
+     * @return void
+     */
+    protected function assertWildcardStructure(array $value, array $data, string $path): void
+    {
+        Assert::assertIsArray(
+            $data,
+            "Expected array at path '{$path}' but got " . gettype($data)
+        );
+
+        foreach ($data as $index => $item) {
+            $itemPath = $this->buildPath($path, $index);
+
+            Assert::assertIsArray(
+                $item,
+                "Expected array at path '{$itemPath}' but got " . gettype($item)
+            );
+            $this->assertStructure($value, $item, $itemPath);
+        }
+    }
+
+    /**
+     * @param string|int $key
+     * @param array<string, mixed> $value
+     * @param array<string, mixed> $data
+     * @param string $currentPath
+     * @return void
+     */
+    protected function assertKeyedNestedStructure(
+        string|int $key,
+        array $value,
+        array $data,
+        string $currentPath
+    ): void {
+        Assert::assertArrayHasKey(
+            $key,
+            $data,
+            "Missing key '{$key}' at path '{$currentPath}'"
+        );
+        Assert::assertIsArray(
+            $data[$key],
+            "Expected array at path '{$currentPath}' but got " . gettype($data[$key])
+        );
+        $this->assertStructure($value, $data[$key], $currentPath);
+    }
+
+    /**
+     * @param string|int $value
+     * @param array<string, mixed> $data
+     * @param string $currentPath
+     * @return void
+     */
+    protected function assertScalarKey(string|int $value, array $data, string $currentPath): void
+    {
+        Assert::assertArrayHasKey(
+            $value,
+            $data,
+            "Missing key '{$value}' at path '{$currentPath}'"
+        );
     }
 }
