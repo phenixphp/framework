@@ -78,3 +78,28 @@ if (! function_exists('trans_choice')) {
         return Translator::choice($key, $number, $replace);
     }
 }
+
+if (! function_exists('class_uses_recursive')) {
+    function class_uses_recursive(object|string $class): array
+    {
+        if (is_object($class)) {
+            $class = get_class($class);
+        }
+
+        $results = [];
+
+        do {
+            $traits = class_uses($class) ?: [];
+
+            foreach ($traits as $trait) {
+                $results[$trait] = $trait;
+
+                foreach (class_uses_recursive($trait) as $nestedTrait) {
+                    $results[$nestedTrait] = $nestedTrait;
+                }
+            }
+        } while ($class = get_parent_class($class));
+
+        return array_values($results);
+    }
+}

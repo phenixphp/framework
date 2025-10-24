@@ -9,8 +9,13 @@ use Phenix\App;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
+use Phenix\Facades\Event;
+use Phenix\Facades\Queue;
 use Phenix\Testing\Concerns\InteractWithResponses;
+use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
+
+use function in_array;
 
 abstract class TestCase extends AsyncTestCase
 {
@@ -29,11 +34,20 @@ abstract class TestCase extends AsyncTestCase
             $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
             $this->app->enableTestingMode();
         }
+
+        $uses = class_uses_recursive($this);
+
+        if (in_array(RefreshDatabase::class, $uses, true) && method_exists($this, 'refreshDatabase')) {
+            $this->refreshDatabase();
+        }
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
+
+        Event::resetFaking();
+        Queue::resetFaking();
 
         $this->app = null;
     }

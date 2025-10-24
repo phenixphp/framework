@@ -6,6 +6,7 @@ namespace Phenix\Queue;
 
 use Phenix\App;
 use Phenix\Database\Constants\Driver as DatabaseDriver;
+use Phenix\Queue\Concerns\CaptureTasks;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
 use Phenix\Redis\Contracts\Client;
@@ -13,6 +14,8 @@ use Phenix\Tasks\QueuableTask;
 
 class QueueManager
 {
+    use CaptureTasks;
+
     protected array $drivers = [];
 
     protected Config $config;
@@ -24,11 +27,28 @@ class QueueManager
 
     public function push(QueuableTask $task): void
     {
+        $this->recordPush($task);
+
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
+            return;
+        }
+
         $this->driver()->push($task);
     }
 
     public function pushOn(string $queueName, QueuableTask $task): void
     {
+        $task->setQueueName($queueName);
+        $this->recordPush($task);
+
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
+            return;
+        }
+
         $this->driver()->pushOn($queueName, $task);
     }
 

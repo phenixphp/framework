@@ -7,60 +7,69 @@ namespace Phenix\Testing;
 use Closure;
 use Phenix\Data\Collection;
 use Phenix\Mail\Contracts\Mailable;
+use PHPUnit\Framework\Assert;
 
 class TestMail
 {
     public readonly Collection $log;
+    protected string $mailable;
 
-    public function __construct(array $log = [])
+    /**
+     * @param array<int, array{mailable: string, success: bool, email: mixed, timestamp: float}> $log
+     */
+    public function __construct(Mailable|string $mailable, array $log = [])
     {
+        if ($mailable instanceof Mailable) {
+            $mailable = $mailable::class;
+        }
+
+        $this->mailable = $mailable;
         $this->log = Collection::fromArray($log);
     }
 
-    public function toBeSent(Mailable|string $mailable, Closure|null $closure = null): void
+    public function toBeSent(Closure|null $closure = null): void
     {
-        if ($mailable instanceof Mailable) {
-            $mailable = $mailable::class;
-        }
-
-        $matches = $this->log->filter(function (array $mail) use ($mailable): bool {
-            return $mail['mailable'] === $mailable;
-        });
+        $matches = $this->filterByMailable($this->mailable);
 
         if ($closure) {
-            expect($closure($matches->first()))->toBeTrue();
+            Assert::assertTrue($closure($matches->first()));
         } else {
-            expect($matches)->not->toBeEmpty();
+            Assert::assertNotEmpty($matches, "Failed asserting that mailable '{$this->mailable}' was sent at least once.");
         }
     }
 
-    public function toNotBeSent(Mailable|string $mailable, Closure|null $closure = null): void
+    public function toNotBeSent(Closure|null $closure = null): void
     {
-        if ($mailable instanceof Mailable) {
-            $mailable = $mailable::class;
-        }
-
-        $matches = $this->log->filter(function (array $mail) use ($mailable): bool {
-            return $mail['mailable'] === $mailable;
-        });
+        $matches = $this->filterByMailable($this->mailable);
 
         if ($closure) {
-            expect($closure($matches->first()))->toBeFalse();
+            Assert::assertFalse($closure($matches->first()));
         } else {
-            expect($matches)->toBeEmpty();
+            $matches = $matches->filter(fn (array $item): bool => $item['success'] === false);
+
+            Assert::assertEmpty($matches, "Failed asserting that mailable '{$this->mailable}' was NOT sent.");
         }
     }
 
-    public function toBeSentTimes(Mailable|string $mailable, int $times): void
+    public function toBeSentTimes(int $times): void
     {
-        if ($mailable instanceof Mailable) {
-            $mailable = $mailable::class;
+        $matches = $this->filterByMailable($this->mailable);
+
+        $count = $matches->count();
+
+        Assert::assertCount($times, $matches, "Failed asserting that mailable '{$this->mailable}' was sent {$times} times. Actual: {$count}.");
+    }
+
+    private function filterByMailable(string $mailable): Collection
+    {
+        $filtered = [];
+
+        foreach ($this->log as $record) {
+            if (($record['mailable'] ?? null) === $mailable) {
+                $filtered[] = $record;
+            }
         }
 
-        $matches = $this->log->filter(function (array $mail) use ($mailable): bool {
-            return $mail['mailable'] === $mailable;
-        });
-
-        expect($matches)->toHaveCount($times);
+        return Collection::fromArray($filtered);
     }
 }

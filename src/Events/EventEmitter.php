@@ -6,6 +6,7 @@ namespace Phenix\Events;
 
 use Amp\Future;
 use Closure;
+use Phenix\Events\Concerns\CaptureEvents;
 use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Contracts\EventEmitter as EventEmitterContract;
 use Phenix\Events\Contracts\EventListener as EventListenerContract;
@@ -17,6 +18,8 @@ use function Amp\async;
 
 class EventEmitter implements EventEmitterContract
 {
+    use CaptureEvents;
+
     /**
      * @var array<string, array<int, EventListenerContract>>
      */
@@ -27,14 +30,8 @@ class EventEmitter implements EventEmitterContract
      */
     protected array $listenerCounts = [];
 
-    /**
-     * Maximum number of listeners per event.
-     */
     protected int $maxListeners = 10;
 
-    /**
-     * Whether to emit warnings for too many listeners.
-     */
     protected bool $emitWarnings = true;
 
     public function on(string $event, Closure|EventListenerContract|string $listener, int $priority = 0): void
@@ -88,6 +85,15 @@ class EventEmitter implements EventEmitterContract
     public function emit(string|EventContract $event, mixed $payload = null): array
     {
         $eventObject = $this->createEvent($event, $payload);
+
+        $this->recordDispatched($eventObject);
+
+        if ($this->shouldFakeEvent($eventObject->getName())) {
+            $this->consumeFakedEvent($eventObject->getName());
+
+            return [];
+        }
+
         $results = [];
 
         $listeners = $this->getListeners($eventObject->getName());
@@ -105,7 +111,6 @@ class EventEmitter implements EventEmitterContract
                 $result = $listener->handle($eventObject);
                 $results[] = $result;
 
-                // Remove one-time listeners after execution
                 if ($listener->isOnce()) {
                     $this->removeListener($eventObject->getName(), $listener);
                 }
@@ -134,6 +139,15 @@ class EventEmitter implements EventEmitterContract
     {
         return async(function () use ($event, $payload): array {
             $eventObject = $this->createEvent($event, $payload);
+
+            $this->recordDispatched($eventObject);
+
+            if ($this->shouldFakeEvent($eventObject->getName())) {
+                $this->consumeFakedEvent($eventObject->getName());
+
+                return [];
+            }
+
             $listeners = $this->getListeners($eventObject->getName());
             $futures = [];
 
@@ -161,43 +175,6 @@ class EventEmitter implements EventEmitterContract
             }
 
             return $results;
-        });
-    }
-
-    protected function handleListenerAsync(EventListenerContract $listener, EventContract $eventObject): Future
-    {
-        return async(function () use ($listener, $eventObject): mixed {
-            try {
-                if ($eventObject->isPropagationStopped()) {
-                    return null;
-                }
-
-                $result = $listener->handle($eventObject);
-
-                // Remove one-time listeners after execution
-                if ($listener->isOnce()) {
-                    $this->removeListener($eventObject->getName(), $listener);
-                }
-
-                return $result;
-            } catch (Throwable $e) {
-                Log::error('Async event listener error', [
-                    'event' => $eventObject->getName(),
-                    'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                ]);
-
-                if ($this->emitWarnings) {
-                    throw new EventException(
-                        "Error in async event listener for '{$eventObject->getName()}': {$e->getMessage()}",
-                        0,
-                        $e
-                    );
-                }
-
-                return null;
-            }
         });
     }
 
@@ -243,6 +220,37 @@ class EventEmitter implements EventEmitterContract
     public function getEventNames(): array
     {
         return array_keys($this->listeners);
+    }
+
+    protected function handleListenerAsync(EventListenerContract $listener, EventContract $eventObject): Future
+    {
+        return async(function () use ($listener, $eventObject): mixed {
+            try {
+                if ($eventObject->isPropagationStopped()) {
+                    return null;
+                }
+
+                $result = $listener->handle($eventObject);
+
+                if ($listener->isOnce()) {
+                    $this->removeListener($eventObject->getName(), $listener);
+                }
+
+                return $result;
+            } catch (Throwable $e) {
+                report($e);
+
+                if ($this->emitWarnings) {
+                    throw new EventException(
+                        "Error in async event listener for '{$eventObject->getName()}': {$e->getMessage()}",
+                        0,
+                        $e
+                    );
+                }
+
+                return null;
+            }
+        });
     }
 
     protected function createEventListener(Closure|EventListenerContract|string $listener, int $priority): EventListenerContract

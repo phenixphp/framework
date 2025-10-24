@@ -49,7 +49,7 @@ class MailManager
         $this->mailer()->send($mailable);
     }
 
-    public function log(MailerType|null $mailerType = null): void
+    public function fake(MailerType|null $mailerType = null): void
     {
         $mailerType ??= MailerType::from($this->config->default());
 

@@ -139,7 +139,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @return Collection<int, DatabaseModel>
+     * @return Collection<DatabaseModel>
      */
     public function get(): Collection
     {
@@ -215,7 +215,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param BelongsTo $relationship
      * @param Closure $closure
      */
@@ -226,7 +226,7 @@ class DatabaseQueryBuilder extends QueryBase
     ): void {
         $closure($relationship);
 
-        /** @var Collection<int, DatabaseModel> $records */
+        /** @var Collection<DatabaseModel> $records */
         $records = $relationship->query()
             ->whereIn($relationship->getForeignKey()->getColumnName(), $models->modelKeys())
             ->get();
@@ -243,7 +243,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param HasMany $relationship
      * @param Closure $closure
      */
@@ -254,7 +254,7 @@ class DatabaseQueryBuilder extends QueryBase
     ): void {
         $closure($relationship);
 
-        /** @var Collection<int, DatabaseModel> $children */
+        /** @var Collection<DatabaseModel> $children */
         $children = $relationship->query()
             ->whereIn($relationship->getProperty()->getAttribute()->foreignKey, $models->modelKeys())
             ->get();
@@ -284,7 +284,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param BelongsToMany $relationship
      * @param Closure $closure
      */
@@ -297,7 +297,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         $attr = $relationship->getProperty()->getAttribute();
 
-        /** @var Collection<int, DatabaseModel> $related */
+        /** @var Collection<DatabaseModel> $related */
         $related = $relationship->query()
             ->addSelect($relationship->getColumns())
             ->innerJoin($attr->table, function (Join $join) use ($attr): void {
