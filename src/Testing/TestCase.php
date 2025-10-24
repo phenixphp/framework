@@ -10,6 +10,7 @@ use Phenix\AppBuilder;
 use Phenix\AppProxy;
 use Phenix\Console\Phenix;
 use Phenix\Facades\Event;
+use Phenix\Facades\Queue;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -46,6 +47,7 @@ abstract class TestCase extends AsyncTestCase
         parent::tearDown();
 
         Event::resetFaking();
+        Queue::resetFaking();
 
         $this->app = null;
     }
