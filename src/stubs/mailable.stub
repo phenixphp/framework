@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Mail\Mailable;
+
+class {name} extends Mailable
+{
+    public function build(): self
+    {
+        return $this->view('emails.{view}')
+            ->subject('Subject here');
+    }
+}
