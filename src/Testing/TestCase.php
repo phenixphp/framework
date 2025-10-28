@@ -42,6 +42,8 @@ abstract class TestCase extends AsyncTestCase
         if (in_array(RefreshDatabase::class, $uses, true) && method_exists($this, 'refreshDatabase')) {
             $this->refreshDatabase();
         }
+
+        View::clearCache();
     }
 
     protected function tearDown(): void
@@ -51,7 +53,6 @@ abstract class TestCase extends AsyncTestCase
         Event::resetFaking();
         Queue::resetFaking();
         Mail::resetSendingLog();
-        View::clearCache();
 
         $this->app = null;
     }
