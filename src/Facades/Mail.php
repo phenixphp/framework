@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
+use Amp\Future;
+use Phenix\Runtime\Facade;
+use Phenix\Mail\MailManager;
+use Phenix\Testing\TestMail;
+use Phenix\Mail\Contracts\Mailer;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailable as MailableContract;
-use Phenix\Mail\Contracts\Mailer;
-use Phenix\Mail\MailManager;
-use Phenix\Runtime\Facade;
-use Phenix\Testing\TestMail;
 
 /**
  * @method static Mailer mailer(MailerType|null $mailerType = null)
  * @method static Mailer using(MailerType $mailerType)
  * @method static Mailer to(array|string $to)
- * @method static void send(MailableContract $mailable)
+ * @method static Future send(MailableContract $mailable)
  * @method static Mailer fake(MailerType|null $mailerType = null)
  * @method static array getSendingLog(MailerType|null $mailerType = null)
  * @method static void resetSendingLog(MailerType|null $mailerType = null)

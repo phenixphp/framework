@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Data\Collection;
 use Phenix\Facades\Config;
 use Phenix\Facades\Mail;
 use Phenix\Mail\Constants\MailerType;
@@ -13,6 +14,7 @@ use Phenix\Mail\Tasks\SendEmail;
 use Phenix\Mail\TransportFactory;
 use Phenix\Mail\Transports\LogTransport;
 use Phenix\Tasks\Result;
+use Phenix\Util\Arr;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
@@ -140,19 +142,22 @@ it('send email successfully using smtp mailer', function (): void {
         }
     };
 
+    $missingMailable = new class () extends Mailable {
+        public function build(): self
+        {
+            return $this->view('emails.welcome')
+                ->subject('It will not be sent');
+        }
+    };
+
     Mail::to($email)->send($mailable);
 
     Mail::expect($mailable)->toBeSent();
-
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        return $matches['success'] === true;
-    });
-
+    Mail::expect($mailable)->toBeSent(fn (Collection $matches): bool => Arr::get($matches->first(), 'mailable') === $mailable::class);
     Mail::expect($mailable)->toBeSentTimes(1);
-    Mail::expect($mailable)->toNotBeSent();
-    Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
-        return $matches['success'] === false;
-    });
+
+    Mail::expect($missingMailable)->toNotBeSent();
+    Mail::expect($missingMailable)->toNotBeSent(fn (Collection $matches): bool => $matches->isEmpty());
 
     Mail::resetSendingLog();
 
@@ -184,15 +189,8 @@ it('send email successfully using smtps', function (): void {
     Mail::to($email)->send($mailable);
 
     Mail::expect($mailable)->toBeSent();
-
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        return $matches['success'] === true;
-    });
-
+    Mail::expect($mailable)->toBeSent(fn (Collection $matches): bool => Arr::get($matches->first(), 'mailable') === $mailable::class);
     Mail::expect($mailable)->toBeSentTimes(1);
-    Mail::expect($mailable)->toNotBeSent(function (array $matches): bool {
-        return $matches['success'] === false;
-    });
 });
 
 it('send email successfully using smtp mailer with sender defined in mailable', function (): void {
@@ -246,8 +244,9 @@ it('merge sender defined from facade and mailer', function (): void {
 
     Mail::to($email)->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
 
         if (! $email) {
             return false;
@@ -287,8 +286,9 @@ it('send email successfully using cc', function (): void {
         ->cc($cc)
         ->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches) use ($cc): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches) use ($cc): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
 
         if (! $email) {
             return false;
@@ -329,8 +329,9 @@ it('send email successfully using bcc', function (): void {
         ->bcc($bcc)
         ->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches) use ($bcc): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches) use ($bcc): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
 
         if (! $email) {
             return false;
@@ -370,8 +371,9 @@ it('send email successfully using reply to', function (): void {
     Mail::to($to)
         ->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
 
         if (! $email) {
             return false;
@@ -415,8 +417,9 @@ it('send email with multi attachments', function (): void {
 
     Mail::to($to)->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
         if (! $email) {
             return false;
         }
@@ -535,8 +538,9 @@ it('send email with custom headers', function (): void {
 
     Mail::to($to)->send($mailable);
 
-    Mail::expect($mailable)->toBeSent(function (array $matches): bool {
-        $email = $matches['email'] ?? null;
+    Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
+        $firstMatch = $matches->first();
+        $email = $firstMatch['email'] ?? null;
 
         if (! $email) {
             return false;

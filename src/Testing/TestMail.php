@@ -7,6 +7,7 @@ namespace Phenix\Testing;
 use Closure;
 use Phenix\Data\Collection;
 use Phenix\Mail\Contracts\Mailable;
+use Phenix\Util\Arr;
 use PHPUnit\Framework\Assert;
 
 class TestMail
@@ -32,7 +33,7 @@ class TestMail
         $matches = $this->filterByMailable($this->mailable);
 
         if ($closure) {
-            Assert::assertTrue($closure($matches->first()));
+            Assert::assertTrue($closure($matches));
         } else {
             Assert::assertNotEmpty($matches, "Failed asserting that mailable '{$this->mailable}' was sent at least once.");
         }
@@ -43,10 +44,8 @@ class TestMail
         $matches = $this->filterByMailable($this->mailable);
 
         if ($closure) {
-            Assert::assertFalse($closure($matches->first()));
+            Assert::assertTrue($closure($matches));
         } else {
-            $matches = $matches->filter(fn (array $item): bool => $item['success'] === false);
-
             Assert::assertEmpty($matches, "Failed asserting that mailable '{$this->mailable}' was NOT sent.");
         }
     }
@@ -65,7 +64,7 @@ class TestMail
         $filtered = [];
 
         foreach ($this->log as $record) {
-            if (($record['mailable'] ?? null) === $mailable) {
+            if (Arr::get($record, 'mailable') === $mailable) {
                 $filtered[] = $record;
             }
         }

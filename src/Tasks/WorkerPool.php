@@ -12,7 +12,7 @@ use Phenix\Tasks\Contracts\Task;
 
 class WorkerPool extends AbstractWorker
 {
-    protected function submitTask(Task $parallelTask): Worker\Execution
+    public function submitTask(Task $parallelTask): Worker\Execution
     {
         /** @var Pool $pool */
         $pool = App::make(Pool::class);

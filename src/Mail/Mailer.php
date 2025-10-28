@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
-use Phenix\Mail\Contracts\Mailable;
-use Phenix\Mail\Contracts\Mailer as MailerContract;
-use Phenix\Mail\Tasks\SendEmail;
+use Amp\Future;
+use Phenix\Tasks\WorkerPool;
+use SensitiveParameter;
 use Phenix\Tasks\Result;
 use Phenix\Tasks\Worker;
-use SensitiveParameter;
+use Phenix\Mail\Tasks\SendEmail;
+use Phenix\Mail\Contracts\Mailable;
 use Symfony\Component\Mime\Address;
+use Phenix\Mail\Contracts\Mailer as MailerContract;
 
 abstract class Mailer implements MailerContract
 {
@@ -57,7 +59,7 @@ abstract class Mailer implements MailerContract
         return $this;
     }
 
-    public function send(Mailable $mailable): void
+    public function send(Mailable $mailable): Future
     {
         $mailable->from($this->from)
             ->to($this->to)
@@ -67,22 +69,22 @@ abstract class Mailer implements MailerContract
 
         $email = $mailable->toMail();
 
-        /** @var Result $result */
-        [$result] = Worker::batch([
+        $execution = (new WorkerPool())->submitTask(
             new SendEmail(
                 $email,
                 $this->config,
                 $this->serviceConfig,
-            ),
-        ]);
+            )
+        );
 
         if ($this->config['transport'] === 'log') {
             $this->sendingLog[] = [
                 'mailable' => $mailable::class,
                 'email' => $email,
-                'success' => $result->isSuccess(),
             ];
         }
+
+        return $execution->getFuture();
     }
 
     public function getSendingLog(): array

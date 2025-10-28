@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
+use Amp\Future;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Mailers\Resend;
@@ -44,9 +45,9 @@ class MailManager
         return $this->mailer()->to($to);
     }
 
-    public function send(Mailable $mailable): void
+    public function send(Mailable $mailable): Future
     {
-        $this->mailer()->send($mailable);
+        return $this->mailer()->send($mailable);
     }
 
     public function fake(MailerType|null $mailerType = null): void
