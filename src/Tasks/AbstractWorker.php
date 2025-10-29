@@ -26,12 +26,12 @@ abstract class AbstractWorker implements WorkerContract
      * @param array<int, Task> $tasks
      * @return array<int, Result>
      */
-    public static function batch(array $tasks): array
+    public static function awaitAll(array $tasks): array
     {
         $pool = new static();
 
         foreach ($tasks as $task) {
-            $pool->submit($task);
+            $pool->push($task);
         }
 
         $results = $pool->run();
@@ -41,9 +41,9 @@ abstract class AbstractWorker implements WorkerContract
         return $results;
     }
 
-    public function submit(Task $parallelTask): self
+    public function push(Task $parallelTask): self
     {
-        $this->tasks[] = $this->submitTask($parallelTask);
+        $this->tasks[] = $this->prepareTask($parallelTask);
 
         return $this;
     }
@@ -56,7 +56,7 @@ abstract class AbstractWorker implements WorkerContract
         ));
     }
 
-    abstract public function submitTask(Task $parallelTask): Worker\Execution;
+    abstract public function prepareTask(Task $parallelTask): Worker\Execution;
 
     protected function finalize(): void
     {
