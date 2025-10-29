@@ -12,6 +12,7 @@ use Phenix\Console\Phenix;
 use Phenix\Facades\Event;
 use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
+use Phenix\Facades\View;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -41,6 +42,8 @@ abstract class TestCase extends AsyncTestCase
         if (in_array(RefreshDatabase::class, $uses, true) && method_exists($this, 'refreshDatabase')) {
             $this->refreshDatabase();
         }
+
+        View::clearCache();
     }
 
     protected function tearDown(): void

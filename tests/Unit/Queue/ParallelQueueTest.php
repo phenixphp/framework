@@ -251,9 +251,6 @@ it('skips processing new tasks when previous tasks are still running', function 
 
     // Processor should still be running
     expect($parallelQueue->isProcessing())->ToBeTrue();
-
-    $parallelQueue->clear();
-    $parallelQueue->stop();
 });
 
 it('automatically disables processing when no tasks are available to reserve', function (): void {
@@ -357,8 +354,6 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
 
     // All tasks should eventually be processed or re-enqueued appropriately
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
-
-    $parallelQueue->clear();
 });
 
 it('handles concurrent task reservation attempts correctly', function (): void {

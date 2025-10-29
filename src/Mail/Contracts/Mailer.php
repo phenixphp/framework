@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Mail\Contracts;
 
+use Amp\Future;
 use Phenix\Mail\Mailable;
 
 interface Mailer
@@ -14,7 +15,7 @@ interface Mailer
 
     public function bcc(array|string $bcc): self;
 
-    public function send(Mailable $mailable): void;
+    public function send(Mailable $mailable): Future;
 
     public function getSendingLog(): array;
 

@@ -7,6 +7,7 @@ namespace Phenix\Mail;
 use InvalidArgumentException;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Transports\LogTransport;
+use Phenix\Util\Arr;
 use SensitiveParameter;
 use Symfony\Component\Mailer\Bridge\Amazon\Transport\SesSmtpTransport;
 use Symfony\Component\Mailer\Bridge\Resend\Transport\ResendApiTransport;
@@ -34,7 +35,7 @@ class TransportFactory
         $scheme = 'smtp';
 
         if (! empty($config['encryption']) && $config['encryption'] === 'tls') {
-            $scheme = ($config['port'] === 465) ? 'smtps' : 'smtp';
+            $scheme = (Arr::get($config, 'port') === 465) ? 'smtps' : 'smtp';
         }
 
         $dsn = new Dsn(
@@ -42,7 +43,7 @@ class TransportFactory
             $config['host'],
             $config['username'] ?? null,
             $config['password'] ?? null,
-            $config['port'] ?? null,
+            Arr::has($config, 'port') ? (int) Arr::get($config, 'port') : null,
             $config
         );
 

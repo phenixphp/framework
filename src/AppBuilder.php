@@ -13,7 +13,7 @@ class AppBuilder implements Buildable
     {
         $app = new App($path ?? dirname(__DIR__));
 
-        Environment::load($env);
+        Environment::load('.env', $env);
 
         putenv('PHENIX_BASE_PATH=' . base_path());
         $_ENV['PHENIX_BASE_PATH'] = base_path();

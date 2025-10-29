@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Runtime;
 
 use Dotenv\Dotenv;
+use Phenix\Util\Str;
 
 class Environment
 {
@@ -12,7 +13,7 @@ class Environment
     {
         $fileName ??= '.env';
         $fileName .= $environment ? ".{$environment}" : '';
-        $fileNamePath = base_path() . DIRECTORY_SEPARATOR . $fileName;
+        $fileNamePath = Str::finish(base_path(), DIRECTORY_SEPARATOR) . $fileName;
 
         if (file_exists($fileNamePath)) {
             Dotenv::createImmutable(base_path(), $fileName)->load();

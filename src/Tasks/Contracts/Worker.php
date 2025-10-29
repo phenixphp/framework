@@ -6,7 +6,7 @@ namespace Phenix\Tasks\Contracts;
 
 interface Worker
 {
-    public function submit(Task $parallelTask): self;
+    public function push(Task $parallelTask): self;
 
     public function run(): array;
 
@@ -14,5 +14,5 @@ interface Worker
      * @param Task[] $tasks
      * @return array
      */
-    public static function batch(array $tasks): array;
+    public static function awaitAll(array $tasks): array;
 }
