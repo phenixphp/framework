@@ -12,7 +12,7 @@ use Phenix\Tasks\Contracts\Task;
 
 class WorkerPool extends AbstractWorker
 {
-    public function prepareTask(Task $parallelTask): Execution
+    protected function prepareTask(Task $parallelTask): Execution
     {
         $timeout = new TimeoutCancellation($parallelTask->getTimeout());
 

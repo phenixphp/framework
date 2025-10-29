@@ -56,7 +56,7 @@ abstract class AbstractWorker implements WorkerContract
         ));
     }
 
-    abstract public function prepareTask(Task $parallelTask): Worker\Execution;
+    abstract protected function prepareTask(Task $parallelTask): Worker\Execution;
 
     protected function finalize(): void
     {

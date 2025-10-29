@@ -19,7 +19,7 @@ class Worker extends AbstractWorker
         $this->worker = Workers\createWorker();
     }
 
-    public function prepareTask(Task $parallelTask): Workers\Execution
+    protected function prepareTask(Task $parallelTask): Workers\Execution
     {
         $timeout = new TimeoutCancellation($parallelTask->getTimeout());
 
