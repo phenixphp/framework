@@ -150,7 +150,12 @@ it('send email successfully using smtp mailer', function (): void {
         }
     };
 
-    Mail::to($email)->send($mailable);
+    $future = Mail::to($email)->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent();
     Mail::expect($mailable)->toBeSent(fn (Collection $matches): bool => Arr::get($matches->first(), 'mailable') === $mailable::class);
@@ -186,7 +191,12 @@ it('send email successfully using smtps', function (): void {
         }
     };
 
-    Mail::to($email)->send($mailable);
+    $future = Mail::to($email)->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent();
     Mail::expect($mailable)->toBeSent(fn (Collection $matches): bool => Arr::get($matches->first(), 'mailable') === $mailable::class);
@@ -214,7 +224,12 @@ it('send email successfully using smtp mailer with sender defined in mailable', 
         }
     };
 
-    Mail::send($mailable);
+    $future = Mail::send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent();
 });
@@ -242,7 +257,12 @@ it('merge sender defined from facade and mailer', function (): void {
         }
     };
 
-    Mail::to($email)->send($mailable);
+    $future = Mail::to($email)->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
         $firstMatch = $matches->first();
@@ -282,9 +302,14 @@ it('send email successfully using cc', function (): void {
         }
     };
 
-    Mail::to($to)
+    $future = Mail::to($to)
         ->cc($cc)
         ->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent(function (Collection $matches) use ($cc): bool {
         $firstMatch = $matches->first();
@@ -325,9 +350,14 @@ it('send email successfully using bcc', function (): void {
         }
     };
 
-    Mail::to($to)
+    $future = Mail::to($to)
         ->bcc($bcc)
         ->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent(function (Collection $matches) use ($bcc): bool {
         $firstMatch = $matches->first();
@@ -368,8 +398,13 @@ it('send email successfully using reply to', function (): void {
         }
     };
 
-    Mail::to($to)
+    $future = Mail::to($to)
         ->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
         $firstMatch = $matches->first();
@@ -415,7 +450,12 @@ it('send email with multi attachments', function (): void {
         }
     };
 
-    Mail::to($to)->send($mailable);
+    $future = Mail::to($to)->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeTrue();
 
     Mail::expect($mailable)->toBeSent(function (Collection $matches): bool {
         $firstMatch = $matches->first();
@@ -462,7 +502,12 @@ it('throw exception when file attachment does not exists', function (): void {
         }
     };
 
-    Mail::to($to)->send($mailable);
+    $future = Mail::to($to)->send($mailable);
+
+    /** @var Result $result */
+    $result = $future->await();
+
+    expect($result->isSuccess())->toBeFalse();
 
     Mail::expect($mailable)->toNotBeSent();
 })->throws(InvalidArgumentException::class);

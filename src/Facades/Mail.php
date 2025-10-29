@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Phenix\Facades;
 
 use Amp\Future;
-use Phenix\Runtime\Facade;
-use Phenix\Mail\MailManager;
-use Phenix\Testing\TestMail;
-use Phenix\Mail\Contracts\Mailer;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailable as MailableContract;
+use Phenix\Mail\Contracts\Mailer;
+use Phenix\Mail\MailManager;
+use Phenix\Runtime\Facade;
+use Phenix\Testing\TestMail;
 
 /**
  * @method static Mailer mailer(MailerType|null $mailerType = null)
