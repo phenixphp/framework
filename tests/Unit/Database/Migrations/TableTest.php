@@ -17,7 +17,10 @@ use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
 use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
+use Phenix\Database\Migrations\Columns\UnsignedDecimal;
+use Phenix\Database\Migrations\Columns\UnsignedFloat;
 use Phenix\Database\Migrations\Columns\UnsignedInteger;
+use Phenix\Database\Migrations\Columns\UnsignedSmallInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phenix\Database\Migrations\Table;
 use Phinx\Db\Adapter\AdapterInterface;
@@ -180,7 +183,7 @@ it('can add boolean column', function (): void {
 it('can add decimal column with precision and scale', function (): void {
     $table = new Table('products', adapter: $this->mockAdapter);
 
-    $column = $table->decimal('price', 8, 2, true)->default(0.00)->comment('Product price');
+    $column = $table->decimal('price', 8, 2)->default(0.00)->comment('Product price');
 
     expect($column)->toBeInstanceOf(Decimal::class);
     expect($column->getName())->toBe('price');
@@ -354,5 +357,71 @@ it('can add timestamps columns', function (): void {
         'null' => true,
         'timezone' => true,
         'update' => 'CURRENT_TIMESTAMP',
+    ]);
+});
+
+it('can add unsigned decimal column with precision and scale', function (): void {
+    $table = new Table('products', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedDecimal('price', 8, 2)->default(0.00)->comment('Product price');
+
+    expect($column)->toBeInstanceOf(UnsignedDecimal::class);
+    expect($column->getName())->toBe('price');
+    expect($column->getType())->toBe('decimal');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'precision' => 8,
+        'scale' => 2,
+        'signed' => false,
+        'default' => 0.00,
+        'comment' => 'Product price',
+    ]);
+});
+
+it('can add unsigned small integer column', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedSmallInteger('status', false)->default(1)->comment('User status');
+
+    expect($column)->toBeInstanceOf(UnsignedSmallInteger::class);
+    expect($column->getName())->toBe('status');
+    expect($column->getType())->toBe('smallinteger');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => false,
+        'default' => 1,
+        'comment' => 'User status',
+    ]);
+});
+
+it('can add unsigned small integer column with identity', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedSmallInteger('id', true)->comment('Primary key');
+
+    expect($column)->toBeInstanceOf(UnsignedSmallInteger::class);
+    expect($column->getName())->toBe('id');
+    expect($column->getType())->toBe('smallinteger');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => false,
+        'identity' => true,
+        'comment' => 'Primary key',
+    ]);
+});
+
+it('can add unsigned float column', function (): void {
+    $table = new Table('measurements', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedFloat('temperature')->default(0.0)->comment('Temperature value');
+
+    expect($column)->toBeInstanceOf(UnsignedFloat::class);
+    expect($column->getName())->toBe('temperature');
+    expect($column->getType())->toBe('float');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => false,
+        'default' => 0.0,
+        'comment' => 'Temperature value',
     ]);
 });

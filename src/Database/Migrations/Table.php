@@ -20,7 +20,10 @@ use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
 use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
+use Phenix\Database\Migrations\Columns\UnsignedDecimal;
+use Phenix\Database\Migrations\Columns\UnsignedFloat;
 use Phenix\Database\Migrations\Columns\UnsignedInteger;
+use Phenix\Database\Migrations\Columns\UnsignedSmallInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phinx\Db\Table as PhinxTable;
 
@@ -111,6 +114,33 @@ class Table extends PhinxTable
     public function decimal(string $name, int $precision = 10, int $scale = 2): Decimal
     {
         $column = new Decimal($name, $precision, $scale);
+
+        $this->columns[] = $column;
+
+        return $column;
+    }
+
+    public function unsignedDecimal(string $name, int $precision = 10, int $scale = 2): UnsignedDecimal
+    {
+        $column = new UnsignedDecimal($name, $precision, $scale);
+
+        $this->columns[] = $column;
+
+        return $column;
+    }
+
+    public function unsignedSmallInteger(string $name, bool $identity = false): UnsignedSmallInteger
+    {
+        $column = new UnsignedSmallInteger($name, $identity);
+
+        $this->columns[] = $column;
+
+        return $column;
+    }
+
+    public function unsignedFloat(string $name): UnsignedFloat
+    {
+        $column = new UnsignedFloat($name);
 
         $this->columns[] = $column;
 
