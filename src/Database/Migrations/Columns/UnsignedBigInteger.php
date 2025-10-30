@@ -6,7 +6,7 @@ namespace Phenix\Database\Migrations\Columns;
 
 use Phenix\Database\Migrations\Columns\Concerns\HasSign;
 
-class BigInteger extends UnsignedBigInteger
+class UnsignedBigInteger extends Number
 {
     use HasSign;
 
@@ -14,9 +14,12 @@ class BigInteger extends UnsignedBigInteger
         protected string $name,
         bool $identity = false,
     ) {
-        parent::__construct($name, $identity);
+        $this->options['null'] = false;
+        $this->options['signed'] = false;
 
-        $this->options['signed'] = true;
+        if ($identity) {
+            $this->options['identity'] = true;
+        }
     }
 
     public function getType(): string
