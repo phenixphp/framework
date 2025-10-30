@@ -19,6 +19,7 @@ use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
+use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 use Phenix\Database\Migrations\Columns\UnsignedInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phinx\Db\Table as PhinxTable;
@@ -56,6 +57,24 @@ class Table extends PhinxTable
     public function bigInteger(string $name, bool $identity = false): BigInteger
     {
         $column = new BigInteger($name, $identity);
+
+        $this->columns[] = $column;
+
+        return $column;
+    }
+
+    public function unsignedInteger(string $name, int|null $limit = null, bool $identity = false): UnsignedInteger
+    {
+        $column = new UnsignedInteger($name, $limit, $identity);
+
+        $this->columns[] = $column;
+
+        return $column;
+    }
+
+    public function unsignedBigInteger(string $name, bool $identity = false): UnsignedBigInteger
+    {
+        $column = new UnsignedBigInteger($name, $identity);
 
         $this->columns[] = $column;
 

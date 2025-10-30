@@ -16,6 +16,7 @@ use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
+use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 use Phenix\Database\Migrations\Columns\UnsignedInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phenix\Database\Migrations\Table;
@@ -94,6 +95,39 @@ it('can add big integer column with identity', function (): void {
     expect($column->getOptions())->toBe([
         'null' => false,
         'signed' => true,
+        'identity' => true,
+        'comment' => 'Primary key',
+    ]);
+});
+
+it('can add unsigned integer column with options', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedInteger('count', 10, false)->default(0)->comment('Item count');
+
+    expect($column)->toBeInstanceOf(UnsignedInteger::class);
+    expect($column->getName())->toBe('count');
+    expect($column->getType())->toBe('integer');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => false,
+        'limit' => 10,
+        'default' => 0,
+        'comment' => 'Item count',
+    ]);
+});
+
+it('can add unsigned big integer column with identity', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->unsignedBigInteger('id', true)->comment('Primary key');
+
+    expect($column)->toBeInstanceOf(UnsignedBigInteger::class);
+    expect($column->getName())->toBe('id');
+    expect($column->getType())->toBe('biginteger');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => false,
         'identity' => true,
         'comment' => 'Primary key',
     ]);
