@@ -16,6 +16,7 @@ use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
+use Phenix\Database\Migrations\Columns\UnsignedInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phenix\Database\Migrations\Table;
 use Phinx\Db\Adapter\AdapterInterface;
@@ -47,7 +48,7 @@ beforeEach(function (): void {
 it('can add string column with options', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $table->string('username', 50)->notNull()->comment('User name');
+    $table->string('username', 50)->comment('User name');
 
     $columns = $table->getColumnBuilders();
 
@@ -59,8 +60,8 @@ it('can add string column with options', function (): void {
     expect($column->getName())->toBe('username');
     expect($column->getType())->toBe('string');
     expect($column->getOptions())->toBe([
-        'limit' => 50,
         'null' => false,
+        'limit' => 50,
         'comment' => 'User name',
     ]);
 });
@@ -68,12 +69,14 @@ it('can add string column with options', function (): void {
 it('can add integer column with options', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->integer('age', 10, false, true)->default(0)->comment('User age');
+    $column = $table->integer('age', 10, false)->default(0)->comment('User age');
 
     expect($column)->toBeInstanceOf(Integer::class);
     expect($column->getName())->toBe('age');
     expect($column->getType())->toBe('integer');
     expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => true,
         'limit' => 10,
         'default' => 0,
         'comment' => 'User age',
@@ -83,15 +86,15 @@ it('can add integer column with options', function (): void {
 it('can add big integer column with identity', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->bigInteger('id', true, false)->comment('Primary key');
+    $column = $table->bigInteger('id', true)->comment('Primary key');
 
     expect($column)->toBeInstanceOf(BigInteger::class);
     expect($column->getName())->toBe('id');
     expect($column->getType())->toBe('biginteger');
     expect($column->getOptions())->toBe([
-        'identity' => true,
         'null' => false,
-        'signed' => false,
+        'signed' => true,
+        'identity' => true,
         'comment' => 'Primary key',
     ]);
 });
@@ -99,12 +102,13 @@ it('can add big integer column with identity', function (): void {
 it('can add small integer column', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->smallInteger('status', false, true)->default(1);
+    $column = $table->smallInteger('status', false)->default(1);
 
     expect($column)->toBeInstanceOf(SmallInteger::class);
     expect($column->getName())->toBe('status');
     expect($column->getType())->toBe('smallinteger');
     expect($column->getOptions())->toBe([
+        'null' => false,
         'default' => 1,
     ]);
 });
@@ -118,8 +122,8 @@ it('can add text column with limit', function (): void {
     expect($column->getName())->toBe('content');
     expect($column->getType())->toBe('text');
     expect($column->getOptions())->toBe([
-        'limit' => 1000,
         'null' => true,
+        'limit' => 1000,
         'comment' => 'Post content',
     ]);
 });
@@ -127,12 +131,13 @@ it('can add text column with limit', function (): void {
 it('can add boolean column', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->boolean('is_active', true)->default(true)->comment('User status');
+    $column = $table->boolean('is_active')->default(true)->comment('User status');
 
     expect($column)->toBeInstanceOf(Boolean::class);
     expect($column->getName())->toBe('is_active');
     expect($column->getType())->toBe('boolean');
     expect($column->getOptions())->toBe([
+        'null' => false,
         'default' => true,
         'comment' => 'User status',
     ]);
@@ -147,8 +152,10 @@ it('can add decimal column with precision and scale', function (): void {
     expect($column->getName())->toBe('price');
     expect($column->getType())->toBe('decimal');
     expect($column->getOptions())->toBe([
+        'null' => false,
         'precision' => 8,
         'scale' => 2,
+        'signed' => true,
         'default' => 0.00,
         'comment' => 'Product price',
     ]);
@@ -171,14 +178,14 @@ it('can add datetime column', function (): void {
 it('can add timestamp column with timezone', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->timestamp('created_at', true)->notNull()->currentTimestamp();
+    $column = $table->timestamp('created_at', true)->currentTimestamp();
 
     expect($column)->toBeInstanceOf(Timestamp::class);
     expect($column->getName())->toBe('created_at');
     expect($column->getType())->toBe('timestamp');
     expect($column->getOptions())->toBe([
-        'timezone' => true,
         'null' => false,
+        'timezone' => true,
         'default' => 'CURRENT_TIMESTAMP',
     ]);
 });
@@ -200,7 +207,7 @@ it('can add json column', function (): void {
 it('can add uuid column', function (): void {
     $table = new Table('users', adapter: $this->mockAdapter);
 
-    $column = $table->uuid('uuid')->notNull()->comment('Unique identifier');
+    $column = $table->uuid('uuid')->comment('Unique identifier');
 
     expect($column)->toBeInstanceOf(Uuid::class);
     expect($column->getName())->toBe('uuid');
@@ -220,6 +227,7 @@ it('can add enum column with values', function (): void {
     expect($column->getName())->toBe('role');
     expect($column->getType())->toBe('enum');
     expect($column->getOptions())->toBe([
+        'null' => false,
         'values' => ['admin', 'user', 'guest'],
         'default' => 'user',
         'comment' => 'User role',
@@ -235,6 +243,7 @@ it('can add float column', function (): void {
     expect($column->getName())->toBe('temperature');
     expect($column->getType())->toBe('float');
     expect($column->getOptions())->toBe([
+        'null' => false,
         'default' => 0.0,
         'comment' => 'Temperature value',
     ]);
@@ -243,7 +252,7 @@ it('can add float column', function (): void {
 it('can add date column', function (): void {
     $table = new Table('events', adapter: $this->mockAdapter);
 
-    $column = $table->date('event_date')->notNull()->comment('Event date');
+    $column = $table->date('event_date')->comment('Event date');
 
     expect($column)->toBeInstanceOf(Date::class);
     expect($column->getName())->toBe('event_date');
@@ -263,8 +272,8 @@ it('can add binary column with limit', function (): void {
     expect($column->getName())->toBe('file_data');
     expect($column->getType())->toBe('binary');
     expect($column->getOptions())->toBe([
-        'limit' => 1024,
         'null' => true,
+        'limit' => 1024,
         'comment' => 'Binary file data',
     ]);
 });
@@ -274,13 +283,13 @@ it('can add id column with auto increment', function (): void {
 
     $column = $table->id('user_id');
 
-    expect($column)->toBeInstanceOf(Integer::class);
+    expect($column)->toBeInstanceOf(UnsignedInteger::class);
     expect($column->getName())->toBe('user_id');
     expect($column->getType())->toBe('integer');
     expect($column->getOptions())->toBe([
-        'identity' => true,
         'null' => false,
         'signed' => false,
+        'identity' => true,
     ]);
 });
 
@@ -298,8 +307,8 @@ it('can add timestamps columns', function (): void {
     expect($createdAt->getName())->toBe('created_at');
     expect($createdAt->getType())->toBe('timestamp');
     expect($createdAt->getOptions())->toBe([
+        'null' => true,
         'timezone' => true,
-        'null' => false,
         'default' => 'CURRENT_TIMESTAMP',
     ]);
 
@@ -308,8 +317,8 @@ it('can add timestamps columns', function (): void {
     expect($updatedAt->getName())->toBe('updated_at');
     expect($updatedAt->getType())->toBe('timestamp');
     expect($updatedAt->getOptions())->toBe([
-        'timezone' => true,
         'null' => true,
+        'timezone' => true,
         'update' => 'CURRENT_TIMESTAMP',
     ]);
 });
