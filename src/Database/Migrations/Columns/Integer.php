@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations\Columns;
 
+use Phenix\Database\Migrations\Columns\Concerns\HasSign;
+
 class Integer extends UnsignedInteger
 {
+    use HasSign;
+
     public function __construct(
         protected string $name,
         int|null $limit = null,
@@ -14,19 +18,5 @@ class Integer extends UnsignedInteger
         parent::__construct($name, $limit, $identity);
 
         $this->options['signed'] = true;
-    }
-
-    public function unsigned(): static
-    {
-        $this->options['signed'] = false;
-
-        return $this;
-    }
-
-    public function signed(): static
-    {
-        $this->options['signed'] = true;
-
-        return $this;
     }
 }

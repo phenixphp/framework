@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations\Columns;
 
+use Phenix\Database\Migrations\Columns\Concerns\HasSign;
+
 class Decimal extends Column
 {
+    use HasSign;
+
     public function __construct(
         protected string $name,
         int $precision = 10,
@@ -29,20 +33,6 @@ class Decimal extends Column
     public function default(float $value): static
     {
         $this->options['default'] = $value;
-
-        return $this;
-    }
-
-    public function unsigned(): static
-    {
-        $this->options['signed'] = false;
-
-        return $this;
-    }
-
-    public function signed(): static
-    {
-        $this->options['signed'] = true;
 
         return $this;
     }
