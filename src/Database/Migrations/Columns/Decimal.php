@@ -14,15 +14,11 @@ class Decimal extends Column
         protected string $name,
         int $precision = 10,
         int $scale = 2,
-        bool $signed = true
     ) {
         parent::__construct($name);
         $this->options['precision'] = $precision;
         $this->options['scale'] = $scale;
-
-        if (! $signed) {
-            $this->options['signed'] = false;
-        }
+        $this->options['signed'] = true;
     }
 
     public function getType(): string
