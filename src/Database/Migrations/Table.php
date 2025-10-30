@@ -19,6 +19,7 @@ use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Timestamp;
+use Phenix\Database\Migrations\Columns\UnsignedInteger;
 use Phenix\Database\Migrations\Columns\Uuid;
 use Phinx\Db\Table as PhinxTable;
 
@@ -43,27 +44,27 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function integer(string $name, int|null $limit = null, bool $identity = false, bool $signed = true): Integer
+    public function integer(string $name, int|null $limit = null, bool $identity = false): Integer
     {
-        $column = new Integer($name, $limit, $identity, $signed);
+        $column = new Integer($name, $limit, $identity);
 
         $this->columns[] = $column;
 
         return $column;
     }
 
-    public function bigInteger(string $name, bool $identity = false, bool $signed = true): BigInteger
+    public function bigInteger(string $name, bool $identity = false): BigInteger
     {
-        $column = new BigInteger($name, $identity, $signed);
+        $column = new BigInteger($name, $identity);
 
         $this->columns[] = $column;
 
         return $column;
     }
 
-    public function smallInteger(string $name, bool $identity = false, bool $signed = true): SmallInteger
+    public function smallInteger(string $name, bool $identity = false): SmallInteger
     {
-        $column = new SmallInteger($name, $identity, $signed);
+        $column = new SmallInteger($name, $identity);
 
         $this->columns[] = $column;
 
@@ -79,18 +80,18 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function boolean(string $name, bool $signed = true): Boolean
+    public function boolean(string $name): Boolean
     {
-        $column = new Boolean($name, $signed);
+        $column = new Boolean($name);
 
         $this->columns[] = $column;
 
         return $column;
     }
 
-    public function decimal(string $name, int $precision = 10, int $scale = 2, bool $signed = true): Decimal
+    public function decimal(string $name, int $precision = 10, int $scale = 2): Decimal
     {
-        $column = new Decimal($name, $precision, $scale, $signed);
+        $column = new Decimal($name, $precision, $scale);
 
         $this->columns[] = $column;
 
@@ -169,9 +170,9 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function id(string $name = 'id'): Integer
+    public function id(string $name = 'id'): UnsignedInteger
     {
-        $column = new Integer($name, null, true, false);
+        $column = new UnsignedInteger($name, null, true);
 
         $this->columns[] = $column;
 
@@ -181,7 +182,7 @@ class Table extends PhinxTable
     public function timestamps(bool $timezone = false): self
     {
         $createdAt = new Timestamp('created_at', $timezone);
-        $createdAt->notNull()->currentTimestamp();
+        $createdAt->nullable()->currentTimestamp();
         $this->columns[] = $createdAt;
 
         $updatedAt = new Timestamp('updated_at', $timezone);
