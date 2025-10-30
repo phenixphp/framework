@@ -10,6 +10,7 @@ class Str extends Column
         protected string $name,
         int $limit = 255
     ) {
+        parent::__construct($name);
         $this->options['limit'] = $limit;
     }
 

@@ -10,6 +10,7 @@ class Text extends Column
         protected string $name,
         ?int $limit = null
     ) {
+        parent::__construct($name);
         if ($limit !== null) {
             $this->options['limit'] = $limit;
         }
@@ -20,37 +21,9 @@ class Text extends Column
         return 'text';
     }
 
-    public function nullable(): static
-    {
-        $this->options['null'] = true;
-
-        return $this;
-    }
-
-    public function notNull(): static
-    {
-        $this->options['null'] = false;
-
-        return $this;
-    }
-
     public function default(string $value): static
     {
         $this->options['default'] = $value;
-
-        return $this;
-    }
-
-    public function comment(string $comment): static
-    {
-        $this->options['comment'] = $comment;
-
-        return $this;
-    }
-
-    public function after(string $column): static
-    {
-        $this->options['after'] = $column;
 
         return $this;
     }

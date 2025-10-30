@@ -7,12 +7,9 @@ namespace Phenix\Database\Migrations\Columns;
 class Boolean extends Column
 {
     public function __construct(
-        protected string $name,
-        bool $signed = true
+        protected string $name
     ) {
-        if (! $signed) {
-            $this->options['signed'] = false;
-        }
+        parent::__construct($name);
     }
 
     public function getType(): string
@@ -20,51 +17,9 @@ class Boolean extends Column
         return 'boolean';
     }
 
-    public function nullable(): static
-    {
-        $this->options['null'] = true;
-
-        return $this;
-    }
-
-    public function notNull(): static
-    {
-        $this->options['null'] = false;
-
-        return $this;
-    }
-
     public function default(bool $value): static
     {
         $this->options['default'] = $value;
-
-        return $this;
-    }
-
-    public function comment(string $comment): static
-    {
-        $this->options['comment'] = $comment;
-
-        return $this;
-    }
-
-    public function after(string $column): static
-    {
-        $this->options['after'] = $column;
-
-        return $this;
-    }
-
-    public function unsigned(): static
-    {
-        $this->options['signed'] = false;
-
-        return $this;
-    }
-
-    public function signed(): static
-    {
-        $this->options['signed'] = true;
 
         return $this;
     }

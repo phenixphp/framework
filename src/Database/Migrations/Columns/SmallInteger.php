@@ -11,9 +11,10 @@ class SmallInteger extends Column
         bool $identity = false,
         bool $signed = true
     ) {
+        parent::__construct($name);
+        
         if ($identity) {
             $this->options['identity'] = true;
-            $this->options['null'] = false;
         }
 
         if (! $signed) {
@@ -26,37 +27,9 @@ class SmallInteger extends Column
         return 'smallinteger';
     }
 
-    public function nullable(): static
-    {
-        $this->options['null'] = true;
-
-        return $this;
-    }
-
-    public function notNull(): static
-    {
-        $this->options['null'] = false;
-
-        return $this;
-    }
-
     public function default(int $value): static
     {
         $this->options['default'] = $value;
-
-        return $this;
-    }
-
-    public function comment(string $comment): static
-    {
-        $this->options['comment'] = $comment;
-
-        return $this;
-    }
-
-    public function after(string $column): static
-    {
-        $this->options['after'] = $column;
 
         return $this;
     }

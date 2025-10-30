@@ -13,6 +13,7 @@ abstract class Column
     public function __construct(
         protected string $name
     ) {
+        $this->options['null'] = false;
     }
 
     public function getName(): string
@@ -27,19 +28,9 @@ abstract class Column
 
     abstract public function getType(): string;
 
-    /**
-     * Common methods available to all column types
-     */
     public function nullable(): static
     {
         $this->options['null'] = true;
-
-        return $this;
-    }
-
-    public function notNull(): static
-    {
-        $this->options['null'] = false;
 
         return $this;
     }

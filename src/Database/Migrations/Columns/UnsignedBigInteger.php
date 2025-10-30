@@ -14,7 +14,8 @@ class UnsignedBigInteger extends Number
         protected string $name,
         bool $identity = false,
     ) {
-        $this->options['null'] = false;
+        parent::__construct($name);
+
         $this->options['signed'] = false;
 
         if ($identity) {

@@ -12,6 +12,7 @@ class Decimal extends Column
         int $scale = 2,
         bool $signed = true
     ) {
+        parent::__construct($name);
         $this->options['precision'] = $precision;
         $this->options['scale'] = $scale;
 
@@ -25,37 +26,9 @@ class Decimal extends Column
         return 'decimal';
     }
 
-    public function nullable(): static
-    {
-        $this->options['null'] = true;
-
-        return $this;
-    }
-
-    public function notNull(): static
-    {
-        $this->options['null'] = false;
-
-        return $this;
-    }
-
     public function default(float $value): static
     {
         $this->options['default'] = $value;
-
-        return $this;
-    }
-
-    public function comment(string $comment): static
-    {
-        $this->options['comment'] = $comment;
-
-        return $this;
-    }
-
-    public function after(string $column): static
-    {
-        $this->options['after'] = $column;
 
         return $this;
     }

@@ -11,7 +11,8 @@ class UnsignedInteger extends Number
         int|null $limit = null,
         bool $identity = false,
     ) {
-        $this->options['null'] = false;
+        parent::__construct($name);
+
         $this->options['signed'] = false;
 
         if ($limit) {

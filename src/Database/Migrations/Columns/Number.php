@@ -16,7 +16,6 @@ abstract class Number extends Column
     public function identity(): static
     {
         $this->options['identity'] = true;
-        $this->options['null'] = false;
 
         return $this;
     }
