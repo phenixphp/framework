@@ -41,202 +41,116 @@ class Table extends PhinxTable
 
     public function string(string $name, int $limit = 255): Str
     {
-        $column = new Str($name, $limit);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Str($name, $limit));
     }
 
     public function integer(string $name, int|null $limit = null, bool $identity = false): Integer
     {
-        $column = new Integer($name, $limit, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Integer($name, $limit, $identity));
     }
 
     public function bigInteger(string $name, bool $identity = false): BigInteger
     {
-        $column = new BigInteger($name, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new BigInteger($name, $identity));
     }
 
     public function unsignedInteger(string $name, int|null $limit = null, bool $identity = false): UnsignedInteger
     {
-        $column = new UnsignedInteger($name, $limit, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedInteger($name, $limit, $identity));
     }
 
     public function unsignedBigInteger(string $name, bool $identity = false): UnsignedBigInteger
     {
-        $column = new UnsignedBigInteger($name, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedBigInteger($name, $identity));
     }
 
     public function smallInteger(string $name, bool $identity = false): SmallInteger
     {
-        $column = new SmallInteger($name, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new SmallInteger($name, $identity));
     }
 
     public function text(string $name, int|null $limit = null): Text
     {
-        $column = new Text($name, $limit);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Text($name, $limit));
     }
 
     public function boolean(string $name): Boolean
     {
-        $column = new Boolean($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Boolean($name));
     }
 
     public function decimal(string $name, int $precision = 10, int $scale = 2): Decimal
     {
-        $column = new Decimal($name, $precision, $scale);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Decimal($name, $precision, $scale));
     }
 
     public function unsignedDecimal(string $name, int $precision = 10, int $scale = 2): UnsignedDecimal
     {
-        $column = new UnsignedDecimal($name, $precision, $scale);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedDecimal($name, $precision, $scale));
     }
 
     public function unsignedSmallInteger(string $name, bool $identity = false): UnsignedSmallInteger
     {
-        $column = new UnsignedSmallInteger($name, $identity);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedSmallInteger($name, $identity));
     }
 
     public function unsignedFloat(string $name): UnsignedFloat
     {
-        $column = new UnsignedFloat($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedFloat($name));
     }
 
     public function dateTime(string $name): DateTime
     {
-        $column = new DateTime($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new DateTime($name));
     }
 
     public function timestamp(string $name, bool $timezone = false): Timestamp
     {
-        $column = new Timestamp($name, $timezone);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Timestamp($name, $timezone));
     }
 
     public function json(string $name): Json
     {
-        $column = new Json($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Json($name));
     }
 
     public function uuid(string $name): Uuid
     {
-        $column = new Uuid($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Uuid($name));
     }
 
     public function enum(string $name, array $values): Enum
     {
-        $column = new Enum($name, $values);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Enum($name, $values));
     }
 
     public function float(string $name): Floating
     {
-        $column = new Floating($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Floating($name));
     }
 
     public function date(string $name): Date
     {
-        $column = new Date($name);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Date($name));
     }
 
     public function binary(string $name, int|null $limit = null): Binary
     {
-        $column = new Binary($name, $limit);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new Binary($name, $limit));
     }
 
     public function id(string $name = 'id'): UnsignedInteger
     {
-        $column = new UnsignedInteger($name, null, true);
-
-        $this->columns[] = $column;
-
-        return $column;
+        return $this->addColumnWithAdapter(new UnsignedInteger($name, null, true));
     }
 
     public function timestamps(bool $timezone = false): self
     {
-        $createdAt = new Timestamp('created_at', $timezone);
+        $createdAt = $this->addColumnWithAdapter(new Timestamp('created_at', $timezone));
         $createdAt->nullable()->currentTimestamp();
-        $this->columns[] = $createdAt;
 
-        $updatedAt = new Timestamp('updated_at', $timezone);
+        $updatedAt = $this->addColumnWithAdapter(new Timestamp('updated_at', $timezone));
         $updatedAt->nullable()->onUpdateCurrentTimestamp();
-        $this->columns[] = $updatedAt;
 
         return $this;
     }
@@ -248,5 +162,19 @@ class Table extends PhinxTable
         }
 
         $this->save();
+    }
+
+    /**
+     * @template T of Column
+     * @param T $column
+     * @return T
+     */
+    private function addColumnWithAdapter(Column $column): Column
+    {
+        $column->setAdapter($this->getAdapter());
+
+        $this->columns[] = $column;
+
+        return $column;
     }
 }

@@ -2,29 +2,31 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Migrations\Columns\BigInteger;
+use Phinx\Db\Table\Column;
+use Phinx\Db\Adapter\MysqlAdapter;
+use Phenix\Database\Migrations\Table;
+use Phinx\Db\Adapter\PostgresAdapter;
+use Phinx\Db\Adapter\AdapterInterface;
+use Phenix\Database\Migrations\Columns\Str;
+use Phenix\Database\Migrations\Columns\Date;
+use Phenix\Database\Migrations\Columns\Enum;
+use Phenix\Database\Migrations\Columns\Json;
+use Phenix\Database\Migrations\Columns\Text;
+use Phenix\Database\Migrations\Columns\Uuid;
 use Phenix\Database\Migrations\Columns\Binary;
 use Phenix\Database\Migrations\Columns\Boolean;
-use Phenix\Database\Migrations\Columns\Date;
-use Phenix\Database\Migrations\Columns\DateTime;
 use Phenix\Database\Migrations\Columns\Decimal;
-use Phenix\Database\Migrations\Columns\Enum;
-use Phenix\Database\Migrations\Columns\Floating;
 use Phenix\Database\Migrations\Columns\Integer;
-use Phenix\Database\Migrations\Columns\Json;
-use Phenix\Database\Migrations\Columns\SmallInteger;
-use Phenix\Database\Migrations\Columns\Str;
-use Phenix\Database\Migrations\Columns\Text;
+use Phenix\Database\Migrations\Columns\DateTime;
+use Phenix\Database\Migrations\Columns\Floating;
 use Phenix\Database\Migrations\Columns\Timestamp;
-use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
-use Phenix\Database\Migrations\Columns\UnsignedDecimal;
+use Phenix\Database\Migrations\Columns\BigInteger;
+use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\UnsignedFloat;
+use Phenix\Database\Migrations\Columns\UnsignedDecimal;
 use Phenix\Database\Migrations\Columns\UnsignedInteger;
+use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 use Phenix\Database\Migrations\Columns\UnsignedSmallInteger;
-use Phenix\Database\Migrations\Columns\Uuid;
-use Phenix\Database\Migrations\Table;
-use Phinx\Db\Adapter\AdapterInterface;
-use Phinx\Db\Table\Column;
 
 beforeEach(function (): void {
     $this->mockAdapter = $this->getMockBuilder(AdapterInterface::class)->getMock();
@@ -424,4 +426,28 @@ it('can add unsigned float column', function (): void {
         'default' => 0.0,
         'comment' => 'Temperature value',
     ]);
+});
+
+it('can change adapter for columns', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->string('name', 100);
+
+    expect($column->getAdapter())->toBe($this->mockAdapter);
+
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column->setAdapter($mysqlAdapter);
+    expect($column->isMysql())->toBeTrue();
+
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column->setAdapter($postgresAdapter);
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->isMysql())->toBeFalse();
 });
