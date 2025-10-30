@@ -12,7 +12,7 @@ use Phenix\Database\Migrations\Columns\Date;
 use Phenix\Database\Migrations\Columns\DateTime;
 use Phenix\Database\Migrations\Columns\Decimal;
 use Phenix\Database\Migrations\Columns\Enum;
-use Phenix\Database\Migrations\Columns\FloatColumn;
+use Phenix\Database\Migrations\Columns\Floating;
 use Phenix\Database\Migrations\Columns\Integer;
 use Phenix\Database\Migrations\Columns\Json;
 use Phenix\Database\Migrations\Columns\SmallInteger;
@@ -142,9 +142,9 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function float(string $name): FloatColumn
+    public function float(string $name): Floating
     {
-        $column = new FloatColumn($name);
+        $column = new Floating($name);
 
         $this->columns[] = $column;
 

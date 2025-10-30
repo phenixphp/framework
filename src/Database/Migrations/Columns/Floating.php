@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations\Columns;
 
-class FloatColumn extends Column
+class Floating extends Column
 {
     public function __construct(
         protected string $name

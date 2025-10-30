@@ -9,7 +9,7 @@ use Phenix\Database\Migrations\Columns\Date;
 use Phenix\Database\Migrations\Columns\DateTime;
 use Phenix\Database\Migrations\Columns\Decimal;
 use Phenix\Database\Migrations\Columns\Enum;
-use Phenix\Database\Migrations\Columns\FloatColumn;
+use Phenix\Database\Migrations\Columns\Floating;
 use Phenix\Database\Migrations\Columns\Integer;
 use Phenix\Database\Migrations\Columns\Json;
 use Phenix\Database\Migrations\Columns\SmallInteger;
@@ -231,7 +231,7 @@ it('can add float column', function (): void {
 
     $column = $table->float('temperature')->default(0.0)->comment('Temperature value');
 
-    expect($column)->toBeInstanceOf(FloatColumn::class);
+    expect($column)->toBeInstanceOf(Floating::class);
     expect($column->getName())->toBe('temperature');
     expect($column->getType())->toBe('float');
     expect($column->getOptions())->toBe([
