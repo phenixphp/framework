@@ -43,7 +43,7 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function integer(string $name, ?int $limit = null, bool $identity = false, bool $signed = true): Integer
+    public function integer(string $name, int|null $limit = null, bool $identity = false, bool $signed = true): Integer
     {
         $column = new Integer($name, $limit, $identity, $signed);
 
@@ -70,7 +70,7 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function text(string $name, ?int $limit = null): Text
+    public function text(string $name, int|null $limit = null): Text
     {
         $column = new Text($name, $limit);
 
@@ -160,7 +160,7 @@ class Table extends PhinxTable
         return $column;
     }
 
-    public function binary(string $name, ?int $limit = null): Binary
+    public function binary(string $name, int|null $limit = null): Binary
     {
         $column = new Binary($name, $limit);
 
