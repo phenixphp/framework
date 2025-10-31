@@ -6,18 +6,29 @@ namespace Phenix\Database\Migrations;
 
 use Phenix\Database\Migrations\Columns\BigInteger;
 use Phenix\Database\Migrations\Columns\Binary;
+use Phenix\Database\Migrations\Columns\Bit;
+use Phenix\Database\Migrations\Columns\Blob;
 use Phenix\Database\Migrations\Columns\Boolean;
+use Phenix\Database\Migrations\Columns\Char;
+use Phenix\Database\Migrations\Columns\Cidr;
 use Phenix\Database\Migrations\Columns\Column;
 use Phenix\Database\Migrations\Columns\Date;
 use Phenix\Database\Migrations\Columns\DateTime;
 use Phenix\Database\Migrations\Columns\Decimal;
+use Phenix\Database\Migrations\Columns\Double;
 use Phenix\Database\Migrations\Columns\Enum;
 use Phenix\Database\Migrations\Columns\Floating;
+use Phenix\Database\Migrations\Columns\Inet;
 use Phenix\Database\Migrations\Columns\Integer;
+use Phenix\Database\Migrations\Columns\Interval;
 use Phenix\Database\Migrations\Columns\Json;
+use Phenix\Database\Migrations\Columns\JsonB;
+use Phenix\Database\Migrations\Columns\MacAddr;
+use Phenix\Database\Migrations\Columns\Set;
 use Phenix\Database\Migrations\Columns\SmallInteger;
 use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
+use Phenix\Database\Migrations\Columns\Time;
 use Phenix\Database\Migrations\Columns\Timestamp;
 use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 use Phenix\Database\Migrations\Columns\UnsignedDecimal;
@@ -137,6 +148,61 @@ class Table extends PhinxTable
     public function binary(string $name, int|null $limit = null): Binary
     {
         return $this->addColumnWithAdapter(new Binary($name, $limit));
+    }
+
+    public function char(string $name, int $limit = 255): Char
+    {
+        return $this->addColumnWithAdapter(new Char($name, $limit));
+    }
+
+    public function time(string $name, bool $timezone = false): Time
+    {
+        return $this->addColumnWithAdapter(new Time($name, $timezone));
+    }
+
+    public function double(string $name, bool $signed = true): Double
+    {
+        return $this->addColumnWithAdapter(new Double($name, $signed));
+    }
+
+    public function blob(string $name, int|null $limit = null): Blob
+    {
+        return $this->addColumnWithAdapter(new Blob($name, $limit));
+    }
+
+    public function set(string $name, array $values): Set
+    {
+        return $this->addColumnWithAdapter(new Set($name, $values));
+    }
+
+    public function bit(string $name, int $limit = 1): Bit
+    {
+        return $this->addColumnWithAdapter(new Bit($name, $limit));
+    }
+
+    public function jsonb(string $name): JsonB
+    {
+        return $this->addColumnWithAdapter(new JsonB($name));
+    }
+
+    public function inet(string $name): Inet
+    {
+        return $this->addColumnWithAdapter(new Inet($name));
+    }
+
+    public function cidr(string $name): Cidr
+    {
+        return $this->addColumnWithAdapter(new Cidr($name));
+    }
+
+    public function macaddr(string $name): MacAddr
+    {
+        return $this->addColumnWithAdapter(new MacAddr($name));
+    }
+
+    public function interval(string $name): Interval
+    {
+        return $this->addColumnWithAdapter(new Interval($name));
     }
 
     public function id(string $name = 'id'): UnsignedInteger

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations\Columns;
 
-use Phinx\Db\Adapter\MysqlAdapter;
-use Phinx\Db\Adapter\SQLiteAdapter;
-use Phinx\Db\Adapter\PostgresAdapter;
 use Phinx\Db\Adapter\AdapterInterface;
+use Phinx\Db\Adapter\MysqlAdapter;
+use Phinx\Db\Adapter\PostgresAdapter;
+use Phinx\Db\Adapter\SQLiteAdapter;
 use Phinx\Db\Adapter\SqlServerAdapter;
 
 abstract class Column
@@ -58,6 +58,54 @@ abstract class Column
     public function first(): static
     {
         $this->options['after'] = MysqlAdapter::FIRST;
+
+        return $this;
+    }
+
+    public function collation(string $collation): static
+    {
+        if ($this->isMysql()) {
+            $this->options['collation'] = $collation;
+        }
+
+        return $this;
+    }
+
+    public function encoding(string $encoding): static
+    {
+        if ($this->isMysql()) {
+            $this->options['encoding'] = $encoding;
+        }
+
+        return $this;
+    }
+
+    public function timezone(bool $timezone = true): static
+    {
+        if ($this->isPostgres()) {
+            $this->options['timezone'] = $timezone;
+        }
+
+        return $this;
+    }
+
+    public function update(string $update): static
+    {
+        if ($this->isMysql()) {
+            $this->options['update'] = $update;
+        }
+
+        return $this;
+    }
+
+    public function length(int $length): static
+    {
+        return $this->limit($length);
+    }
+
+    public function limit(int $limit): static
+    {
+        $this->options['limit'] = $limit;
 
         return $this;
     }

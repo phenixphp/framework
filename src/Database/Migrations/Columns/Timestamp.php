@@ -28,9 +28,9 @@ class Timestamp extends Column
         return $this;
     }
 
-    public function timezone(): static
+    public function timezone(bool $timezone = true): static
     {
-        $this->options['timezone'] = true;
+        $this->options['timezone'] = $timezone;
 
         return $this;
     }

@@ -2,31 +2,42 @@
 
 declare(strict_types=1);
 
-use Phinx\Db\Table\Column;
-use Phinx\Db\Adapter\MysqlAdapter;
-use Phenix\Database\Migrations\Table;
-use Phinx\Db\Adapter\PostgresAdapter;
-use Phinx\Db\Adapter\AdapterInterface;
-use Phenix\Database\Migrations\Columns\Str;
-use Phenix\Database\Migrations\Columns\Date;
-use Phenix\Database\Migrations\Columns\Enum;
-use Phenix\Database\Migrations\Columns\Json;
-use Phenix\Database\Migrations\Columns\Text;
-use Phenix\Database\Migrations\Columns\Uuid;
-use Phenix\Database\Migrations\Columns\Binary;
-use Phenix\Database\Migrations\Columns\Boolean;
-use Phenix\Database\Migrations\Columns\Decimal;
-use Phenix\Database\Migrations\Columns\Integer;
-use Phenix\Database\Migrations\Columns\DateTime;
-use Phenix\Database\Migrations\Columns\Floating;
-use Phenix\Database\Migrations\Columns\Timestamp;
 use Phenix\Database\Migrations\Columns\BigInteger;
+use Phenix\Database\Migrations\Columns\Binary;
+use Phenix\Database\Migrations\Columns\Bit;
+use Phenix\Database\Migrations\Columns\Blob;
+use Phenix\Database\Migrations\Columns\Boolean;
+use Phenix\Database\Migrations\Columns\Char;
+use Phenix\Database\Migrations\Columns\Cidr;
+use Phenix\Database\Migrations\Columns\Date;
+use Phenix\Database\Migrations\Columns\DateTime;
+use Phenix\Database\Migrations\Columns\Decimal;
+use Phenix\Database\Migrations\Columns\Double;
+use Phenix\Database\Migrations\Columns\Enum;
+use Phenix\Database\Migrations\Columns\Floating;
+use Phenix\Database\Migrations\Columns\Inet;
+use Phenix\Database\Migrations\Columns\Integer;
+use Phenix\Database\Migrations\Columns\Interval;
+use Phenix\Database\Migrations\Columns\Json;
+use Phenix\Database\Migrations\Columns\JsonB;
+use Phenix\Database\Migrations\Columns\MacAddr;
+use Phenix\Database\Migrations\Columns\Set;
 use Phenix\Database\Migrations\Columns\SmallInteger;
-use Phenix\Database\Migrations\Columns\UnsignedFloat;
-use Phenix\Database\Migrations\Columns\UnsignedDecimal;
-use Phenix\Database\Migrations\Columns\UnsignedInteger;
+use Phenix\Database\Migrations\Columns\Str;
+use Phenix\Database\Migrations\Columns\Text;
+use Phenix\Database\Migrations\Columns\Time;
+use Phenix\Database\Migrations\Columns\Timestamp;
 use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
+use Phenix\Database\Migrations\Columns\UnsignedDecimal;
+use Phenix\Database\Migrations\Columns\UnsignedFloat;
+use Phenix\Database\Migrations\Columns\UnsignedInteger;
 use Phenix\Database\Migrations\Columns\UnsignedSmallInteger;
+use Phenix\Database\Migrations\Columns\Uuid;
+use Phenix\Database\Migrations\Table;
+use Phinx\Db\Adapter\AdapterInterface;
+use Phinx\Db\Adapter\MysqlAdapter;
+use Phinx\Db\Adapter\PostgresAdapter;
+use Phinx\Db\Table\Column;
 
 beforeEach(function (): void {
     $this->mockAdapter = $this->getMockBuilder(AdapterInterface::class)->getMock();
@@ -450,4 +461,163 @@ it('can change adapter for columns', function (): void {
 
     expect($column->isPostgres())->toBeTrue();
     expect($column->isMysql())->toBeFalse();
+});
+
+it('can add char column with limit', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->char('code', 10)->comment('Product code');
+
+    expect($column)->toBeInstanceOf(Char::class);
+    expect($column->getName())->toBe('code');
+    expect($column->getType())->toBe('char');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 10,
+        'comment' => 'Product code',
+    ]);
+});
+
+it('can add time column', function (): void {
+    $table = new Table('events', adapter: $this->mockAdapter);
+
+    $column = $table->time('start_time')->comment('Event start time');
+
+    expect($column)->toBeInstanceOf(Time::class);
+    expect($column->getName())->toBe('start_time');
+    expect($column->getType())->toBe('time');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'Event start time',
+    ]);
+});
+
+it('can add double column', function (): void {
+    $table = new Table('measurements', adapter: $this->mockAdapter);
+
+    $column = $table->double('value')->default(0.0)->comment('Measurement value');
+
+    expect($column)->toBeInstanceOf(Double::class);
+    expect($column->getName())->toBe('value');
+    expect($column->getType())->toBe('double');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'signed' => true,
+        'default' => 0.0,
+        'comment' => 'Measurement value',
+    ]);
+});
+
+it('can add blob column', function (): void {
+    $table = new Table('files', adapter: $this->mockAdapter);
+
+    $column = $table->blob('data')->comment('File data');
+
+    expect($column)->toBeInstanceOf(Blob::class);
+    expect($column->getName())->toBe('data');
+    expect($column->getType())->toBe('blob');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'File data',
+    ]);
+});
+
+it('can add set column with values', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->set('permissions', ['read', 'write', 'execute'])->comment('User permissions');
+
+    expect($column)->toBeInstanceOf(Set::class);
+    expect($column->getName())->toBe('permissions');
+    expect($column->getType())->toBe('set');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'values' => ['read', 'write', 'execute'],
+        'comment' => 'User permissions',
+    ]);
+});
+
+it('can add bit column', function (): void {
+    $table = new Table('flags', adapter: $this->mockAdapter);
+
+    $column = $table->bit('flags', 8)->comment('Status flags');
+
+    expect($column)->toBeInstanceOf(Bit::class);
+    expect($column->getName())->toBe('flags');
+    expect($column->getType())->toBe('bit');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 8,
+        'comment' => 'Status flags',
+    ]);
+});
+
+it('can add jsonb column (PostgreSQL)', function (): void {
+    $table = new Table('data', adapter: $this->mockAdapter);
+
+    $column = $table->jsonb('metadata')->nullable()->comment('JSON metadata');
+
+    expect($column)->toBeInstanceOf(JsonB::class);
+    expect($column->getName())->toBe('metadata');
+    expect($column->getType())->toBe('jsonb');
+    expect($column->getOptions())->toBe([
+        'null' => true,
+        'comment' => 'JSON metadata',
+    ]);
+});
+
+it('can add inet column (PostgreSQL)', function (): void {
+    $table = new Table('connections', adapter: $this->mockAdapter);
+
+    $column = $table->inet('ip_address')->comment('IP address');
+
+    expect($column)->toBeInstanceOf(Inet::class);
+    expect($column->getName())->toBe('ip_address');
+    expect($column->getType())->toBe('inet');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'IP address',
+    ]);
+});
+
+it('can add cidr column (PostgreSQL)', function (): void {
+    $table = new Table('networks', adapter: $this->mockAdapter);
+
+    $column = $table->cidr('network')->comment('Network CIDR');
+
+    expect($column)->toBeInstanceOf(Cidr::class);
+    expect($column->getName())->toBe('network');
+    expect($column->getType())->toBe('cidr');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'Network CIDR',
+    ]);
+});
+
+it('can add macaddr column (PostgreSQL)', function (): void {
+    $table = new Table('devices', adapter: $this->mockAdapter);
+
+    $column = $table->macaddr('mac_address')->comment('MAC address');
+
+    expect($column)->toBeInstanceOf(MacAddr::class);
+    expect($column->getName())->toBe('mac_address');
+    expect($column->getType())->toBe('macaddr');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'MAC address',
+    ]);
+});
+
+it('can add interval column (PostgreSQL)', function (): void {
+    $table = new Table('events', adapter: $this->mockAdapter);
+
+    $column = $table->interval('duration')->comment('Event duration');
+
+    expect($column)->toBeInstanceOf(Interval::class);
+    expect($column->getName())->toBe('duration');
+    expect($column->getType())->toBe('interval');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'comment' => 'Event duration',
+    ]);
 });
