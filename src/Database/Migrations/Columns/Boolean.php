@@ -6,12 +6,6 @@ namespace Phenix\Database\Migrations\Columns;
 
 class Boolean extends Column
 {
-    public function __construct(
-        protected string $name
-    ) {
-        parent::__construct($name);
-    }
-
     public function getType(): string
     {
         return 'boolean';
