@@ -4,42 +4,28 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations;
 
-use Phenix\Database\Migrations\Columns\BigInteger;
-use Phenix\Database\Migrations\Columns\Binary;
-use Phenix\Database\Migrations\Columns\Bit;
-use Phenix\Database\Migrations\Columns\Blob;
-use Phenix\Database\Migrations\Columns\Boolean;
-use Phenix\Database\Migrations\Columns\Char;
-use Phenix\Database\Migrations\Columns\Cidr;
 use Phenix\Database\Migrations\Columns\Column;
-use Phenix\Database\Migrations\Columns\Date;
-use Phenix\Database\Migrations\Columns\DateTime;
-use Phenix\Database\Migrations\Columns\Decimal;
-use Phenix\Database\Migrations\Columns\Double;
-use Phenix\Database\Migrations\Columns\Enum;
-use Phenix\Database\Migrations\Columns\Floating;
-use Phenix\Database\Migrations\Columns\Inet;
-use Phenix\Database\Migrations\Columns\Integer;
-use Phenix\Database\Migrations\Columns\Interval;
-use Phenix\Database\Migrations\Columns\Json;
-use Phenix\Database\Migrations\Columns\JsonB;
-use Phenix\Database\Migrations\Columns\MacAddr;
-use Phenix\Database\Migrations\Columns\Set;
-use Phenix\Database\Migrations\Columns\SmallInteger;
-use Phenix\Database\Migrations\Columns\Str;
-use Phenix\Database\Migrations\Columns\Text;
-use Phenix\Database\Migrations\Columns\Time;
-use Phenix\Database\Migrations\Columns\Timestamp;
-use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
-use Phenix\Database\Migrations\Columns\UnsignedDecimal;
-use Phenix\Database\Migrations\Columns\UnsignedFloat;
-use Phenix\Database\Migrations\Columns\UnsignedInteger;
-use Phenix\Database\Migrations\Columns\UnsignedSmallInteger;
-use Phenix\Database\Migrations\Columns\Uuid;
+use Phenix\Database\Migrations\Columns\Concerns\WithBinary;
+use Phenix\Database\Migrations\Columns\Concerns\WithConvenience;
+use Phenix\Database\Migrations\Columns\Concerns\WithDateTime;
+use Phenix\Database\Migrations\Columns\Concerns\WithJson;
+use Phenix\Database\Migrations\Columns\Concerns\WithNetwork;
+use Phenix\Database\Migrations\Columns\Concerns\WithNumeric;
+use Phenix\Database\Migrations\Columns\Concerns\WithSpecial;
+use Phenix\Database\Migrations\Columns\Concerns\WithText;
 use Phinx\Db\Table as PhinxTable;
 
 class Table extends PhinxTable
 {
+    use WithBinary;
+    use WithConvenience;
+    use WithDateTime;
+    use WithJson;
+    use WithNetwork;
+    use WithNumeric;
+    use WithSpecial;
+    use WithText;
+
     /**
      * @var array<Column>
      */
@@ -48,177 +34,6 @@ class Table extends PhinxTable
     public function getColumnBuilders(): array
     {
         return $this->columns;
-    }
-
-    public function string(string $name, int $limit = 255): Str
-    {
-        return $this->addColumnWithAdapter(new Str($name, $limit));
-    }
-
-    public function integer(string $name, int|null $limit = null, bool $identity = false): Integer
-    {
-        return $this->addColumnWithAdapter(new Integer($name, $limit, $identity));
-    }
-
-    public function bigInteger(string $name, bool $identity = false): BigInteger
-    {
-        return $this->addColumnWithAdapter(new BigInteger($name, $identity));
-    }
-
-    public function unsignedInteger(string $name, int|null $limit = null, bool $identity = false): UnsignedInteger
-    {
-        return $this->addColumnWithAdapter(new UnsignedInteger($name, $limit, $identity));
-    }
-
-    public function unsignedBigInteger(string $name, bool $identity = false): UnsignedBigInteger
-    {
-        return $this->addColumnWithAdapter(new UnsignedBigInteger($name, $identity));
-    }
-
-    public function smallInteger(string $name, bool $identity = false): SmallInteger
-    {
-        return $this->addColumnWithAdapter(new SmallInteger($name, $identity));
-    }
-
-    public function text(string $name, int|null $limit = null): Text
-    {
-        return $this->addColumnWithAdapter(new Text($name, $limit));
-    }
-
-    public function boolean(string $name): Boolean
-    {
-        return $this->addColumnWithAdapter(new Boolean($name));
-    }
-
-    public function decimal(string $name, int $precision = 10, int $scale = 2): Decimal
-    {
-        return $this->addColumnWithAdapter(new Decimal($name, $precision, $scale));
-    }
-
-    public function unsignedDecimal(string $name, int $precision = 10, int $scale = 2): UnsignedDecimal
-    {
-        return $this->addColumnWithAdapter(new UnsignedDecimal($name, $precision, $scale));
-    }
-
-    public function unsignedSmallInteger(string $name, bool $identity = false): UnsignedSmallInteger
-    {
-        return $this->addColumnWithAdapter(new UnsignedSmallInteger($name, $identity));
-    }
-
-    public function unsignedFloat(string $name): UnsignedFloat
-    {
-        return $this->addColumnWithAdapter(new UnsignedFloat($name));
-    }
-
-    public function dateTime(string $name): DateTime
-    {
-        return $this->addColumnWithAdapter(new DateTime($name));
-    }
-
-    public function timestamp(string $name, bool $timezone = false): Timestamp
-    {
-        return $this->addColumnWithAdapter(new Timestamp($name, $timezone));
-    }
-
-    public function json(string $name): Json
-    {
-        return $this->addColumnWithAdapter(new Json($name));
-    }
-
-    public function uuid(string $name): Uuid
-    {
-        return $this->addColumnWithAdapter(new Uuid($name));
-    }
-
-    public function enum(string $name, array $values): Enum
-    {
-        return $this->addColumnWithAdapter(new Enum($name, $values));
-    }
-
-    public function float(string $name): Floating
-    {
-        return $this->addColumnWithAdapter(new Floating($name));
-    }
-
-    public function date(string $name): Date
-    {
-        return $this->addColumnWithAdapter(new Date($name));
-    }
-
-    public function binary(string $name, int|null $limit = null): Binary
-    {
-        return $this->addColumnWithAdapter(new Binary($name, $limit));
-    }
-
-    public function char(string $name, int $limit = 255): Char
-    {
-        return $this->addColumnWithAdapter(new Char($name, $limit));
-    }
-
-    public function time(string $name, bool $timezone = false): Time
-    {
-        return $this->addColumnWithAdapter(new Time($name, $timezone));
-    }
-
-    public function double(string $name, bool $signed = true): Double
-    {
-        return $this->addColumnWithAdapter(new Double($name, $signed));
-    }
-
-    public function blob(string $name, int|null $limit = null): Blob
-    {
-        return $this->addColumnWithAdapter(new Blob($name, $limit));
-    }
-
-    public function set(string $name, array $values): Set
-    {
-        return $this->addColumnWithAdapter(new Set($name, $values));
-    }
-
-    public function bit(string $name, int $limit = 1): Bit
-    {
-        return $this->addColumnWithAdapter(new Bit($name, $limit));
-    }
-
-    public function jsonb(string $name): JsonB
-    {
-        return $this->addColumnWithAdapter(new JsonB($name));
-    }
-
-    public function inet(string $name): Inet
-    {
-        return $this->addColumnWithAdapter(new Inet($name));
-    }
-
-    public function cidr(string $name): Cidr
-    {
-        return $this->addColumnWithAdapter(new Cidr($name));
-    }
-
-    public function macaddr(string $name): MacAddr
-    {
-        return $this->addColumnWithAdapter(new MacAddr($name));
-    }
-
-    public function interval(string $name): Interval
-    {
-        return $this->addColumnWithAdapter(new Interval($name));
-    }
-
-    public function id(string $name = 'id'): UnsignedInteger
-    {
-        return $this->addColumnWithAdapter(new UnsignedInteger($name, null, true));
-    }
-
-    public function timestamps(bool $timezone = false): self
-    {
-        $createdAt = $this->addColumnWithAdapter(new Timestamp('created_at', $timezone));
-        $createdAt->nullable()->currentTimestamp();
-
-        $updatedAt = $this->addColumnWithAdapter(new Timestamp('updated_at', $timezone));
-        $updatedAt->nullable()->onUpdateCurrentTimestamp();
-
-        return $this;
     }
 
     public function __destruct()
