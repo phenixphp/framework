@@ -50,7 +50,7 @@ class Table extends PhinxTable
      * @param T $column
      * @return T
      */
-    private function addColumnWithAdapter(Column $column): Column
+    protected function addColumnWithAdapter(Column $column): Column
     {
         $column->setAdapter($this->getAdapter());
 
