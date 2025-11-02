@@ -621,3 +621,385 @@ it('can add interval column (PostgreSQL)', function (): void {
         'comment' => 'Event duration',
     ]);
 });
+
+it('can use after method to position column', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->string('email')->after('username');
+
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'after' => 'username',
+    ]);
+});
+
+it('can use first method to position column at beginning', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $mysqlAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $mysqlAdapter);
+
+    $column = $table->string('id')->setAdapter($mysqlAdapter)->first();
+
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'after' => MysqlAdapter::FIRST,
+    ]);
+});
+
+it('can set collation for MySQL columns', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $mysqlAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $mysqlAdapter);
+
+    $column = $table->string('name')->setAdapter($mysqlAdapter)->collation('utf8mb4_unicode_ci');
+
+    expect($column->isMysql())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'collation' => 'utf8mb4_unicode_ci',
+    ]);
+});
+
+it('sets collation for non-MySQL adapters (Str class behavior)', function (): void {
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $postgresAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $postgresAdapter);
+
+    $column = $table->string('name');
+    $column->setAdapter($postgresAdapter);
+    $column->collation('utf8mb4_unicode_ci');
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'collation' => 'utf8mb4_unicode_ci',
+    ]);
+});
+
+it('can set encoding for MySQL columns', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $mysqlAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $mysqlAdapter);
+
+    $column = $table->string('name');
+    $column->setAdapter($mysqlAdapter);
+    $column->encoding('utf8mb4');
+
+    expect($column->isMysql())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'encoding' => 'utf8mb4',
+    ]);
+});
+
+it('sets encoding for non-MySQL adapters (Str class behavior)', function (): void {
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $postgresAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $postgresAdapter);
+
+    $column = $table->string('name');
+    $column->setAdapter($postgresAdapter);
+    $column->encoding('utf8mb4');
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 255,
+        'encoding' => 'utf8mb4',
+    ]);
+});
+
+it('can set timezone for PostgreSQL columns', function (): void {
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $postgresAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('events', adapter: $postgresAdapter);
+
+    $column = $table->timestamp('created_at');
+    $column->setAdapter($postgresAdapter);
+    $column->timezone(true);
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'timezone' => true,
+    ]);
+});
+
+it('can set timezone to false for PostgreSQL columns', function (): void {
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $postgresAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('events', adapter: $postgresAdapter);
+
+    $column = $table->timestamp('created_at');
+    $column->setAdapter($postgresAdapter);
+    $column->timezone(false);
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'timezone' => false,
+    ]);
+});
+
+it('sets timezone for non-PostgreSQL adapters (Timestamp class behavior)', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $mysqlAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('events', adapter: $mysqlAdapter);
+
+    $column = $table->timestamp('created_at');
+    $column->setAdapter($mysqlAdapter);
+    $column->timezone(true);
+
+    expect($column->isMysql())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'timezone' => true,
+    ]);
+});
+
+it('can set update trigger for MySQL columns', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $mysqlAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $mysqlAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $mysqlAdapter);
+
+    $column = $table->timestamp('updated_at');
+    $column->setAdapter($mysqlAdapter);
+    $column->update('CURRENT_TIMESTAMP');
+
+    expect($column->isMysql())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'update' => 'CURRENT_TIMESTAMP',
+    ]);
+});
+
+it('sets update trigger for non-MySQL adapters (Timestamp class behavior)', function (): void {
+    $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $postgresAdapter->expects($this->any())
+        ->method('isValidColumnType')
+        ->willReturn(true);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnTypes')
+        ->willReturn(['string', 'integer', 'boolean', 'text', 'datetime', 'timestamp']);
+
+    $postgresAdapter->expects($this->any())
+        ->method('getColumnForType')
+        ->willReturnCallback(function (string $columnName, string $type, array $options): Column {
+            $column = new Column();
+            $column->setName($columnName);
+            $column->setType($type);
+            $column->setOptions($options);
+
+            return $column;
+        });
+
+    $table = new Table('users', adapter: $postgresAdapter);
+
+    $column = $table->timestamp('updated_at');
+    $column->setAdapter($postgresAdapter);
+    $column->update('CURRENT_TIMESTAMP');
+
+    expect($column->isPostgres())->toBeTrue();
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'update' => 'CURRENT_TIMESTAMP',
+    ]);
+});
