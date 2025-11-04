@@ -152,6 +152,5 @@ it('sets adapter correctly when added to table', function (): void {
 
     $foreignKey = $table->foreignKey('user_id', 'users');
 
-    // Verify adapter is set correctly
     expect($foreignKey->getAdapter())->not->toBeNull();
 });
