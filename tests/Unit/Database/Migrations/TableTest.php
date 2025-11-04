@@ -453,6 +453,9 @@ it('can change adapter for columns', function (): void {
 
     $column->setAdapter($mysqlAdapter);
     expect($column->isMysql())->toBeTrue();
+    expect($column->isPostgres())->toBeFalse();
+    expect($column->isSQLite())->toBeFalse();
+    expect($column->isSqlServer())->toBeFalse();
 
     $postgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
         ->disableOriginalConstructor()
