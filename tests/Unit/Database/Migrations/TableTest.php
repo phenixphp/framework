@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Migration;
 use Phenix\Database\Migrations\Columns\BigInteger;
 use Phenix\Database\Migrations\Columns\Binary;
 use Phenix\Database\Migrations\Columns\Bit;
@@ -1002,4 +1003,11 @@ it('sets update trigger for non-MySQL adapters (Timestamp class behavior)', func
         'null' => false,
         'update' => 'CURRENT_TIMESTAMP',
     ]);
+});
+
+it('returns new table for migrations', function (): void {
+    $migration = new class ('local', 1) extends Migration {};
+    $migration->setAdapter($this->mockAdapter);
+
+    expect($migration->table('users'))->toBeInstanceOf(Table::class);
 });
