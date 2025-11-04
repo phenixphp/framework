@@ -8,6 +8,7 @@ use Phenix\Database\Migrations\Columns\Column;
 use Phenix\Database\Migrations\Columns\Concerns\WithBinary;
 use Phenix\Database\Migrations\Columns\Concerns\WithConvenience;
 use Phenix\Database\Migrations\Columns\Concerns\WithDateTime;
+use Phenix\Database\Migrations\Columns\Concerns\WithForeignKeys;
 use Phenix\Database\Migrations\Columns\Concerns\WithJson;
 use Phenix\Database\Migrations\Columns\Concerns\WithNetwork;
 use Phenix\Database\Migrations\Columns\Concerns\WithNumeric;
@@ -20,6 +21,7 @@ class Table extends PhinxTable
     use WithBinary;
     use WithConvenience;
     use WithDateTime;
+    use WithForeignKeys;
     use WithJson;
     use WithNetwork;
     use WithNumeric;
@@ -30,6 +32,11 @@ class Table extends PhinxTable
      * @var array<Column>
      */
     protected array $columns = [];
+
+    /**
+     * @var array<ForeignKey>
+     */
+    protected array $foreignKeys = [];
 
     protected bool $executed = false;
 
@@ -43,6 +50,11 @@ class Table extends PhinxTable
     public function getColumnBuilders(): array
     {
         return $this->columns;
+    }
+
+    public function getForeignKeyBuilders(): array
+    {
+        return $this->foreignKeys;
     }
 
     public function create(): void
@@ -86,10 +98,33 @@ class Table extends PhinxTable
         return $column;
     }
 
+    /**
+     * @template T of ForeignKey
+     * @param T $foreignKey
+     * @return T
+     */
+    protected function addForeignKeyWithAdapter(ForeignKey $foreignKey): ForeignKey
+    {
+        $foreignKey->setAdapter($this->getAdapter());
+
+        $this->foreignKeys[] = $foreignKey;
+
+        return $foreignKey;
+    }
+
     protected function addColumnFromBuilders(): void
     {
         foreach ($this->columns as $column) {
             $this->addColumn($column->getName(), $column->getType(), $column->getOptions());
+        }
+
+        foreach ($this->foreignKeys as $foreignKey) {
+            $this->addForeignKey(
+                $foreignKey->getColumns(),
+                $foreignKey->getReferencedTable(),
+                $foreignKey->getReferencedColumns(),
+                $foreignKey->getOptions()
+            );
         }
     }
 }

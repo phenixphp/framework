@@ -1030,3 +1030,40 @@ it('returns new table for migrations', function (): void {
 
     expect($migration->table('users'))->toBeInstanceOf(Table::class);
 });
+
+it('can add foreign key using table methods', function (): void {
+    $table = new Table('posts', adapter: $this->mockAdapter);
+
+    $table->string('title');
+    $table->foreignKey('user_id', 'users', 'id', ['delete' => 'CASCADE']);
+
+    $columns = $table->getColumnBuilders();
+    $foreignKeys = $table->getForeignKeyBuilders();
+
+    expect(count($columns))->toBe(1);
+    expect(count($foreignKeys))->toBe(1);
+
+    $foreignKey = $foreignKeys[0];
+    expect($foreignKey->getColumns())->toBe('user_id');
+    expect($foreignKey->getReferencedTable())->toBe('users');
+    expect($foreignKey->getReferencedColumns())->toBe('id');
+    expect($foreignKey->getOptions()['delete'])->toBe('CASCADE');
+});
+
+it('can add foreign key using fluent interface', function (): void {
+    $table = new Table('posts', adapter: $this->mockAdapter);
+
+    $table->string('title');
+    $table->foreign('author_id')->references('id')->on('authors')->onDelete('SET_NULL')->constraint('fk_post_author');
+
+    $foreignKeys = $table->getForeignKeyBuilders();
+
+    expect(count($foreignKeys))->toBe(1);
+
+    $foreignKey = $foreignKeys[0];
+    expect($foreignKey->getColumns())->toBe('author_id');
+    expect($foreignKey->getReferencedTable())->toBe('authors');
+    expect($foreignKey->getReferencedColumns())->toBe('id');
+    expect($foreignKey->getOptions()['delete'])->toBe('SET_NULL');
+    expect($foreignKey->getOptions()['constraint'])->toBe('fk_post_author');
+});
