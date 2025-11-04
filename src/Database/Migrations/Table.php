@@ -36,15 +36,6 @@ class Table extends PhinxTable
         return $this->columns;
     }
 
-    public function __destruct()
-    {
-        foreach ($this->columns as $column) {
-            $this->addColumn($column->getName(), $column->getType(), $column->getOptions());
-        }
-
-        $this->save();
-    }
-
     /**
      * @template T of Column
      * @param T $column
