@@ -351,7 +351,7 @@ it('can add id column with auto increment', function (): void {
 
     $column = $table->id('user_id');
 
-    expect($column)->toBeInstanceOf(UnsignedInteger::class);
+    expect($column)->toBeInstanceOf(UnsignedBigInteger::class);
     expect($column->getName())->toBe('user_id');
     expect($column->getType())->toBe('integer');
     expect($column->getOptions())->toBe([
