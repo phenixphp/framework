@@ -28,6 +28,7 @@ use Phenix\Database\Migrations\Columns\Str;
 use Phenix\Database\Migrations\Columns\Text;
 use Phenix\Database\Migrations\Columns\Time;
 use Phenix\Database\Migrations\Columns\Timestamp;
+use Phenix\Database\Migrations\Columns\Ulid;
 use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 use Phenix\Database\Migrations\Columns\UnsignedDecimal;
 use Phenix\Database\Migrations\Columns\UnsignedFloat;
@@ -266,6 +267,21 @@ it('can add uuid column', function (): void {
     expect($column->getOptions())->toBe([
         'null' => false,
         'comment' => 'Unique identifier',
+    ]);
+});
+
+it('can add ulid column', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->ulid('ulid')->comment('ULID identifier');
+
+    expect($column)->toBeInstanceOf(Ulid::class);
+    expect($column->getName())->toBe('ulid');
+    expect($column->getType())->toBe('string');
+    expect($column->getOptions())->toBe([
+        'null' => false,
+        'limit' => 26,
+        'comment' => 'ULID identifier',
     ]);
 });
 

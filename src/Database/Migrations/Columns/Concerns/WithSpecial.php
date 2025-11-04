@@ -7,6 +7,7 @@ namespace Phenix\Database\Migrations\Columns\Concerns;
 use Phenix\Database\Migrations\Columns\Boolean;
 use Phenix\Database\Migrations\Columns\Enum;
 use Phenix\Database\Migrations\Columns\Set;
+use Phenix\Database\Migrations\Columns\Ulid;
 use Phenix\Database\Migrations\Columns\Uuid;
 
 trait WithSpecial
@@ -19,6 +20,11 @@ trait WithSpecial
     public function uuid(string $name): Uuid
     {
         return $this->addColumnWithAdapter(new Uuid($name));
+    }
+
+    public function ulid(string $name): Ulid
+    {
+        return $this->addColumnWithAdapter(new Ulid($name));
     }
 
     public function enum(string $name, array $values): Enum
