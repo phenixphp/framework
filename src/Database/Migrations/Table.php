@@ -35,7 +35,7 @@ class Table extends PhinxTable
 
     public function __destruct()
     {
-        if (!$this->executed) {
+        if (! $this->executed) {
             $this->save();
         }
     }
