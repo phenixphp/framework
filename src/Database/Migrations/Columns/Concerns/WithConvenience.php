@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Phenix\Database\Migrations\Columns\Concerns;
 
 use Phenix\Database\Migrations\Columns\Timestamp;
-use Phenix\Database\Migrations\Columns\UnsignedInteger;
+use Phenix\Database\Migrations\Columns\UnsignedBigInteger;
 
 trait WithConvenience
 {
-    public function id(string $name = 'id'): UnsignedInteger
+    public function id(string $name = 'id'): UnsignedBigInteger
     {
-        return $this->addColumnWithAdapter(new UnsignedInteger($name, null, true));
+        return $this->addColumnWithAdapter(new UnsignedBigInteger($name, true));
     }
 
     public function timestamps(bool $timezone = false): self
