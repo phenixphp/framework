@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Migrations;
 
+use Phenix\Database\Constants\ColumnAction;
+
 class ForeignKey extends TableColumn
 {
     public function __construct(
@@ -30,16 +32,16 @@ class ForeignKey extends TableColumn
         return $this->referencedColumns;
     }
 
-    public function onDelete(string $action): static
+    public function onDelete(string|ColumnAction $action): static
     {
-        $this->options['delete'] = $action;
+        $this->options['delete'] = $action instanceof ColumnAction ? $action->value : $action;
 
         return $this;
     }
 
-    public function onUpdate(string $action): static
+    public function onUpdate(string|ColumnAction $action): static
     {
-        $this->options['update'] = $action;
+        $this->options['update'] = $action instanceof ColumnAction ? $action->value : $action;
 
         return $this;
     }

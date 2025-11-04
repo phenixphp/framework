@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Constants\ColumnAction;
 use Phenix\Database\Migration;
 use Phenix\Database\Migrations\Columns\BigInteger;
 use Phenix\Database\Migrations\Columns\Binary;
@@ -1035,7 +1036,7 @@ it('can add foreign key using table methods', function (): void {
     $table = new Table('posts', adapter: $this->mockAdapter);
 
     $table->string('title');
-    $table->foreignKey('user_id', 'users', 'id', ['delete' => 'CASCADE']);
+    $table->foreignKey('user_id', 'users', 'id', ['delete' => ColumnAction::CASCADE->value]);
 
     $columns = $table->getColumnBuilders();
     $foreignKeys = $table->getForeignKeyBuilders();
@@ -1054,7 +1055,7 @@ it('can add foreign key using fluent interface', function (): void {
     $table = new Table('posts', adapter: $this->mockAdapter);
 
     $table->string('title');
-    $table->foreign('author_id')->references('id')->on('authors')->onDelete('SET_NULL')->constraint('fk_post_author');
+    $table->foreign('author_id')->references('id')->on('authors')->onDelete(ColumnAction::SET_NULL)->constraint('fk_post_author');
 
     $foreignKeys = $table->getForeignKeyBuilders();
 

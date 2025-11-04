@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Constants\ColumnAction;
 use Phenix\Database\Migrations\ForeignKey;
 use Phenix\Database\Migrations\Table;
 use Phinx\Db\Adapter\AdapterInterface;
@@ -43,7 +44,7 @@ it('can create a foreign key with multiple columns', function (): void {
     expect($foreignKey->getReferencedColumns())->toEqual(['user_id', 'role_id']);
 });
 
-it('can set delete and update actions', function (): void {
+it('can set delete and update actions with strings', function (): void {
     $foreignKey = new ForeignKey('user_id', 'users', 'id');
     $foreignKey->onDelete('CASCADE')->onUpdate('SET_NULL');
 
@@ -133,8 +134,8 @@ it('can create foreign key with multiple columns using fluent interface', functi
     $foreignKey = $table->foreign(['user_id', 'role_id'])
         ->references(['user_id', 'role_id'])
         ->on('user_roles')
-        ->onDelete('NO_ACTION')
-        ->onUpdate('NO_ACTION')
+        ->onDelete(ColumnAction::NO_ACTION)
+        ->onUpdate(ColumnAction::NO_ACTION)
         ->constraint('fk_posts_user_role');
 
     expect($foreignKey->getColumns())->toEqual(['user_id', 'role_id']);
@@ -153,4 +154,35 @@ it('sets adapter correctly when added to table', function (): void {
     $foreignKey = $table->foreignKey('user_id', 'users');
 
     expect($foreignKey->getAdapter())->not->toBeNull();
+});
+
+it('can use ColumnAction enum constants for onDelete and onUpdate', function (): void {
+    $foreignKey = new ForeignKey('user_id', 'users', 'id');
+    $foreignKey->onDelete(ColumnAction::CASCADE)->onUpdate(ColumnAction::SET_NULL);
+
+    $options = $foreignKey->getOptions();
+    expect($options['delete'])->toEqual('CASCADE');
+    expect($options['update'])->toEqual('SET_NULL');
+});
+
+it('can use mixed string and ColumnAction enum parameters', function (): void {
+    $foreignKey = new ForeignKey('user_id', 'users', 'id');
+    $foreignKey->onDelete('RESTRICT')->onUpdate(ColumnAction::NO_ACTION);
+
+    $options = $foreignKey->getOptions();
+    expect($options['delete'])->toEqual('RESTRICT');
+    expect($options['update'])->toEqual('NO_ACTION');
+});
+
+it('can use ColumnAction enum in fluent interface', function (): void {
+    $table = new Table('posts', adapter: $this->mockAdapter);
+
+    $foreignKey = $table->foreign('user_id')
+        ->references('id')
+        ->on('users')
+        ->onDelete(ColumnAction::CASCADE)
+        ->onUpdate(ColumnAction::RESTRICT);
+
+    expect($foreignKey->getOptions()['delete'])->toEqual('CASCADE');
+    expect($foreignKey->getOptions()['update'])->toEqual('RESTRICT');
 });
