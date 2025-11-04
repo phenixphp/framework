@@ -16,6 +16,13 @@ abstract class TableColumn
 
     protected AdapterInterface|null $adapter = null;
 
+    public function nullable(): static
+    {
+        $this->options['null'] = true;
+
+        return $this;
+    }
+
     public function getOptions(): array
     {
         return $this->options;

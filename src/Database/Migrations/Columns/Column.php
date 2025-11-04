@@ -22,13 +22,6 @@ abstract class Column extends TableColumn
 
     abstract public function getType(): string;
 
-    public function nullable(): static
-    {
-        $this->options['null'] = true;
-
-        return $this;
-    }
-
     public function comment(string $comment): static
     {
         $this->options['comment'] = $comment;
