@@ -22,14 +22,11 @@ class EventServiceProvider extends ServiceProvider
         return in_array($id, $this->provides);
     }
 
-    public function register(): void
+    public function boot(): void
     {
         $this->getContainer()->addShared(EventEmitter::class, EventEmitter::class);
         $this->getContainer()->add(EventEmitterContract::class, EventEmitter::class);
-    }
 
-    public function boot(): void
-    {
         $this->commands([
             MakeEvent::class,
             MakeListener::class,
