@@ -13,6 +13,7 @@ use Phenix\Facades\Event;
 use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
 use Phenix\Facades\View;
+use Phenix\Testing\Concerns\InteractWithDatabase;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -22,6 +23,7 @@ use function in_array;
 abstract class TestCase extends AsyncTestCase
 {
     use InteractWithResponses;
+    use InteractWithDatabase;
 
     protected ?AppProxy $app;
     protected string $appDir;
