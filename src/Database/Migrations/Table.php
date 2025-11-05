@@ -112,6 +112,11 @@ class Table extends PhinxTable
         return $foreignKey;
     }
 
+    public function getUniqueColumns(): array
+    {
+        return array_filter($this->columns, fn ($column): bool => $column->isUnique());
+    }
+
     protected function addColumnFromBuilders(): void
     {
         foreach ($this->columns as $column) {
@@ -126,5 +131,10 @@ class Table extends PhinxTable
                 $foreignKey->getOptions()
             );
         }
+
+        foreach ($this->getUniqueColumns() as $column) {
+            $this->addIndex([$column->getName()], ['unique' => true]);
+        }
+
     }
 }

@@ -9,6 +9,8 @@ use Phinx\Db\Adapter\MysqlAdapter;
 
 abstract class Column extends TableColumn
 {
+    protected bool $isUnique = false;
+
     public function __construct(
         protected string $name
     ) {
@@ -27,6 +29,11 @@ abstract class Column extends TableColumn
         $this->options['comment'] = $comment;
 
         return $this;
+    }
+
+    public function isUnique(): bool
+    {
+        return $this->isUnique;
     }
 
     public function after(string $column): static
@@ -87,6 +94,13 @@ abstract class Column extends TableColumn
     public function limit(int $limit): static
     {
         $this->options['limit'] = $limit;
+
+        return $this;
+    }
+
+    public function unique(): static
+    {
+        $this->isUnique = true;
 
         return $this;
     }
