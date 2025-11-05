@@ -1068,3 +1068,76 @@ it('can add foreign key using fluent interface', function (): void {
     expect($foreignKey->getOptions()['delete'])->toBe('SET_NULL');
     expect($foreignKey->getOptions()['constraint'])->toBe('fk_post_author');
 });
+
+it('can mark a column as unique', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $column = $table->string('email')->unique();
+
+    expect($column->isUnique())->toBeTrue();
+
+    $uniqueColumns = $table->getUniqueColumns();
+
+    expect(count($uniqueColumns))->toBe(1);
+    expect($uniqueColumns[0]->getName())->toBe('email');
+});
+
+it('can mark multiple columns as unique', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $table->string('username')->unique();
+    $table->string('email')->unique();
+    $table->integer('user_id')->unique();
+
+    $uniqueColumns = $table->getUniqueColumns();
+
+    expect(count($uniqueColumns))->toBe(3);
+
+    $columnNames = array_map(fn ($column) => $column->getName(), $uniqueColumns);
+
+    expect($columnNames)->toContain('username');
+    expect($columnNames)->toContain('email');
+    expect($columnNames)->toContain('user_id');
+});
+
+it('can identify non-unique columns', function (): void {
+    $table = new Table('users', adapter: $this->mockAdapter);
+
+    $uniqueColumn = $table->string('email')->unique();
+    $regularColumn = $table->string('name');
+
+    expect($uniqueColumn->isUnique())->toBeTrue();
+    expect($regularColumn->isUnique())->toBeFalse();
+
+    $uniqueColumns = $table->getUniqueColumns();
+
+    expect(count($uniqueColumns))->toBe(1);
+    expect($uniqueColumns[0]->getName())->toBe('email');
+});
+
+it('creates unique indexes when building columns', function (): void {
+    $table = $this->getMockBuilder(Table::class)
+        ->setConstructorArgs(['users', [], $this->mockAdapter])
+        ->onlyMethods(['addIndex', 'addColumn'])
+        ->getMock();
+
+    $table->expects($this->exactly(3))
+        ->method('addColumn')
+        ->willReturn($table);
+
+    $table->expects($this->exactly(2))
+        ->method('addIndex')
+        ->withConsecutive(
+            [['username'], ['unique' => true]],
+            [['email'], ['unique' => true]]
+        );
+
+    $table->string('username')->unique();
+    $table->string('email')->unique();
+    $table->string('name');
+
+    $reflection = new ReflectionClass($table);
+    $method = $reflection->getMethod('addColumnFromBuilders');
+    $method->setAccessible(true);
+    $method->invoke($table);
+});
