@@ -7,9 +7,9 @@ namespace Tests;
 use Amp\Cancellation;
 use Amp\Sync\Channel;
 use Closure;
-use Phenix\Testing\TestCase as TestingTestCase;
+use Phenix\Testing\TestCase as BaseTestCase;
 
-class TestCase extends TestingTestCase
+class TestCase extends BaseTestCase
 {
     protected function getAppDir(): string
     {
