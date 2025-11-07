@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\App;
+use Phenix\Facades\Config;
 use Phenix\Facades\Log;
 use Phenix\Facades\Translator;
 use Phenix\Http\Response;
@@ -37,6 +38,13 @@ if (! function_exists('env')) {
         }
 
         return $default instanceof Closure ? $default() : $default;
+    }
+}
+
+if (! function_exists('config')) {
+    function config(string $key, mixed $default = null): mixed
+    {
+        return Config::get($key, $default);
     }
 }
 
