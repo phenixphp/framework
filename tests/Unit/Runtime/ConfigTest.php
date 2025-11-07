@@ -18,3 +18,9 @@ it('can set environment configurations successfully', function () {
 
     expect($config->get('app.name'))->toBe('PHPhenix');
 });
+
+it('retrieve configurations from global config helper function', function (): void {
+    config('app.name', 'DefaultApp');
+
+    expect(config('app.name'))->toBe('Phenix');
+});
