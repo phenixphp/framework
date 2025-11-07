@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+/.github export-ignore
+/tests export-ignore
+CHANGELOG.md export-ignore
+phpstan.neon export-ignore
+phpstan-baseline.neon export-ignore
+phpunit.xml.dist export-ignore
+rector.php export-ignore
+sonar-project.properties export-ignore
