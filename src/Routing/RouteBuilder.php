@@ -9,6 +9,8 @@ use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Requests\ClosureRequestHandler;
 
+use function is_string;
+
 class RouteBuilder implements Arrayable
 {
     protected string|null $baseName = null;
@@ -47,7 +49,7 @@ class RouteBuilder implements Arrayable
     public function middleware(array|string $middleware): self
     {
         foreach ((array) $middleware as $item) {
-            $this->pushMiddleware(new $item());
+            $this->pushMiddleware(is_string($item) ? new $item() : $item);
         }
 
         return $this;
