@@ -33,3 +33,36 @@ it('checks if string ends with a suffix', function () {
     expect($string)->toBe('Hello World');
     expect(Str::finish('Hello', ' World'))->toBe('Hello World');
 });
+
+it('generates random string with default length', function (): void {
+    $random = Str::random();
+
+    expect(strlen($random))->toBe(16);
+});
+
+it('generates random string with custom length', function (): void {
+    $length = 32;
+    $random = Str::random($length);
+
+    expect(strlen($random))->toBe($length);
+});
+
+it('generates different random strings', function (): void {
+    $random1 = Str::random(20);
+    $random2 = Str::random(20);
+
+    expect($random1 === $random2)->toBeFalse();
+});
+
+it('generates random string with only allowed characters', function (): void {
+    $random = Str::random(100);
+
+    expect(preg_match('/^[a-zA-Z0-9]+$/', $random))->toBe(1);
+});
+
+it('generates single character string', function (): void {
+    $random = Str::random(1);
+
+    expect(strlen($random))->toBe(1);
+    expect(preg_match('/^[a-zA-Z0-9]$/', $random))->toBe(1);
+});

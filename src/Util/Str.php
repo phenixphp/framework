@@ -63,4 +63,25 @@ class Str extends Utility
 
         return strtolower(preg_replace('/[\s]/u', $separator, $value));
     }
+
+    public static function random(int $length = 16): string
+    {
+        $length = abs($length);
+
+        if ($length < 1) {
+            $length = 16;
+        }
+
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $charactersLength = strlen($characters);
+        $result = '';
+
+        $randomBytes = random_bytes($length);
+
+        for ($i = 0; $i < $length; $i++) {
+            $result .= $characters[ord($randomBytes[$i]) % $charactersLength];
+        }
+
+        return $result;
+    }
 }
