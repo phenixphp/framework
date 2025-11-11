@@ -14,7 +14,7 @@ use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Unit\Routing\AcceptJsonResponses;
 
-afterEach(function () {
+afterEach(function (): void {
     $this->app->stop();
 });
 
