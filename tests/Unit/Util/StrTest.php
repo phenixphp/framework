@@ -66,3 +66,9 @@ it('generates single character string', function (): void {
     expect(strlen($random))->toBe(1);
     expect(preg_match('/^[a-zA-Z0-9]$/', $random))->toBe(1);
 });
+
+it('generates default length string when length is zero', function (): void {
+    $random = Str::random(0);
+
+    expect(strlen($random))->toBe(16);
+});
