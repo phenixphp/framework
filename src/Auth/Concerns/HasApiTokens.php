@@ -30,8 +30,8 @@ trait HasApiTokens
         $model = new (config('auth.tokens.model'));
 
         return $model::query()
-            ->where('tokenable_type', static::class)
-            ->where('tokenable_id', $this->getKey());
+            ->whereEqual('tokenable_type', static::class)
+            ->whereEqual('tokenable_id', $this->getKey());
     }
 
     public function createToken(string $name, array $abilities = ['*'], Date|null $expiresAt = null): AuthenticationToken
