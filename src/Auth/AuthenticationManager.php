@@ -39,6 +39,7 @@ class AuthenticationManager
         $accessToken->lastUsedAt = Date::now();
         $accessToken->save();
 
+        /** @var class-string<User> $userModel */
         $userModel = Config::get('auth.users.model', User::class);
 
         /** @var User|null $user */
