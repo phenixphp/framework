@@ -32,6 +32,13 @@ trait InteractWithHeaders
         return $this;
     }
 
+    public function assertHeaderIsMissing(string $name): self
+    {
+        Assert::assertNull($this->response->getHeader($name));
+
+        return $this;
+    }
+
     public function assertIsJson(): self
     {
         $contentType = $this->response->getHeader('content-type');
