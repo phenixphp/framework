@@ -158,3 +158,68 @@ it('denies when user is not found', function (): void {
         'Authorization' => 'Bearer ' . $authToken->toString(),
     ])->assertUnauthorized();
 });
+
+it('check user can query tokens', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $userData = [
+        [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->createdAt->toDateTimeString(),
+        ],
+    ];
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', 'valid-token'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $tokenResult = new Result([['Query OK']]);
+    $tokenResult->setLastInsertedId($tokenData[0]['id']);
+
+    $connection->expects($this->exactly(5))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($tokenResult), // Create token
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])), // Save last used at update for token
+            new Statement(new Result($userData)),
+            new Statement(new Result($tokenData)), // Query tokens
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $authToken = $user->createToken('api-token');
+
+    Route::get('/tokens', function (Request $request): Response {
+        return response()->json($request->user()->tokens()->get());
+    })->middleware(Authenticated::class);
+
+    $this->app->run();
+
+    $this->get('/tokens', headers: [
+        'Authorization' => 'Bearer ' . $authToken->toString(),
+    ])
+        ->assertOk()
+        ->assertJsonFragment([
+            'name' => 'api-token',
+            'tokenableType' => $user::class,
+            'tokenableId' => $user->id,
+        ]);
+});
