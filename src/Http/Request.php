@@ -13,7 +13,9 @@ use Amp\Http\Server\Router;
 use Amp\Http\Server\Session\Session as ServerSession;
 use Amp\Http\Server\Trailers;
 use League\Uri\Components\Query;
+use Phenix\Auth\User;
 use Phenix\Contracts\Arrayable;
+use Phenix\Facades\Config;
 use Phenix\Http\Constants\ContentType;
 use Phenix\Http\Constants\RequestMode;
 use Phenix\Http\Contracts\BodyParser;
@@ -33,12 +35,16 @@ class Request implements Arrayable
     use HasQueryParameters;
 
     protected readonly BodyParser $body;
+
     protected readonly Query $query;
+
     protected readonly RouteAttributes|null $attributes;
+
     protected Session|null $session;
 
-    public function __construct(protected ServerRequest $request)
-    {
+    public function __construct(
+        protected ServerRequest $request
+    ) {
         $attributes = [];
         $this->session = null;
 
@@ -53,6 +59,25 @@ class Request implements Arrayable
         $this->query = Query::fromUri($request->getUri());
         $this->attributes = new RouteAttributes($attributes);
         $this->body = $this->getParser();
+    }
+
+    public function user(): User|null
+    {
+        if ($this->request->hasAttribute(Config::get('auth.users.model', User::class))) {
+            return $this->request->getAttribute(Config::get('auth.users.model', User::class));
+        }
+
+        return null;
+    }
+
+    public function setUser(User $user): void
+    {
+        $this->request->setAttribute(Config::get('auth.users.model', User::class), $user);
+    }
+
+    public function hasUser(): bool
+    {
+        return $this->user() !== null;
     }
 
     public function getClient(): Client
