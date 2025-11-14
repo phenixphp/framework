@@ -110,3 +110,51 @@ it('denies access with invalid token', function (): void {
         ->assertUnauthorized()
         ->assertJsonFragment(['message' => 'Unauthorized']);
 });
+
+it('denies when user is not found', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', 'valid-token'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $tokenResult = new Result([['Query OK']]);
+    $tokenResult->setLastInsertedId($tokenData[0]['id']);
+
+    $connection->expects($this->exactly(4))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($tokenResult), // Create token
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])), // Save last used at update for token
+            new Statement(new Result()),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $authToken = $user->createToken('api-token');
+
+    Route::get('/profile', fn (Request $request): Response => response()->plain('Never reached'))
+        ->middleware(Authenticated::class);
+
+    $this->app->run();
+
+    $this->get('/profile', headers: [
+        'Authorization' => 'Bearer ' . $authToken->toString(),
+    ])->assertUnauthorized();
+});
