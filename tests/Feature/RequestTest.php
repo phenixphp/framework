@@ -118,7 +118,7 @@ it('responds with a view', function (): void {
     $response = $this->get('/users');
 
     $response->assertOk()
-        ->assertHeaderContains(['Content-Type' => 'text/html; charset=utf-8'])
+        ->assertHeaders(['Content-Type' => 'text/html; charset=utf-8'])
         ->assertBodyContains('<body>')
         ->assertBodyContains('User index');
 });

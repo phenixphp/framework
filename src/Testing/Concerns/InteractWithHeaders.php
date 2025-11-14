@@ -20,10 +20,8 @@ trait InteractWithHeaders
         return $this->response->getHeader($name);
     }
 
-    public function assertHeaderContains(array $needles): self
+    public function assertHeaders(array $needles): self
     {
-        $needles = (array) $needles;
-
         foreach ($needles as $header => $value) {
             Assert::assertNotNull($this->response->getHeader($header));
             Assert::assertEquals($value, $this->response->getHeader($header));
