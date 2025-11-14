@@ -38,18 +38,18 @@ class Request implements Arrayable
 
     protected readonly Query $query;
 
-    protected readonly RouteAttributes|null $attributes;
+    protected readonly RouteAttributes|null $routeAttributes;
 
     protected Session|null $session;
 
     public function __construct(
         protected ServerRequest $request
     ) {
-        $attributes = [];
+        $routeAttributes = [];
         $this->session = null;
 
         if ($request->hasAttribute(Router::class)) {
-            $attributes = $request->getAttribute(Router::class);
+            $routeAttributes = $request->getAttribute(Router::class);
         }
 
         if ($request->hasAttribute(ServerSession::class)) {
@@ -57,7 +57,7 @@ class Request implements Arrayable
         }
 
         $this->query = Query::fromUri($request->getUri());
-        $this->attributes = new RouteAttributes($attributes);
+        $this->routeAttributes = new RouteAttributes($routeAttributes);
         $this->body = $this->getParser();
     }
 
@@ -133,10 +133,10 @@ class Request implements Arrayable
     public function route(string|null $key = null, string|int|null $default = null): RouteAttributes|string|int|null
     {
         if ($key) {
-            return $this->attributes->get($key, $default);
+            return $this->routeAttributes->get($key, $default);
         }
 
-        return $this->attributes;
+        return $this->routeAttributes;
     }
 
     public function query(string|null $key = null, array|string|int|null $default = null): Query|array|string|null
