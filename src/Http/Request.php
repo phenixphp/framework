@@ -13,15 +13,14 @@ use Amp\Http\Server\Router;
 use Amp\Http\Server\Session\Session as ServerSession;
 use Amp\Http\Server\Trailers;
 use League\Uri\Components\Query;
-use Phenix\Auth\User;
 use Phenix\Contracts\Arrayable;
-use Phenix\Facades\Config;
 use Phenix\Http\Constants\ContentType;
 use Phenix\Http\Constants\RequestMode;
 use Phenix\Http\Contracts\BodyParser;
 use Phenix\Http\Requests\Concerns\HasCookies;
 use Phenix\Http\Requests\Concerns\HasHeaders;
 use Phenix\Http\Requests\Concerns\HasQueryParameters;
+use Phenix\Http\Requests\Concerns\HasUser;
 use Phenix\Http\Requests\FormParser;
 use Phenix\Http\Requests\JsonParser;
 use Phenix\Http\Requests\RouteAttributes;
@@ -30,6 +29,7 @@ use Psr\Http\Message\UriInterface;
 
 class Request implements Arrayable
 {
+    use HasUser;
     use HasHeaders;
     use HasCookies;
     use HasQueryParameters;
@@ -59,25 +59,6 @@ class Request implements Arrayable
         $this->query = Query::fromUri($request->getUri());
         $this->routeAttributes = new RouteAttributes($routeAttributes);
         $this->body = $this->getParser();
-    }
-
-    public function user(): User|null
-    {
-        if ($this->request->hasAttribute(Config::get('auth.users.model', User::class))) {
-            return $this->request->getAttribute(Config::get('auth.users.model', User::class));
-        }
-
-        return null;
-    }
-
-    public function setUser(User $user): void
-    {
-        $this->request->setAttribute(Config::get('auth.users.model', User::class), $user);
-    }
-
-    public function hasUser(): bool
-    {
-        return $this->user() !== null;
     }
 
     public function getClient(): Client
