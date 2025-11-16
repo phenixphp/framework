@@ -37,7 +37,7 @@ trait HasApiTokens
     public function createToken(string $name, array $abilities = ['*'], Date|null $expiresAt = null): AuthenticationToken
     {
         $plainTextToken = $this->generateTokenValue();
-        $expiresAt ??= Date::now()->addMinutes(config('auth.tokens.expiration', 60 * 6));
+        $expiresAt ??= Date::now()->addMinutes(config('auth.tokens.expiration', 60 * 12));
 
         $token = $this->token();
         $token->name = $name;
