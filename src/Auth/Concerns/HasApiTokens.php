@@ -54,7 +54,7 @@ trait HasApiTokens
 
     public function generateTokenValue(): string
     {
-        $tokenEntropy = Str::random(40);
+        $tokenEntropy = Str::random(64);
 
         return sprintf(
             '%s%s%s',
