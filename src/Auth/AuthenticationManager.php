@@ -28,8 +28,7 @@ class AuthenticationManager
         /** @var PersonalAccessToken|null $accessToken */
         $accessToken = PersonalAccessToken::query()
             ->whereEqual('token', $hashedToken)
-            ->whereNull('expires_at')
-            ->orWhereGreaterThan('expires_at', Date::now()->toDateTimeString())
+            ->whereGreaterThan('expires_at', Date::now()->toDateTimeString())
             ->first();
 
         if (! $accessToken) {

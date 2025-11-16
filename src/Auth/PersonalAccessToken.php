@@ -36,7 +36,7 @@ class PersonalAccessToken extends DatabaseModel
     public Date|null $lastUsedAt = null;
 
     #[DateTime(name: 'expires_at')]
-    public Date|null $expiresAt = null;
+    public Date $expiresAt;
 
     #[DateTime(name: 'created_at', autoInit: true)]
     public Date $createdAt;
