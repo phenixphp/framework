@@ -8,6 +8,14 @@ use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Uid\UuidV4;
 
+use function ord;
+use function preg_replace;
+use function random_bytes;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function strtolower;
+
 class Str extends Utility
 {
     public static function snake(string $value): string
