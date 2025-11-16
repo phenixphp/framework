@@ -9,7 +9,7 @@ return [
     'tokens' => [
         'model' => Phenix\Auth\PersonalAccessToken::class,
         'prefix' => '',
-        'expiration' => 60 * 6, // in minutes
+        'expiration' => 60 * 12, // in minutes
     ],
     'otp' => [
         'expiration' => 10, // in minutes
