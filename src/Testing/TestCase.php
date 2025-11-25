@@ -8,7 +8,9 @@ use Amp\PHPUnit\AsyncTestCase;
 use Phenix\App;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
+use Phenix\Cache\Constants\Store;
 use Phenix\Console\Phenix;
+use Phenix\Facades\Cache;
 use Phenix\Facades\Event;
 use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
@@ -55,6 +57,10 @@ abstract class TestCase extends AsyncTestCase
         Event::resetFaking();
         Queue::resetFaking();
         Mail::resetSendingLog();
+
+        if (config('cache.default') !== Store::REDIS->value) {
+            Cache::clear();
+        }
 
         $this->app = null;
     }
