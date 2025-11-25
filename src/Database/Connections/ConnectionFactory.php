@@ -15,6 +15,7 @@ use Phenix\Database\Constants\Driver;
 use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
+use function sprintf;
 
 class ConnectionFactory
 {
