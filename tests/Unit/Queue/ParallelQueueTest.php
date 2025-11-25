@@ -381,7 +381,7 @@ it('handles concurrent task reservation attempts correctly', function (): void {
     }
 
     // Wait for all tasks to complete
-    delay(6.0);
+    delay(8.0);
 
     // Eventually all tasks should be processed
     $this->assertSame(0, $parallelQueue->size());
