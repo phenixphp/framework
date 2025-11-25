@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Phenix\Cache\Stores;
 
 use Closure;
-use Phenix\Cache\Contracts\CacheStore;
+use Phenix\Cache\CacheStore;
 use Phenix\Redis\Contracts\Client;
 use Phenix\Util\Date;
 
-class RedisStore implements CacheStore
+class RedisStore extends CacheStore
 {
     public function __construct(
         protected Client $client,

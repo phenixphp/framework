@@ -6,10 +6,10 @@ namespace Phenix\Cache\Stores;
 
 use Amp\Cache\LocalCache;
 use Closure;
-use Phenix\Cache\Contracts\CacheStore;
+use Phenix\Cache\CacheStore;
 use Phenix\Util\Date;
 
-class LocalStore implements CacheStore
+class LocalStore extends CacheStore
 {
     public function __construct(
         protected LocalCache $cache,
@@ -41,36 +41,6 @@ class LocalStore implements CacheStore
     public function forever(string $key, mixed $value): void
     {
         $this->cache->set($key, $value, null);
-    }
-
-    public function remember(string $key, Date $ttl, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->set($key, $value, $ttl);
-
-        return $value;
-    }
-
-    public function rememberForever(string $key, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->forever($key, $value);
-
-        return $value;
     }
 
     public function has(string $key): bool

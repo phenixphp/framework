@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Phenix\Cache\Stores;
 
 use Closure;
-use Phenix\Cache\Contracts\CacheStore;
+use Phenix\Cache\CacheStore;
 use Phenix\Facades\File;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 
 use function is_array;
 
-class FileStore implements CacheStore
+class FileStore extends CacheStore
 {
     public function __construct(
         protected string $path,
@@ -69,36 +69,6 @@ class FileStore implements CacheStore
         ];
 
         File::put($this->filename($key), json_encode($payload, JSON_THROW_ON_ERROR));
-    }
-
-    public function remember(string $key, Date $ttl, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->set($key, $value, $ttl);
-
-        return $value;
-    }
-
-    public function rememberForever(string $key, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->forever($key, $value);
-
-        return $value;
     }
 
     public function has(string $key): bool
