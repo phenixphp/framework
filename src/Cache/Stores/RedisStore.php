@@ -44,36 +44,6 @@ class RedisStore extends CacheStore
         $this->client->execute('SET', $this->getPrefixedKey($key), $value);
     }
 
-    public function remember(string $key, Date $ttl, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->set($key, $value, $ttl);
-
-        return $value;
-    }
-
-    public function rememberForever(string $key, Closure $callback): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-
-        $this->forever($key, $value);
-
-        return $value;
-    }
-
     public function has(string $key): bool
     {
         return $this->client->execute('EXISTS', $this->getPrefixedKey($key)) === 1;
