@@ -59,3 +59,19 @@ it('changes the redis connection using facade', function (): void {
 
     Redis::connection('default')->execute('PING');
 });
+
+it('invokes magic __call method to delegate to underlying redis client', function (): void {
+    $linkMock = $this->getMockBuilder(RedisLink::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $linkMock->expects($this->once())
+        ->method('execute')
+        ->with('get', ['test-key'])
+        ->willReturn($this->createMock(RedisResponse::class));
+
+    $redis = new RedisClient($linkMock);
+    $client = new ClientWrapper($redis);
+
+    $client->get('test-key');
+});
