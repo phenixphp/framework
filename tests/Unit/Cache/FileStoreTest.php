@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Cache\Constants\Store;
 use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
+use Phenix\Facades\File;
 use Phenix\Util\Date;
 
 use function Amp\delay;
@@ -137,4 +138,49 @@ it('remembers forever when cache exists', function (): void {
 
     expect($value)->toBe('existing_value');
     expect($callCount)->toBe(0);
+});
+
+it('tries to get expired cache and callback', function (): void {
+    Cache::set('short_lived', 'to_expire', Date::now()->addSeconds(1));
+
+    delay(2);
+
+    $callCount = 0;
+
+    $value = Cache::get('short_lived', function () use (&$callCount): string {
+        $callCount++;
+
+        return 'refreshed_value';
+    });
+
+    expect($value)->toBe('refreshed_value');
+    expect($callCount)->toBe(1);
+});
+
+it('handles corrupted cache file gracefully', function (): void {
+    $cachePath = Config::get('cache.stores.file.path');
+    $filename = "{$cachePath}/corrupted.cache";
+
+    File::put($filename, 'not a valid json');
+
+    $callCount = 0;
+
+    $value = Cache::get('corrupted', function () use (&$callCount): string {
+        $callCount++;
+
+        return 'fixed_value';
+    });
+
+    expect($value)->toBe('fixed_value');
+    expect($callCount)->toBe(1);
+    expect(Cache::has('corrupted'))->toBeTrue();
+});
+
+it('handles corrupted trying to check cache exists', function (): void {
+    $cachePath = Config::get('cache.stores.file.path');
+    $filename = "{$cachePath}/corrupted.cache";
+
+    File::put($filename, 'not a valid json');
+
+    expect(Cache::has('corrupted'))->toBeFalse();
 });
