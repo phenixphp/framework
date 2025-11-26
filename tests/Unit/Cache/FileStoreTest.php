@@ -161,7 +161,7 @@ it('handles corrupted cache file gracefully', function (): void {
     $cachePath = Config::get('cache.stores.file.path');
     $prefix = Config::get('cache.prefix');
 
-    $filename = $cachePath . DIRECTORY_SEPARATOR . sha1( "{$prefix}corrupted") . '.cache';
+    $filename = $cachePath . DIRECTORY_SEPARATOR . sha1("{$prefix}corrupted") . '.cache';
 
     File::put($filename, 'not a valid json');
 
@@ -182,7 +182,7 @@ it('handles corrupted trying to check cache exists', function (): void {
     $cachePath = Config::get('cache.stores.file.path');
     $prefix = Config::get('cache.prefix');
 
-    $filename = $cachePath . DIRECTORY_SEPARATOR . sha1( "{$prefix}corrupted") . '.cache';
+    $filename = $cachePath . DIRECTORY_SEPARATOR . sha1("{$prefix}corrupted") . '.cache';
 
     File::put($filename, 'not a valid json');
 
