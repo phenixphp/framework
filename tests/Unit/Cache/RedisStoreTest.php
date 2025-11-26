@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Phenix\Cache\Constants\Store;
+use Phenix\Database\Constants\Connection;
 use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
-use Phenix\Redis\Client;
-use Phenix\Redis\Contracts\Client as ClientContract;
+use Phenix\Redis\ClientWrapper;
 use Phenix\Util\Date;
 
 beforeEach(function (): void {
@@ -16,7 +16,7 @@ beforeEach(function (): void {
 });
 
 it('stores and retrieves a value', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -44,7 +44,7 @@ it('stores and retrieves a value', function (): void {
             1
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::set('test_key', 'test_value');
 
@@ -55,7 +55,7 @@ it('stores and retrieves a value', function (): void {
 });
 
 it('computes value via callback on miss', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -78,7 +78,7 @@ it('computes value via callback on miss', function (): void {
             null
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     $value = Cache::get('beta', static fn (): string => 'generated');
 
@@ -86,7 +86,7 @@ it('computes value via callback on miss', function (): void {
 });
 
 it('expires values using ttl', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -116,7 +116,7 @@ it('expires values using ttl', function (): void {
             null
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::set('temp', 'soon-gone', Date::now()->addSeconds(1));
 
@@ -127,7 +127,7 @@ it('expires values using ttl', function (): void {
 });
 
 it('deletes single value', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -155,7 +155,7 @@ it('deletes single value', function (): void {
             0
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::set('gamma', 42);
     Cache::delete('gamma');
@@ -164,7 +164,7 @@ it('deletes single value', function (): void {
 });
 
 it('clears all values', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -206,7 +206,7 @@ it('clears all values', function (): void {
             return null;
         });
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::set('a', 1);
     Cache::set('b', 2);
@@ -217,7 +217,7 @@ it('clears all values', function (): void {
 });
 
 it('stores forever without expiration', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -239,7 +239,7 @@ it('stores forever without expiration', function (): void {
             'always'
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::forever('perm', 'always');
 
@@ -249,7 +249,7 @@ it('stores forever without expiration', function (): void {
 });
 
 it('stores with default ttl', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -265,7 +265,7 @@ it('stores with default ttl', function (): void {
         )
         ->willReturn(null);
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     Cache::set('delta', 'value');
 });
@@ -282,7 +282,7 @@ it('mocks cache facade methods', function (): void {
 });
 
 it('remembers value when cache is empty', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -310,7 +310,7 @@ it('remembers value when cache is empty', function (): void {
             1
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     $callCount = 0;
 
@@ -326,7 +326,7 @@ it('remembers value when cache is empty', function (): void {
 });
 
 it('remembers value when cache exists', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -338,7 +338,7 @@ it('remembers value when cache exists', function (): void {
         )
         ->willReturn('cached_value');
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     $callCount = 0;
 
@@ -353,7 +353,7 @@ it('remembers value when cache exists', function (): void {
 });
 
 it('remembers forever when cache is empty', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -380,7 +380,7 @@ it('remembers forever when cache is empty', function (): void {
             1
         );
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     $callCount = 0;
 
@@ -396,7 +396,7 @@ it('remembers forever when cache is empty', function (): void {
 });
 
 it('remembers forever when cache exists', function (): void {
-    $client = $this->getMockBuilder(Client::class)
+    $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -408,7 +408,7 @@ it('remembers forever when cache exists', function (): void {
         )
         ->willReturn('existing_value');
 
-    $this->app->swap(ClientContract::class, $client);
+    $this->app->swap(Connection::redis('default'), $client);
 
     $callCount = 0;
 

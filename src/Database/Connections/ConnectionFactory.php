@@ -8,10 +8,10 @@ use Amp\Mysql\MysqlConfig;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
-use Amp\Redis\RedisClient;
 use Closure;
 use InvalidArgumentException;
 use Phenix\Database\Constants\Driver;
+use Phenix\Redis\ClientWrapper;
 use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
@@ -65,7 +65,7 @@ class ConnectionFactory
 
     private static function createRedisConnection(#[SensitiveParameter] array $settings): Closure
     {
-        return static function () use ($settings): RedisClient {
+        return static function () use ($settings): ClientWrapper {
             $auth = $settings['username'] && $settings['password']
                 ? sprintf('%s:%s@', $settings['username'], $settings['password'])
                 : '';
@@ -79,7 +79,7 @@ class ConnectionFactory
                 (int) $settings['database'] ?: 0
             );
 
-            return createRedisClient($uri);
+            return new ClientWrapper(createRedisClient($uri));
         };
     }
 }

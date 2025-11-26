@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Amp\Redis\Connection\RedisLink;
 use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\RedisClient;
-use Phenix\Redis\Client;
+use Phenix\Redis\ClientWrapper;
 
 it('executes a Redis command', function (): void {
     $linkMock = $this->getMockBuilder(RedisLink::class)
@@ -19,6 +19,6 @@ it('executes a Redis command', function (): void {
 
     $redis = new RedisClient($linkMock);
 
-    $client = new Client($redis);
+    $client = new ClientWrapper($redis);
     $client->execute('PING');
 });

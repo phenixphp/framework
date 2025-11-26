@@ -21,8 +21,10 @@ class RedisServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->bind(ClientContract::class, fn (): ClientContract => new Client(
-            $this->getContainer()->get(Connection::redis('default'))
-        ))->setShared(true);
+        $this->bind(
+            ClientContract::class,
+            fn (): ClientContract => $this->getContainer()
+                ->get(Connection::redis('default'))
+        );
     }
 }

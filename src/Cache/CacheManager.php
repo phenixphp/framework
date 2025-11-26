@@ -12,7 +12,8 @@ use Phenix\Cache\Contracts\CacheStore;
 use Phenix\Cache\Stores\FileStore;
 use Phenix\Cache\Stores\LocalStore;
 use Phenix\Cache\Stores\RedisStore;
-use Phenix\Redis\Contracts\Client;
+use Phenix\Database\Constants\Connection;
+use Phenix\Redis\ClientWrapper;
 use Phenix\Util\Date;
 
 class CacheManager
@@ -111,10 +112,12 @@ class CacheManager
 
     protected function createRedisStore(): CacheStore
     {
-        // TODO: Which Redis connection to use?
         $storeConfig = $this->config->getStore(Store::REDIS->value);
         $defaultTtl = $storeConfig['ttl'] ?? $this->config->defaultTtlMinutes();
 
-        return new RedisStore(App::make(Client::class), $this->config->prefix(), (int) $defaultTtl);
+        /** @var ClientWrapper $client */
+        $client = App::make(Connection::redis($this->config->getConnection()));
+
+        return new RedisStore($client, $this->config->prefix(), (int) $defaultTtl);
     }
 }
