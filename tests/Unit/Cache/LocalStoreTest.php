@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Phenix\Facades\Cache;
 use Phenix\Util\Date;
 
+use function Amp\delay;
+
 it('stores and retrieves a value', function (): void {
     Cache::set('test_key', 'test_value');
 
@@ -19,7 +21,7 @@ it('stores value with custom ttl', function (): void {
 
     expect(Cache::has('temp_key'))->toBeTrue();
 
-    usleep(3_000_000);
+    delay(3);
 
     expect(Cache::has('temp_key'))->toBeFalse();
 });
@@ -82,7 +84,7 @@ it('remembers forever when cache is empty', function (): void {
     expect($callCount)->toBe(1);
     expect(Cache::has('forever_key'))->toBeTrue();
 
-    usleep(500_000);
+    delay(0.5);
 
     expect(Cache::get('forever_key'))->toBe('forever_value');
 });

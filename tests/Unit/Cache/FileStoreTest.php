@@ -7,6 +7,8 @@ use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
 use Phenix\Util\Date;
 
+use function Amp\delay;
+
 beforeEach(function (): void {
     Config::set('cache.default', Store::FILE->value);
 
@@ -30,7 +32,7 @@ it('computes value via callback on miss', function (): void {
 it('expires values using ttl', function (): void {
     Cache::set('temp', 'soon-gone', Date::now()->addSeconds(1));
 
-    usleep(2_000_000);
+    delay(2);
 
     expect(Cache::has('temp'))->toBeFalse();
     expect(Cache::get('temp'))->toBeNull();
@@ -56,7 +58,7 @@ it('clears all values', function (): void {
 it('stores forever without expiration', function (): void {
     Cache::forever('perm', 'always');
 
-    usleep(500_000);
+    delay(0.5);
 
     expect(Cache::get('perm'))->toBe('always');
 });
@@ -117,7 +119,7 @@ it('remembers forever when cache is empty', function (): void {
     expect($callCount)->toBe(1);
     expect(Cache::has('forever_key'))->toBeTrue();
 
-    usleep(500_000);
+    delay(0.5);
 
     expect(Cache::get('forever_key'))->toBe('forever_value');
 });

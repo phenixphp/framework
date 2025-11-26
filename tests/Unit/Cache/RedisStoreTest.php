@@ -9,6 +9,8 @@ use Phenix\Facades\Config;
 use Phenix\Redis\ClientWrapper;
 use Phenix\Util\Date;
 
+use function Amp\delay;
+
 beforeEach(function (): void {
     Config::set('cache.default', Store::REDIS->value);
 
@@ -120,7 +122,7 @@ it('expires values using ttl', function (): void {
 
     Cache::set('temp', 'soon-gone', Date::now()->addSeconds(1));
 
-    usleep(2_000_000);
+    delay(2);
 
     expect(Cache::has('temp'))->toBeFalse();
     expect(Cache::get('temp'))->toBeNull();
@@ -243,7 +245,7 @@ it('stores forever without expiration', function (): void {
 
     Cache::forever('perm', 'always');
 
-    usleep(500_000);
+    delay(0.5);
 
     expect(Cache::get('perm'))->toBe('always');
 });
