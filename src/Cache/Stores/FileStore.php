@@ -107,10 +107,6 @@ class FileStore extends CacheStore
 
     public function clear(): void
     {
-        if (! File::isDirectory($this->path)) {
-            return;
-        }
-
         $files = File::listFiles($this->path, false);
 
         foreach ($files as $file) {
