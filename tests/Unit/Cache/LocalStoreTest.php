@@ -26,6 +26,26 @@ it('stores value with custom ttl', function (): void {
     expect(Cache::has('temp_key'))->toBeFalse();
 });
 
+it('stores forever without expiration', function (): void {
+    Cache::forever('forever_key', 'forever_value');
+
+    expect(Cache::has('forever_key'))->toBeTrue();
+
+    delay(0.5);
+
+    expect(Cache::has('forever_key'))->toBeTrue();
+});
+
+it('clear all cached values', function (): void {
+    Cache::set('key1', 'value1');
+    Cache::set('key2', 'value2');
+
+    Cache::clear();
+
+    expect(Cache::has('key1'))->toBeFalse();
+    expect(Cache::has('key2'))->toBeFalse();
+});
+
 it('computes value via callback when missing', function (): void {
     $value = Cache::get('missing', static fn (): string => 'generated');
 
