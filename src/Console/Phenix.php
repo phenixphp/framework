@@ -29,7 +29,7 @@ class Phenix extends Application
 
     public function registerCommands(): void
     {
-        foreach (self::$commands as $command) {
+        foreach (array_unique(self::$commands) as $command) {
             $this->add(new $command());
         }
     }
