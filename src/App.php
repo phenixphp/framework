@@ -59,6 +59,8 @@ class App implements AppContract, Makeable
 
         $this->host = $this->getHost();
 
+        self::$container->add(Phenix::class)->addMethodCall('registerCommands');
+
         /** @var array $providers */
         $providers = Config::get('app.providers', []);
 
@@ -70,8 +72,6 @@ class App implements AppContract, Makeable
         $channel = Config::get('logging.default', 'file');
 
         $this->logger = LoggerFactory::make($channel);
-
-        self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
         $this->register(Log::class, new Log($this->logger));
     }
