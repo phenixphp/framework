@@ -58,6 +58,8 @@ it('changes the redis connection using facade', function (): void {
     $this->app->swap(Connection::redis('default'), $clientDefault);
 
     Redis::connection('default')->execute('PING');
+
+    expect(Redis::client())->toBeInstanceOf(ClientWrapper::class);
 });
 
 it('invokes magic __call method to delegate to underlying redis client', function (): void {

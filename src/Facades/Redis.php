@@ -9,6 +9,7 @@ use Phenix\Runtime\Facade;
 /**
  * @method static \Phenix\Redis\ConnectionManager connection(string $connection)
  * @method static mixed execute(string $command, string|int|float ...$args)
+ * @method static \Phenix\Redis\ClientWrapper client()
  *
  * @see \Phenix\Redis\ConnectionManager
  */

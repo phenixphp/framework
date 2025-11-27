@@ -27,6 +27,11 @@ class ConnectionManager
         return $this;
     }
 
+    public function client(): ClientWrapper
+    {
+        return $this->client;
+    }
+
     public function execute(string $command, string|int|float ...$args): mixed
     {
         return $this->client->execute($command, ...$args);
