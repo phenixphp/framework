@@ -14,7 +14,7 @@ class TemplateFactory
     protected array $data;
 
     public function __construct(
-        protected ViewCache $cache
+        protected TemplateCache $cache
     ) {
         $this->section = null;
         $this->layout = null;
