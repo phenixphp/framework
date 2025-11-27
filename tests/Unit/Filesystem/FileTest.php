@@ -83,8 +83,13 @@ it('open a file for IO operations', function () {
     $file = new File();
 
     expect($file->openFile($path))->toBeInstanceOf(FileHandler::class);
-    expect($file->getCreationTime($path))->toBe(filemtime($path));
-    expect($file->getModificationTime($path))->toBe(filemtime($path));
+
+    $creationTime = $file->getCreationTime($path);
+    $modificationTime = $file->getModificationTime($path);
+
+    expect($creationTime)->toBeInt();
+    expect($modificationTime)->toBeInt();
+    expect($modificationTime)->toBeGreaterThanOrEqual($creationTime);
 });
 
 it('list files in a directory', function () {

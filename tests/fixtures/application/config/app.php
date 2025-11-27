@@ -27,6 +27,7 @@ return [
         \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
+        \Phenix\Cache\CacheServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
         \Phenix\Crypto\CryptoServiceProvider::class,
         \Phenix\Queue\QueueServiceProvider::class,

@@ -7,7 +7,7 @@ namespace Phenix\Views;
 use Phenix\Facades\File;
 use Phenix\Util\Str;
 
-class ViewCache
+class TemplateCache
 {
     public function __construct(
         protected Config $config = new Config(),

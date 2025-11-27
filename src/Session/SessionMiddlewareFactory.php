@@ -10,6 +10,7 @@ use Amp\Http\Server\Session\SessionFactory;
 use Amp\Http\Server\Session\SessionMiddleware as Middleware;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
+use Phenix\Redis\ClientWrapper;
 use Phenix\Session\Constants\Driver;
 
 class SessionMiddlewareFactory
@@ -26,8 +27,10 @@ class SessionMiddlewareFactory
         if ($driver === Driver::REDIS) {
             $connection = Connection::redis($config->connection());
 
+            /** @var ClientWrapper $client */
             $client = App::make($connection);
-            $storage = new RedisSessionStorage($client);
+
+            $storage = new RedisSessionStorage($client->getClient());
         }
 
         $factory = new SessionFactory(storage: $storage);
