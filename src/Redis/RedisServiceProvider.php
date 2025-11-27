@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Phenix\Redis;
 
+use Phenix\App;
 use Phenix\Database\Constants\Connection;
 use Phenix\Providers\ServiceProvider;
-use Phenix\Redis\Contracts\Client as ClientContract;
 
 class RedisServiceProvider extends ServiceProvider
 {
     public function provides(string $id): bool
     {
         $this->provided = [
-            ClientContract::class,
+            ConnectionManager::class,
         ];
 
         return $this->isProvided($id);
@@ -21,8 +21,9 @@ class RedisServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->bind(ClientContract::class, fn (): ClientContract => new Client(
-            $this->getContainer()->get(Connection::redis('default'))
-        ))->setShared(true);
+        $this->bind(
+            ConnectionManager::class,
+            fn (): ConnectionManager => new ConnectionManager(App::make(Connection::redis('default')))
+        );
     }
 }

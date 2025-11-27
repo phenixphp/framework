@@ -8,6 +8,8 @@ use Phenix\Queue\StateManagers\RedisTaskState;
 use Phenix\Redis\Contracts\Client;
 use Phenix\Tasks\QueuableTask;
 
+use function is_int;
+
 class RedisQueue extends Queue
 {
     public function __construct(

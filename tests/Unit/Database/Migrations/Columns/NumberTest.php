@@ -2,16 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Migrations\Columns\Number;
-
-// Create a concrete implementation for testing
-class TestNumber extends Number
-{
-    public function getType(): string
-    {
-        return 'test_number';
-    }
-}
+use Tests\Unit\Database\Migrations\Columns\Internal\TestNumber;
 
 it('can set default value', function (): void {
     $column = new TestNumber('test');
