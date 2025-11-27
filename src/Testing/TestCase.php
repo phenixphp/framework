@@ -58,7 +58,7 @@ abstract class TestCase extends AsyncTestCase
         Queue::resetFaking();
         Mail::resetSendingLog();
 
-        if (config('cache.default') !== Store::REDIS->value) {
+        if (config('cache.default') === Store::FILE->value) {
             Cache::clear();
         }
 
