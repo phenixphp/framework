@@ -6,14 +6,12 @@ namespace Phenix\Cache;
 
 use Amp\Cache\LocalCache;
 use Closure;
-use Phenix\App;
 use Phenix\Cache\Constants\Store;
 use Phenix\Cache\Contracts\CacheStore;
 use Phenix\Cache\Stores\FileStore;
 use Phenix\Cache\Stores\LocalStore;
 use Phenix\Cache\Stores\RedisStore;
-use Phenix\Database\Constants\Connection;
-use Phenix\Redis\ClientWrapper;
+use Phenix\Facades\Redis;
 use Phenix\Util\Date;
 
 class CacheManager
@@ -115,8 +113,7 @@ class CacheManager
         $storeConfig = $this->config->getStore(Store::REDIS->value);
         $defaultTtl = $storeConfig['ttl'] ?? $this->config->defaultTtlMinutes();
 
-        /** @var ClientWrapper $client */
-        $client = App::make(Connection::redis($this->config->getConnection()));
+        $client = Redis::connection($this->config->getConnection())->client();
 
         return new RedisStore($client, $this->config->prefix(), (int) $defaultTtl);
     }

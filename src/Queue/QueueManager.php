@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\App;
-use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver as DatabaseDriver;
+use Phenix\Facades\Redis;
 use Phenix\Queue\Concerns\CaptureTasks;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
-use Phenix\Redis\ClientWrapper;
 use Phenix\Tasks\QueuableTask;
 
 class QueueManager
@@ -127,8 +125,7 @@ class QueueManager
     {
         $config = $this->config->getDriver(QueueDriver::REDIS->value);
 
-        /** @var ClientWrapper $client */
-        $client = App::make(Connection::redis($this->config->getConnection()));
+        $client = Redis::connection($this->config->getConnection())->client();
 
         return new RedisQueue(
             redis: $client,
