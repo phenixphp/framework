@@ -15,6 +15,7 @@ return [
     'middlewares' => [
         'global' => [
             \Phenix\Http\Middlewares\HandleCors::class,
+            \Phenix\Http\Middlewares\TokenRateLimit::class,
         ],
         'router' => [],
     ],

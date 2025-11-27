@@ -13,6 +13,7 @@ use Phenix\Auth\AuthenticationManager;
 use Phenix\Auth\User;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
+use Phenix\Http\IpAddress;
 
 class Authenticated implements Middleware
 {
@@ -29,9 +30,15 @@ class Authenticated implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
+        $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
+
         if (! $token || ! $auth->validate($token)) {
+            $auth->increaseAttempts($clientIdentifier);
+
             return $this->unauthorized();
         }
+
+        $auth->resetAttempts($clientIdentifier);
 
         $request->setAttribute(Config::get('auth.users.model', User::class), $auth->user());
 
