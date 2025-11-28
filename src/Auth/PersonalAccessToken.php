@@ -53,4 +53,13 @@ class PersonalAccessToken extends DatabaseModel
     {
         return new PersonalAccessTokenQuery();
     }
+
+    public function getAbilities(): array|null
+    {
+        if ($this->abilities === null) {
+            return null;
+        }
+
+        return json_decode($this->abilities, true);
+    }
 }
