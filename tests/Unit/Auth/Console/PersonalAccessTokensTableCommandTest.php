@@ -32,8 +32,5 @@ it('creates personal access tokens table migration successfully', function (): v
 
     $command->assertCommandIsSuccessful();
 
-    $display = $command->getDisplay();
-    if (! str_contains($display, 'Personal access tokens table [database/migrations/20251128110000_create_personal_access_tokens_table.php] successfully generated!')) {
-        throw new RuntimeException('Expected success output not found');
-    }
+    expect($command->getDisplay())->toContain('Personal access tokens table [database/migrations/20251128110000_create_personal_access_tokens_table.php] successfully generated!');
 });
