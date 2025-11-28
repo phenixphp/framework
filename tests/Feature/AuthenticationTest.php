@@ -403,7 +403,7 @@ it('check user permissions', function (): void {
     );
 
     Route::get('/users', function (Request $request): Response {
-        if (!$request->can('users.index')) {
+        if (! $request->can('users.index')) {
             return response()->json([
                 'error' => 'Forbidden',
             ], HttpStatus::FORBIDDEN);
@@ -486,6 +486,7 @@ it('denies when abilities is null', function (): void {
         $canSingle = $request->can('anything.here');
         $canAny = $request->canAny(['one.ability', 'second.ability']);
         $canAll = $request->canAll(['first.required', 'second.required']);
+
         return response()->plain(($canSingle || $canAny || $canAll) ? 'granted' : 'denied');
     })->middleware(Authenticated::class);
 
@@ -860,6 +861,7 @@ it('returns false when user present but no token', function (): void {
     // No DB, no middleware: manually attach user without token
     Route::get('/no-token', function (Request $request) use ($user): Response {
         $request->setUser($user); // user has no currentAccessToken
+
         return response()->plain($request->can('users.index') ? 'ok' : 'fail');
     });
 
