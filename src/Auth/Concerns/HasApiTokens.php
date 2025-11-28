@@ -54,13 +54,14 @@ trait HasApiTokens
 
     public function generateTokenValue(): string
     {
-        $tokenEntropy = Str::random(64);
+        $entropy = bin2hex(random_bytes(32));
+        $checksum = substr(hash('sha256', $entropy), 0, 8);
 
         return sprintf(
-            '%s%s%s',
+            '%s%s_%s',
             config('auth.tokens.prefix', ''),
-            $tokenEntropy,
-            hash('crc32b', $tokenEntropy)
+            $entropy,
+            $checksum
         );
     }
 
