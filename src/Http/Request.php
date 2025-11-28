@@ -147,6 +147,11 @@ class Request implements Arrayable
         return $this->session;
     }
 
+    public function ip(): string|null
+    {
+        return IpAddress::parse($this->request);
+    }
+
     public function toArray(): array
     {
         return $this->body->toArray();

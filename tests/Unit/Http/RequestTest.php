@@ -25,6 +25,7 @@ it('gets route attributes from server request', function () {
 
     $formRequest = new Request($request);
 
+    expect($formRequest->ip())->toBeNull();
     expect($formRequest->route('post'))->toBe('7');
     expect($formRequest->route('comment'))->toBe('22');
     expect($formRequest->route()->integer('post'))->toBe(7);
