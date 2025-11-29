@@ -88,7 +88,7 @@ it('authenticates user with valid token', function (): void {
     $authToken = $user->createToken('api-token');
 
     Route::get('/profile', function (Request $request): Response {
-        return response()->plain($request->user() instanceof User ? 'Authenticated' : 'Guest');
+        return response()->plain($request->hasUser() && $request->user() instanceof User ? 'Authenticated' : 'Guest');
     })->middleware(Authenticated::class);
 
     $this->app->run();
