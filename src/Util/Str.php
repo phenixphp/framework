@@ -82,12 +82,24 @@ class Str extends Utility
 
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $charactersLength = strlen($characters);
+
+        $max = intdiv(256, $charactersLength) * $charactersLength;
+
         $result = '';
 
-        $randomBytes = random_bytes($length);
+        while (strlen($result) < $length) {
+            $bytes = random_bytes($length);
 
-        for ($i = 0; $i < $length; $i++) {
-            $result .= $characters[ord($randomBytes[$i]) % $charactersLength];
+            for ($i = 0; $i < strlen($bytes) && strlen($result) < $length; $i++) {
+                $val = ord($bytes[$i]);
+
+                if ($val >= $max) {
+                    continue;
+                }
+
+                $idx = $val % $charactersLength;
+                $result .= $characters[$idx];
+            }
         }
 
         return $result;
