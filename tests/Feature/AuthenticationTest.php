@@ -880,9 +880,8 @@ it('returns false when user present but no token', function (): void {
     $user->email = 'john@example.com';
     $user->createdAt = Date::now();
 
-    // No DB, no middleware: manually attach user without token
     Route::get('/no-token', function (Request $request) use ($user): Response {
-        $request->setUser($user); // user has no currentAccessToken
+        $request->setUser($user);
 
         return response()->plain($request->can('users.index') ? 'ok' : 'fail');
     });
