@@ -10,10 +10,14 @@ use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
 use Phenix\App;
 use Phenix\Auth\AuthenticationManager;
+use Phenix\Auth\Events\FailedTokenValidation;
+use Phenix\Auth\Events\TokenValidated;
 use Phenix\Auth\User;
 use Phenix\Facades\Config;
+use Phenix\Facades\Event;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\IpAddress;
+use Phenix\Http\Request as HttpRequest;
 
 class Authenticated implements Middleware
 {
@@ -33,10 +37,24 @@ class Authenticated implements Middleware
         $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
 
         if (! $token || ! $auth->validate($token)) {
+            Event::emitAsync(new FailedTokenValidation(
+                request: new HttpRequest($request),
+                clientIp: $clientIdentifier,
+                reason: $token ? 'validation_failed' : 'invalid_format',
+                attemptedToken: $token,
+                attemptCount: $auth->getAttempts($clientIdentifier)
+            ));
+
             $auth->increaseAttempts($clientIdentifier);
 
             return $this->unauthorized();
         }
+
+        Event::emitAsync(new TokenValidated(
+            token: $auth->user()?->currentAccessToken(),
+            request: new HttpRequest($request),
+            clientIp: $clientIdentifier
+        ));
 
         $auth->resetAttempts($clientIdentifier);
 

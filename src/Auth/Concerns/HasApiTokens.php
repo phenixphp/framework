@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Phenix\Auth\Concerns;
 
 use Phenix\Auth\AuthenticationToken;
+use Phenix\Auth\Events\TokenCreated;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\PersonalAccessTokenQuery;
+use Phenix\Facades\Event;
 use Phenix\Util\Date;
-use Phenix\Util\Str;
 
 use function sprintf;
 
@@ -45,6 +46,11 @@ trait HasApiTokens
         $token->abilities = json_encode($abilities);
         $token->expiresAt = $expiresAt;
         $token->save();
+
+        Event::emitAsync(new TokenCreated(
+            $token,
+            $this
+        ));
 
         return new AuthenticationToken(
             token: $plainTextToken,

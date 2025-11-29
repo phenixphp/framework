@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 use Phenix\Auth\AuthenticationToken;
 use Phenix\Auth\Concerns\HasApiTokens;
+use Phenix\Auth\Events\FailedTokenValidation;
+use Phenix\Auth\Events\TokenCreated;
+use Phenix\Auth\Events\TokenValidated;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
 use Phenix\Database\Constants\Connection;
+use Phenix\Facades\Event;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Middlewares\Authenticated;
@@ -35,6 +39,8 @@ it('requires authentication', function (): void {
 });
 
 it('authenticates user with valid token', function (): void {
+    Event::fake();
+
     $user = new User();
     $user->id = 1;
     $user->name = 'John Doe';
@@ -92,9 +98,14 @@ it('authenticates user with valid token', function (): void {
     ])
         ->assertOk()
         ->assertBodyContains('Authenticated');
+
+    Event::expect(TokenCreated::class)->toBeDispatched();
+    Event::expect(TokenValidated::class)->toBeDispatched();
 });
 
 it('denies access with invalid token', function (): void {
+    Event::fake();
+
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->once())
@@ -115,6 +126,9 @@ it('denies access with invalid token', function (): void {
     ])
         ->assertUnauthorized()
         ->assertJsonFragment(['message' => 'Unauthorized']);
+
+    Event::expect(TokenValidated::class)->toNotBeDispatched();
+    Event::expect(FailedTokenValidation::class)->toBeDispatched();
 });
 
 it('rate limits failed token validations and sets retry-after header', function (): void {
