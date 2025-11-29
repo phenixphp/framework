@@ -50,4 +50,11 @@ trait InteractWithStatusCode
 
         return $this;
     }
+
+    public function assertUnauthorized(): self
+    {
+        Assert::assertEquals(HttpStatus::UNAUTHORIZED->value, $this->response->getStatus());
+
+        return $this;
+    }
 }

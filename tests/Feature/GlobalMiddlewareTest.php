@@ -18,7 +18,7 @@ it('handles options request successfully using global cors middleware', function
 
     $this->options('/', headers: ['Access-Control-Request-Method' => 'GET'])
         ->assertOk()
-        ->assertHeaderContains(['Access-Control-Allow-Origin' => '*']);
+        ->assertHeaders(['Access-Control-Allow-Origin' => '*']);
 });
 
 it('initializes the session middleware', function () {

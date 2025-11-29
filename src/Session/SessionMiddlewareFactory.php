@@ -13,7 +13,7 @@ use Phenix\Database\Constants\Connection;
 use Phenix\Redis\ClientWrapper;
 use Phenix\Session\Constants\Driver;
 
-class SessionMiddleware
+class SessionMiddlewareFactory
 {
     public static function make(string $host): Middleware
     {

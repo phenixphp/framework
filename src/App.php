@@ -22,7 +22,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
-use Phenix\Session\SessionMiddleware;
+use Phenix\Session\SessionMiddlewareFactory;
 
 class App implements AppContract, Makeable
 {
@@ -169,7 +169,7 @@ class App implements AppContract, Makeable
         /** @var array<int, Middleware> $globalMiddlewares */
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
-        $globalMiddlewares[] = SessionMiddleware::make($this->host);
+        $globalMiddlewares[] = SessionMiddlewareFactory::make($this->host);
 
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }

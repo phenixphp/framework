@@ -10,7 +10,9 @@ use Phenix\Validation\Validator;
 abstract class FormRequest extends Request
 {
     private bool $isValid;
+
     private bool $checked;
+
     protected Validator $validator;
 
     public function __construct(ServerRequest $request)
