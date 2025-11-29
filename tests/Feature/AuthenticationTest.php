@@ -6,6 +6,7 @@ use Phenix\Auth\AuthenticationToken;
 use Phenix\Auth\Concerns\HasApiTokens;
 use Phenix\Auth\Events\FailedTokenValidation;
 use Phenix\Auth\Events\TokenCreated;
+use Phenix\Auth\Events\TokenRefreshCompleted;
 use Phenix\Auth\Events\TokenValidated;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
@@ -21,6 +22,8 @@ use Phenix\Util\Str;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
+
+use function Amp\delay;
 
 uses(HasApiTokens::class);
 
@@ -899,4 +902,56 @@ it('returns false when no user', function (): void {
     $this->app->run();
 
     $this->get('/no-user')->assertOk()->assertBodyContains('fail');
+});
+
+it('refreshes token and dispatches event', function (): void {
+    Event::fake();
+
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $previous = new PersonalAccessToken();
+    $previous->id = Str::uuid()->toString();
+    $previous->tokenableType = $user::class;
+    $previous->tokenableId = $user->id;
+    $previous->name = 'api-token';
+    $previous->token = hash('sha256', 'previous-plain');
+    $previous->createdAt = Date::now();
+    $previous->expiresAt = Date::now()->addMinutes(30);
+
+    $insertResult = new Result([[ 'Query OK' ]]);
+    $newTokenId = Str::uuid()->toString();
+    $insertResult->setLastInsertedId($newTokenId);
+
+    $updateResult = new Result([[ 'Query OK' ]]);
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($insertResult),
+            new Statement($updateResult),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $this->app->run();
+
+    $user->withAccessToken($previous);
+
+    $oldExpiresAt = $previous->expiresAt;
+
+    $refreshed = $user->refreshToken('api-token');
+
+    $this->assertInstanceOf(AuthenticationToken::class, $refreshed);
+    $this->assertSame($newTokenId, $refreshed->id());
+    $this->assertNotSame($previous->id, $refreshed->id());
+    $this->assertNotEquals($oldExpiresAt->toDateTimeString(), $previous->expiresAt->toDateTimeString());
+
+    delay(2);
+
+    Event::expect(TokenRefreshCompleted::class)->toBeDispatched();
 });

@@ -6,6 +6,7 @@ namespace Phenix\Auth\Concerns;
 
 use Phenix\Auth\AuthenticationToken;
 use Phenix\Auth\Events\TokenCreated;
+use Phenix\Auth\Events\TokenRefreshCompleted;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\PersonalAccessTokenQuery;
 use Phenix\Facades\Event;
@@ -79,5 +80,24 @@ trait HasApiTokens
         $this->accessToken = $accessToken;
 
         return $this;
+    }
+
+    public function refreshToken(string $name, array $abilities = ['*'], Date|null $expiresAt = null): AuthenticationToken
+    {
+        $previous = $this->currentAccessToken();
+
+        $newToken = $this->createToken($name, $abilities, $expiresAt);
+
+        if ($previous) {
+            $previous->expiresAt = Date::now();
+            $previous->save();
+
+            Event::emitAsync(new TokenRefreshCompleted(
+                $previous,
+                $newToken
+            ));
+        }
+
+        return $newToken;
     }
 }
