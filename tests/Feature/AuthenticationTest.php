@@ -237,7 +237,7 @@ it('resets rate limit counter on successful authentication', function (): void {
     $this->get('/reset', headers: [
         'Authorization' => 'Bearer ' . $authToken->toString(),
         'X-Forwarded-For' => '203.0.113.10',
-    ])->assertOk();
+    ])->assertOk()->assertHeaderIsMissing('Retry-After');
 
     $this->get('/reset', headers: [
         'Authorization' => 'Bearer invalid-token',
