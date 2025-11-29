@@ -289,7 +289,7 @@ it('denies when user is not found', function (): void {
     $this->app->run();
 
     $this->get('/profile', headers: [
-        'Authorization' => 'Bearer ' . $authToken->toString(),
+        'Authorization' => 'Bearer ' . (string) $authToken,
     ])->assertUnauthorized();
 });
 
