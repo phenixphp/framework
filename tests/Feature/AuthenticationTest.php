@@ -217,6 +217,7 @@ it('resets rate limit counter on successful authentication', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -412,6 +413,7 @@ it('check user permissions', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -492,6 +494,7 @@ it('denies when abilities is null', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -566,6 +569,7 @@ it('grants any ability via wildcard asterisk *', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -640,6 +644,7 @@ it('canAny passes when at least one matches', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -710,6 +715,7 @@ it('canAny fails when none match', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -780,6 +786,7 @@ it('canAll passes when all match', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );
@@ -850,6 +857,7 @@ it('canAll fails when one is missing', function (): void {
     $this->app->swap(Connection::default(), $connection);
 
     $authToken = new AuthenticationToken(
+        id: $token->id,
         token: $plainToken,
         expiresAt: $token->expiresAt
     );

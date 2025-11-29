@@ -50,6 +50,7 @@ trait HasApiTokens
         Event::emitAsync(new TokenCreated($token));
 
         return new AuthenticationToken(
+            id: $token->id,
             token: $plainTextToken,
             expiresAt: $expiresAt
         );

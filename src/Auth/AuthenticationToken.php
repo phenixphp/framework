@@ -10,9 +10,15 @@ use Stringable;
 class AuthenticationToken implements Stringable
 {
     public function __construct(
+        protected string $id,
         protected string $token,
         protected Date $expiresAt,
     ) {
+    }
+
+    public function id(): string
+    {
+        return $this->id;
     }
 
     public function toString(): string
