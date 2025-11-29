@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Auth\Events;
 
 use Phenix\Auth\PersonalAccessToken;
-use Phenix\Auth\User;
 use Phenix\Events\AbstractEvent;
-use Phenix\Util\Date;
 
 class TokenCreated extends AbstractEvent
 {
