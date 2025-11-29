@@ -11,7 +11,7 @@ use Phenix\Util\Date;
 
 class TokenCreated extends AbstractEvent
 {
-    public function __construct(PersonalAccessToken $token, User $user)
+    public function __construct(PersonalAccessToken $token)
     {
         $this->payload = [
             'token_id' => $token->id,
@@ -19,8 +19,8 @@ class TokenCreated extends AbstractEvent
             'user_type' => $token->tokenableType,
             'name' => $token->name,
             'abilities' => $token->getAbilities(),
-            'expires_at' => $token->expiresAt?->toDateTimeString(),
-            'created_at' => $token->createdAt?->toDateTimeString() ?? Date::now()->toDateTimeString(),
+            'expires_at' => $token->expiresAt->toDateTimeString(),
+            'created_at' => $token->createdAt->toDateTimeString(),
         ];
     }
 }

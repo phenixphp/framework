@@ -23,7 +23,7 @@ class TokenValidated extends AbstractEvent
             'user_type' => $token->tokenableType,
             'abilities_count' => count($abilities),
             'wildcard' => in_array('*', $abilities, true),
-            'expires_at' => $token->expiresAt?->toDateTimeString(),
+            'expires_at' => $token->expiresAt->toDateTimeString(),
             'request_path' => $request->getUri()->getPath(),
             'request_method' => $request->getMethod(),
             'client_ip' => $clientIp,

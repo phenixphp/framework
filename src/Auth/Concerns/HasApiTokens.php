@@ -47,10 +47,7 @@ trait HasApiTokens
         $token->expiresAt = $expiresAt;
         $token->save();
 
-        Event::emitAsync(new TokenCreated(
-            $token,
-            $this
-        ));
+        Event::emitAsync(new TokenCreated($token));
 
         return new AuthenticationToken(
             token: $plainTextToken,
