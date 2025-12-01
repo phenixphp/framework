@@ -15,6 +15,7 @@ return [
     'middlewares' => [
         'global' => [
             \Phenix\Http\Middlewares\HandleCors::class,
+            \Phenix\Http\Middlewares\TokenRateLimit::class,
         ],
         'router' => [],
     ],
@@ -23,9 +24,11 @@ return [
         \Phenix\Routing\RouteServiceProvider::class,
         \Phenix\Database\DatabaseServiceProvider::class,
         \Phenix\Redis\RedisServiceProvider::class,
+        \Phenix\Auth\AuthServiceProvider::class,
         \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
+        \Phenix\Cache\CacheServiceProvider::class,
         \Phenix\Mail\MailServiceProvider::class,
         \Phenix\Crypto\CryptoServiceProvider::class,
         \Phenix\Queue\QueueServiceProvider::class,

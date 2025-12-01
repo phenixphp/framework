@@ -14,7 +14,7 @@ use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Unit\Routing\AcceptJsonResponses;
 
-afterEach(function () {
+afterEach(function (): void {
     $this->app->stop();
 });
 
@@ -118,7 +118,7 @@ it('responds with a view', function (): void {
     $response = $this->get('/users');
 
     $response->assertOk()
-        ->assertHeaderContains(['Content-Type' => 'text/html; charset=utf-8'])
+        ->assertHeaders(['Content-Type' => 'text/html; charset=utf-8'])
         ->assertBodyContains('<body>')
         ->assertBodyContains('User index');
 });

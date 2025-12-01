@@ -8,6 +8,14 @@ use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Uid\UuidV4;
 
+use function ord;
+use function preg_replace;
+use function random_bytes;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function strtolower;
+
 class Str extends Utility
 {
     public static function snake(string $value): string
@@ -62,5 +70,38 @@ class Str extends Utility
         $value = preg_replace('/[^\p{L}\p{N}\s]/u', '', $value);
 
         return strtolower(preg_replace('/[\s]/u', $separator, $value));
+    }
+
+    public static function random(int $length = 16): string
+    {
+        $length = abs($length);
+
+        if ($length < 1) {
+            $length = 16;
+        }
+
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $charactersLength = strlen($characters);
+
+        $max = intdiv(256, $charactersLength) * $charactersLength;
+
+        $result = '';
+
+        while (strlen($result) < $length) {
+            $bytes = random_bytes($length);
+
+            for ($i = 0; $i < strlen($bytes) && strlen($result) < $length; $i++) {
+                $val = ord($bytes[$i]);
+
+                if ($val >= $max) {
+                    continue;
+                }
+
+                $idx = $val % $charactersLength;
+                $result .= $characters[$idx];
+            }
+        }
+
+        return $result;
     }
 }

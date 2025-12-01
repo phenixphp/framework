@@ -66,7 +66,7 @@ class JsonParser extends BodyParser
 
     protected function parse(Request $request): self
     {
-        $body = json_decode($request->getBody()->read(), true);
+        $body = json_decode($request->getBody()->read() ?? '', true);
 
         if (json_last_error() === JSON_ERROR_NONE) {
             $this->body = $body;
