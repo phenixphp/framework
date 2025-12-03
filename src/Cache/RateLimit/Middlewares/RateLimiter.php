@@ -34,7 +34,7 @@ class RateLimiter implements Middleware
         $current = $rateLimiter->increment($key);
 
         if ($current > Config::get('cache.rate_limit.per_minute', 60)) {
-            return $this->createRateLimitExceededResponse($key);
+            return $this->createRateLimitExceededResponse($rateLimiter, $key);
         }
 
         $response = $next->handleRequest($request);
@@ -73,9 +73,9 @@ class RateLimiter implements Middleware
         return $session?->getId();
     }
 
-    protected function createRateLimitExceededResponse(string $key): Response
+    protected function createRateLimitExceededResponse(RateLimitManager $rateLimiter, string $key): Response
     {
-        $retryAfter = $this->rateLimit->getTtl($key);
+        $retryAfter = $rateLimiter->getTtl($key);
 
         return new Response(
             status: HttpStatus::TOO_MANY_REQUESTS->value,
