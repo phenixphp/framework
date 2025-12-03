@@ -6,6 +6,7 @@ namespace Phenix\Cache;
 
 use Phenix\Cache\Console\CacheClear;
 use Phenix\Providers\ServiceProvider;
+use Phenix\Cache\RateLimit\RateLimitManager;
 
 class CacheServiceProvider extends ServiceProvider
 {
@@ -13,6 +14,7 @@ class CacheServiceProvider extends ServiceProvider
     {
         $this->provided = [
             CacheManager::class,
+            RateLimitManager::class,
         ];
 
         return $this->isProvided($id);
@@ -22,6 +24,11 @@ class CacheServiceProvider extends ServiceProvider
     {
         $this->bind(CacheManager::class)
             ->setShared(true);
+
+        $this->bind(
+            RateLimitManager::class,
+            fn (): RateLimitManager => new RateLimitManager()
+        )->setShared(true);
     }
 
     public function boot(): void

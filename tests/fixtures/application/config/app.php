@@ -17,7 +17,9 @@ return [
             \Phenix\Http\Middlewares\HandleCors::class,
             \Phenix\Http\Middlewares\TokenRateLimit::class,
         ],
-        'router' => [],
+        'router' => [
+            \Phenix\Cache\RateLimit\Middlewares\RateLimiter::class,
+        ],
     ],
     'providers' => [
         \Phenix\Console\CommandsServiceProvider::class,

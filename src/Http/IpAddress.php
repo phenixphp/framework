@@ -21,13 +21,7 @@ final class IpAddress
             return $ip;
         }
 
-        $ip = (string) $request->getClient()->getRemoteAddress();
-
-        if ($ip !== '') {
-            return explode(':', $ip)[0] ?? null;
-        }
-
-        return null;
+        return (string) $request->getClient()->getRemoteAddress() ?? null;
     }
 
     private static function getFromHeader(string $header): string
