@@ -48,9 +48,13 @@ class LocalRateLimit implements RateLimit
         }
 
         $data['count'] = ((int) ($data['count'] ?? 0)) + 1;
-        $data['expires_at'] = $currentTime + $this->ttl;
 
-        $this->store->set($id, $data, Date::now()->addSeconds($this->ttl));
+        if (! isset($data['expires_at'])) {
+            $data['expires_at'] = $currentTime + $this->ttl;
+        }
+
+        $remainingTtl = max(0, ((int) $data['expires_at']) - $currentTime);
+        $this->store->set($id, $data, Date::now()->addSeconds($remainingTtl));
 
         return (int) $data['count'];
     }
