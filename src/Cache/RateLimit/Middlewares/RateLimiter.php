@@ -4,42 +4,44 @@ declare(strict_types=1);
 
 namespace Phenix\Cache\RateLimit\Middlewares;
 
+use Amp\Http\Server\Middleware;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\RequestHandler;
+use Amp\Http\Server\Response;
+use Amp\Http\Server\Session\Session as ServerSession;
 use Phenix\App;
 use Phenix\Auth\User;
-use Phenix\Http\Session;
-use Phenix\Facades\Config;
-use Phenix\Http\IpAddress;
-use Amp\Http\Server\Request;
-use Amp\Http\Server\Response;
-use Amp\Http\Server\Middleware;
-use Amp\Http\Server\RequestHandler;
-use Phenix\Http\Constants\HttpStatus;
 use Phenix\Cache\RateLimit\RateLimitManager;
-use Amp\Http\Server\Session\Session as ServerSession;
+use Phenix\Facades\Config;
+use Phenix\Http\Constants\HttpStatus;
+use Phenix\Http\IpAddress;
+use Phenix\Http\Session;
 
 class RateLimiter implements Middleware
 {
+    protected RateLimitManager $rateLimiter;
+
+    public function __construct()
+    {
+        $this->rateLimiter = App::make(RateLimitManager::class);
+    }
+
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
-        $config = Config::get('cache.rate_limit', []);
-
-        if (!Config::get('cache.rate_limit.enabled', false)) {
+        if (! Config::get('cache.rate_limit.enabled', false)) {
             return $next->handleRequest($request);
         }
 
-        /** @var RateLimitManager $rateLimiter */
-        $rateLimiter = App::make(RateLimitManager::class);
-
         $key = $this->resolveKey($request) ?? 'guest';
-        $current = $rateLimiter->increment($key);
+        $current = $this->rateLimiter->increment($key);
 
         if ($current > Config::get('cache.rate_limit.per_minute', 60)) {
-            return $this->createRateLimitExceededResponse($rateLimiter, $key);
+            return $this->createRateLimitExceededResponse($key);
         }
 
         $response = $next->handleRequest($request);
 
-        return $this->addRateLimitHeaders($rateLimiter, $request, $response, $current, $key);
+        return $this->addRateLimitHeaders($request, $response, $current, $key);
     }
 
     protected function resolveKey(Request $request): string|null
@@ -73,9 +75,9 @@ class RateLimiter implements Middleware
         return $session?->getId();
     }
 
-    protected function createRateLimitExceededResponse(RateLimitManager $rateLimiter, string $key): Response
+    protected function createRateLimitExceededResponse(string $key): Response
     {
-        $retryAfter = $rateLimiter->getTtl($key);
+        $retryAfter = $this->rateLimiter->getTtl($key);
 
         return new Response(
             status: HttpStatus::TOO_MANY_REQUESTS->value,
@@ -91,16 +93,16 @@ class RateLimiter implements Middleware
         );
     }
 
-    protected function addRateLimitHeaders(RateLimitManager $rateLimiter, Request $request, Response $response, int $current, string $key): Response
+    protected function addRateLimitHeaders(Request $request, Response $response, int $current, string $key): Response
     {
         $remaining = max(0, Config::get('cache.rate_limit.per_minute', 60) - $current);
-        $resetTime = time() + $rateLimiter->getTtl($key);
+        $resetTime = time() + $this->rateLimiter->getTtl($key);
 
         if ($this->user($request)) {
             $response->addHeader('x-ratelimit-limit', (string) Config::get('cache.rate_limit.per_minute', 60));
             $response->addHeader('x-ratelimit-remaining', (string) $remaining);
             $response->addHeader('x-ratelimit-reset', (string) $resetTime);
-            $response->addHeader('x-ratelimit-reset-after', (string) $rateLimiter->getTtl($key));
+            $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($key));
         }
 
         return $response;
