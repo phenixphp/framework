@@ -32,19 +32,19 @@ class RateLimiter implements Middleware
             return $next->handleRequest($request);
         }
 
-        $key = $this->resolveKey($request) ?? 'guest';
-        $current = $this->rateLimiter->increment($key);
+        $identifier = $this->resolveClientId($request) ?? 'guest';
+        $current = $this->rateLimiter->increment($identifier);
 
         if ($current > Config::get('cache.rate_limit.per_minute', 60)) {
-            return $this->createRateLimitExceededResponse($key);
+            return $this->createRateLimitExceededResponse($identifier);
         }
 
         $response = $next->handleRequest($request);
 
-        return $this->addRateLimitHeaders($request, $response, $current, $key);
+        return $this->addRateLimitHeaders($request, $response, $current, $identifier);
     }
 
-    protected function resolveKey(Request $request): string|null
+    protected function resolveClientId(Request $request): string|null
     {
         $user = $this->user($request);
 
@@ -54,7 +54,7 @@ class RateLimiter implements Middleware
 
         $ip = IpAddress::parse($request);
 
-        return $ip !== null ? $ip : $this->getSessionId($request);
+        return $ip !== null ? parse_url($ip, PHP_URL_HOST) : $this->getSessionId($request);
     }
 
     protected function user(Request $request): User|null
