@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Cache\RateLimit;
 
+use Kelunik\RateLimit\PrefixRateLimit;
 use Kelunik\RateLimit\RateLimit;
 use Kelunik\RateLimit\RedisRateLimit;
-use Kelunik\RateLimit\PrefixRateLimit;
 use Phenix\Cache\Constants\Store;
 use Phenix\Cache\Stores\LocalStore;
 use Phenix\Facades\Cache;

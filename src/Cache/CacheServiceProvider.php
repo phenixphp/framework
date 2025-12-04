@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Cache;
 
 use Phenix\Cache\Console\CacheClear;
-use Phenix\Providers\ServiceProvider;
 use Phenix\Cache\RateLimit\RateLimitManager;
+use Phenix\Providers\ServiceProvider;
 
 class CacheServiceProvider extends ServiceProvider
 {
