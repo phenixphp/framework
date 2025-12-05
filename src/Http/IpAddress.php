@@ -13,7 +13,7 @@ final class IpAddress
         // Prevent instantiation
     }
 
-    public static function parse(Request $request): string|null
+    public static function parse(Request $request): string
     {
         $xff = $request->getHeader('X-Forwarded-For');
 
@@ -21,7 +21,7 @@ final class IpAddress
             return $ip;
         }
 
-        return (string) $request->getClient()->getRemoteAddress() ?? null;
+        return (string) $request->getClient()->getRemoteAddress();
     }
 
     private static function getFromHeader(string $header): string

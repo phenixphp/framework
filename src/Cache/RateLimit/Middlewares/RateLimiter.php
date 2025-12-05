@@ -8,14 +8,12 @@ use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
-use Amp\Http\Server\Session\Session as ServerSession;
 use Phenix\App;
-use Phenix\Auth\User;
 use Phenix\Cache\RateLimit\RateLimitManager;
+use Phenix\Crypto\Bin2Base64;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\IpAddress;
-use Phenix\Http\Session;
 
 class RateLimiter implements Middleware
 {
@@ -32,52 +30,50 @@ class RateLimiter implements Middleware
             return $next->handleRequest($request);
         }
 
-        $identifier = $this->resolveClientId($request) ?? 'guest';
+        $identifier = $this->getIpHash($request) ?? 'guest';
         $current = $this->rateLimiter->increment($identifier);
 
-        if ($current > Config::get('cache.rate_limit.per_minute', 60)) {
-            return $this->createRateLimitExceededResponse($identifier);
+        $perMinuteLimit = Config::get('cache.rate_limit.per_minute', 60);
+
+        if ($current > $perMinuteLimit) {
+            return $this->rateLimitExceededResponse($identifier);
         }
 
         $response = $next->handleRequest($request);
+        $remaining = max(0, $perMinuteLimit - $current);
+        $resetTime = time() + $this->rateLimiter->getTtl($identifier);
 
-        return $this->addRateLimitHeaders($request, $response, $current, $identifier);
+        $response->addHeader('x-ratelimit-limit', (string) $perMinuteLimit);
+        $response->addHeader('x-ratelimit-remaining', (string) $remaining);
+        $response->addHeader('x-ratelimit-reset', (string) $resetTime);
+        $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($identifier));
+
+        return $response;
     }
 
-    protected function resolveClientId(Request $request): string|null
+    protected function getIpHash(Request $request): string|null
     {
-        $user = $this->user($request);
-
-        if ($user) {
-            return (string) $user->getKey();
-        }
-
         $ip = IpAddress::parse($request);
+        $host = parse_url($ip, PHP_URL_HOST);
 
-        return $ip !== null ? parse_url($ip, PHP_URL_HOST) : $this->getSessionId($request);
-    }
-
-    protected function user(Request $request): User|null
-    {
-        $key = Config::get('auth.users.model', User::class);
-
-        return $request->hasAttribute($key) ? $request->getAttribute($key) : null;
-    }
-
-    protected function getSessionId(Request $request): string|null
-    {
-        $session = null;
-
-        if ($request->hasAttribute(ServerSession::class)) {
-            $session = new Session($request->getAttribute(ServerSession::class));
+        if (! $host) {
+            return null;
         }
 
-        return $session?->getId();
+        $encodedKey = Config::get('app.key');
+
+        if ($encodedKey) {
+            $decodedKey = Bin2Base64::decode($encodedKey);
+
+            return hash_hmac('sha256', $host, $decodedKey);
+        }
+
+        return hash('sha256', $host);
     }
 
-    protected function createRateLimitExceededResponse(string $key): Response
+    protected function rateLimitExceededResponse(string $identifier): Response
     {
-        $retryAfter = $this->rateLimiter->getTtl($key);
+        $retryAfter = $this->rateLimiter->getTtl($identifier);
 
         return new Response(
             status: HttpStatus::TOO_MANY_REQUESTS->value,
@@ -91,20 +87,5 @@ class RateLimiter implements Middleware
                 'retry_after' => $retryAfter,
             ])
         );
-    }
-
-    protected function addRateLimitHeaders(Request $request, Response $response, int $current, string $key): Response
-    {
-        $remaining = max(0, Config::get('cache.rate_limit.per_minute', 60) - $current);
-        $resetTime = time() + $this->rateLimiter->getTtl($key);
-
-        if ($this->user($request)) {
-            $response->addHeader('x-ratelimit-limit', (string) Config::get('cache.rate_limit.per_minute', 60));
-            $response->addHeader('x-ratelimit-remaining', (string) $remaining);
-            $response->addHeader('x-ratelimit-reset', (string) $resetTime);
-            $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($key));
-        }
-
-        return $response;
     }
 }

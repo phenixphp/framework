@@ -2,24 +2,75 @@
 
 declare(strict_types=1);
 
-use Amp\Http\Server\Response;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
+use Phenix\Http\Constants\HttpStatus;
+use Phenix\Http\Response;
 use Tests\Unit\Routing\AcceptJsonResponses;
 
-afterEach(function () {
+use function Amp\delay;
+
+afterEach(function (): void {
     $this->app->stop();
 });
 
-it('sets a middleware for all routes', function () {
+it('sets a middleware for all routes', function (): void {
     Config::set('app.middlewares.router', [
         AcceptJsonResponses::class,
     ]);
 
-    Route::get('/', fn () => new Response(body: 'Hello'));
+    Route::get('/', fn (): Response => response()->plain('Ok'));
 
     $this->app->run();
 
     $this->get(path: '/', headers: ['Accept' => 'text/html'])
         ->assertNotAcceptable();
+});
+
+it('skips rate limiting when disabled', function (): void {
+    Config::set('cache.rate_limit.enabled', false);
+    Config::set('cache.rate_limit.per_minute', 1);
+
+    Route::get('/', fn (): Response => response()->plain('Ok'));
+
+    $this->app->run();
+
+    $this->get(path: '/')
+        ->assertOk();
+
+    $this->get(path: '/')
+        ->assertOk();
+});
+
+it('returns 429 when rate limit exceeded', function (): void {
+    Config::set('cache.rate_limit.per_minute', 1);
+
+    Route::get('/', fn (): Response => response()->plain('Ok'));
+
+    $this->app->run();
+
+    $this->get(path: '/')
+        ->assertOk();
+
+    $this->get(path: '/')
+        ->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS);
+});
+
+it('resets rate limit after time window', function (): void {
+    Config::set('cache.rate_limit.per_minute', 1);
+
+    Route::get('/', fn (): Response => response()->plain('Ok'));
+
+    $this->app->run();
+
+    $this->get(path: '/')
+        ->assertOk();
+
+    $this->get(path: '/')
+        ->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS);
+
+    delay(61); // Wait for the rate limit window to expire
+
+    $this->get(path: '/')
+        ->assertOk();
 });
