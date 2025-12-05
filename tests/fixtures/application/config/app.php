@@ -15,10 +15,10 @@ return [
     'middlewares' => [
         'global' => [
             \Phenix\Http\Middlewares\HandleCors::class,
-            \Phenix\Http\Middlewares\TokenRateLimit::class,
+            \Phenix\Cache\RateLimit\Middlewares\RateLimiter::class,
+            \Phenix\Auth\Middlewares\TokenRateLimit::class,
         ],
         'router' => [
-            \Phenix\Cache\RateLimit\Middlewares\RateLimiter::class,
         ],
     ],
     'providers' => [
