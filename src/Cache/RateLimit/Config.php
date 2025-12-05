@@ -20,11 +20,6 @@ class Config
         return $this->config['store'] ?? 'local';
     }
 
-    public function perMinute(): int
-    {
-        return (int) ($this->config['per_minute'] ?? 60);
-    }
-
     public function connection(): string
     {
         return $this->config['connection'] ?? 'default';
