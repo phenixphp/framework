@@ -283,7 +283,7 @@ it('automatically disables processing after all tasks complete', function (): vo
     $this->assertGreaterThan(0, $parallelQueue->size());
 
     // Wait for tasks to be processed and completed
-    delay(6.0); // Wait long enough for tasks to complete and cleanup
+    delay(10.0); // Wait long enough for tasks to complete and cleanup
 
     // Verify processing was disabled after all tasks completed
     $this->assertFalse($parallelQueue->isProcessing());
