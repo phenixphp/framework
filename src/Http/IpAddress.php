@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Http;
 
 use Amp\Http\Server\Request;
-use Phenix\Crypto\Bin2Base64;
-use Phenix\Facades\Config;
 
 final class IpAddress
 {
@@ -33,14 +31,6 @@ final class IpAddress
 
         if ($host === null) {
             return $ip;
-        }
-
-        $encodedKey = Config::get('app.key');
-
-        if ($encodedKey) {
-            $decodedKey = Bin2Base64::decode($encodedKey);
-
-            return hash_hmac('sha256', $host, $decodedKey);
         }
 
         return hash('sha256', $host);
