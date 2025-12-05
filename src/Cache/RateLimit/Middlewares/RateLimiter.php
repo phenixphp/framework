@@ -29,23 +29,23 @@ class RateLimiter implements Middleware
             return $next->handleRequest($request);
         }
 
-        $identifier = IpAddress::hash($request) ?? 'guest';
-        $current = $this->rateLimiter->increment($identifier);
+        $clientIp = IpAddress::hash($request);
+        $current = $this->rateLimiter->increment($clientIp);
 
         $perMinuteLimit = Config::get('cache.rate_limit.per_minute', 60);
 
         if ($current > $perMinuteLimit) {
-            return $this->rateLimitExceededResponse($identifier);
+            return $this->rateLimitExceededResponse($clientIp);
         }
 
         $response = $next->handleRequest($request);
         $remaining = max(0, $perMinuteLimit - $current);
-        $resetTime = time() + $this->rateLimiter->getTtl($identifier);
+        $resetTime = time() + $this->rateLimiter->getTtl($clientIp);
 
         $response->addHeader('x-ratelimit-limit', (string) $perMinuteLimit);
         $response->addHeader('x-ratelimit-remaining', (string) $remaining);
         $response->addHeader('x-ratelimit-reset', (string) $resetTime);
-        $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($identifier));
+        $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($clientIp));
 
         return $response;
     }
