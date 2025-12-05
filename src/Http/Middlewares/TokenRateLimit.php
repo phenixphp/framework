@@ -29,7 +29,11 @@ class TokenRateLimit implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
+        $clientIdentifier = 'unknown';
+
+        if ($ip = IpAddress::parse($request)) {
+            $clientIdentifier = parse_url($ip, PHP_URL_HOST) ?? 'unknown';
+        }
 
         $attemptLimit = (int) (Config::get('auth.tokens.rate_limit.attempts', 5));
         $windowSeconds = (int) (Config::get('auth.tokens.rate_limit.window', 300));

@@ -23,6 +23,8 @@ class Authenticated implements Middleware
 {
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
+        dump(__CLASS__ . ' invoked');
+
         $authorizationHeader = $request->getHeader('Authorization');
 
         if (! $this->hasToken($authorizationHeader)) {
@@ -34,7 +36,11 @@ class Authenticated implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
+        $clientIdentifier = 'unknown';
+
+        if ($ip = IpAddress::parse($request)) {
+            $clientIdentifier = parse_url($ip, PHP_URL_HOST) ?? 'unknown';
+        }
 
         if (! $token || ! $auth->validate($token)) {
             Event::emitAsync(new FailedTokenValidation(
