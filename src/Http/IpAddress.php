@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Http;
 
-use Phenix\Facades\Config;
 use Amp\Http\Server\Request;
 use Phenix\Crypto\Bin2Base64;
+use Phenix\Facades\Config;
 
 final class IpAddress
 {
