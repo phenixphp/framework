@@ -32,7 +32,7 @@ class RateLimiter implements Middleware
         $clientIp = IpAddress::hash($request);
         $current = $this->rateLimiter->increment($clientIp);
 
-        $perMinuteLimit = Config::get('cache.rate_limit.per_minute', 60);
+        $perMinuteLimit = (int) Config::get('cache.rate_limit.per_minute', 60);
 
         if ($current > $perMinuteLimit) {
             return $this->rateLimitExceededResponse($clientIp);
