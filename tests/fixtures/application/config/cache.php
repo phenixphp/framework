@@ -48,7 +48,7 @@ return [
 
     'rate_limit' => [
         'enabled' => env('RATE_LIMIT_ENABLED', static fn (): bool => true),
-        'driver' => env('RATE_LIMIT_DRIVER', static fn (): string => 'local'),
+        'store' => env('RATE_LIMIT_STORE', static fn (): string => 'local'),
         'per_minute' => env('RATE_LIMIT_PER_MINUTE', static fn (): int => 60),
         'connection' => env('RATE_LIMIT_REDIS_CONNECTION', static fn (): string => 'default'),
     ],

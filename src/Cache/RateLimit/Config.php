@@ -17,7 +17,7 @@ class Config
 
     public function default(): string
     {
-        return $this->config['driver'] ?? 'local';
+        return $this->config['store'] ?? 'local';
     }
 
     public function perMinute(): int

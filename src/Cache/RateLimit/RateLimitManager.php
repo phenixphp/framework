@@ -41,10 +41,10 @@ class RateLimitManager
 
     protected function limiter(): RateLimit
     {
-        return $this->rateLimiters[$this->config->default()] ??= $this->resolveDriver();
+        return $this->rateLimiters[$this->config->default()] ??= $this->resolveStore();
     }
 
-    protected function resolveDriver(): RateLimit
+    protected function resolveStore(): RateLimit
     {
         return match ($this->config->default()) {
             'redis' => RateLimitFactory::redis($this->config->ttl(), $this->config->connection()),
