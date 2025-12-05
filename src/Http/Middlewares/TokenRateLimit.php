@@ -29,16 +29,12 @@ class TokenRateLimit implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIdentifier = 'unknown';
-
-        if ($ip = IpAddress::parse($request)) {
-            $clientIdentifier = parse_url($ip, PHP_URL_HOST) ?? 'unknown';
-        }
+        $clientIp = IpAddress::hash($request);
 
         $attemptLimit = (int) (Config::get('auth.tokens.rate_limit.attempts', 5));
         $windowSeconds = (int) (Config::get('auth.tokens.rate_limit.window', 300));
 
-        if ($auth->getAttempts($clientIdentifier) >= $attemptLimit) {
+        if ($auth->getAttempts($clientIp) >= $attemptLimit) {
             return response()->json(
                 content: ['error' => 'Too many token validation attempts'],
                 status: HttpStatus::TOO_MANY_REQUESTS,

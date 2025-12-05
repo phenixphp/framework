@@ -10,7 +10,6 @@ use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
 use Phenix\App;
 use Phenix\Cache\RateLimit\RateLimitManager;
-use Phenix\Crypto\Bin2Base64;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\IpAddress;
@@ -30,7 +29,7 @@ class RateLimiter implements Middleware
             return $next->handleRequest($request);
         }
 
-        $identifier = $this->getIpHash($request) ?? 'guest';
+        $identifier = IpAddress::hash($request) ?? 'guest';
         $current = $this->rateLimiter->increment($identifier);
 
         $perMinuteLimit = Config::get('cache.rate_limit.per_minute', 60);
@@ -49,26 +48,6 @@ class RateLimiter implements Middleware
         $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($identifier));
 
         return $response;
-    }
-
-    protected function getIpHash(Request $request): string|null
-    {
-        $ip = IpAddress::parse($request);
-        $host = parse_url($ip, PHP_URL_HOST);
-
-        if (! $host) {
-            return null;
-        }
-
-        $encodedKey = Config::get('app.key');
-
-        if ($encodedKey) {
-            $decodedKey = Bin2Base64::decode($encodedKey);
-
-            return hash_hmac('sha256', $host, $decodedKey);
-        }
-
-        return hash('sha256', $host);
     }
 
     protected function rateLimitExceededResponse(string $identifier): Response
