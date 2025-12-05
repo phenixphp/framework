@@ -32,16 +32,16 @@ class RateLimitManager
         return $this->limiter()->getTtl($key);
     }
 
+    public function limiter(): RateLimit
+    {
+        return $this->rateLimiters[$this->config->default()] ??= $this->resolveStore();
+    }
+
     public function prefixed(string $prefix): self
     {
         $this->rateLimiters[$this->config->default()] = RateLimitFactory::withPrefix($this->limiter(), $prefix);
 
         return $this;
-    }
-
-    protected function limiter(): RateLimit
-    {
-        return $this->rateLimiters[$this->config->default()] ??= $this->resolveStore();
     }
 
     protected function resolveStore(): RateLimit
