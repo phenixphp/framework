@@ -14,7 +14,7 @@ use Phenix\Database\Constants\Connection;
 use Phenix\Facades\Event;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
-use Phenix\Http\Middlewares\Authenticated;
+use Phenix\Auth\Middlewares\Authenticated;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Util\Date;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Phenix\Auth\Middlewares;
 
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
@@ -23,8 +23,6 @@ class Authenticated implements Middleware
 {
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
-        dump(__CLASS__ . ' invoked');
-
         $authorizationHeader = $request->getHeader('Authorization');
 
         if (! $this->hasToken($authorizationHeader)) {
