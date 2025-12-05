@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Phenix\Auth\Middlewares;
 
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
