@@ -60,35 +60,35 @@ class AuthenticationManager
         return true;
     }
 
-    public function increaseAttempts(string $clientIdentifier): void
+    public function increaseAttempts(string $clientIp): void
     {
-        $key = $this->getAttemptKey($clientIdentifier);
+        $key = $this->getAttemptKey($clientIp);
 
         Cache::set(
             $key,
-            $this->getAttempts($clientIdentifier) + 1,
+            $this->getAttempts($clientIp) + 1,
             Date::now()->addSeconds(
                 (int) (Config::get('auth.tokens.rate_limit.window', 300))
             )
         );
     }
 
-    public function getAttempts(string $clientIdentifier): int
+    public function getAttempts(string $clientIp): int
     {
-        $key = $this->getAttemptKey($clientIdentifier);
+        $key = $this->getAttemptKey($clientIp);
 
         return (int) Cache::get($key, fn (): int => 0);
     }
 
-    public function resetAttempts(string $clientIdentifier): void
+    public function resetAttempts(string $clientIp): void
     {
-        $key = $this->getAttemptKey($clientIdentifier);
+        $key = $this->getAttemptKey($clientIp);
 
         Cache::delete($key);
     }
 
-    protected function getAttemptKey(string $clientIdentifier): string
+    protected function getAttemptKey(string $clientIp): string
     {
-        return sprintf('auth:token_attempts:%s', $clientIdentifier);
+        return sprintf('auth:token_attempts:%s', $clientIp);
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Phenix\Auth\Middlewares;
 
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
@@ -34,18 +34,18 @@ class Authenticated implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
+        $clientIp = IpAddress::hash($request);
 
         if (! $token || ! $auth->validate($token)) {
             Event::emitAsync(new FailedTokenValidation(
                 request: new HttpRequest($request),
-                clientIp: $clientIdentifier,
+                clientIp: $clientIp,
                 reason: $token ? 'validation_failed' : 'invalid_format',
                 attemptedToken: $token,
-                attemptCount: $auth->getAttempts($clientIdentifier)
+                attemptCount: $auth->getAttempts($clientIp)
             ));
 
-            $auth->increaseAttempts($clientIdentifier);
+            $auth->increaseAttempts($clientIp);
 
             return $this->unauthorized();
         }
@@ -53,10 +53,10 @@ class Authenticated implements Middleware
         Event::emitAsync(new TokenValidated(
             token: $auth->user()?->currentAccessToken(),
             request: new HttpRequest($request),
-            clientIp: $clientIdentifier
+            clientIp: $clientIp
         ));
 
-        $auth->resetAttempts($clientIdentifier);
+        $auth->resetAttempts($clientIp);
 
         $request->setAttribute(Config::get('auth.users.model', User::class), $auth->user());
 

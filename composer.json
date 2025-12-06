@@ -38,6 +38,7 @@
         "amphp/socket": "^2.1.0",
         "egulias/email-validator": "^4.0",
         "fakerphp/faker": "^1.23",
+        "kelunik/rate-limit": "^3.0",
         "league/container": "^4.2",
         "nesbot/carbon": "^3.0",
         "phenixphp/http-cors": "^0.1.0",

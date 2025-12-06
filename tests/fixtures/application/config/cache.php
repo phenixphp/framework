@@ -45,4 +45,11 @@ return [
     | unless a specific TTL is provided when setting a cache item.
     */
     'ttl' => env('CACHE_TTL', static fn (): int => 60),
+
+    'rate_limit' => [
+        'enabled' => env('RATE_LIMIT_ENABLED', static fn (): bool => true),
+        'store' => env('RATE_LIMIT_STORE', static fn (): string => 'local'),
+        'per_minute' => env('RATE_LIMIT_PER_MINUTE', static fn (): int => 60),
+        'connection' => env('RATE_LIMIT_REDIS_CONNECTION', static fn (): string => 'default'),
+    ],
 ];

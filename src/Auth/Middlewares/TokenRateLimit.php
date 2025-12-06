@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Middlewares;
+namespace Phenix\Auth\Middlewares;
 
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Request;
@@ -29,12 +29,12 @@ class TokenRateLimit implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIdentifier = IpAddress::parse($request) ?? 'unknown';
+        $clientIp = IpAddress::hash($request);
 
         $attemptLimit = (int) (Config::get('auth.tokens.rate_limit.attempts', 5));
         $windowSeconds = (int) (Config::get('auth.tokens.rate_limit.window', 300));
 
-        if ($auth->getAttempts($clientIdentifier) >= $attemptLimit) {
+        if ($auth->getAttempts($clientIp) >= $attemptLimit) {
             return response()->json(
                 content: ['error' => 'Too many token validation attempts'],
                 status: HttpStatus::TOO_MANY_REQUESTS,
