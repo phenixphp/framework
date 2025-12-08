@@ -34,7 +34,7 @@ class ResponseHeaders implements Middleware
     {
         $response = $next->handleRequest($request);
 
-        if ($response->getStatus() >= HttpStatus::MULTIPLE_CHOICES && $response->getStatus() < HttpStatus::BAD_REQUEST) {
+        if ($response->getStatus() >= HttpStatus::MULTIPLE_CHOICES->value && $response->getStatus() < HttpStatus::BAD_REQUEST->value) {
             return $response;
         }
 
