@@ -66,6 +66,15 @@ class Response
         return $this;
     }
 
+    public function redirect(string $location, HttpStatus $status = HttpStatus::FOUND, array $headers = []): self
+    {
+        $this->body = json_encode(['redirectTo' => $location]);
+        $this->status = $status;
+        $this->headers = [...['Location' => $location, 'content-type' => 'application/json'], ...$headers];
+
+        return $this;
+    }
+
     public function send(): ServerResponse
     {
         return new ServerResponse(
