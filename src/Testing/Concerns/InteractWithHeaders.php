@@ -23,8 +23,8 @@ trait InteractWithHeaders
     public function assertHeaders(array $needles): self
     {
         foreach ($needles as $header => $value) {
-            Assert::assertNotNull($this->response->getHeader($header));
-            Assert::assertEquals($value, $this->response->getHeader($header));
+            Assert::assertNotNull($this->response->getHeader($header), "Response is missing expected header: {$header}");
+            Assert::assertEquals($value, $this->response->getHeader($header), "Response header {$header} does not match expected value {$value}.");
         }
 
         return $this;
