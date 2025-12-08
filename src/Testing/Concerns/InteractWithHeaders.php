@@ -37,6 +37,15 @@ trait InteractWithHeaders
         return $this;
     }
 
+    public function assertHeadersMissing(array $needles): self
+    {
+        foreach ($needles as $header) {
+            Assert::assertNull($this->response->getHeader($header), "Response has unexpected header: {$header}");
+        }
+
+        return $this;
+    }
+
     public function assertIsJson(): self
     {
         $contentType = $this->response->getHeader('content-type');

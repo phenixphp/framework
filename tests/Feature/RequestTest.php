@@ -474,3 +474,20 @@ it('adds secure headers to responses', function (): void {
                 'Cross-Origin-Opener-Policy' => 'same-origin',
         ]);
 });
+
+it('does not add secure headers to redirect responses', function (): void {
+    Route::get('/redirect', fn (): Response => response()->redirect('/target'));
+
+    $this->app->run();
+
+    $this->get('/redirect')
+        ->assertHeadersMissing([
+            'X-Frame-Options',
+            'X-Content-Type-Options',
+            'X-DNS-Prefetch-Control',
+            'Strict-Transport-Security',
+            'Referrer-Policy',
+            'Cross-Origin-Resource-Policy',
+            'Cross-Origin-Opener-Policy',
+        ]);
+});
