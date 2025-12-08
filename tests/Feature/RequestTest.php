@@ -456,3 +456,21 @@ it('can assert record was created', function (): void {
             'email' => 'jane@example.com',
         ], 'data');
 });
+
+it('adds secure headers to responses', function (): void {
+    Route::get('/secure', fn (): Response => response()->json(['message' => 'Secure']));
+
+    $this->app->run();
+
+    $this->get('/secure')
+        ->assertOk()
+        ->assertHeaders([
+                'X-Frame-Options' => 'SAMEORIGIN',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-DNS-Prefetch-Control' => 'off',
+                'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains; preload',
+                'Referrer-Policy' => 'no-referrer',
+                'Cross-Origin-Resource-Policy' => 'same-origin',
+                'Cross-Origin-Opener-Policy' => 'same-origin',
+        ]);
+});

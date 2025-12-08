@@ -19,6 +19,7 @@ return [
             \Phenix\Auth\Middlewares\TokenRateLimit::class,
         ],
         'router' => [
+            \Phenix\Http\Middlewares\ResponseHeaders::class,
         ],
     ],
     'providers' => [
