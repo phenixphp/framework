@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'origins' => env('CORS_ORIGIN', static fn (): array => ['*']),
     'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'OPTIONS', 'DELETE'],

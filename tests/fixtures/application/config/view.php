@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'path' => env('VIEW_PATH', static fn () => base_path('resources/views')),
 
