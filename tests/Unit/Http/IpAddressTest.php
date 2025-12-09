@@ -56,3 +56,199 @@ it('generate ip hash from request', function (string $ip, $expected): void {
     [' 192.168.0.1:8080', hash('sha256', '192.168.0.1')],
     ['::ffff:192.168.0.1', hash('sha256', '::ffff:192.168.0.1')],
 ]);
+
+it('parses host and port from remote address (IPv6 bracket + port)', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('[2001:db8::1]:443') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $ip = Ip::make($request);
+
+    expect($ip->host())->toBe('2001:db8::1');
+    expect($ip->port())->toBe(443);
+    expect($ip->isForwarded())->toBeFalse();
+    expect($ip->forwardingAddresses())->toBe([]);
+});
+
+it('parses host only from raw IPv6 without port', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('2001:db8::2') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $ip = Ip::make($request);
+
+    expect($ip->host())->toBe('2001:db8::2');
+    expect($ip->port())->toBeNull();
+});
+
+it('parses host and port from IPv4 with port', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('192.168.0.1:8080') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $ip = Ip::make($request);
+
+    expect($ip->host())->toBe('192.168.0.1');
+    expect($ip->port())->toBe(8080);
+});
+
+it('parses host only from hostname with port', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('localhost:3000') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $ip = Ip::make($request);
+
+    expect($ip->host())->toBe('localhost');
+    expect($ip->port())->toBe(3000);
+});
+
+it('parses host only from hostname without port', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('example.com') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $ip = Ip::make($request);
+
+    expect($ip->host())->toBe('example.com');
+    expect($ip->port())->toBeNull();
+});
+
+it('sets forwarding info from X-Forwarded-For header', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('10.0.0.1:1234') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request->setHeader('X-Forwarded-For', '203.0.113.1, 198.51.100.2');
+
+    $ip = Ip::make($request);
+
+    expect($ip->isForwarded())->toBeTrue();
+    expect($ip->forwardingAddresses())->toBe(['203.0.113.1', '198.51.100.2']);
+});
