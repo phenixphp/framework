@@ -11,6 +11,7 @@ use Amp\Http\Server\Router;
 use Amp\Http\Server\Trailers;
 use League\Uri\Http;
 use Phenix\Http\Constants\HttpMethod;
+use Phenix\Http\Ip;
 use Phenix\Http\Request;
 use Phenix\Util\URL;
 use Psr\Http\Message\UriInterface;
@@ -25,7 +26,7 @@ it('gets route attributes from server request', function () {
 
     $formRequest = new Request($request);
 
-    expect($formRequest->ip())->toBeEmpty();
+    expect($formRequest->ip())->toBeInstanceOf(Ip::class);
     expect($formRequest->route('post'))->toBe('7');
     expect($formRequest->route('comment'))->toBe('22');
     expect($formRequest->route()->integer('post'))->toBe(7);
