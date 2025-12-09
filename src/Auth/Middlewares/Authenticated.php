@@ -34,7 +34,7 @@ class Authenticated implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIp = Ip::hash($request);
+        $clientIp = Ip::make($request)->hash();
 
         if (! $token || ! $auth->validate($token)) {
             Event::emitAsync(new FailedTokenValidation(
