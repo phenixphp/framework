@@ -57,7 +57,7 @@ it('generate ip hash from request', function (string $ip, $expected): void {
     ['::ffff:192.168.0.1', hash('sha256', '::ffff:192.168.0.1')],
 ]);
 
-it('parses host and port from remote address (IPv6 bracket + port)', function (): void {
+it('parses host and port from remote address IPv6 bracket with port', function (): void {
     $client = $this->createMock(Client::class);
     $client->method('getRemoteAddress')->willReturn(
         new class ('[2001:db8::1]:443') implements SocketAddress {
@@ -85,6 +85,7 @@ it('parses host and port from remote address (IPv6 bracket + port)', function ()
     $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
     $ip = Ip::make($request);
 
+    expect($ip->address())->toBe('[2001:db8::1]:443');
     expect($ip->host())->toBe('2001:db8::1');
     expect($ip->port())->toBe(443);
     expect($ip->isForwarded())->toBeFalse();
