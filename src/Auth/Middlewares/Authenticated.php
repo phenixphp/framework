@@ -16,7 +16,7 @@ use Phenix\Auth\User;
 use Phenix\Facades\Config;
 use Phenix\Facades\Event;
 use Phenix\Http\Constants\HttpStatus;
-use Phenix\Http\IpAddress;
+use Phenix\Http\Ip;
 use Phenix\Http\Request as HttpRequest;
 
 class Authenticated implements Middleware
@@ -34,7 +34,7 @@ class Authenticated implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIp = IpAddress::hash($request);
+        $clientIp = Ip::make($request)->hash();
 
         if (! $token || ! $auth->validate($token)) {
             Event::emitAsync(new FailedTokenValidation(
