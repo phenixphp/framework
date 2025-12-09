@@ -6,61 +6,97 @@ namespace Phenix\Http;
 
 use Amp\Http\Server\Request;
 
-final class Ip
+class Ip
 {
-    private function __construct()
+    protected string $address;
+
+    protected string $host;
+
+    protected int|null $port = null;
+
+    protected array $forwardingAddresses = [];
+
+    public function __construct(Request $request)
     {
-        // Prevent instantiation
+        $this->address = $request->getClient()->getRemoteAddress()->toString();
+
+        if ($forwardingHeader = $request->getHeader('X-Forwarded-For')) {
+            $parts = array_map(static fn ($v) => trim($v), explode(',', $forwardingHeader));
+            $this->forwardingAddresses = $parts;
+        }
     }
 
-    public static function parse(Request $request): string
+    public static function make(Request $request): self
     {
-        $xff = $request->getHeader('X-Forwarded-For'); // TODO: Review trusted proxies handling
+        $ip = new self($request);
+        $ip->parse();
 
-        if ($xff && $ip = self::getFromHeader($xff)) {
-            return $ip;
+        return $ip;
+    }
+
+    public function address(): string
+    {
+        return $this->address;
+    }
+
+    public function host(): string
+    {
+        return $this->host;
+    }
+
+    public function port(): int|null
+    {
+        return $this->port;
+    }
+
+    public function isForwarded(): bool
+    {
+        return ! empty($this->forwardingAddresses);
+    }
+
+    public function forwardingAddresses(): array
+    {
+        return $this->forwardingAddresses;
+    }
+
+    public function hash(): string
+    {
+        return hash('sha256', $this->host);
+    }
+
+    protected function parse(): void
+    {
+        $address = trim($this->address);
+
+        if (preg_match('/^\[(?<addr>[^\]]+)\](?::(?<port>\d+))?$/', $address, $m) === 1) {
+            $this->host = $m['addr'];
+            $this->port = isset($m['port']) ? (int) $m['port'] : null;
+
+            return;
         }
 
-        return (string) $request->getClient()->getRemoteAddress();
-    }
+        if (filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $this->host = $address;
+            $this->port = null;
 
-    public static function hash(Request $request): string
-    {
-        $ip = self::parse($request);
-
-        $normalized = self::normalize($ip);
-
-        return hash('sha256', $normalized);
-    }
-
-    private static function getFromHeader(string $header): string
-    {
-        $parts = explode(',', $header)[0] ?? '';
-
-        return trim($parts);
-    }
-
-    private static function normalize(string $ip): string
-    {
-        if (preg_match('/^\[(?<addr>[^\]]+)\](?::\d+)?$/', $ip, $m) === 1) {
-            return $m['addr'];
+            return;
         }
 
-        $normalized = $ip;
+        if (str_contains($address, ':')) {
+            [$maybeHost, $maybePort] = explode(':', $address, 2);
 
-        if (filter_var($normalized, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            return $normalized;
-        }
+            if (
+                filter_var($maybeHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ||
+                filter_var($maybeHost, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
+            ) {
+                $this->host = $maybeHost;
+                $this->port = is_numeric($maybePort) ? (int) $maybePort : null;
 
-        if (str_contains($normalized, ':')) {
-            $parts = explode(':', $normalized);
-            $maybeIpv4 = $parts[0];
-
-            if (filter_var($maybeIpv4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $normalized = $maybeIpv4;
+                return;
             }
         }
 
-        return $normalized;
+        $this->host = $address;
+        $this->port = null;
     }
 }
