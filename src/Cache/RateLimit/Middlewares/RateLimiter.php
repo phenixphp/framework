@@ -12,7 +12,7 @@ use Phenix\App;
 use Phenix\Cache\RateLimit\RateLimitManager;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
-use Phenix\Http\IpAddress;
+use Phenix\Http\Ip;
 
 class RateLimiter implements Middleware
 {
@@ -29,7 +29,7 @@ class RateLimiter implements Middleware
             return $next->handleRequest($request);
         }
 
-        $clientIp = IpAddress::hash($request);
+        $clientIp = Ip::hash($request);
         $current = $this->rateLimiter->increment($clientIp);
 
         $perMinuteLimit = (int) Config::get('cache.rate_limit.per_minute', 60);

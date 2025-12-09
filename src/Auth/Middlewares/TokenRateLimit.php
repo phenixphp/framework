@@ -12,7 +12,7 @@ use Phenix\App;
 use Phenix\Auth\AuthenticationManager;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
-use Phenix\Http\IpAddress;
+use Phenix\Http\Ip;
 
 use function str_starts_with;
 
@@ -29,7 +29,7 @@ class TokenRateLimit implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIp = IpAddress::hash($request);
+        $clientIp = Ip::hash($request);
 
         $attemptLimit = (int) (Config::get('auth.tokens.rate_limit.attempts', 5));
         $windowSeconds = (int) (Config::get('auth.tokens.rate_limit.window', 300));

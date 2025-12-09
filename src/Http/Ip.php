@@ -6,7 +6,7 @@ namespace Phenix\Http;
 
 use Amp\Http\Server\Request;
 
-final class IpAddress
+final class Ip
 {
     private function __construct()
     {
@@ -15,7 +15,7 @@ final class IpAddress
 
     public static function parse(Request $request): string
     {
-        $xff = $request->getHeader('X-Forwarded-For');
+        $xff = $request->getHeader('X-Forwarded-For'); // TODO: Review trusted proxies handling
 
         if ($xff && $ip = self::getFromHeader($xff)) {
             return $ip;

@@ -6,7 +6,7 @@ use Amp\Http\Server\Driver\Client;
 use Amp\Http\Server\Request as ServerRequest;
 use League\Uri\Http;
 use Phenix\Http\Constants\HttpMethod;
-use Phenix\Http\IpAddress;
+use Phenix\Http\Ip;
 use Phenix\Util\URL;
 
 it('generate ip hash from request', function (string $ip, $expected): void {
@@ -16,7 +16,7 @@ it('generate ip hash from request', function (string $ip, $expected): void {
 
     $request->setHeader('X-Forwarded-For', $ip);
 
-    expect(IpAddress::hash($request))->toBe($expected);
+    expect(Ip::hash($request))->toBe($expected);
 })->with([
     ['192.168.1.1', hash('sha256', '192.168.1.1')],
     ['192.168.1.1:8080', hash('sha256', '192.168.1.1')],

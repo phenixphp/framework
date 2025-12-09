@@ -149,7 +149,7 @@ class Request implements Arrayable
 
     public function ip(): string|null
     {
-        return IpAddress::parse($this->request);
+        return Ip::parse($this->request);
     }
 
     public function toArray(): array
