@@ -17,7 +17,8 @@ use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
 
 use function Amp\async;
-use function Amp\delay;
+use function Amp\weakClosure;
+use function count;
 
 class ParallelQueue extends Queue
 {
@@ -144,44 +145,52 @@ class ParallelQueue extends Queue
     private function initializeProcessor(): void
     {
         $this->processingStarted = true;
+        $this->processingInterval = new Interval($this->interval, weakClosure($this->handleIntervalTick(...)));
+        $this->processingInterval->disable();
 
-        $this->processingInterval = new Interval($this->interval, function (): void {
-            $this->cleanupCompletedTasks();
+        $this->isEnabled = false;
+    }
 
-            if (! empty($this->runningTasks)) {
-                return; // Skip processing if tasks are still running
-            }
+    private function handleIntervalTick(): void
+    {
+        $this->cleanupCompletedTasks();
 
-            $reservedTasks = $this->chunkProcessing
-                ? $this->popChunk($this->chunkSize)
-                : $this->processSingle();
+        if (! empty($this->runningTasks)) {
+            return; // Skip processing if tasks are still running
+        }
 
-            if (empty($reservedTasks)) {
-                $this->disableProcessing();
+        // Preserve batch-sequential characteristics, but cap batch size to maxConcurrency.
+        $batchSize = min($this->chunkSize, $this->maxConcurrency);
 
-                return;
-            }
+        $reservedTasks = $this->chunkProcessing
+            ? $this->popChunk($batchSize)
+            : $this->processSingle();
 
-            $executions = array_map(function (QueuableTask $task): Execution {
-                /** @var WorkerPool $pool */
-                $pool = App::make(WorkerPool::class);
+        if (empty($reservedTasks)) {
+            $this->disableProcessing();
 
-                $timeout = new TimeoutCancellation($task->getTimeout());
+            return;
+        }
 
-                return $pool->submit($task, $timeout);
-            }, $reservedTasks);
+        $executions = array_map(function (QueuableTask $task): Execution {
+            /** @var WorkerPool $pool */
+            $pool = App::make(WorkerPool::class);
 
-            $this->runningTasks = array_merge($this->runningTasks, $executions);
+            $timeout = new TimeoutCancellation($task->getTimeout());
 
-            $future = async(function () use ($reservedTasks, $executions): void {
-                $this->processTaskResults($reservedTasks, $executions);
-            });
+            return $pool->submit($task, $timeout);
+        }, $reservedTasks);
 
-            $future->await();
+        $this->runningTasks = array_merge($this->runningTasks, $executions);
+
+        $future = async(function () use ($reservedTasks, $executions): void {
+            $this->processTaskResults($reservedTasks, $executions);
         });
 
-        $this->processingInterval->disable();
-        $this->isEnabled = false;
+        $future->await();
+
+        // Keep runningTasks accurate within the same tick.
+        $this->cleanupCompletedTasks();
     }
 
     private function enableProcessing(): void
@@ -285,8 +294,6 @@ class ParallelQueue extends Queue
 
         if ($task->getAttempts() < $maxRetries) {
             $this->stateManager->retry($task, $retryDelay);
-
-            delay($retryDelay);
 
             parent::push($task);
         } else {
