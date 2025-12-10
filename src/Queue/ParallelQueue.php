@@ -15,8 +15,8 @@ use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Tasks\Exceptions\FailedTaskException;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
+use Throwable;
 
-use function Amp\async;
 use function Amp\weakClosure;
 use function count;
 
@@ -181,11 +181,26 @@ class ParallelQueue extends Queue
 
         $this->runningTasks = array_merge($this->runningTasks, $executions);
 
-        $future = async(function () use ($reservedTasks, $executions): void {
-            $this->processTaskResults($reservedTasks, $executions);
-        });
+        foreach ($executions as $i => $execution) {
+            $task = $reservedTasks[$i];
 
-        $future->await();
+            $execution->getFuture()
+                ->map(function (Result $result) use ($task): void {
+                    if ($result->isSuccess()) {
+                        $this->stateManager->complete($task);
+                    } else {
+                        $this->handleTaskFailure($task, $result->message());
+                    }
+                })
+                ->catch(function (Throwable $error) use ($task): void {
+                    $this->handleTaskFailure($task, $error->getMessage());
+                })
+                ->finally(function () use ($i): void {
+                    unset($this->runningTasks[$i]);
+
+                    $this->stateManager->cleanupExpiredReservations();
+                });
+        }
 
         $this->cleanupCompletedTasks();
     }
@@ -241,27 +256,6 @@ class ParallelQueue extends Queue
         }
 
         return null;
-    }
-
-    private function processTaskResults(array $tasks, array $executions): void
-    {
-        /** @var array<int, Result> $results */
-        $results = Future\await(array_map(
-            fn (Execution $e): Future => $e->getFuture(),
-            $executions,
-        ));
-
-        foreach ($results as $index => $result) {
-            $task = $tasks[$index];
-
-            if ($result->isSuccess()) {
-                $this->stateManager->complete($task);
-            } else {
-                $this->handleTaskFailure($task, $result->message());
-            }
-        }
-
-        $this->stateManager->cleanupExpiredReservations();
     }
 
     private function cleanupCompletedTasks(): void
