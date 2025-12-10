@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Amp\Future;
 use Amp\Interval;
 use Amp\Parallel\Worker\Execution;
 use Amp\Parallel\Worker\WorkerPool;
