@@ -81,7 +81,6 @@ class ParallelQueue extends Queue
                 continue;
             }
 
-            // If reservation failed re-enqueue the task
             parent::push($task);
         }
 
@@ -156,10 +155,9 @@ class ParallelQueue extends Queue
         $this->cleanupCompletedTasks();
 
         if (! empty($this->runningTasks)) {
-            return; // Skip processing if tasks are still running
+            return;
         }
 
-        // Preserve batch-sequential characteristics, but cap batch size to maxConcurrency.
         $batchSize = min($this->chunkSize, $this->maxConcurrency);
 
         $reservedTasks = $this->chunkProcessing
@@ -189,7 +187,6 @@ class ParallelQueue extends Queue
 
         $future->await();
 
-        // Keep runningTasks accurate within the same tick.
         $this->cleanupCompletedTasks();
     }
 
@@ -236,12 +233,10 @@ class ParallelQueue extends Queue
             $taskId = $task->getTaskId();
             $state = $this->stateManager->getTaskState($taskId);
 
-            // If task has no state or is available
             if ($state === null || ($state['available_at'] ?? 0) <= time()) {
                 return $task;
             }
 
-            // If not available, re-enqueue the task
             parent::push($task);
         }
 
