@@ -499,7 +499,6 @@ it('fakes events preventing listener execution', function (): void {
 
     $called = false;
     EventFacade::on('fake.event', function () use (&$called): void {
-        dump('FAILING');
         $called = true;
     });
 
