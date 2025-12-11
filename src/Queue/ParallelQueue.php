@@ -184,6 +184,7 @@ class ParallelQueue extends Queue
             $task = $reservedTasks[$i];
 
             $execution->getFuture()
+                ->ignore()
                 ->map(function (Result $result) use ($task): void {
                     if ($result->isSuccess()) {
                         $this->stateManager->complete($task);
