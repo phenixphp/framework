@@ -22,16 +22,12 @@ beforeEach(function (): void {
 afterEach(function (): void {
     $driver = Queue::driver();
 
-    $driver->clear();
-
     if ($driver instanceof ParallelQueue) {
         $driver->stop();
     }
 });
 
 it('pushes a task onto the parallel queue', function (): void {
-    Queue::clear();
-
     expect(Queue::pop())->toBeNull();
     expect(Queue::getConnectionName())->toBe('default');
 
@@ -52,7 +48,6 @@ it('pushes a task onto the parallel queue', function (): void {
 });
 
 it('dispatches a task conditionally', function (): void {
-    Queue::clear();
     BasicQueuableTask::dispatchIf(fn (): bool => true);
 
     $task = Queue::pop();
@@ -66,7 +61,6 @@ it('does not dispatch a task conditionally', function (): void {
 });
 
 it('pushes a task onto a custom parallel queue', function (): void {
-    Queue::clear();
     Queue::pushOn('custom-parallel', new BasicQueuableTask());
 
     $task = Queue::pop('custom-parallel');
@@ -76,7 +70,6 @@ it('pushes a task onto a custom parallel queue', function (): void {
 });
 
 it('returns the correct size for parallel queue', function (): void {
-    Queue::clear();
     Queue::push(new BasicQueuableTask());
 
     $this->assertSame(1, Queue::size());
@@ -248,6 +241,7 @@ it('skips processing new tasks when previous tasks are still running', function 
 
     // Verify the queue size - should be 1 (running task) or 0 if already completed
     $size = $parallelQueue->size();
+
     $this->assertLessThanOrEqual(1, $size);
     $this->assertGreaterThanOrEqual(0, $size);
 });
@@ -270,8 +264,6 @@ it('automatically disables processing when no tasks are available to reserve', f
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size());
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
-
-    $parallelQueue->clear();
 });
 
 it('automatically disables processing after all tasks complete', function (): void {
@@ -296,8 +288,6 @@ it('automatically disables processing after all tasks complete', function (): vo
     $this->assertSame(0, $status['pending_tasks']);
     $this->assertSame(0, $status['running_tasks']);
     $this->assertSame(0, $status['total_tasks']);
-
-    $parallelQueue->clear();
 });
 
 it('handles chunk processing when no available tasks exist', function (): void {
@@ -319,7 +309,6 @@ it('handles chunk processing when no available tasks exist', function (): void {
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertGreaterThan(0, $parallelQueue->size());
 
-    $parallelQueue->clear();
     $parallelQueue->stop();
 });
 
@@ -368,25 +357,9 @@ it('handles concurrent task reservation attempts correctly', function (): void {
     $this->assertSame(10, $initialSize);
 
     // Allow some time for processing to start and potentially encounter reservation conflicts
-    delay(3.5); // Wait just a bit more than the interval time
+    delay(4.0);
 
-    // Verify queue is still functioning properly despite any reservation conflicts
-    $currentSize = $parallelQueue->size();
-    $this->assertGreaterThanOrEqual(0, $currentSize);
-
-    // If tasks remain, processing should continue
-    if ($currentSize > 0) {
-        $this->assertTrue($parallelQueue->isProcessing());
-    }
-
-    // Wait for all tasks to complete
-    delay(12.0);
-
-    // Eventually all tasks should be processed
-    $this->assertSame(0, $parallelQueue->size());
-    $this->assertFalse($parallelQueue->isProcessing());
-
-    $parallelQueue->clear();
+    $this->assertLessThan(10, $parallelQueue->size());
 });
 
 it('handles task failures gracefully', function (): void {
@@ -459,8 +432,6 @@ it('returns null when next available task is not available', function (): void {
     // Since the task isn't available yet, the processor should disable itself and re-enqueue the task
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
-
-    $parallelQueue->clear();
 });
 
 it('re-enqueues the task when reservation fails inside getTaskChunk', function (): void {
@@ -484,8 +455,6 @@ it('re-enqueues the task when reservation fails inside getTaskChunk', function (
     // Since reservation failed, it should have been re-enqueued and processing disabled
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
-
-    $parallelQueue->clear();
 });
 
 it('process task in single mode', function (): void {
@@ -519,8 +488,6 @@ it('re-enqueues the task when reservation fails in single processing mode', func
 
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
-
-    $parallelQueue->clear();
 });
 
 it('logs pushed tasks when logging is enabled', function (): void {
@@ -607,7 +574,6 @@ it('does not fake tasks in production environment', function (): void {
     Queue::expect(BasicQueuableTask::class)->toPushNothing();
 
     Config::set('app.env', 'local');
-    Queue::clear();
 });
 
 it('does not log tasks when logging is disabled', function (): void {

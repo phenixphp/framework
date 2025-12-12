@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Amp\Future;
 use Amp\Interval;
 use Amp\Parallel\Worker\Execution;
 use Amp\Parallel\Worker\WorkerPool;
@@ -15,9 +14,10 @@ use Phenix\Queue\StateManagers\MemoryTaskState;
 use Phenix\Tasks\Exceptions\FailedTaskException;
 use Phenix\Tasks\QueuableTask;
 use Phenix\Tasks\Result;
+use Throwable;
 
-use function Amp\async;
-use function Amp\delay;
+use function Amp\weakClosure;
+use function count;
 
 class ParallelQueue extends Queue
 {
@@ -80,7 +80,6 @@ class ParallelQueue extends Queue
                 continue;
             }
 
-            // If reservation failed re-enqueue the task
             parent::push($task);
         }
 
@@ -144,44 +143,66 @@ class ParallelQueue extends Queue
     private function initializeProcessor(): void
     {
         $this->processingStarted = true;
-
-        $this->processingInterval = new Interval($this->interval, function (): void {
-            $this->cleanupCompletedTasks();
-
-            if (! empty($this->runningTasks)) {
-                return; // Skip processing if tasks are still running
-            }
-
-            $reservedTasks = $this->chunkProcessing
-                ? $this->popChunk($this->chunkSize)
-                : $this->processSingle();
-
-            if (empty($reservedTasks)) {
-                $this->disableProcessing();
-
-                return;
-            }
-
-            $executions = array_map(function (QueuableTask $task): Execution {
-                /** @var WorkerPool $pool */
-                $pool = App::make(WorkerPool::class);
-
-                $timeout = new TimeoutCancellation($task->getTimeout());
-
-                return $pool->submit($task, $timeout);
-            }, $reservedTasks);
-
-            $this->runningTasks = array_merge($this->runningTasks, $executions);
-
-            $future = async(function () use ($reservedTasks, $executions): void {
-                $this->processTaskResults($reservedTasks, $executions);
-            });
-
-            $future->await();
-        });
-
+        $this->processingInterval ??= new Interval($this->interval, weakClosure($this->handleIntervalTick(...)));
         $this->processingInterval->disable();
+
         $this->isEnabled = false;
+    }
+
+    private function handleIntervalTick(): void
+    {
+        $this->cleanupCompletedTasks();
+
+        if (! empty($this->runningTasks)) {
+            return;
+        }
+
+        $batchSize = min($this->chunkSize, $this->maxConcurrency);
+
+        $reservedTasks = $this->chunkProcessing
+            ? $this->popChunk($batchSize)
+            : $this->processSingle();
+
+        if (empty($reservedTasks)) {
+            $this->disableProcessing();
+
+            return;
+        }
+
+        $executions = array_map(function (QueuableTask $task): Execution {
+            /** @var WorkerPool $pool */
+            $pool = App::make(WorkerPool::class);
+
+            $timeout = new TimeoutCancellation($task->getTimeout());
+
+            return $pool->submit($task, $timeout);
+        }, $reservedTasks);
+
+        $this->runningTasks = array_merge($this->runningTasks, $executions);
+
+        foreach ($executions as $i => $execution) {
+            $task = $reservedTasks[$i];
+
+            $execution->getFuture()
+                ->ignore()
+                ->map(function (Result $result) use ($task): void {
+                    if ($result->isSuccess()) {
+                        $this->stateManager->complete($task);
+                    } else {
+                        $this->handleTaskFailure($task, $result->message());
+                    }
+                })
+                ->catch(function (Throwable $error) use ($task): void {
+                    $this->handleTaskFailure($task, $error->getMessage());
+                })
+                ->finally(function () use ($i): void {
+                    unset($this->runningTasks[$i]);
+
+                    $this->stateManager->cleanupExpiredReservations();
+                });
+        }
+
+        $this->cleanupCompletedTasks();
     }
 
     private function enableProcessing(): void
@@ -227,37 +248,14 @@ class ParallelQueue extends Queue
             $taskId = $task->getTaskId();
             $state = $this->stateManager->getTaskState($taskId);
 
-            // If task has no state or is available
             if ($state === null || ($state['available_at'] ?? 0) <= time()) {
                 return $task;
             }
 
-            // If not available, re-enqueue the task
             parent::push($task);
         }
 
         return null;
-    }
-
-    private function processTaskResults(array $tasks, array $executions): void
-    {
-        /** @var array<int, Result> $results */
-        $results = Future\await(array_map(
-            fn (Execution $e): Future => $e->getFuture(),
-            $executions,
-        ));
-
-        foreach ($results as $index => $result) {
-            $task = $tasks[$index];
-
-            if ($result->isSuccess()) {
-                $this->stateManager->complete($task);
-            } else {
-                $this->handleTaskFailure($task, $result->message());
-            }
-        }
-
-        $this->stateManager->cleanupExpiredReservations();
     }
 
     private function cleanupCompletedTasks(): void
@@ -285,8 +283,6 @@ class ParallelQueue extends Queue
 
         if ($task->getAttempts() < $maxRetries) {
             $this->stateManager->retry($task, $retryDelay);
-
-            delay($retryDelay);
 
             parent::push($task);
         } else {
