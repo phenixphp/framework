@@ -21,7 +21,7 @@ class ResponseHeaders implements Middleware
 
     public function __construct()
     {
-        $builders = Config::get('server.security.headers', []);
+        $builders = Config::get('app.response.headers', []);
 
         foreach ($builders as $builder) {
             assert(is_subclass_of($builder, HeaderBuilder::class));

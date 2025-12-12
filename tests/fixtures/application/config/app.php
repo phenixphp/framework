@@ -39,4 +39,15 @@ return [
         \Phenix\Translation\TranslationServiceProvider::class,
         \Phenix\Validation\ValidationServiceProvider::class,
     ],
+    'response' => [
+        'headers' => [
+            \Phenix\Http\Headers\XDnsPrefetchControl::class,
+            \Phenix\Http\Headers\XFrameOptions::class,
+            \Phenix\Http\Headers\StrictTransportSecurity::class,
+            \Phenix\Http\Headers\XContentTypeOptions::class,
+            \Phenix\Http\Headers\ReferrerPolicy::class,
+            \Phenix\Http\Headers\CrossOriginResourcePolicy::class,
+            \Phenix\Http\Headers\CrossOriginOpenerPolicy::class,
+        ],
+    ],
 ];
