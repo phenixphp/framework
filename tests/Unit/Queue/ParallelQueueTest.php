@@ -372,7 +372,6 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
     // All tasks should eventually be processed or re-enqueued appropriately
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
 
-    $parallelQueue->clear();
     $parallelQueue->finalize();
 });
 
