@@ -20,6 +20,7 @@ use Phenix\Console\Phenix;
 use Phenix\Constants\AppMode;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
+use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
@@ -200,7 +201,9 @@ class App implements AppContract, Makeable
             /** @var array<int, string> $trustedProxies */
             $trustedProxies = Config::get('app.trusted_proxies', []);
 
-            assert(is_array($trustedProxies) && count($trustedProxies) >= 0);
+            if (is_array($trustedProxies) && count($trustedProxies) === 0) {
+                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+            }
 
             return SocketHttpServer::createForBehindProxy(
                 $this->logger,
