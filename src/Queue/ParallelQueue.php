@@ -201,14 +201,8 @@ class ParallelQueue extends Queue
                 ->catch(function (Throwable $error) use ($task): void {
                     $this->handleTaskFailure($task, $error->getMessage());
                 })
-                ->finally(function () use ($i): void {
-                    unset($this->runningTasks[$i]);
-
-                    $this->stateManager->cleanupExpiredReservations();
-                });
+                ->finally($this->stateManager->cleanupExpiredReservations(...));
         }
-
-        $this->cleanupCompletedTasks();
     }
 
     private function enableProcessing(): void
