@@ -140,12 +140,6 @@ class ParallelQueue extends Queue
         $this->runningTasks = [];
     }
 
-    public function finalize(): void
-    {
-        unset($this->processingInterval);
-        $this->processingInterval = null;
-    }
-
     private function initializeProcessor(): void
     {
         $this->processingStarted = true;

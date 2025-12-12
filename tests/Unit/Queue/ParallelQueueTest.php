@@ -110,8 +110,6 @@ it('automatically starts processing when tasks are added', function (): void {
 
     $this->assertTrue($parallelQueue->isProcessing());
     $this->assertSame(1, $parallelQueue->size());
-
-    $parallelQueue->finalize();
 });
 
 it('can manually start and stop processing', function (): void {
@@ -130,8 +128,6 @@ it('can manually start and stop processing', function (): void {
     // Stop manually
     $parallelQueue->stop();
     $this->assertFalse($parallelQueue->isProcessing());
-
-    $parallelQueue->finalize();
 });
 
 it('processes tasks using interval without blocking', function (): void {
@@ -160,8 +156,6 @@ it('processes tasks using interval without blocking', function (): void {
 
     // Some tasks may have been processed
     $this->assertLessThanOrEqual(5, $parallelQueue->size());
-
-    $parallelQueue->finalize();
 });
 
 it('automatically stops processing when no tasks remain', function (): void {
@@ -179,8 +173,6 @@ it('automatically stops processing when no tasks remain', function (): void {
 
     // There should be no pending tasks
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
-
-    $parallelQueue->finalize();
 });
 
 it('provides detailed processor status', function (): void {
@@ -206,8 +198,6 @@ it('provides detailed processor status', function (): void {
     $status = $parallelQueue->getProcessorStatus();
     $this->assertTrue($status['is_processing']);
     $this->assertSame(2, $status['total_tasks']);
-
-    $parallelQueue->finalize();
 });
 
 it('works correctly with the HTTP server without blocking', function (): void {
@@ -243,8 +233,6 @@ it('works correctly with the HTTP server without blocking', function (): void {
     // Verify that tasks were added
     $this->assertSame(10, $parallelQueue->size());
     $this->assertTrue($parallelQueue->isProcessing());
-
-    $parallelQueue->finalize();
 });
 
 it('skips processing new tasks when previous tasks are still running', function (): void {
@@ -263,8 +251,6 @@ it('skips processing new tasks when previous tasks are still running', function 
 
     $this->assertLessThanOrEqual(1, $size);
     $this->assertGreaterThanOrEqual(0, $size);
-
-    $parallelQueue->finalize();
 });
 
 it('automatically disables processing when no tasks are available to reserve', function (): void {
@@ -287,7 +273,6 @@ it('automatically disables processing when no tasks are available to reserve', f
     $this->assertSame(0, $parallelQueue->getRunningTasksCount());
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('automatically disables processing after all tasks complete', function (): void {
@@ -314,7 +299,6 @@ it('automatically disables processing after all tasks complete', function (): vo
     $this->assertSame(0, $status['total_tasks']);
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('handles chunk processing when no available tasks exist', function (): void {
@@ -338,7 +322,6 @@ it('handles chunk processing when no available tasks exist', function (): void {
 
     $parallelQueue->clear();
     $parallelQueue->stop();
-    $parallelQueue->finalize();
 });
 
 it('re-enqueues tasks that cannot be reserved during chunk processing', function (): void {
@@ -371,8 +354,6 @@ it('re-enqueues tasks that cannot be reserved during chunk processing', function
 
     // All tasks should eventually be processed or re-enqueued appropriately
     $this->assertGreaterThanOrEqual(0, $parallelQueue->size());
-
-    $parallelQueue->finalize();
 });
 
 it('handles concurrent task reservation attempts correctly', function (): void {
@@ -393,7 +374,6 @@ it('handles concurrent task reservation attempts correctly', function (): void {
     $this->assertLessThan(10, $parallelQueue->size());
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('handles task failures gracefully', function (): void {
@@ -416,8 +396,6 @@ it('handles task failures gracefully', function (): void {
 
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size()); // Task should have been removed after processing
-
-    $parallelQueue->finalize();
 });
 
 it('prevent reserve the same task in task state management', function (): void {
@@ -470,7 +448,6 @@ it('returns null when next available task is not available', function (): void {
     $this->assertSame(1, $parallelQueue->size());
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('re-enqueues the task when reservation fails inside getTaskChunk', function (): void {
@@ -496,7 +473,6 @@ it('re-enqueues the task when reservation fails inside getTaskChunk', function (
     $this->assertSame(1, $parallelQueue->size());
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('process task in single mode', function (): void {
@@ -511,8 +487,6 @@ it('process task in single mode', function (): void {
 
     $this->assertFalse($parallelQueue->isProcessing());
     $this->assertSame(0, $parallelQueue->size());
-
-    $parallelQueue->finalize();
 });
 
 it('re-enqueues the task when reservation fails in single processing mode', function (): void {
@@ -534,7 +508,6 @@ it('re-enqueues the task when reservation fails in single processing mode', func
     $this->assertSame(1, $parallelQueue->size());
 
     $parallelQueue->clear();
-    $parallelQueue->finalize();
 });
 
 it('logs pushed tasks when logging is enabled', function (): void {
