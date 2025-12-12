@@ -147,7 +147,7 @@ class App implements AppContract, Makeable
         $this->signalTrapping = false;
     }
 
-    private function setRouter(): void
+    protected function setRouter(): void
     {
         $router = new Router($this->server, $this->logger, $this->errorHandler);
 
@@ -179,12 +179,12 @@ class App implements AppContract, Makeable
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
 
-    private function getHost(): string
+    protected function getHost(): string
     {
         return $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
     }
 
-    private function getPort(): int
+    protected function getPort(): int
     {
         $port = $this->getPortFromOptions() ?? Config::get('app.port');
 
@@ -210,13 +210,15 @@ class App implements AppContract, Makeable
 
         return SocketHttpServer::createForDirectAccess($this->logger);
     }
+
+    protected function getHostFromOptions(): string|null
     {
         $options = getopt('', ['host:']);
 
         return $options['host'] ?? null;
     }
 
-    private function getPortFromOptions(): string|null
+    protected function getPortFromOptions(): string|null
     {
         $options = getopt('', ['port:']);
 
