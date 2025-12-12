@@ -8,6 +8,32 @@ return [
     'url' => env('APP_URL', static fn (): string => 'http://127.0.0.1'),
     'port' => env('APP_PORT', static fn (): int => 1338),
     'key' => env('APP_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | App mode
+    |--------------------------------------------------------------------------
+    | Controls how the HTTP server determines client connection details.
+    |
+    | direct:
+    |   The server is exposed directly to clients. Remote address, scheme,
+    |   and host are taken from the TCP connection and request line.
+    |
+    | proxied:
+    |   The server runs behind a reverse proxy or load balancer (e.g., Nginx,
+    |   HAProxy, AWS ALB). Client information is derived from standard
+    |   forwarding headers only when the request comes from a trusted proxy.
+    |   Configure trusted proxies in `trusted_proxies` (IP addresses or CIDRs).
+    |   When enabled, the server will honor `Forwarded`, `X-Forwarded-For`,
+    |   `X-Forwarded-Proto`, and `X-Forwarded-Host` headers from trusted
+    |   sources, matching Amphp's behind-proxy behavior.
+    |
+    | Supported values: "direct", "proxied"
+    |
+    */
+
+    'app_mode' => env('APP_MODE', static fn (): string => 'direct'),
+    'trusted_proxies' => env('APP_TRUSTED_PROXIES', static fn (): array => []),
     'previous_key' => env('APP_PREVIOUS_KEY'),
     'debug' => env('APP_DEBUG', static fn (): bool => true),
     'locale' => 'en',

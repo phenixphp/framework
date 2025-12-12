@@ -6,6 +6,7 @@ namespace Phenix;
 
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\Middleware;
+use Amp\Http\Server\Middleware\ForwardedHeaderType;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
@@ -16,6 +17,7 @@ use Mockery\LegacyMockInterface;
 use Mockery\MockInterface;
 use Monolog\Logger;
 use Phenix\Console\Phenix;
+use Phenix\Constants\AppMode;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
 use Phenix\Facades\Config;
@@ -23,6 +25,9 @@ use Phenix\Facades\Route;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
 use Phenix\Session\SessionMiddlewareFactory;
+
+use function count;
+use function is_array;
 
 class App implements AppContract, Makeable
 {
@@ -78,7 +83,7 @@ class App implements AppContract, Makeable
 
     public function run(): void
     {
-        $this->server = SocketHttpServer::createForDirectAccess($this->logger);
+        $this->server = $this->createServer();
 
         $this->setRouter();
 
@@ -186,7 +191,25 @@ class App implements AppContract, Makeable
         return (int) $port;
     }
 
-    private function getHostFromOptions(): string|null
+    protected function createServer(): SocketHttpServer
+    {
+        $mode = AppMode::tryFrom(Config::get('app.app_mode', AppMode::DIRECT->value)) ?? AppMode::DIRECT;
+
+        if ($mode === AppMode::PROXIED) {
+            /** @var array<int, string> $trustedProxies */
+            $trustedProxies = Config::get('app.trusted_proxies', []);
+
+            assert(is_array($trustedProxies) && count($trustedProxies) >= 0);
+
+            return SocketHttpServer::createForBehindProxy(
+                $this->logger,
+                ForwardedHeaderType::XForwardedFor,
+                $trustedProxies
+            );
+        }
+
+        return SocketHttpServer::createForDirectAccess($this->logger);
+    }
     {
         $options = getopt('', ['host:']);
 
