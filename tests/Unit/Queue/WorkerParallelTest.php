@@ -183,6 +183,8 @@ it('processes a chunk of tasks in parallel when enabled', function (): void {
 
     $buffer = $output->fetch();
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
+
+    $parallelQueue->finalize();
 });
 
 it('processes a chunk via runOnce when chunk mode enabled', function (): void {
@@ -210,6 +212,8 @@ it('processes a chunk via runOnce when chunk mode enabled', function (): void {
 
     $buffer = $output->fetch();
     $this->assertStringContainsString('success: ' . BasicQueuableTask::class . ' processed', $buffer);
+
+    $parallelQueue->finalize();
 });
 
 it('retries failing tasks in chunk mode', function (): void {
@@ -238,6 +242,8 @@ it('retries failing tasks in chunk mode', function (): void {
     $buffer = $output->fetch();
     expect($buffer)->toContain('success: ' . BasicQueuableTask::class . ' processed');
     expect($buffer)->toContain('failed');
+
+    $parallelQueue->finalize();
 });
 
 it('cleans up and sleeps when no tasks in chunk mode, then stops', function (): void {
