@@ -10,7 +10,9 @@ use Amp\Http\Server\Middleware\ForwardedHeaderType;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
-use Amp\Socket;
+use Amp\Socket\BindContext;
+use Amp\Socket\Certificate;
+use Amp\Socket\ServerTlsContext;
 use League\Container\Container;
 use League\Uri\Uri;
 use Mockery\LegacyMockInterface;
@@ -23,6 +25,7 @@ use Phenix\Contracts\Makeable;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
+use Phenix\Http\Constants\Protocol;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
 use Phenix\Session\SessionMiddlewareFactory;
@@ -33,21 +36,23 @@ use function is_array;
 
 class App implements AppContract, Makeable
 {
-    private static string $path;
+    protected static string $path;
 
-    private static Container $container;
+    protected static Container $container;
 
-    private string $host;
+    protected string $host;
 
-    private RequestHandler $router;
+    protected RequestHandler $router;
 
-    private Logger $logger;
+    protected Logger $logger;
 
-    private SocketHttpServer $server;
+    protected SocketHttpServer $server;
 
-    private bool $signalTrapping = true;
+    protected bool $signalTrapping = true;
 
-    private DefaultErrorHandler $errorHandler;
+    protected DefaultErrorHandler $errorHandler;
+
+    protected Protocol $protocol = Protocol::HTTP;
 
     public function __construct(string $path)
     {
@@ -63,8 +68,6 @@ class App implements AppContract, Makeable
             Config::getKeyName(),
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
-
-        $this->host = $this->getHost();
 
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
@@ -85,13 +88,15 @@ class App implements AppContract, Makeable
 
     public function run(): void
     {
+        $this->detectProtocol();
+
+        $this->host = $this->getHost();
+
         $this->server = $this->createServer();
 
         $this->setRouter();
 
-        $port = $this->getPort();
-
-        $this->server->expose(new Socket\InternetAddress($this->host, $port));
+        $this->expose($this->getPort());
 
         $this->server->start($this->router, $this->errorHandler);
 
@@ -227,5 +232,35 @@ class App implements AppContract, Makeable
         $options = getopt('', ['port:']);
 
         return $options['port'] ?? null;
+    }
+
+    protected function expose(int $port): void
+    {
+        $plainBindContext = (new BindContext())->withTcpNoDelay();
+
+        if ($this->protocol === Protocol::HTTPS) {
+            /** @var string|null $certPath */
+            $certPath = Config::get('app.cert_path');
+
+            $tlsBindContext = $plainBindContext->withTlsContext(
+                (new ServerTlsContext())->withDefaultCertificate(new Certificate($certPath))
+            );
+
+            $this->server->expose("{$this->host}:{$port}", $tlsBindContext);
+
+            return;
+        }
+
+        $this->server->expose("{$this->host}:{$port}", $plainBindContext);
+    }
+
+    protected function detectProtocol(): void
+    {
+        $url = (string) Config::get('app.url');
+
+        /** @var string|null $certPath */
+        $certPath = Config::get('app.cert_path');
+
+        $this->protocol = str_starts_with($url, 'https://') && $certPath !== null ? Protocol::HTTPS : Protocol::HTTP;
     }
 }

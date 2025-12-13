@@ -6,8 +6,10 @@ return [
     'name' => env('APP_NAME', static fn (): string => 'Phenix'),
     'env' => env('APP_ENV', static fn (): string => 'local'),
     'url' => env('APP_URL', static fn (): string => 'http://127.0.0.1'),
-    'port' => env('APP_PORT', static fn (): int => 1338),
+    'port' => env('APP_PORT', static fn (): int => 1337),
+    'cert_path' => env('APP_CERT_PATH', static fn (): string|null => null),
     'key' => env('APP_KEY'),
+    'previous_key' => env('APP_PREVIOUS_KEY'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +36,6 @@ return [
 
     'app_mode' => env('APP_MODE', static fn (): string => 'direct'),
     'trusted_proxies' => env('APP_TRUSTED_PROXIES', static fn (): array => []),
-    'previous_key' => env('APP_PREVIOUS_KEY'),
     'debug' => env('APP_DEBUG', static fn (): bool => true),
     'locale' => 'en',
     'fallback_locale' => 'en',
