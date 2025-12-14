@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
+use Phenix\Constants\AppMode;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Response;
 
 it('starts server in proxied mode', function (): void {
-    Config::set('app.app_mode', 'proxied');
-    Config::set('app.trusted_proxies', ['172.18.0.0/24']);
+    Config::set('app.app_mode', AppMode::PROXIED->value);
+    Config::set('app.trusted_proxies', ['172.18.0.0']);
 
     Route::get('/proxy', fn (): Response => response()->json(['message' => 'Proxied']));
 
@@ -23,7 +24,7 @@ it('starts server in proxied mode', function (): void {
 });
 
 it('starts server in proxied mode with no trusted proxies', function (): void {
-    Config::set('app.app_mode', 'proxied');
+    Config::set('app.app_mode', AppMode::PROXIED->value);
 
     $this->app->run();
 })->throws(RuntimeError::class);
