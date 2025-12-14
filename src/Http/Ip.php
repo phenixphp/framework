@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Http;
 
+use Amp\Http\Server\Middleware\Forwarded;
 use Amp\Http\Server\Request;
 
 class Ip
@@ -14,15 +15,17 @@ class Ip
 
     protected int|null $port = null;
 
-    protected array $forwardingAddresses = [];
+    protected string|null $forwardingAddress = null;
 
     public function __construct(Request $request)
     {
         $this->address = $request->getClient()->getRemoteAddress()->toString();
 
-        if ($forwardingHeader = $request->getHeader('X-Forwarded-For')) {
-            $parts = array_map(static fn ($v) => trim($v), explode(',', $forwardingHeader));
-            $this->forwardingAddresses = $parts;
+        if ($request->hasAttribute(Forwarded::class)) {
+            /** @var Forwarded|null $forwarded */
+            $forwarded = $request->getAttribute(Forwarded::class);
+
+            $this->forwardingAddress = $forwarded->getFor()->toString();
         }
     }
 
@@ -51,12 +54,12 @@ class Ip
 
     public function isForwarded(): bool
     {
-        return ! empty($this->forwardingAddresses);
+        return ! empty($this->forwardingAddress);
     }
 
-    public function forwardingAddresses(): array
+    public function forwardingAddress(): string|null
     {
-        return $this->forwardingAddresses;
+        return $this->forwardingAddress;
     }
 
     public function hash(): string

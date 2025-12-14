@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use Amp\Http\Server\Driver\Client;
+use Amp\Http\Server\Middleware\Forwarded;
 use Amp\Http\Server\Request as ServerRequest;
+use Amp\Socket\InternetAddress;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketAddressType;
 use League\Uri\Http;
+use Phenix\Constants\AppMode;
+use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Ip;
 use Phenix\Util\URL;
@@ -43,7 +47,7 @@ it('generate ip hash from request', function (string $ip, $expected): void {
 
     expect($ip->hash())->toBe($expected);
     expect($ip->isForwarded())->toBeFalse();
-    expect($ip->forwardingAddresses())->toBe([]);
+    expect($ip->forwardingAddress())->toBeNull();
 })->with([
     ['192.168.1.1', hash('sha256', '192.168.1.1')],
     ['192.168.1.1:8080', hash('sha256', '192.168.1.1')],
@@ -89,7 +93,7 @@ it('parses host and port from remote address IPv6 bracket with port', function (
     expect($ip->host())->toBe('2001:db8::1');
     expect($ip->port())->toBe(443);
     expect($ip->isForwarded())->toBeFalse();
-    expect($ip->forwardingAddresses())->toBe([]);
+    expect($ip->forwardingAddress())->toBeNull();
 });
 
 it('parses host only from raw IPv6 without port', function (): void {
@@ -246,10 +250,19 @@ it('sets forwarding info from X-Forwarded-For header', function (): void {
     );
 
     $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
-    $request->setHeader('X-Forwarded-For', '203.0.113.1, 198.51.100.2');
+    $request->setHeader('X-Forwarded-For', '203.0.113.1');
+    $request->setAttribute(
+        Forwarded::class,
+        new Forwarded(
+            new InternetAddress('203.0.113.1', 4711),
+            [
+                'for' => '203.0.113.1:4711',
+            ]
+        )
+    );
 
     $ip = Ip::make($request);
 
     expect($ip->isForwarded())->toBeTrue();
-    expect($ip->forwardingAddresses())->toBe(['203.0.113.1', '198.51.100.2']);
+    expect($ip->forwardingAddress())->toBe('203.0.113.1:4711');
 });
