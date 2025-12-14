@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Amp\Socket\SocketException;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
@@ -31,7 +30,7 @@ it('starts server in proxied mode with no trusted proxies', function (): void {
 
 it('starts server with TLS certificate', function (): void {
     Config::set('app.url', 'https://127.0.0.1');
-    Config::set('app.port', 443);
+    Config::set('app.port', 1338);
     Config::set('app.cert_path', __DIR__ . '/../fixtures/files/cert.pem');
 
     Route::get('/tls', fn (): Response => response()->json(['message' => 'TLS']));
@@ -43,4 +42,4 @@ it('starts server with TLS certificate', function (): void {
         ->assertJsonPath('data.message', 'TLS');
 
     $this->app->stop();
-})->throws(SocketException::class, 'Could not create server tcp://127.0.0.1:443: [Error: #0] Permission denied');
+});
