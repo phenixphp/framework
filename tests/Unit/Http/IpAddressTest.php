@@ -9,8 +9,6 @@ use Amp\Socket\InternetAddress;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketAddressType;
 use League\Uri\Http;
-use Phenix\Constants\AppMode;
-use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Ip;
 use Phenix\Util\URL;
