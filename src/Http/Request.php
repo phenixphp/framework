@@ -42,6 +42,8 @@ class Request implements Arrayable
 
     protected Session|null $session;
 
+    protected Ip|null $ip;
+
     public function __construct(
         protected ServerRequest $request
     ) {
@@ -149,7 +151,7 @@ class Request implements Arrayable
 
     public function ip(): Ip
     {
-        return Ip::make($this->request);
+        return $this->ip ??= Ip::make($this->request);
     }
 
     public function toArray(): array

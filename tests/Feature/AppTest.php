@@ -6,17 +6,20 @@ use Phenix\Constants\AppMode;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
+use Phenix\Http\Request;
 use Phenix\Http\Response;
 
 it('starts server in proxied mode', function (): void {
     Config::set('app.app_mode', AppMode::PROXIED->value);
-    Config::set('app.trusted_proxies', ['172.18.0.0']);
+    Config::set('app.trusted_proxies', ['127.0.0.1/32', '127.0.0.1']);
 
-    Route::get('/proxy', fn (): Response => response()->json(['message' => 'Proxied']));
+    Route::get('/proxy', function (Request $request): Response {
+        return response()->json(['message' => 'Proxied']);
+    });
 
     $this->app->run();
 
-    $this->get('/proxy')
+    $this->get('/proxy', headers: ['X-Forwarded-For' => '10.0.0.1'])
         ->assertOk()
         ->assertJsonPath('data.message', 'Proxied');
 
