@@ -112,7 +112,7 @@ class App implements AppContract, Makeable
 
         $this->server->start($this->router, $this->errorHandler);
 
-        if ($this->serverMode === ServerMode::CLUSTER) {
+        if ($this->serverMode === ServerMode::CLUSTER && $this->signalTrapping) {
             async(function (): void {
                 Cluster::awaitTermination();
 
