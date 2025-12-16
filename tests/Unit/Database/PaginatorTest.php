@@ -209,7 +209,7 @@ it('handles empty dataset gracefully', function () {
     expect($paginator->perPage())->toBe(15);
     expect($paginator->hasPreviousPage())->toBeFalse();
     expect($paginator->hasNextPage())->toBeFalse();
-    expect($paginator->from())->toBe(0);
+    expect($paginator->from())->toBeNull();
     expect($paginator->to())->toBe(0);
 
     expect($paginator->toArray())->toBe([
@@ -222,7 +222,7 @@ it('handles empty dataset gracefully', function () {
         'last_page_url' => null,
         'prev_page_url' => null,
         'next_page_url' => null,
-        'from' => 0,
+        'from' => null,
         'to' => 0,
         'data' => [],
         'links' => [],

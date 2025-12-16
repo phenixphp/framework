@@ -99,39 +99,31 @@ class Paginator implements Arrayable
         $links = [];
         $separator = ['url' => null, 'label' => '...'];
 
-        $prepend = ($this->currentPage + 1) - $this->itemsEachSide;
-        $prepend = $prepend < 0 ? 0 : $prepend;
+        $start = max(1, $this->currentPage - $this->itemsEachSide);
+        $end = min($this->lastPage, $this->currentPage + $this->itemsEachSide);
 
-        if ($prepend > ($this->itemsEachSide + 1)) {
-            $prepend = $this->itemsEachSide;
+        if ($this->currentPage <= ($this->linksNumber - 1)) {
+            $start = 1;
+            $end = min($this->lastPage, $this->linksNumber);
+        }
 
+        if ($start > 1) {
             $links[] = $this->buildLink(1);
-            $links[] = $separator;
+
+            if ($start > 2) {
+                $links[] = $separator;
+            }
         }
 
-        $start = $this->currentPage - $prepend;
-
-        for ($i = $start; $i < $this->currentPage; $i++) {
+        for ($i = $start; $i <= $end; $i++) {
             $links[] = $this->buildLink($i);
         }
 
-        $append = $this->linksNumber - $prepend;
-        $append = ($this->currentPage + $append) > $this->lastPage
-            ? ($this->lastPage - $this->currentPage) + 1
-            : $append;
+        if ($end < $this->lastPage) {
+            if ($end < ($this->lastPage - 1)) {
+                $links[] = $separator;
+            }
 
-        $limit = $this->currentPage + $append;
-
-        for ($i = $this->currentPage; $i < $limit; $i++) {
-            $links[] = $this->buildLink($i);
-        }
-
-        if (($this->lastPage - ($this->currentPage + $append)) >= 1) {
-            $links[] = $separator;
-            $links[] = $this->buildLink($this->lastPage);
-        }
-
-        if (($this->lastPage - ($this->currentPage + $append)) === 0) {
             $links[] = $this->buildLink($this->lastPage);
         }
 
