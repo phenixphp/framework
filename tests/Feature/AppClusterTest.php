@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use Amp\Cluster\Cluster;
+use Phenix\Constants\ServerMode;
+use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Response;
-use Phenix\Facades\Config;
-use Phenix\Constants\ServerMode;
 
 beforeAll(function (): void {
     $_ENV['APP_SERVER_MODE'] = ServerMode::CLUSTER->value;
