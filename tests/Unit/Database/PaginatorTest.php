@@ -196,3 +196,35 @@ it('calculates pagination data without query params', function () {
         'links' => $links,
     ]);
 });
+
+it('handles empty dataset gracefully', function () {
+    $uri = Http::new(URL::build('users', ['page' => 1]));
+
+    $paginator = new Paginator($uri, new Collection('array'), 0, 1, 15);
+
+    expect($paginator->data()->toArray())->toBe([]);
+    expect($paginator->total())->toBe(0);
+    expect($paginator->lastPage())->toBe(0);
+    expect($paginator->currentPage())->toBe(1);
+    expect($paginator->perPage())->toBe(15);
+    expect($paginator->hasPreviousPage())->toBeFalse();
+    expect($paginator->hasNextPage())->toBeFalse();
+    expect($paginator->from())->toBeNull();
+    expect($paginator->to())->toBe(0);
+
+    expect($paginator->toArray())->toBe([
+        'path' => URL::build('users'),
+        'current_page' => 1,
+        'last_page' => 0,
+        'per_page' => 15,
+        'total' => 0,
+        'first_page_url' => URL::build('users', ['page' => 1]),
+        'last_page_url' => null,
+        'prev_page_url' => null,
+        'next_page_url' => null,
+        'from' => null,
+        'to' => 0,
+        'data' => [],
+        'links' => [],
+    ]);
+});
