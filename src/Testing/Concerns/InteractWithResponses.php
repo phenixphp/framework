@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace Phenix\Testing\Concerns;
 
+use Amp\Cancellation;
+use Amp\Http\Client\Connection\DefaultConnectionFactory;
+use Amp\Http\Client\Connection\UnlimitedConnectionPool;
 use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
+use Amp\Socket\ClientTlsContext;
+use Amp\Socket\ConnectContext;
+use Amp\Socket\DnsSocketConnector;
+use Amp\Socket\Socket;
+use Amp\Socket\SocketAddress;
+use Amp\Socket\SocketConnector;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Testing\TestResponse;
 use Phenix\Util\URL;
@@ -37,7 +46,22 @@ trait InteractWithResponses
             $request->setBody($body);
         }
 
-        $client = HttpClientBuilder::buildDefault();
+        $connector = new class () implements SocketConnector {
+            public function connect(
+                SocketAddress|string $uri,
+                ConnectContext|null $context = null,
+                Cancellation|null $cancellation = null
+            ): Socket {
+                $context = (new ConnectContext())
+                    ->withTlsContext((new ClientTlsContext(''))->withoutPeerVerification());
+
+                return (new DnsSocketConnector())->connect($uri, $context, $cancellation);
+            }
+        };
+
+        $client = (new HttpClientBuilder())
+            ->usingPool(new UnlimitedConnectionPool(new DefaultConnectionFactory($connector)))
+            ->build();
 
         return new TestResponse($client->request($request));
     }

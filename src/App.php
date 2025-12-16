@@ -4,43 +4,70 @@ declare(strict_types=1);
 
 namespace Phenix;
 
+use Amp\Cluster\Cluster;
 use Amp\Http\Server\DefaultErrorHandler;
+use Amp\Http\Server\Driver\ConnectionLimitingClientFactory;
+use Amp\Http\Server\Driver\ConnectionLimitingServerSocketFactory;
+use Amp\Http\Server\Driver\SocketClientFactory;
 use Amp\Http\Server\Middleware;
+use Amp\Http\Server\Middleware\CompressionMiddleware;
+use Amp\Http\Server\Middleware\ForwardedHeaderType;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
-use Amp\Socket;
+use Amp\Socket\BindContext;
+use Amp\Socket\Certificate;
+use Amp\Socket\ServerTlsContext;
+use Amp\Sync\LocalSemaphore;
 use League\Container\Container;
 use League\Uri\Uri;
 use Mockery\LegacyMockInterface;
 use Mockery\MockInterface;
 use Monolog\Logger;
 use Phenix\Console\Phenix;
+use Phenix\Constants\AppMode;
+use Phenix\Constants\ServerMode;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
+use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
+use Phenix\Http\Constants\Protocol;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
 use Phenix\Session\SessionMiddlewareFactory;
 
+use function Amp\async;
+use function Amp\trapSignal;
+use function count;
+use function extension_loaded;
+use function is_array;
+
 class App implements AppContract, Makeable
 {
-    private static string $path;
+    protected static string $path;
 
-    private static Container $container;
+    protected static Container $container;
 
-    private string $host;
+    protected string $host;
 
-    private RequestHandler $router;
+    protected RequestHandler $router;
 
-    private Logger $logger;
+    protected Logger $logger;
 
-    private SocketHttpServer $server;
+    protected SocketHttpServer $server;
 
-    private bool $signalTrapping = true;
+    protected bool $signalTrapping = true;
 
-    private DefaultErrorHandler $errorHandler;
+    protected DefaultErrorHandler $errorHandler;
+
+    protected Protocol $protocol = Protocol::HTTP;
+
+    protected AppMode $appMode;
+
+    protected ServerMode $serverMode;
+
+    protected bool $isRunning = false;
 
     public function __construct(string $path)
     {
@@ -57,8 +84,6 @@ class App implements AppContract, Makeable
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
 
-        $this->host = $this->getHost();
-
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
         /** @var array $providers */
@@ -68,28 +93,39 @@ class App implements AppContract, Makeable
             self::$container->addServiceProvider(new $provider());
         }
 
-        /** @var string $channel */
-        $channel = Config::get('logging.default', 'file');
+        $this->serverMode = ServerMode::tryFrom(Config::get('app.server_mode', ServerMode::SINGLE->value)) ?? ServerMode::SINGLE;
 
-        $this->logger = LoggerFactory::make($channel);
-
-        $this->register(Log::class, new Log($this->logger));
+        $this->setLogger();
     }
 
     public function run(): void
     {
-        $this->server = SocketHttpServer::createForDirectAccess($this->logger);
+        $this->appMode = AppMode::tryFrom(Config::get('app.app_mode', AppMode::DIRECT->value)) ?? AppMode::DIRECT;
+
+        $this->detectProtocol();
+
+        $this->host = Uri::new(Config::get('app.url'))->getHost();
+
+        $this->server = $this->createServer();
 
         $this->setRouter();
 
-        $port = $this->getPort();
-
-        $this->server->expose(new Socket\InternetAddress($this->host, $port));
+        $this->expose();
 
         $this->server->start($this->router, $this->errorHandler);
 
-        if ($this->signalTrapping) {
-            $signal = \Amp\trapSignal([SIGHUP, SIGINT, SIGQUIT, SIGTERM]);
+        $this->isRunning = true;
+
+        if ($this->serverMode === ServerMode::CLUSTER && $this->signalTrapping) {
+            async(function (): void {
+                Cluster::awaitTermination();
+
+                $this->logger->info('Received termination request');
+
+                $this->stop();
+            });
+        } elseif ($this->signalTrapping) {
+            $signal = trapSignal([SIGHUP, SIGINT, SIGQUIT, SIGTERM]);
 
             $this->logger->info("Caught signal {$signal}, stopping server");
 
@@ -99,7 +135,11 @@ class App implements AppContract, Makeable
 
     public function stop(): void
     {
-        $this->server->stop();
+        if ($this->isRunning) {
+            $this->server->stop();
+
+            $this->isRunning = false;
+        }
     }
 
     public static function make(string $key): object
@@ -142,7 +182,17 @@ class App implements AppContract, Makeable
         $this->signalTrapping = false;
     }
 
-    private function setRouter(): void
+    protected function setLogger(): void
+    {
+        /** @var string $channel */
+        $channel = Config::get('logging.default', 'file');
+
+        $this->logger = LoggerFactory::make($channel, $this->serverMode);
+
+        $this->register(Log::class, new Log($this->logger));
+    }
+
+    protected function setRouter(): void
     {
         $router = new Router($this->server, $this->logger, $this->errorHandler);
 
@@ -174,29 +224,109 @@ class App implements AppContract, Makeable
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
 
-    private function getHost(): string
+    protected function createServer(): SocketHttpServer
     {
-        return $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
+        if ($this->serverMode === ServerMode::CLUSTER) {
+            return $this->createClusterServer();
+        }
+
+        if ($this->appMode === AppMode::PROXIED) {
+            /** @var array<int, string> $trustedProxies */
+            $trustedProxies = Config::get('app.trusted_proxies', []);
+
+            if (is_array($trustedProxies) && count($trustedProxies) === 0) {
+                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+            }
+
+            return SocketHttpServer::createForBehindProxy(
+                $this->logger,
+                ForwardedHeaderType::XForwardedFor,
+                $trustedProxies
+            );
+        }
+
+        return SocketHttpServer::createForDirectAccess($this->logger);
     }
 
-    private function getPort(): int
+    protected function createClusterServer(): SocketHttpServer
     {
-        $port = $this->getPortFromOptions() ?? Config::get('app.port');
+        $middleware = [];
+        $allowedMethods = Middleware\AllowedMethodsMiddleware::DEFAULT_ALLOWED_METHODS;
 
-        return (int) $port;
+        if (extension_loaded('zlib')) {
+            $middleware[] = new CompressionMiddleware();
+        }
+
+        if ($this->appMode === AppMode::PROXIED) {
+            /** @var array<int, string> $trustedProxies */
+            $trustedProxies = Config::get('app.trusted_proxies', []);
+
+            if (is_array($trustedProxies) && count($trustedProxies) === 0) {
+                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+            }
+
+            $middleware[] = new Middleware\ForwardedMiddleware(ForwardedHeaderType::XForwardedFor, $trustedProxies);
+
+            return new SocketHttpServer(
+                $this->logger,
+                Cluster::getServerSocketFactory(),
+                new SocketClientFactory($this->logger),
+                $middleware,
+                $allowedMethods,
+            );
+        }
+
+        $connectionLimit = 1000;
+        $connectionLimitPerIp = 10;
+
+        $serverSocketFactory = new ConnectionLimitingServerSocketFactory(
+            new LocalSemaphore($connectionLimit),
+            Cluster::getServerSocketFactory(),
+        );
+
+        $clientFactory = new ConnectionLimitingClientFactory(
+            new SocketClientFactory($this->logger),
+            $this->logger,
+            $connectionLimitPerIp,
+        );
+
+        return new SocketHttpServer(
+            $this->logger,
+            $serverSocketFactory,
+            $clientFactory,
+            $middleware,
+            $allowedMethods,
+        );
     }
 
-    private function getHostFromOptions(): string|null
+    protected function expose(): void
     {
-        $options = getopt('', ['host:']);
+        $port = (int) Config::get('app.port');
+        $plainBindContext = (new BindContext())->withTcpNoDelay();
 
-        return $options['host'] ?? null;
+        if ($this->protocol === Protocol::HTTPS) {
+            /** @var string|null $certPath */
+            $certPath = Config::get('app.cert_path');
+
+            $tlsBindContext = $plainBindContext->withTlsContext(
+                (new ServerTlsContext())->withDefaultCertificate(new Certificate($certPath))
+            );
+
+            $this->server->expose("{$this->host}:{$port}", $tlsBindContext);
+
+            return;
+        }
+
+        $this->server->expose("{$this->host}:{$port}", $plainBindContext);
     }
 
-    private function getPortFromOptions(): string|null
+    protected function detectProtocol(): void
     {
-        $options = getopt('', ['port:']);
+        $url = (string) Config::get('app.url');
 
-        return $options['port'] ?? null;
+        /** @var string|null $certPath */
+        $certPath = Config::get('app.cert_path');
+
+        $this->protocol = str_starts_with($url, 'https://') && $certPath !== null ? Protocol::HTTPS : Protocol::HTTP;
     }
 }

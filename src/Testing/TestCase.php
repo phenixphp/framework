@@ -62,6 +62,10 @@ abstract class TestCase extends AsyncTestCase
             Cache::clear();
         }
 
+        if ($this->app instanceof AppProxy) {
+            $this->app->stop();
+        }
+
         $this->app = null;
     }
 
