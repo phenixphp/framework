@@ -91,7 +91,7 @@ class App implements AppContract, Makeable
             self::$container->addServiceProvider(new $provider());
         }
 
-        $this->serverMode = ServerMode::tryFrom(Config::get('app.server.mode', ServerMode::SINGLE->value)) ?? ServerMode::SINGLE;
+        $this->serverMode = ServerMode::tryFrom(Config::get('app.server_mode', ServerMode::SINGLE->value)) ?? ServerMode::SINGLE;
 
         $this->setLogger();
     }

@@ -13,7 +13,7 @@ beforeAll(function (): void {
 
 it('starts server in cluster mode', function (): void {
 
-    Config::set('app.server.mode', ServerMode::CLUSTER->value);
+    Config::set('app.server_mode', ServerMode::CLUSTER->value);
 
     Route::get('/cluster', fn (): Response => response()->json(['message' => 'Cluster']));
 
