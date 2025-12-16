@@ -21,7 +21,6 @@ class Ip
     {
         $this->address = $request->getClient()->getRemoteAddress()->toString();
 
-        /** @var Forwarded|null $forwarded */
         if ($request->hasAttribute(Forwarded::class) && $forwarded = $request->getAttribute(Forwarded::class)) {
             $this->forwardingAddress = $forwarded->getFor()->toString();
         }
