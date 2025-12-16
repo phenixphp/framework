@@ -67,6 +67,8 @@ class App implements AppContract, Makeable
 
     protected ServerMode $serverMode;
 
+    protected bool $isRunning = false;
+
     public function __construct(string $path)
     {
         self::$path = $path;
@@ -112,6 +114,8 @@ class App implements AppContract, Makeable
 
         $this->server->start($this->router, $this->errorHandler);
 
+        $this->isRunning = true;
+
         if ($this->serverMode === ServerMode::CLUSTER && $this->signalTrapping) {
             async(function (): void {
                 Cluster::awaitTermination();
@@ -131,7 +135,11 @@ class App implements AppContract, Makeable
 
     public function stop(): void
     {
-        $this->server->stop();
+        if ($this->isRunning) {
+            $this->server->stop();
+
+            $this->isRunning = false;
+        }
     }
 
     public static function make(string $key): object
