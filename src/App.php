@@ -104,13 +104,13 @@ class App implements AppContract, Makeable
 
         $this->detectProtocol();
 
-        $this->host = $this->getHost();
+        $this->host = Uri::new(Config::get('app.url'))->getHost();
 
         $this->server = $this->createServer();
 
         $this->setRouter();
 
-        $this->expose($this->getPort());
+        $this->expose();
 
         $this->server->start($this->router, $this->errorHandler);
 
@@ -224,18 +224,6 @@ class App implements AppContract, Makeable
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
 
-    protected function getHost(): string
-    {
-        return $this->getHostFromOptions() ?? Uri::new(Config::get('app.url'))->getHost();
-    }
-
-    protected function getPort(): int
-    {
-        $port = $this->getPortFromOptions() ?? Config::get('app.port');
-
-        return (int) $port;
-    }
-
     protected function createServer(): SocketHttpServer
     {
         if ($this->serverMode === ServerMode::CLUSTER) {
@@ -311,22 +299,9 @@ class App implements AppContract, Makeable
         );
     }
 
-    protected function getHostFromOptions(): string|null
+    protected function expose(): void
     {
-        $options = getopt('', ['host:']);
-
-        return $options['host'] ?? null;
-    }
-
-    protected function getPortFromOptions(): string|null
-    {
-        $options = getopt('', ['port:']);
-
-        return $options['port'] ?? null;
-    }
-
-    protected function expose(int $port): void
-    {
+        $port = (int) Config::get('app.port');
         $plainBindContext = (new BindContext())->withTcpNoDelay();
 
         if ($this->protocol === Protocol::HTTPS) {
