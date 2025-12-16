@@ -72,8 +72,12 @@ class Paginator implements Arrayable
         return $this->currentPage < $this->lastPage;
     }
 
-    public function from(): int
+    public function from(): int|null
     {
+        if ($this->total === 0) {
+            return null;
+        }
+
         return (($this->currentPage - 1) * $this->perPage) + 1;
     }
 
@@ -88,6 +92,10 @@ class Paginator implements Arrayable
 
     public function links(): array
     {
+        if ($this->total === 0 || $this->lastPage === 0) {
+            return [];
+        }
+
         $links = [];
         $separator = ['url' => null, 'label' => '...'];
 
@@ -179,8 +187,12 @@ class Paginator implements Arrayable
         return $this->buildPageUrl(1);
     }
 
-    private function getLastPageUrl(): string
+    private function getLastPageUrl(): string|null
     {
+        if ($this->lastPage === 0) {
+            return null;
+        }
+
         return $this->buildPageUrl($this->lastPage);
     }
 
