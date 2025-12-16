@@ -21,12 +21,15 @@ class LoggerFactory implements Makeable
 {
     public static function make(string $key, ServerMode $serverMode = ServerMode::SINGLE): Logger
     {
-        $logHandler = match (true) {
-            $serverMode === ServerMode::CLUSTER => Cluster::createLogHandler(),
-            $key === 'file' => self::fileHandler(),
-            $key === 'stream' => self::streamHandler(),
-            default => throw new RuntimeError("Unsupported logging channel: {$key}")
-        };
+        if ($serverMode === ServerMode::CLUSTER && Cluster::isWorker()) {
+            $logHandler = Cluster::createLogHandler();
+        } else {
+            $logHandler = match ($key) {
+                'file' => self::fileHandler(),
+                'stream' => self::streamHandler(),
+                default => throw new RuntimeError("Unsupported logging channel: {$key}"),
+            };
+        }
 
         $logger = new Logger(self::buildName($serverMode));
         $logger->pushHandler($logHandler);
@@ -62,9 +65,10 @@ class LoggerFactory implements Makeable
 
     private static function buildName(ServerMode $serverMode = ServerMode::SINGLE): string
     {
-        return match ($serverMode) {
-            ServerMode::SINGLE => 'phenix',
-            ServerMode::CLUSTER => 'phenix-worker-' . (Cluster::getContextId() ?? getmypid()),
-        };
+        if ($serverMode === ServerMode::CLUSTER && Cluster::isWorker()) {
+            return 'phenix-worker-' . (Cluster::getContextId() ?? getmypid());
+        }
+
+        return 'phenix';
     }
 }
