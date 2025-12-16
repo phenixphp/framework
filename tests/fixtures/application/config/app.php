@@ -36,6 +36,29 @@ return [
 
     'app_mode' => env('APP_MODE', static fn (): string => 'direct'),
     'trusted_proxies' => env('APP_TRUSTED_PROXIES', static fn (): array => []),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Server runtime mode
+    |--------------------------------------------------------------------------
+    | Controls whether the HTTP server runs as a single process (default) or
+    | under amphp/cluster.
+    |
+    | Supported values:
+    |   - "single"  (single process)
+    |   - "cluster" (run with vendor/bin/cluster and cluster sockets)
+    |
+    | server.cluster:
+    |   - workers: override number of workers (null = cluster default)
+    |   - pid_file: optional PID file for watcher (enables hot reload tooling)
+    */
+    'server' => [
+        'mode' => env('APP_SERVER_MODE', static fn (): string => 'single'),
+        'cluster' => [
+            'workers' => env('APP_CLUSTER_WORKERS', static fn (): int|null => null),
+            'pid_file' => env('APP_CLUSTER_PID_FILE', static fn (): string|null => null),
+        ],
+    ],
     'debug' => env('APP_DEBUG', static fn (): bool => true),
     'locale' => 'en',
     'fallback_locale' => 'en',

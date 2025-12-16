@@ -19,6 +19,7 @@ use Phenix\Testing\Concerns\InteractWithDatabase;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Throwable;
 
 use function in_array;
 
@@ -60,6 +61,10 @@ abstract class TestCase extends AsyncTestCase
 
         if (config('cache.default') === Store::FILE->value) {
             Cache::clear();
+        }
+
+        if ($this->app instanceof AppProxy) {
+            $this->app->stop();
         }
 
         $this->app = null;
