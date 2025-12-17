@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
+use Phenix\Facades\File;
 use Phenix\Providers\ServiceProvider;
 use Phenix\Routing\Console\RouteList;
 use Phenix\Util\Directory;
@@ -41,8 +42,10 @@ class RouteServiceProvider extends ServiceProvider
 
     private function loadRoutes(): void
     {
-        foreach (Directory::all(base_path('routes')) as $file) {
-            require $file;
+        $routesPath = base_path('routes' . DIRECTORY_SEPARATOR . 'api.php');
+
+        if (File::exists($routesPath)) {
+            require $routesPath;
         }
     }
 }
