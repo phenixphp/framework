@@ -37,7 +37,7 @@ class EventServiceProvider extends ServiceProvider
 
     private function loadEvents(): void
     {
-        $eventPath = base_path('events');
+        $eventPath = base_path('listen');
 
         if (File::exists($eventPath)) {
             foreach (File::listFilesRecursively($eventPath, '.php') as $file) {
