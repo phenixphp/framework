@@ -111,3 +111,136 @@ it('does nothing when no expression is set', function (): void {
 
     expect($executed)->toBeFalse();
 });
+
+it('sets cron for weekly', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->weekly();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 * * 0');
+});
+
+it('sets cron for monthly', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->monthly();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 1 * *');
+});
+
+it('sets cron for every ten minutes', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyTenMinutes();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('*/10 * * * *');
+});
+
+it('sets cron for every fifteen minutes', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyFifteenMinutes();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('*/15 * * * *');
+});
+
+it('sets cron for every thirty minutes', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyThirtyMinutes();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('*/30 * * * *');
+});
+
+it('sets cron for every two hours', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyTwoHours();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 */2 * * *');
+});
+
+it('sets cron for every two days', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyTwoDays();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 */2 * *');
+});
+
+it('sets cron for every weekday', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyWeekday();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 * * 1-5');
+});
+
+it('sets cron for every weekend', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->everyWeekend();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 * * 6,0');
+});
+
+it('sets cron for mondays', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->mondays();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 * * 1');
+});
+
+it('sets cron for fridays', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->fridays();
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('0 0 * * 5');
+});
+
+it('sets cron for weeklyAt at specific time', function (): void {
+    $scheduler = (new Schedule())->call(function (): void {})->weeklyAt('10:15');
+
+    $ref = new ReflectionClass($scheduler);
+    $prop = $ref->getProperty('expression');
+    $prop->setAccessible(true);
+    $expr = $prop->getValue($scheduler);
+
+    expect($expr->getExpression())->toBe('15 10 * * 0');
+});
+
