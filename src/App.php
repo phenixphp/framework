@@ -35,6 +35,7 @@ use Phenix\Facades\Route;
 use Phenix\Http\Constants\Protocol;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
+use Phenix\Scheduling\TimerRegistry;
 use Phenix\Session\SessionMiddlewareFactory;
 
 use function Amp\async;
@@ -115,6 +116,8 @@ class App implements AppContract, Makeable
         $this->server->start($this->router, $this->errorHandler);
 
         $this->isRunning = true;
+
+        TimerRegistry::run();
 
         if ($this->serverMode === ServerMode::CLUSTER && $this->signalTrapping) {
             async(function (): void {

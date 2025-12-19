@@ -64,12 +64,12 @@ return [
         ],
     ],
     'providers' => [
+        \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Console\CommandsServiceProvider::class,
         \Phenix\Routing\RouteServiceProvider::class,
         \Phenix\Database\DatabaseServiceProvider::class,
         \Phenix\Redis\RedisServiceProvider::class,
         \Phenix\Auth\AuthServiceProvider::class,
-        \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Cache\CacheServiceProvider::class,
@@ -78,6 +78,7 @@ return [
         \Phenix\Queue\QueueServiceProvider::class,
         \Phenix\Events\EventServiceProvider::class,
         \Phenix\Translation\TranslationServiceProvider::class,
+        \Phenix\Scheduling\SchedulingServiceProvider::class,
         \Phenix\Validation\ValidationServiceProvider::class,
     ],
     'response' => [

@@ -19,6 +19,10 @@ class FilesystemServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->bind(Storage::class);
+    }
+
+    public function boot(): void
+    {
         $this->bind(FileContract::class, File::class);
     }
 }
