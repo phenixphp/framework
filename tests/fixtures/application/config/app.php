@@ -78,6 +78,7 @@ return [
         \Phenix\Queue\QueueServiceProvider::class,
         \Phenix\Events\EventServiceProvider::class,
         \Phenix\Translation\TranslationServiceProvider::class,
+        \Phenix\Scheduling\SchedulingServiceProvider::class,
         \Phenix\Validation\ValidationServiceProvider::class,
     ],
     'response' => [
