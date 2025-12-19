@@ -243,4 +243,3 @@ it('sets cron for weeklyAt at specific time', function (): void {
 
     expect($expr->getExpression())->toBe('15 10 * * 0');
 });
-
