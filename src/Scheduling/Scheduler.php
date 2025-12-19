@@ -25,11 +25,6 @@ class Scheduler
         $this->closure = weakClosure($closure);
     }
 
-    public function setCron(string $expression): self
-    {
-        return $this->setExpressionString($expression);
-    }
-
     public function hourly(): self
     {
         return $this->setExpressionString('@hourly');
@@ -80,11 +75,6 @@ class Scheduler
         return $this->setExpressionString('0 */2 * * *');
     }
 
-    public function everyDay(): self
-    {
-        return $this->daily();
-    }
-
     public function everyTwoDays(): self
     {
         return $this->setExpressionString('0 0 */2 * *');
@@ -118,11 +108,6 @@ class Scheduler
     public function weeklyAt(string $time): self
     {
         return $this->weekly()->at($time);
-    }
-
-    public function everyWeekly(): self
-    {
-        return $this->weekly();
     }
 
     public function at(string $time): self
