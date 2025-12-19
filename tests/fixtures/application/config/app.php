@@ -64,12 +64,12 @@ return [
         ],
     ],
     'providers' => [
+        \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Console\CommandsServiceProvider::class,
         \Phenix\Routing\RouteServiceProvider::class,
         \Phenix\Database\DatabaseServiceProvider::class,
         \Phenix\Redis\RedisServiceProvider::class,
         \Phenix\Auth\AuthServiceProvider::class,
-        \Phenix\Filesystem\FilesystemServiceProvider::class,
         \Phenix\Tasks\TaskServiceProvider::class,
         \Phenix\Views\ViewServiceProvider::class,
         \Phenix\Cache\CacheServiceProvider::class,
