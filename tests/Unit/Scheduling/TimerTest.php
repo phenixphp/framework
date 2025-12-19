@@ -18,6 +18,8 @@ it('runs at given interval and can be disabled', function (): void {
         $count++;
     })->everySecond();
 
+    $timer->reference();
+
     TimerRegistry::run();
 
     delay(2.2);
