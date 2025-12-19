@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Phenix\Facades\Schedule as ScheduleFacade;
 use Phenix\Scheduling\Schedule;
+use Phenix\Scheduling\Timer;
 use Phenix\Scheduling\TimerRegistry;
 
 use function Amp\delay;
@@ -138,4 +139,136 @@ it('runs at given using facade', function (): void {
     expect($timerExecuted)->toBeTrue();
 
     $timer->disable();
+});
+
+it('sets interval for every two seconds', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyTwoSeconds();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(2.0);
+});
+
+it('sets interval for every five seconds', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyFiveSeconds();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(5.0);
+});
+
+it('sets interval for every ten seconds', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyTenSeconds();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(10.0);
+});
+
+it('sets interval for every fifteen seconds', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyFifteenSeconds();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(15.0);
+});
+
+it('sets interval for every thirty seconds', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyThirtySeconds();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(30.0);
+});
+
+it('sets interval for every minute', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyMinute();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(60.0);
+});
+
+it('sets interval for every two minutes', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyTwoMinutes();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(120.0);
+});
+
+it('sets interval for every five minutes', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyFiveMinutes();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(300.0);
+});
+
+it('sets interval for every ten minutes', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyTenMinutes();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(600.0);
+});
+
+it('sets interval for every fifteen minutes', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyFifteenMinutes();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(900.0);
+});
+
+it('sets interval for every thirty minutes', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->everyThirtyMinutes();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(1800.0);
+});
+
+it('sets interval for hourly', function (): void {
+    $timer = new Timer(function (): void {});
+    $timer->hourly();
+
+    $ref = new ReflectionClass($timer);
+    $prop = $ref->getProperty('interval');
+    $prop->setAccessible(true);
+
+    expect($prop->getValue($timer))->toBe(3600.0);
 });
