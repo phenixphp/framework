@@ -65,3 +65,30 @@ it('truncates tables for postgresql driver', function (): void {
 
     $this->assertTrue(true);
 });
+
+it('truncates tables for sqlite driver', function (): void {
+    Config::set('database.default', 'sqlite');
+
+    expect(Config::get('database.default'))->toBe('sqlite');
+
+    $connection = new class () {
+        public function prepare(string $sql): Statement
+        {
+            if (str_starts_with($sql, 'SELECT name FROM sqlite_master')) {
+                return new Statement(new Result([
+                    ['name' => 'users'],
+                    ['name' => 'posts'],
+                    ['name' => 'migrations'],
+                ]));
+            }
+
+            return new Statement(new Result());
+        }
+    };
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $this->refreshDatabase();
+
+    $this->assertTrue(true);
+});

@@ -22,6 +22,7 @@
     "require": {
         "php": "^8.2",
         "ext-pcntl": "*",
+        "ext-sockets": "*",
         "adbario/php-dot-notation": "^3.1",
         "amphp/cache": "^2.0",
         "amphp/cluster": "^2.0",

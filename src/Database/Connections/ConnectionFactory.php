@@ -8,6 +8,7 @@ use Amp\Mysql\MysqlConfig;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
+use Amp\SQLite3\SQLite3WorkerConnection;
 use Closure;
 use InvalidArgumentException;
 use Phenix\Database\Constants\Driver;
@@ -15,6 +16,7 @@ use Phenix\Redis\ClientWrapper;
 use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
+use function Amp\SQLite3\connect;
 use function sprintf;
 
 class ConnectionFactory
@@ -25,10 +27,16 @@ class ConnectionFactory
             Driver::MYSQL => self::createMySqlConnection($settings),
             Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
             Driver::REDIS => self::createRedisConnection($settings),
+            Driver::SQLITE => self::createSqliteConnection($settings),
             default => throw new InvalidArgumentException(
                 sprintf('Unsupported driver: %s', $driver->name)
             ),
         };
+    }
+
+    private static function createSqliteConnection(#[SensitiveParameter] array $settings): Closure
+    {
+        return static fn (): SQLite3WorkerConnection => connect($settings['database']);
     }
 
     private static function createMySqlConnection(#[SensitiveParameter] array $settings): Closure
