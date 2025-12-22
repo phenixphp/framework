@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Concerns\Query;
 
-use Amp\Mysql\Internal\MysqlPooledResult;
-use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransaction;
-use Amp\Sql\SqlTransactionError;
 use Closure;
 use League\Uri\Components\Query;
 use League\Uri\Http;
@@ -38,103 +35,6 @@ trait HasSentences
         $data = $this->page((int) $currentPage, (int) $perPage)->get();
 
         return new Paginator($uri, $data, (int) $total, (int) $currentPage, (int) $perPage);
-    }
-
-    public function count(string $column = '*'): int
-    {
-        $this->action = Action::SELECT;
-
-        $this->countRows($column);
-
-        [$dml, $params] = $this->toSql();
-
-        /** @var array<string, int> $count */
-        $count = $this->exec($dml, $params)->fetchRow();
-
-        return array_values($count)[0];
-    }
-
-    public function insert(array $data): bool
-    {
-        [$dml, $params] = $this->insertRows($data)->toSql();
-
-        try {
-            $this->exec($dml, $params);
-
-            return true;
-        } catch (SqlQueryError|SqlTransactionError $e) {
-            report($e);
-
-            return false;
-        }
-    }
-
-    public function insertRow(array $data): int|string|bool
-    {
-        [$dml, $params] = $this->insertRows($data)->toSql();
-
-        try {
-            /** @var MysqlPooledResult $result */
-            $result = $this->exec($dml, $params);
-
-            return $result->getLastInsertId();
-        } catch (SqlQueryError|SqlTransactionError $e) {
-            report($e);
-
-            return false;
-        }
-    }
-
-    public function exists(): bool
-    {
-        $this->action = Action::EXISTS;
-
-        $this->existsRows();
-
-        [$dml, $params] = $this->toSql();
-
-        $results = $this->exec($dml, $params)->fetchRow();
-
-        return (bool) array_values($results)[0];
-    }
-
-    public function doesntExist(): bool
-    {
-        return ! $this->exists();
-    }
-
-    public function update(array $values): bool
-    {
-        $this->updateRow($values);
-
-        [$dml, $params] = $this->toSql();
-
-        try {
-            $this->exec($dml, $params);
-
-            return true;
-        } catch (SqlQueryError|SqlTransactionError $e) {
-            report($e);
-
-            return false;
-        }
-    }
-
-    public function delete(): bool
-    {
-        $this->deleteRows();
-
-        [$dml, $params] = $this->toSql();
-
-        try {
-            $this->exec($dml, $params);
-
-            return true;
-        } catch (SqlQueryError|SqlTransactionError $e) {
-            report($e);
-
-            return false;
-        }
     }
 
     public function transaction(Closure $callback): mixed

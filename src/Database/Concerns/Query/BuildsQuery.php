@@ -16,12 +16,6 @@ use Phenix\Database\Subquery;
 use Phenix\Database\Value;
 use Phenix\Util\Arr;
 
-use function array_is_list;
-use function array_keys;
-use function array_unique;
-use function array_values;
-use function ksort;
-
 trait BuildsQuery
 {
     use HasLock;
@@ -70,74 +64,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function insert(array $data): static
-    {
-        $this->action = Action::INSERT;
-
-        $this->prepareDataToInsert($data);
-
-        return $this;
-    }
-
-    public function insertOrIgnore(array $values): static
-    {
-        $this->ignore = true;
-
-        $this->insert($values);
-
-        return $this;
-    }
-
-    public function upsert(array $values, array $columns): static
-    {
-        $this->action = Action::INSERT;
-
-        $this->uniqueColumns = $columns;
-
-        $this->prepareDataToInsert($values);
-
-        return $this;
-    }
-
-    public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): static
-    {
-        $builder = new Subquery($this->driver);
-        $builder->selectAllColumns();
-
-        $subquery($builder);
-
-        [$dml, $arguments] = $builder->toSql();
-
-        $this->rawStatement = trim($dml, '()');
-
-        $this->arguments = array_merge($this->arguments, $arguments);
-
-        $this->action = Action::INSERT;
-
-        $this->ignore = $ignore;
-
-        $this->columns = $columns;
-
-        return $this;
-    }
-
-    public function update(array $values): static
-    {
-        $this->action = Action::UPDATE;
-
-        $this->values = $values;
-
-        return $this;
-    }
-
-    public function delete(): static
-    {
-        $this->action = Action::DELETE;
-
-        return $this;
-    }
-
-    public function groupBy(Functions|array|string $column)
+    public function groupBy(Functions|array|string $column): static
     {
         $column = match (true) {
             $column instanceof Functions => (string) $column,
@@ -164,7 +91,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function orderBy(SelectCase|array|string $column, Order $order = Order::DESC)
+    public function orderBy(SelectCase|array|string $column, Order $order = Order::DESC): static
     {
         $column = match (true) {
             $column instanceof SelectCase => '(' . $column . ')',
@@ -192,33 +119,6 @@ trait BuildsQuery
         $offset = $page === 1 ? 0 : (($page - 1) * abs($perPage));
 
         $this->offset = [Operator::OFFSET->value, $offset];
-
-        return $this;
-    }
-
-    public function count(string $column = '*'): static
-    {
-        $this->action = Action::SELECT;
-
-        $this->columns = [Functions::count($column)];
-
-        return $this;
-    }
-
-    public function exists(): static
-    {
-        $this->action = Action::EXISTS;
-
-        $this->columns = [Operator::EXISTS->value];
-
-        return $this;
-    }
-
-    public function doesntExist(): static
-    {
-        $this->action = Action::EXISTS;
-
-        $this->columns = [Operator::NOT_EXISTS->value];
 
         return $this;
     }
@@ -302,25 +202,6 @@ trait BuildsQuery
         $query[] = '(' . Arr::implodeDeeply($subquery) . ') AS ' . Value::from('exists');
 
         return Arr::implodeDeeply($query);
-    }
-
-    private function prepareDataToInsert(array $data): void
-    {
-        if (array_is_list($data)) {
-            foreach ($data as $record) {
-                $this->prepareDataToInsert($record);
-            }
-
-            return;
-        }
-
-        ksort($data);
-
-        $this->columns = array_unique([...$this->columns, ...array_keys($data)]);
-
-        $this->arguments = \array_merge($this->arguments, array_values($data));
-
-        $this->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
     }
 
     private function buildInsertSentence(): string

@@ -12,17 +12,7 @@ use Phenix\Database\Constants\Driver;
 
 class QueryGenerator extends QueryBase
 {
-    use BuildsQuery {
-        insert as protected insertRows;
-        insertOrIgnore as protected insertOrIgnoreRows;
-        upsert as protected upsertRows;
-        insertFrom as protected insertFromRows;
-        update as protected updateRow;
-        delete as protected deleteRows;
-        count as protected countRows;
-        exists as protected existsRows;
-        doesntExist as protected doesntExistRows;
-    }
+    use BuildsQuery;
     use HasJoinClause;
 
     public function __construct(Driver $driver = Driver::MYSQL)
@@ -41,53 +31,51 @@ class QueryGenerator extends QueryBase
 
     public function insert(array $data): array
     {
-        return $this->insertRows($data)->toSql();
+        return parent::insert($data);
     }
 
     public function insertOrIgnore(array $values): array
     {
-        return $this->insertOrIgnoreRows($values)->toSql();
+        $this->ignore = true;
+
+        $this->insert($values);
+
+        return $this->toSql();
     }
 
     public function upsert(array $values, array $columns): array
     {
-        return $this->upsertRows($values, $columns)->toSql();
+        return parent::upsert($values, $columns);
     }
 
     public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): array
     {
-        return $this->insertFromRows($subquery, $columns, $ignore)->toSql();
+        return parent::insertFrom($subquery, $columns, $ignore);
     }
 
     public function update(array $values): array
     {
-        return $this->updateRow($values)->toSql();
+        return parent::update($values);
     }
 
     public function delete(): array
     {
-        return $this->deleteRows()->toSql();
+        return parent::delete();
     }
 
     public function count(string $column = '*'): array
     {
-        $this->action = Action::SELECT;
-
-        return $this->countRows($column)->toSql();
+        return parent::count($column);
     }
 
     public function exists(): array
     {
-        $this->action = Action::EXISTS;
-
-        return $this->existsRows()->toSql();
+        return parent::exists();
     }
 
     public function doesntExist(): array
     {
-        $this->action = Action::EXISTS;
-
-        return $this->doesntExistRows()->toSql();
+        return parent::doesntExist();
     }
 
     public function get(): array
