@@ -9,11 +9,11 @@ use Amp\Sql\Common\SqlCommonConnectionPool;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlTransactionError;
 use Closure;
+use League\Uri\Components\Query;
+use League\Uri\Http;
 use Phenix\App;
 use Phenix\Data\Collection;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
-use Phenix\Database\Concerns\Query\HasSentences;
+use Phenix\Database\Concerns\Query\HasTransaction;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 
@@ -21,9 +21,7 @@ use function is_string;
 
 class QueryBuilder extends QueryBase
 {
-    use BuildsQuery;
-    use HasSentences;
-    use HasJoinClause;
+    use HasTransaction;
 
     protected SqlCommonConnectionPool $connection;
 
@@ -82,6 +80,27 @@ class QueryBuilder extends QueryBase
     public function doesntExist(): bool
     {
         return ! $this->exists();
+    }
+
+    public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
+    {
+        $this->action = Action::SELECT;
+
+        $query = Query::fromUri($uri);
+
+        $currentPage = filter_var($query->get('page') ?? $defaultPage, FILTER_SANITIZE_NUMBER_INT);
+        $currentPage = $currentPage === false ? $defaultPage : $currentPage;
+
+        $perPage = filter_var($query->get('per_page') ?? $defaultPerPage, FILTER_SANITIZE_NUMBER_INT);
+        $perPage = $perPage === false ? $defaultPerPage : $perPage;
+
+        $countQuery = clone $this;
+
+        $total = $countQuery->count();
+
+        $data = $this->page((int) $currentPage, (int) $perPage)->get();
+
+        return new Paginator($uri, $data, (int) $total, (int) $currentPage, (int) $perPage);
     }
 
     public function insert(array $data): bool

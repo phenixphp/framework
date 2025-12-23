@@ -7,9 +7,6 @@ namespace Phenix\Database\Models\QueryBuilders;
 use Amp\Sql\Common\SqlCommonConnectionPool;
 use Closure;
 use Phenix\App;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
-use Phenix\Database\Concerns\Query\HasSentences;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Exceptions\ModelException;
@@ -31,8 +28,6 @@ use function is_string;
 
 class DatabaseQueryBuilder extends QueryBuilder
 {
-    use BuildsQuery;
-    use HasSentences;
     use HasJoinClause;
 
     protected DatabaseModel $model;

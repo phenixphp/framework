@@ -5,16 +5,11 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Closure;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Driver;
 
 class QueryGenerator extends QueryBase
 {
-    use BuildsQuery;
-    use HasJoinClause;
-
     public function __construct(Driver $driver = Driver::MYSQL)
     {
         parent::__construct();

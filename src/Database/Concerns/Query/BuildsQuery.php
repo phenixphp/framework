@@ -18,8 +18,6 @@ use Phenix\Util\Arr;
 
 trait BuildsQuery
 {
-    use HasLock;
-
     public function table(string $table): static
     {
         $this->table = $table;

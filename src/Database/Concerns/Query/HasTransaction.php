@@ -6,36 +6,11 @@ namespace Phenix\Database\Concerns\Query;
 
 use Amp\Sql\SqlTransaction;
 use Closure;
-use League\Uri\Components\Query;
-use League\Uri\Http;
-use Phenix\Database\Constants\Action;
-use Phenix\Database\Paginator;
 use Throwable;
 
-trait HasSentences
+trait HasTransaction
 {
     protected SqlTransaction|null $transaction = null;
-
-    public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
-    {
-        $this->action = Action::SELECT;
-
-        $query = Query::fromUri($uri);
-
-        $currentPage = filter_var($query->get('page') ?? $defaultPage, FILTER_SANITIZE_NUMBER_INT);
-        $currentPage = $currentPage === false ? $defaultPage : $currentPage;
-
-        $perPage = filter_var($query->get('per_page') ?? $defaultPerPage, FILTER_SANITIZE_NUMBER_INT);
-        $perPage = $perPage === false ? $defaultPerPage : $perPage;
-
-        $countQuery = clone $this;
-
-        $total = $countQuery->count();
-
-        $data = $this->page((int) $currentPage, (int) $perPage)->get();
-
-        return new Paginator($uri, $data, (int) $total, (int) $currentPage, (int) $perPage);
-    }
 
     public function transaction(Closure $callback): mixed
     {
