@@ -28,8 +28,6 @@ use function is_string;
 
 class DatabaseQueryBuilder extends QueryBuilder
 {
-    use HasJoinClause;
-
     protected DatabaseModel $model;
 
     /**

@@ -21,6 +21,7 @@ abstract class Clause extends Grammar implements Builder
     use PrepareColumns;
 
     protected array $clauses;
+
     protected array $arguments;
 
     protected function resolveWhereMethod(

@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
+use Phenix\Util\Arr;
+use Phenix\Database\Value;
+use Phenix\Database\Having;
+use Phenix\Database\QueryAst;
+use Phenix\Database\Subquery;
+use Phenix\Database\Functions;
+use Phenix\Database\SelectCase;
+use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\Order;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\Order;
-use Phenix\Database\Constants\SQL;
-use Phenix\Database\Functions;
-use Phenix\Database\Having;
-use Phenix\Database\SelectCase;
-use Phenix\Database\Subquery;
-use Phenix\Database\Value;
-use Phenix\Util\Arr;
+use Phenix\Database\Dialects\DialectFactory;
 
 trait BuildsQuery
 {
@@ -122,22 +124,37 @@ trait BuildsQuery
     }
 
     /**
-     * @return array<int, mixed>
+     * @return array{0: string, 1: array<int, mixed>}
      */
     public function toSql(): array
     {
-        $sql = match ($this->action) {
-            Action::SELECT => $this->buildSelectQuery(),
-            Action::EXISTS => $this->buildExistsQuery(),
-            Action::INSERT => $this->buildInsertSentence(),
-            Action::UPDATE => $this->buildUpdateSentence(),
-            Action::DELETE => $this->buildDeleteSentence(),
-        };
+        $ast = $this->buildAst();
+        $dialect = DialectFactory::fromDriver($this->driver);
 
-        return [
-            $sql,
-            $this->arguments,
-        ];
+        return $dialect->compile($ast);
+    }
+
+    protected function buildAst(): QueryAst
+    {
+        $ast = new QueryAst();
+        $ast->action = $this->action;
+        $ast->table = $this->table;
+        $ast->columns = $this->columns;
+        $ast->values = $this->values ?? [];
+        $ast->wheres = $this->clauses ?? [];
+        $ast->joins = $this->joins ?? [];
+        $ast->groups = $this->groupBy ?? [];
+        $ast->orders = $this->orderBy ?? [];
+        $ast->limit = isset($this->limit) ? $this->limit[1] : null;
+        $ast->offset = isset($this->offset) ? $this->offset[1] : null;
+        $ast->lock = $this->lockType ?? null;
+        $ast->having = $this->having ?? null;
+        $ast->rawStatement = $this->rawStatement ?? null;
+        $ast->ignore = $this->ignore ?? false;
+        $ast->uniqueColumns = $this->uniqueColumns ?? [];
+        $ast->params = $this->arguments;
+
+        return $ast;
     }
 
     protected function buildSelectQuery(): string
