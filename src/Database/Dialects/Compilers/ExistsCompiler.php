@@ -23,15 +23,15 @@ class ExistsCompiler implements ClauseCompiler
     {
         $parts = [];
         $parts[] = 'SELECT';
-        
-        $column = !empty($ast->columns) ? $ast->columns[0] : 'EXISTS';
+
+        $column = ! empty($ast->columns) ? $ast->columns[0] : 'EXISTS';
         $parts[] = $column;
 
         $subquery = [];
         $subquery[] = 'SELECT 1 FROM';
         $subquery[] = $ast->table;
 
-        if (!empty($ast->wheres)) {
+        if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);
 
             $subquery[] = 'WHERE';

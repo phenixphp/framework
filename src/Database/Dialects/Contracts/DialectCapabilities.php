@@ -6,7 +6,7 @@ namespace Phenix\Database\Dialects\Contracts;
 
 /**
  * Defines the capabilities supported by a SQL dialect.
- * 
+ *
  * This immutable value object declares which features are supported
  * by a specific database driver, allowing graceful degradation or
  * error handling for unsupported features.
@@ -32,7 +32,8 @@ final readonly class DialectCapabilities
         public bool $supportsInsertIgnore = false,
         public bool $supportsFulltextSearch = false,
         public bool $supportsGeneratedColumns = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if a specific capability is supported.
@@ -43,7 +44,7 @@ final readonly class DialectCapabilities
     public function supports(string $capability): bool
     {
         $property = 'supports' . ucfirst($capability);
-        
+
         return property_exists($this, $property) && $this->$property;
     }
 }

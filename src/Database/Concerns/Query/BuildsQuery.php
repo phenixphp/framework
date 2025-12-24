@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Util\Arr;
-use Phenix\Database\Value;
-use Phenix\Database\Having;
-use Phenix\Database\QueryAst;
-use Phenix\Database\Subquery;
-use Phenix\Database\Functions;
-use Phenix\Database\SelectCase;
-use Phenix\Database\Constants\SQL;
-use Phenix\Database\Constants\Order;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\Order;
+use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\DialectFactory;
+use Phenix\Database\Functions;
+use Phenix\Database\Having;
+use Phenix\Database\QueryAst;
+use Phenix\Database\SelectCase;
+use Phenix\Database\Subquery;
+use Phenix\Database\Value;
+use Phenix\Util\Arr;
 
 trait BuildsQuery
 {

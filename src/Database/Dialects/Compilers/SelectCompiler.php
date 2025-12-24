@@ -36,11 +36,11 @@ abstract class SelectCompiler implements ClauseCompiler
             $ast->table,
         ];
 
-        if (!empty($ast->joins)) {
+        if (! empty($ast->joins)) {
             $sql[] = $ast->joins;
         }
 
-        if (!empty($ast->wheres)) {
+        if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);
 
             if ($whereCompiled->sql !== '') {
@@ -53,11 +53,11 @@ abstract class SelectCompiler implements ClauseCompiler
             $sql[] = $ast->having;
         }
 
-        if (!empty($ast->groups)) {
+        if (! empty($ast->groups)) {
             $sql[] = Arr::implodeDeeply($ast->groups);
         }
 
-        if (!empty($ast->orders)) {
+        if (! empty($ast->orders)) {
             $sql[] = Arr::implodeDeeply($ast->orders);
         }
 
@@ -118,7 +118,7 @@ abstract class SelectCompiler implements ClauseCompiler
     {
         [$dml, $arguments] = $subquery->toSql();
 
-        if (!str_contains($dml, 'LIMIT 1')) {
+        if (! str_contains($dml, 'LIMIT 1')) {
             throw new QueryErrorException('The subquery must be limited to one record');
         }
 

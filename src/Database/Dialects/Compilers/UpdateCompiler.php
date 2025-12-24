@@ -35,11 +35,11 @@ class UpdateCompiler implements ClauseCompiler
             $params[] = $value;
             $columns[] = "{$column} = " . SQL::PLACEHOLDER->value;
         }
-    
+
         $parts[] = 'SET';
         $parts[] = Arr::implodeDeeply($columns, ', ');
 
-        if (!empty($ast->wheres)) {
+        if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);
 
             $parts[] = 'WHERE';

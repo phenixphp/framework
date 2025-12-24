@@ -7,11 +7,11 @@ namespace Phenix\Database\Dialects\PostgreSQL;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
 use Phenix\Database\Dialects\Contracts\DialectCapabilities;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresSelectCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresInsertCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresUpdateCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresDeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresExistsCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresInsertCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresSelectCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresUpdateCompiler;
 use Phenix\Database\QueryAst;
 
 final class PostgresDialect implements Dialect
@@ -65,7 +65,7 @@ final class PostgresDialect implements Dialect
     private function compileSelect(QueryAst $ast): array
     {
         $compiled = $this->selectCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -75,7 +75,7 @@ final class PostgresDialect implements Dialect
     private function compileInsert(QueryAst $ast): array
     {
         $compiled = $this->insertCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -85,7 +85,7 @@ final class PostgresDialect implements Dialect
     private function compileUpdate(QueryAst $ast): array
     {
         $compiled = $this->updateCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -95,7 +95,7 @@ final class PostgresDialect implements Dialect
     private function compileDelete(QueryAst $ast): array
     {
         $compiled = $this->deleteCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -105,7 +105,7 @@ final class PostgresDialect implements Dialect
     private function compileExists(QueryAst $ast): array
     {
         $compiled = $this->existsCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 }

@@ -13,5 +13,6 @@ final readonly class CompiledClause
     public function __construct(
         public string $sql,
         public array $params = []
-    ) {}
+    ) {
+    }
 }

@@ -18,8 +18,8 @@ class MysqlInsertCompiler extends InsertCompiler
     protected function compileUpsert(QueryAst $ast): string
     {
         $columns = array_map(
-        fn (string $column): string => "{$column} = VALUES({$column})",
-        $ast->uniqueColumns
+            fn (string $column): string => "{$column} = VALUES({$column})",
+            $ast->uniqueColumns
         );
 
         return 'ON DUPLICATE KEY UPDATE ' . Arr::implodeDeeply($columns, ', ');

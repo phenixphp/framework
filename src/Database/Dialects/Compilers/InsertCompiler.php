@@ -38,7 +38,7 @@ abstract class InsertCompiler implements ClauseCompiler
         }
 
         // Dialect-specific UPSERT/ON CONFLICT handling
-        if (!empty($ast->uniqueColumns)) {
+        if (! empty($ast->uniqueColumns)) {
             $parts[] = $this->compileUpsert($ast);
         }
 

@@ -25,9 +25,9 @@ class DeleteCompiler implements ClauseCompiler
         $parts[] = 'DELETE FROM';
         $parts[] = $ast->table;
 
-        if (!empty($ast->wheres)) {
+        if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);
-    
+
             $parts[] = 'WHERE';
             $parts[] = $whereCompiled->sql;
         }

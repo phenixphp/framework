@@ -7,11 +7,11 @@ namespace Phenix\Database\Dialects\MySQL;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
 use Phenix\Database\Dialects\Contracts\DialectCapabilities;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlSelectCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlInsertCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlUpdateCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlDeleteCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlExistsCompiler;
+use Phenix\Database\Dialects\MySQL\Compilers\MysqlInsertCompiler;
+use Phenix\Database\Dialects\MySQL\Compilers\MysqlSelectCompiler;
+use Phenix\Database\Dialects\MySQL\Compilers\MysqlUpdateCompiler;
 use Phenix\Database\QueryAst;
 
 final class MysqlDialect implements Dialect
@@ -70,7 +70,7 @@ final class MysqlDialect implements Dialect
     private function compileSelect(QueryAst $ast): array
     {
         $compiled = $this->selectCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -80,7 +80,7 @@ final class MysqlDialect implements Dialect
     private function compileInsert(QueryAst $ast): array
     {
         $compiled = $this->insertCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -90,7 +90,7 @@ final class MysqlDialect implements Dialect
     private function compileUpdate(QueryAst $ast): array
     {
         $compiled = $this->updateCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -100,7 +100,7 @@ final class MysqlDialect implements Dialect
     private function compileDelete(QueryAst $ast): array
     {
         $compiled = $this->deleteCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -110,7 +110,7 @@ final class MysqlDialect implements Dialect
     private function compileExists(QueryAst $ast): array
     {
         $compiled = $this->existsCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 }

@@ -17,7 +17,9 @@ final class DialectFactory
      */
     private static array $instances = [];
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     public static function fromDriver(Driver $driver): Dialect
     {

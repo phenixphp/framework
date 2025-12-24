@@ -7,11 +7,11 @@ namespace Phenix\Database\Dialects\SQLite;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
 use Phenix\Database\Dialects\Contracts\DialectCapabilities;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteSelectCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteInsertCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteUpdateCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteDeleteCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteExistsCompiler;
+use Phenix\Database\Dialects\SQLite\Compilers\SqliteInsertCompiler;
+use Phenix\Database\Dialects\SQLite\Compilers\SqliteSelectCompiler;
+use Phenix\Database\Dialects\SQLite\Compilers\SqliteUpdateCompiler;
 use Phenix\Database\QueryAst;
 
 final class SqliteDialect implements Dialect
@@ -65,7 +65,7 @@ final class SqliteDialect implements Dialect
     private function compileSelect(QueryAst $ast): array
     {
         $compiled = $this->selectCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -75,7 +75,7 @@ final class SqliteDialect implements Dialect
     private function compileInsert(QueryAst $ast): array
     {
         $compiled = $this->insertCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -85,7 +85,7 @@ final class SqliteDialect implements Dialect
     private function compileUpdate(QueryAst $ast): array
     {
         $compiled = $this->updateCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -95,7 +95,7 @@ final class SqliteDialect implements Dialect
     private function compileDelete(QueryAst $ast): array
     {
         $compiled = $this->deleteCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 
@@ -105,7 +105,7 @@ final class SqliteDialect implements Dialect
     private function compileExists(QueryAst $ast): array
     {
         $compiled = $this->existsCompiler->compile($ast);
-        
+
         return [$compiled->sql, $compiled->params];
     }
 }

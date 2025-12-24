@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
-use Phenix\Util\Arr;
-use Phenix\Database\QueryAst;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\Dialects\Contracts\CompiledClause;
+use Phenix\Database\QueryAst;
+use Phenix\Util\Arr;
 
 /**
  * Supports:
@@ -57,6 +57,7 @@ class PostgresInsertCompiler extends InsertCompiler
             $parts[] = 'ON CONFLICT DO NOTHING';
 
             $sql = Arr::implodeDeeply($parts);
+
             return new CompiledClause($sql, $ast->params);
         }
 
