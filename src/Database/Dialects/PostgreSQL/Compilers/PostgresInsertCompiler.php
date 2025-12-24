@@ -48,10 +48,12 @@ class PostgresInsertCompiler extends InsertCompiler
                 $parts[] = $ast->rawStatement;
             } else {
                 $parts[] = 'VALUES';
+
                 $placeholders = array_map(function (array $value): string {
                     return '(' . Arr::implodeDeeply($value, ', ') . ')';
                 }, $ast->values);
-                $parts[] = Arr::implodeDeeply($placeholders, ', ');
+
+                $parts[] = Arr::implodeDeeply(array_values($placeholders), ', ');
             }
 
             $parts[] = 'ON CONFLICT DO NOTHING';

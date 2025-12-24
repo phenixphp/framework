@@ -10,7 +10,6 @@ use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\SQLite3\SQLite3WorkerConnection;
 use Closure;
-use InvalidArgumentException;
 use Phenix\Database\Constants\Driver;
 use Phenix\Redis\ClientWrapper;
 use SensitiveParameter;

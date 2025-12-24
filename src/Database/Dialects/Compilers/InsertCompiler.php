@@ -34,7 +34,7 @@ abstract class InsertCompiler implements ClauseCompiler
                 return '(' . Arr::implodeDeeply($value, ', ') . ')';
             }, $ast->values);
 
-            $parts[] = Arr::implodeDeeply($placeholders, ', ');
+            $parts[] = Arr::implodeDeeply(array_values($placeholders), ', ');
         }
 
         // Dialect-specific UPSERT/ON CONFLICT handling
