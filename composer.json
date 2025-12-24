@@ -24,6 +24,7 @@
         "ext-pcntl": "*",
         "ext-sockets": "*",
         "adbario/php-dot-notation": "^3.1",
+        "ahjdev/amphp-sqlite3": "dev-main",
         "amphp/cache": "^2.0",
         "amphp/cluster": "^2.0",
         "amphp/file": "^v3.0.0",
