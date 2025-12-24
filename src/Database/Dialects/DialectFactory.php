@@ -19,6 +19,7 @@ final class DialectFactory
 
     private function __construct()
     {
+        // Prevent instantiation
     }
 
     public static function fromDriver(Driver $driver): Dialect
@@ -27,6 +28,7 @@ final class DialectFactory
             Driver::MYSQL => new MysqlDialect(),
             Driver::POSTGRESQL => new PostgresDialect(),
             Driver::SQLITE => new SqliteDialect(),
+            default => new MysqlDialect(),
         };
     }
 

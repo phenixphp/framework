@@ -28,9 +28,6 @@ class ConnectionFactory
             Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
             Driver::REDIS => self::createRedisConnection($settings),
             Driver::SQLITE => self::createSqliteConnection($settings),
-            default => throw new InvalidArgumentException(
-                sprintf('Unsupported driver: %s', $driver->name)
-            ),
         };
     }
 

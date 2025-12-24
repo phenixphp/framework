@@ -27,7 +27,6 @@ final class PostgresSelectCompiler extends SelectCompiler
             Lock::FOR_UPDATE_NOWAIT => 'FOR UPDATE NOWAIT',
             Lock::FOR_SHARE_NOWAIT => 'FOR SHARE NOWAIT',
             Lock::FOR_NO_KEY_UPDATE_NOWAIT => 'FOR NO KEY UPDATE NOWAIT',
-            default => '',
         };
     }
 }
