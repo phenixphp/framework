@@ -8,14 +8,12 @@ use Closure;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
-use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\DialectFactory;
 use Phenix\Database\Functions;
 use Phenix\Database\Having;
 use Phenix\Database\QueryAst;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Database\Value;
 use Phenix\Util\Arr;
 
 trait BuildsQuery
@@ -155,144 +153,5 @@ trait BuildsQuery
         $ast->params = $this->arguments;
 
         return $ast;
-    }
-
-    protected function buildSelectQuery(): string
-    {
-        $this->columns = empty($this->columns) ? ['*'] : $this->columns;
-
-        $query = [
-            'SELECT',
-            $this->prepareColumns($this->columns),
-            'FROM',
-            $this->table,
-            $this->joins,
-        ];
-
-        if (! empty($this->clauses)) {
-            $query[] = 'WHERE';
-            $query[] = $this->prepareClauses($this->clauses);
-        }
-
-        if (isset($this->having)) {
-            $query[] = $this->having;
-        }
-
-        if (isset($this->groupBy)) {
-            $query[] = Arr::implodeDeeply($this->groupBy);
-        }
-
-        if (isset($this->orderBy)) {
-            $query[] = Arr::implodeDeeply($this->orderBy);
-        }
-
-        if (isset($this->limit)) {
-            $query[] = Arr::implodeDeeply($this->limit);
-        }
-
-        if (isset($this->offset)) {
-            $query[] = Arr::implodeDeeply($this->offset);
-
-        }
-
-        if (isset($this->lockType)) {
-            $query[] = $this->buildLock();
-        }
-
-        return Arr::implodeDeeply($query);
-    }
-
-    protected function buildExistsQuery(): string
-    {
-        $query = ['SELECT'];
-        $query[] = $this->columns[0];
-
-        $subquery[] = "SELECT 1 FROM {$this->table}";
-
-        if (! empty($this->clauses)) {
-            $subquery[] = 'WHERE';
-            $subquery[] = $this->prepareClauses($this->clauses);
-        }
-
-        $query[] = '(' . Arr::implodeDeeply($subquery) . ') AS ' . Value::from('exists');
-
-        return Arr::implodeDeeply($query);
-    }
-
-    private function buildInsertSentence(): string
-    {
-        $dml = [
-            $this->ignore ? 'INSERT IGNORE INTO' : 'INSERT INTO',
-            $this->table,
-            '(' . Arr::implodeDeeply($this->columns, ', ') . ')',
-        ];
-
-        if (isset($this->rawStatement)) {
-            $dml[] = $this->rawStatement;
-        } else {
-            $dml[] = 'VALUES';
-
-            $placeholders = array_map(function (array $value): string {
-                return '(' . Arr::implodeDeeply($value, ', ') . ')';
-            }, $this->values);
-
-            $dml[] = Arr::implodeDeeply($placeholders, ', ');
-
-            if (! empty($this->uniqueColumns)) {
-                $dml[] = 'ON DUPLICATE KEY UPDATE';
-
-                $columns = array_map(function (string $column): string {
-                    return "{$column} = VALUES({$column})";
-                }, $this->uniqueColumns);
-
-                $dml[] = Arr::implodeDeeply($columns, ', ');
-            }
-        }
-
-        return Arr::implodeDeeply($dml);
-    }
-
-    private function buildUpdateSentence(): string
-    {
-        $dml = [
-            'UPDATE',
-            $this->table,
-            'SET',
-        ];
-
-        $columns = [];
-        $arguments = [];
-
-        foreach ($this->values as $column => $value) {
-            $arguments[] = $value;
-
-            $columns[] = "{$column} = " . SQL::PLACEHOLDER->value;
-        }
-
-        $this->arguments = [...$arguments, ...$this->arguments];
-
-        $dml[] = Arr::implodeDeeply($columns, ', ');
-
-        if (! empty($this->clauses)) {
-            $dml[] = 'WHERE';
-            $dml[] = $this->prepareClauses($this->clauses);
-        }
-
-        return Arr::implodeDeeply($dml);
-    }
-
-    private function buildDeleteSentence(): string
-    {
-        $dml = [
-            'DELETE FROM',
-            $this->table,
-        ];
-
-        if (! empty($this->clauses)) {
-            $dml[] = 'WHERE';
-            $dml[] = $this->prepareClauses($this->clauses);
-        }
-
-        return Arr::implodeDeeply($dml);
     }
 }
