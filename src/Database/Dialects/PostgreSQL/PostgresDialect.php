@@ -6,7 +6,6 @@ namespace Phenix\Database\Dialects\PostgreSQL;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
-use Phenix\Database\Dialects\Contracts\DialectCapabilities;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresDeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresExistsCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresInsertCompiler;
@@ -16,7 +15,6 @@ use Phenix\Database\QueryAst;
 
 final class PostgresDialect implements Dialect
 {
-    private DialectCapabilities $capabilities;
     private PostgresSelectCompiler $selectCompiler;
     private PostgresInsertCompiler $insertCompiler;
     private PostgresUpdateCompiler $updateCompiler;
@@ -25,27 +23,11 @@ final class PostgresDialect implements Dialect
 
     public function __construct()
     {
-        $this->capabilities = new DialectCapabilities(
-            supportsLocks: true,
-            supportsUpsert: true,
-            supportsReturning: true,
-            supportsJsonOperators: true,
-            supportsAdvancedLocks: true, // FOR NO KEY UPDATE, FOR KEY SHARE, etc.
-            supportsInsertIgnore: false, // Uses ON CONFLICT instead
-            supportsFulltextSearch: true,
-            supportsGeneratedColumns: true,
-        );
-
         $this->selectCompiler = new PostgresSelectCompiler();
         $this->insertCompiler = new PostgresInsertCompiler();
         $this->updateCompiler = new PostgresUpdateCompiler();
         $this->deleteCompiler = new PostgresDeleteCompiler();
         $this->existsCompiler = new PostgresExistsCompiler();
-    }
-
-    public function capabilities(): DialectCapabilities
-    {
-        return $this->capabilities;
     }
 
     public function compile(QueryAst $ast): array

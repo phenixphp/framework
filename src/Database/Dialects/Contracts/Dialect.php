@@ -13,6 +13,4 @@ interface Dialect
      * @return array{0: string, 1: array<int, mixed>} A tuple of SQL string and parameters
      */
     public function compile(QueryAst $ast): array;
-
-    public function capabilities(): DialectCapabilities;
 }

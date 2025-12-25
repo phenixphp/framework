@@ -6,7 +6,6 @@ namespace Phenix\Database\Dialects\MySQL;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
-use Phenix\Database\Dialects\Contracts\DialectCapabilities;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlDeleteCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlExistsCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlInsertCompiler;
@@ -16,8 +15,6 @@ use Phenix\Database\QueryAst;
 
 final class MysqlDialect implements Dialect
 {
-    private DialectCapabilities $capabilities;
-
     private MysqlSelectCompiler $selectCompiler;
 
     private MysqlInsertCompiler $insertCompiler;
@@ -30,27 +27,11 @@ final class MysqlDialect implements Dialect
 
     public function __construct()
     {
-        $this->capabilities = new DialectCapabilities(
-            supportsLocks: true,
-            supportsUpsert: true,
-            supportsReturning: false,
-            supportsJsonOperators: true,
-            supportsAdvancedLocks: false,
-            supportsInsertIgnore: true,
-            supportsFulltextSearch: true,
-            supportsGeneratedColumns: true,
-        );
-
         $this->selectCompiler = new MysqlSelectCompiler();
         $this->insertCompiler = new MysqlInsertCompiler();
         $this->updateCompiler = new MysqlUpdateCompiler();
         $this->deleteCompiler = new MysqlDeleteCompiler();
         $this->existsCompiler = new MysqlExistsCompiler();
-    }
-
-    public function capabilities(): DialectCapabilities
-    {
-        return $this->capabilities;
     }
 
     public function compile(QueryAst $ast): array

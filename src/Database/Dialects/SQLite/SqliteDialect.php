@@ -6,7 +6,6 @@ namespace Phenix\Database\Dialects\SQLite;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Dialects\Contracts\Dialect;
-use Phenix\Database\Dialects\Contracts\DialectCapabilities;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteDeleteCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteExistsCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteInsertCompiler;
@@ -16,7 +15,6 @@ use Phenix\Database\QueryAst;
 
 final class SqliteDialect implements Dialect
 {
-    private DialectCapabilities $capabilities;
     private SqliteSelectCompiler $selectCompiler;
     private SqliteInsertCompiler $insertCompiler;
     private SqliteUpdateCompiler $updateCompiler;
@@ -25,27 +23,11 @@ final class SqliteDialect implements Dialect
 
     public function __construct()
     {
-        $this->capabilities = new DialectCapabilities(
-            supportsLocks: false, // SQLite doesn't support row-level locks
-            supportsUpsert: true, // SQLite 3.24.0+ supports ON CONFLICT
-            supportsReturning: true, // SQLite 3.35.0+ supports RETURNING
-            supportsJsonOperators: true, // SQLite 3.38.0+ supports JSON functions
-            supportsAdvancedLocks: false,
-            supportsInsertIgnore: true, // INSERT OR IGNORE
-            supportsFulltextSearch: true, // FTS5
-            supportsGeneratedColumns: true, // SQLite 3.31.0+
-        );
-
         $this->selectCompiler = new SqliteSelectCompiler();
         $this->insertCompiler = new SqliteInsertCompiler();
         $this->updateCompiler = new SqliteUpdateCompiler();
         $this->deleteCompiler = new SqliteDeleteCompiler();
         $this->existsCompiler = new SqliteExistsCompiler();
-    }
-
-    public function capabilities(): DialectCapabilities
-    {
-        return $this->capabilities;
     }
 
     public function compile(QueryAst $ast): array
