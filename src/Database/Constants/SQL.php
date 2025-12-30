@@ -6,5 +6,5 @@ namespace Phenix\Database\Constants;
 
 enum SQL: string
 {
-    case PLACEHOLDER = '?';
+    case STD_PLACEHOLDER = '?';
 }

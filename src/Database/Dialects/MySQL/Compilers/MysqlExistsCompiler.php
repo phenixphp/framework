@@ -8,5 +8,8 @@ use Phenix\Database\Dialects\Compilers\ExistsCompiler;
 
 final class MysqlExistsCompiler extends ExistsCompiler
 {
-    //
+    public function __construct()
+    {
+        $this->whereCompiler = new MysqlWhereCompiler();
+    }
 }

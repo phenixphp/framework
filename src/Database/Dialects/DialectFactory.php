@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects;
 
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Dialects\Contracts\Dialect;
+use Phenix\Database\Contracts\Dialect;
 use Phenix\Database\Dialects\MySQL\MysqlDialect;
 use Phenix\Database\Dialects\PostgreSQL\PostgresDialect;
 use Phenix\Database\Dialects\SQLite\SqliteDialect;
 
-final class DialectFactory
+class DialectFactory
 {
     /**
      * @var array<string, Dialect>

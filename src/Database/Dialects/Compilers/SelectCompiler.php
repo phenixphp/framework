@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Alias;
-use Phenix\Database\Dialects\Contracts\ClauseCompiler;
-use Phenix\Database\Dialects\Contracts\CompiledClause;
+use Phenix\Database\Contracts\ClauseCompiler;
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryAst;
@@ -18,12 +18,7 @@ use function is_string;
 
 abstract class SelectCompiler implements ClauseCompiler
 {
-    protected WhereCompiler $whereCompiler;
-
-    public function __construct()
-    {
-        $this->whereCompiler = new WhereCompiler();
-    }
+    protected $whereCompiler;
 
     public function compile(QueryAst $ast): CompiledClause
     {

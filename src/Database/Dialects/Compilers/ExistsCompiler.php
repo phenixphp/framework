@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Dialects\Contracts\ClauseCompiler;
-use Phenix\Database\Dialects\Contracts\CompiledClause;
+use Phenix\Database\Contracts\ClauseCompiler;
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
 use Phenix\Database\Value;
 use Phenix\Util\Arr;
 
-class ExistsCompiler implements ClauseCompiler
+abstract class ExistsCompiler implements ClauseCompiler
 {
-    private WhereCompiler $whereCompiler;
-
-    public function __construct()
-    {
-        $this->whereCompiler = new WhereCompiler();
-    }
+    protected $whereCompiler;
 
     public function compile(QueryAst $ast): CompiledClause
     {

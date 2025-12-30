@@ -10,6 +10,11 @@ use Phenix\Database\QueryAst;
 
 final class MysqlSelectCompiler extends SelectCompiler
 {
+    public function __construct()
+    {
+        $this->whereCompiler = new MysqlWhereCompiler();
+    }
+
     protected function compileLock(QueryAst $ast): string
     {
         if ($ast->lock === null) {

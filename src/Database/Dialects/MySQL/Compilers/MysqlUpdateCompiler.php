@@ -8,5 +8,13 @@ use Phenix\Database\Dialects\Compilers\UpdateCompiler;
 
 class MysqlUpdateCompiler extends UpdateCompiler
 {
-    //
+    public function __construct()
+    {
+        $this->whereCompiler = new MysqlWhereCompiler();
+    }
+
+    protected function compileSetClause(string $column, int $paramIndex): string
+    {
+        return "{$column} = ?";
+    }
 }

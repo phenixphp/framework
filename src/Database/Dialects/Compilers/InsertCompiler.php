@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Dialects\Contracts\ClauseCompiler;
-use Phenix\Database\Dialects\Contracts\CompiledClause;
+use Phenix\Database\Contracts\ClauseCompiler;
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Lock;
 
@@ -31,7 +32,7 @@ class QueryAst
     public array $joins = [];
 
     /**
-     * @var array<int, array<int, mixed>>
+     * @var array<int, WhereClause>
      */
     public array $wheres = [];
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\SQLite;
 
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Dialects\Contracts\Dialect;
+use Phenix\Database\Contracts\Dialect;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteDeleteCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteExistsCompiler;
 use Phenix\Database\Dialects\SQLite\Compilers\SqliteInsertCompiler;

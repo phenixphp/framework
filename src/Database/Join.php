@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\JoinType;
-use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Contracts\Builder;
-use Phenix\Util\Arr;
 
 class Join extends Clause implements Builder
 {
@@ -20,40 +21,75 @@ class Join extends Clause implements Builder
         $this->arguments = [];
     }
 
+    // protected function pushClause(WhereClause $clause, LogicalConnector $logicalConnector = LogicalConnector::AND): void
+    // {
+    //     // For Join clauses, remove connector from first clause
+    //     if (empty($this->clauses)) {
+    //         $clause->setConnector(null);
+    //     } else {
+    //         $clause->setConnector($logicalConnector);
+    //     }
+
+    //     $this->clauses[] = $clause;
+    // }
+
     public function onEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::EQUAL, $value]);
+        $this->pushClause(new BasicWhereClause($column, Operator::EQUAL, $value));
 
         return $this;
     }
 
     public function orOnEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::EQUAL, $value], LogicalOperator::OR);
+        $this->pushClause(new BasicWhereClause($column, Operator::EQUAL, $value), LogicalConnector::OR);
 
         return $this;
     }
 
     public function onDistinct(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::DISTINCT, $value]);
+        $this->pushClause(new BasicWhereClause($column, Operator::DISTINCT, $value));
 
         return $this;
     }
 
     public function orOnDistinct(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::DISTINCT, $value], LogicalOperator::OR);
+        $this->pushClause(new BasicWhereClause($column, Operator::DISTINCT, $value), LogicalConnector::OR);
 
         return $this;
     }
 
     public function toSql(): array
     {
-        $clauses = Arr::implodeDeeply($this->prepareClauses($this->clauses));
+        if (empty($this->clauses)) {
+            return [
+                "{$this->type->value} {$this->relationship}",
+                [],
+            ];
+        }
+
+        $sql = [];
+
+        foreach ($this->clauses as $clause) {
+            $connector = $clause->getConnector();
+
+            $column = $clause->getColumn();
+            $operator = $clause->getOperator();
+            $value = $clause->renderValue();
+
+            $clauseSql = "{$column} {$operator->value} {$value}";
+
+            if ($connector !== null) {
+                $clauseSql = "{$connector->value} {$clauseSql}";
+            }
+
+            $sql[] = $clauseSql;
+        }
 
         return [
-            "{$this->type->value} {$this->relationship} ON {$clauses}",
+            "{$this->type->value} {$this->relationship} ON " . implode(' ', $sql),
             $this->arguments,
         ];
     }

@@ -8,5 +8,8 @@ use Phenix\Database\Dialects\Compilers\DeleteCompiler;
 
 class MysqlDeleteCompiler extends DeleteCompiler
 {
-    //
+    public function __construct()
+    {
+        $this->whereCompiler = new MysqlWhereCompiler();
+    }
 }

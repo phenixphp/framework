@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Dialects\Contracts\CompiledClause;
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Util\Arr;
 
-final class WhereCompiler
+class WhereCompiler
 {
     /**
      * @param array<int, array<int, mixed>> $wheres
@@ -38,7 +38,7 @@ final class WhereCompiler
             return array_map(function ($value): mixed {
                 return match (true) {
                     $value instanceof Operator => $value->value,
-                    $value instanceof LogicalOperator => $value->value,
+                    $value instanceof LogicalConnector => $value->value,
                     is_array($value) => '(' . Arr::implodeDeeply($value, ', ') . ')',
                     default => $value,
                 };

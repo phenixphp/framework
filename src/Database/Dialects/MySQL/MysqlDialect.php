@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\MySQL;
 
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Dialects\Contracts\Dialect;
+use Phenix\Database\Contracts\Dialect;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlDeleteCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlExistsCompiler;
 use Phenix\Database\Dialects\MySQL\Compilers\MysqlInsertCompiler;
@@ -15,15 +15,15 @@ use Phenix\Database\QueryAst;
 
 final class MysqlDialect implements Dialect
 {
-    private MysqlSelectCompiler $selectCompiler;
+    protected MysqlSelectCompiler $selectCompiler;
 
-    private MysqlInsertCompiler $insertCompiler;
+    protected MysqlInsertCompiler $insertCompiler;
 
-    private MysqlUpdateCompiler $updateCompiler;
+    protected MysqlUpdateCompiler $updateCompiler;
 
-    private MysqlDeleteCompiler $deleteCompiler;
+    protected MysqlDeleteCompiler $deleteCompiler;
 
-    private MysqlExistsCompiler $existsCompiler;
+    protected MysqlExistsCompiler $existsCompiler;
 
     public function __construct()
     {

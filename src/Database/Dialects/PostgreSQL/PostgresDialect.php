@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\PostgreSQL;
 
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Dialects\Contracts\Dialect;
+use Phenix\Database\Contracts\Dialect;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresDeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresExistsCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresInsertCompiler;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\Contracts;
+namespace Phenix\Database\Dialects;
 
-final readonly class CompiledClause
+readonly class CompiledClause
 {
     /**
      * @param string $sql The compiled SQL string

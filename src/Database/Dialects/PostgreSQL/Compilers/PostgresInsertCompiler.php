@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
-use Phenix\Database\Dialects\Contracts\CompiledClause;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
@@ -16,6 +16,18 @@ use Phenix\Util\Arr;
  */
 class PostgresInsertCompiler extends InsertCompiler
 {
+    /**
+     * Convert ? placeholders to $n format for PostgreSQL
+     */
+    protected function convertPlaceholders(string $sql): string
+    {
+        $index = 1;
+
+        return preg_replace_callback('/\?/', function () use (&$index) {
+            return '$' . ($index++);
+        }, $sql);
+    }
+
     protected function compileInsertIgnore(): string
     {
         return 'INSERT INTO';
@@ -59,10 +71,16 @@ class PostgresInsertCompiler extends InsertCompiler
             $parts[] = 'ON CONFLICT DO NOTHING';
 
             $sql = Arr::implodeDeeply($parts);
+            $sql = $this->convertPlaceholders($sql);
 
             return new CompiledClause($sql, $ast->params);
         }
 
-        return parent::compile($ast);
+        $result = parent::compile($ast);
+
+        return new CompiledClause(
+            $this->convertPlaceholders($result->sql),
+            $result->params
+        );
     }
 }

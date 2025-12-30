@@ -9,6 +9,11 @@ use Phenix\Database\QueryAst;
 
 final class SqliteSelectCompiler extends SelectCompiler
 {
+    public function __construct()
+    {
+        $this->whereCompiler = new SqliteWhereCompiler();
+    }
+
     protected function compileLock(QueryAst $ast): string
     {
         // SQLite doesn't support row-level locks
