@@ -34,16 +34,16 @@ trait HasWhereClause
         return $this;
     }
 
-    public function whereDistinct(string $column, Closure|string|int $value): static
+    public function whereNotEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::DISTINCT, $value);
+        $this->resolveWhereMethod($column, Operator::NOT_EQUAL, $value);
 
         return $this;
     }
 
-    public function orWhereDistinct(string $column, Closure|string|int $value): static
+    public function orWhereNotEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::DISTINCT, $value, LogicalConnector::OR);
+        $this->resolveWhereMethod($column, Operator::NOT_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }

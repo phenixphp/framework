@@ -47,16 +47,16 @@ class Join extends Clause implements Builder
         return $this;
     }
 
-    public function onDistinct(string $column, string $value): self
+    public function onNotEqual(string $column, string $value): self
     {
-        $this->pushClause(new BasicWhereClause($column, Operator::DISTINCT, $value));
+        $this->pushClause(new BasicWhereClause($column, Operator::NOT_EQUAL, $value));
 
         return $this;
     }
 
-    public function orOnDistinct(string $column, string $value): self
+    public function orOnNotEqual(string $column, string $value): self
     {
-        $this->pushClause(new BasicWhereClause($column, Operator::DISTINCT, $value), LogicalConnector::OR);
+        $this->pushClause(new BasicWhereClause($column, Operator::NOT_EQUAL, $value), LogicalConnector::OR);
 
         return $this;
     }

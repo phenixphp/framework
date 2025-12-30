@@ -57,7 +57,7 @@ it('generates query to select using comparison clause', function (
     expect($dml)->toBe("SELECT * FROM users WHERE {$column} {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
-    ['whereDistinct', 'id', Operator::DISTINCT->value, 1],
+    ['whereNotEqual', 'id', Operator::NOT_EQUAL->value, 1],
     ['whereGreaterThan', 'id', Operator::GREATER_THAN->value, 1],
     ['whereGreaterThanOrEqual', 'id', Operator::GREATER_THAN_OR_EQUAL->value, 1],
     ['whereLessThan', 'id', Operator::LESS_THAN->value, 1],
@@ -258,7 +258,7 @@ it('generates queries using logical connectors', function (
 })->with([
     ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operator::LESS_THAN->value],
     ['orWhereEqual', 'updated_at', date('Y-m-d'), Operator::EQUAL->value],
-    ['orWhereDistinct', 'updated_at', date('Y-m-d'), Operator::DISTINCT->value],
+    ['orWhereNotEqual', 'updated_at', date('Y-m-d'), Operator::NOT_EQUAL->value],
     ['orWhereGreaterThan', 'updated_at', date('Y-m-d'), Operator::GREATER_THAN->value],
     ['orWhereGreaterThanOrEqual', 'updated_at', date('Y-m-d'), Operator::GREATER_THAN_OR_EQUAL->value],
     ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operator::LESS_THAN->value],
@@ -440,7 +440,7 @@ it('generates query to select using comparison clause with subqueries and functi
     expect($params)->toBeEmpty();
 })->with([
     ['whereEqual', 'price', Operator::EQUAL->value],
-    ['whereDistinct', 'price', Operator::DISTINCT->value],
+    ['whereNotEqual', 'price', Operator::NOT_EQUAL->value],
     ['whereGreaterThan', 'price', Operator::GREATER_THAN->value],
     ['whereGreaterThanOrEqual', 'price', Operator::GREATER_THAN_OR_EQUAL->value],
     ['whereLessThan', 'price', Operator::LESS_THAN->value],
@@ -472,21 +472,21 @@ it('generates query using comparison clause with subqueries and any, all, some o
     expect($params)->toBe([10]);
 })->with([
     ['whereAnyEqual', Operator::EQUAL->value, Operator::ANY->value],
-    ['whereAnyDistinct', Operator::DISTINCT->value, Operator::ANY->value],
+    ['whereAnyNotEqual', Operator::NOT_EQUAL->value, Operator::ANY->value],
     ['whereAnyGreaterThan', Operator::GREATER_THAN->value, Operator::ANY->value],
     ['whereAnyGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::ANY->value],
     ['whereAnyLessThan', Operator::LESS_THAN->value, Operator::ANY->value],
     ['whereAnyLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value, Operator::ANY->value],
 
     ['whereAllEqual', Operator::EQUAL->value, Operator::ALL->value],
-    ['whereAllDistinct', Operator::DISTINCT->value, Operator::ALL->value],
+    ['whereAllNotEqual', Operator::NOT_EQUAL->value, Operator::ALL->value],
     ['whereAllGreaterThan', Operator::GREATER_THAN->value, Operator::ALL->value],
     ['whereAllGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::ALL->value],
     ['whereAllLessThan', Operator::LESS_THAN->value, Operator::ALL->value],
     ['whereAllLessThanOrEqual', Operator::LESS_THAN_OR_EQUAL->value, Operator::ALL->value],
 
     ['whereSomeEqual', Operator::EQUAL->value, Operator::SOME->value],
-    ['whereSomeDistinct', Operator::DISTINCT->value, Operator::SOME->value],
+    ['whereSomeNotEqual', Operator::NOT_EQUAL->value, Operator::SOME->value],
     ['whereSomeGreaterThan', Operator::GREATER_THAN->value, Operator::SOME->value],
     ['whereSomeGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value, Operator::SOME->value],
     ['whereSomeLessThan', Operator::LESS_THAN->value, Operator::SOME->value],
@@ -516,7 +516,7 @@ it('generates query with row subquery', function (string $method, string $operat
     expect($params)->toBe([1]);
 })->with([
     ['whereRowEqual', Operator::EQUAL->value],
-    ['whereRowDistinct', Operator::DISTINCT->value],
+    ['whereRowNotEqual', Operator::NOT_EQUAL->value],
     ['whereRowGreaterThan', Operator::GREATER_THAN->value],
     ['whereRowGreaterThanOrEqual', Operator::GREATER_THAN_OR_EQUAL->value],
     ['whereRowLessThan', Operator::LESS_THAN->value],

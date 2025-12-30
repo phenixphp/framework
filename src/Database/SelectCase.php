@@ -31,11 +31,11 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenDistinct(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenNotEqual(Functions|string $column, Value|string|int $value, Value|string $result): self
     {
         $this->pushCase(
             $column,
-            Operator::DISTINCT,
+            Operator::NOT_EQUAL,
             $result,
             $value
         );
