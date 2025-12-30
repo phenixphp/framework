@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\UpdateCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
+use Phenix\Database\QueryAst;
 
 class PostgresUpdateCompiler extends UpdateCompiler
 {
+    use HasPlaceholders;
+
     public function __construct()
     {
         $this->whereCompiler = new PostgresWhereCompiler();
@@ -16,6 +21,13 @@ class PostgresUpdateCompiler extends UpdateCompiler
     protected function compileSetClause(string $column, int $paramIndex): string
     {
         return "{$column} = $" . $paramIndex;
+    }
+
+    public function compile(QueryAst $ast): CompiledClause
+    {
+        $result = parent::compile($ast);
+
+        return new CompiledClause($this->convertPlaceholders($result->sql), $result->params);
     }
 
     // TODO: Support RETURNING clause

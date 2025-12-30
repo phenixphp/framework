@@ -14,15 +14,13 @@ use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\CompiledClause;
 
-use function count;
 use function is_array;
 
-final class PostgresWhereCompiler
+class PostgresWhereCompiler
 {
-    private int $paramIndex = 0;
-
     /**
      * @param array<int, WhereClause> $wheres
      * @return CompiledClause
@@ -33,7 +31,6 @@ final class PostgresWhereCompiler
             return new CompiledClause('', []);
         }
 
-        $this->paramIndex = 0;
         $sql = [];
 
         foreach ($wheres as $index => $where) {
@@ -68,14 +65,12 @@ final class PostgresWhereCompiler
         $operator = $clause->getOperator();
 
         if ($clause->isInOperator()) {
-            $placeholders = $this->generatePlaceholders($clause->getValueCount());
+            $placeholders = str_repeat('?, ', $clause->getValueCount() - 1) . '?';
 
             return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        $placeholder = $this->nextPlaceholder();
-
-        return "{$column} {$operator->value} {$placeholder}";
+        return "{$column} {$operator->value} " . SQL::STD_PLACEHOLDER->value;
     }
 
     private function compileNullClause(NullWhereClause $clause): string
@@ -92,10 +87,8 @@ final class PostgresWhereCompiler
     {
         $column = $clause->getColumn();
         $operator = $clause->getOperator();
-        $p1 = $this->nextPlaceholder();
-        $p2 = $this->nextPlaceholder();
 
-        return "{$column} {$operator->value} {$p1} AND {$p2}";
+        return "{$column} {$operator->value} {$clause->renderValue()}";
     }
 
     private function compileSubqueryClause(SubqueryWhereClause $clause): string
@@ -115,9 +108,6 @@ final class PostgresWhereCompiler
             // For regular subqueries, add space
             $parts[] = '(' . $clause->getSql() . ')';
         }
-
-        // Update param index based on subquery params
-        $this->paramIndex += count($clause->getParams());
 
         return implode(' ', $parts);
     }
@@ -140,28 +130,5 @@ final class PostgresWhereCompiler
         }, $clause->getParts());
 
         return implode(' ', $parts);
-    }
-
-    private function nextPlaceholder(): string
-    {
-        return '$' . (++$this->paramIndex);
-    }
-
-    private function generatePlaceholders(int $count): string
-    {
-        $placeholders = [];
-        for ($i = 0; $i < $count; $i++) {
-            $placeholders[] = $this->nextPlaceholder();
-        }
-
-        return implode(', ', $placeholders);
-    }
-
-    /**
-     * Set the starting parameter index (used when WHERE is not the first clause with params)
-     */
-    public function setStartingParamIndex(int $index): void
-    {
-        $this->paramIndex = $index;
     }
 }

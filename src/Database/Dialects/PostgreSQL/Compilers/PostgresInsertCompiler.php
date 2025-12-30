@@ -6,6 +6,7 @@ namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
@@ -16,17 +17,7 @@ use Phenix\Util\Arr;
  */
 class PostgresInsertCompiler extends InsertCompiler
 {
-    /**
-     * Convert ? placeholders to $n format for PostgreSQL
-     */
-    protected function convertPlaceholders(string $sql): string
-    {
-        $index = 1;
-
-        return preg_replace_callback('/\?/', function () use (&$index) {
-            return '$' . ($index++);
-        }, $sql);
-    }
+    use HasPlaceholders;
 
     protected function compileInsertIgnore(): string
     {

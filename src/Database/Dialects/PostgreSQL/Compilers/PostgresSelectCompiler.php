@@ -5,14 +5,28 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
 use Phenix\Database\Constants\Lock;
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 
 final class PostgresSelectCompiler extends SelectCompiler
 {
+    use HasPlaceholders;
+
     public function __construct()
     {
         $this->whereCompiler = new PostgresWhereCompiler();
+    }
+
+    public function compile(QueryAst $ast): CompiledClause
+    {
+        $result = parent::compile($ast);
+
+        return new CompiledClause(
+            $this->convertPlaceholders($result->sql),
+            $result->params
+        );
     }
 
     protected function compileLock(QueryAst $ast): string
