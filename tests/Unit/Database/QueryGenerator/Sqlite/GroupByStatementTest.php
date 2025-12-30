@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Join;
-use Phenix\Database\Having;
-use Phenix\Database\Functions;
-use Phenix\Database\QueryGenerator;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\Functions;
+use Phenix\Database\Having;
+use Phenix\Database\Join;
+use Phenix\Database\QueryGenerator;
 
 it('generates a grouped query', function (Functions|string $column, Functions|array|string $groupBy, string $rawGroup): void {
     $query = new QueryGenerator(Driver::SQLITE);

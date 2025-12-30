@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Join;
-use Phenix\Database\Having;
-use Phenix\Database\Functions;
-use Phenix\Database\QueryGenerator;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\Functions;
+use Phenix\Database\Having;
+use Phenix\Database\Join;
+use Phenix\Database\QueryGenerator;
 
 it('generates a grouped query', function (Functions|string $column, Functions|array|string $groupBy, string $rawGroup): void {
     $query = new QueryGenerator(Driver::POSTGRESQL);
@@ -115,7 +115,7 @@ it('generates a grouped query with having clause', function (): void {
 
     $expected = "SELECT COUNT(products.id) AS product_count, products.category_id "
         . "FROM products "
-        . "HAVING product_count > ? "
+        . "HAVING product_count > $1 "
         . "GROUP BY category_id";
 
     expect($dml)->toBe($expected);
