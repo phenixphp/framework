@@ -31,7 +31,7 @@ it('generates a query using having clause', function () {
     $expected = "SELECT COUNT(products.id) AS identifiers, products.category_id, categories.description "
         . "FROM products "
         . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "HAVING identifiers > ? GROUP BY products.category_id";
+        . "HAVING identifiers > $1 GROUP BY products.category_id";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5]);
@@ -61,7 +61,7 @@ it('generates a query using having with many clauses', function () {
     $expected = "SELECT COUNT(products.id) AS identifiers, products.category_id, categories.description "
         . "FROM products "
         . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "HAVING identifiers > ? AND products.category_id > ? GROUP BY products.category_id";
+        . "HAVING identifiers > $1 AND products.category_id > $2 GROUP BY products.category_id";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5, 10]);
@@ -87,7 +87,7 @@ it('generates a query using having with where clause', function () {
     $expected = "SELECT COUNT(products.id) AS product_count, products.category_id "
         . "FROM products "
         . "WHERE products.status = $1 "
-        . "HAVING product_count > ? GROUP BY products.category_id";
+        . "HAVING product_count > $2 GROUP BY products.category_id";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active', 3]);
@@ -111,7 +111,7 @@ it('generates a query using having with less than', function () {
 
     $expected = "SELECT SUM(orders.total) AS total_sales, orders.customer_id "
         . "FROM orders "
-        . "HAVING total_sales < ? GROUP BY orders.customer_id";
+        . "HAVING total_sales < $1 GROUP BY orders.customer_id";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1000]);
@@ -135,7 +135,7 @@ it('generates a query using having with equal', function () {
 
     $expected = "SELECT COUNT(products.id) AS product_count, products.category_id "
         . "FROM products "
-        . "HAVING product_count = ? GROUP BY products.category_id";
+        . "HAVING product_count = $1 GROUP BY products.category_id";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([10]);
