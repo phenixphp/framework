@@ -12,6 +12,7 @@ use Phenix\Database\QueryBuilder;
 use Phenix\Facades\DB;
 use Phenix\Util\URL;
 use Tests\Mocks\Database\MysqlConnectionPool;
+use Tests\Mocks\Database\PostgresqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
 
@@ -407,4 +408,94 @@ it('rollback transaction manually', function (): void {
     } catch (Throwable $th) {
         $query->rollBack();
     }
+});
+
+it('deletes records and returns deleted data', function () {
+    $deletedData = [
+        ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com'],
+        ['id' => 2, 'name' => 'Jane Doe', 'email' => 'jane@example.com'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('status', 'inactive')
+        ->deleteReturning(['id', 'name', 'email']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->toArray())->toBe($deletedData);
+    expect($result->count())->toBe(2);
+});
+
+it('returns empty collection on delete returning error', function () {
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Foreign key violation'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 1)
+        ->deleteReturning(['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->isEmpty())->toBeTrue();
+});
+
+it('deletes single record and returns its data', function () {
+    $deletedData = [
+        ['id' => 5, 'name' => 'Old User', 'email' => 'old@example.com', 'status' => 'deleted'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 5)
+        ->deleteReturning(['id', 'name', 'email', 'status']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(1);
+    expect($result->first())->toBe($deletedData[0]);
+});
+
+it('deletes records with returning all columns', function () {
+    $deletedData = [
+        ['id' => 1, 'name' => 'User 1', 'email' => 'user1@test.com', 'created_at' => '2024-01-01'],
+        ['id' => 2, 'name' => 'User 2', 'email' => 'user2@test.com', 'created_at' => '2024-01-02'],
+        ['id' => 3, 'name' => 'User 3', 'email' => 'user3@test.com', 'created_at' => '2024-01-03'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereIn('id', [1, 2, 3])
+        ->deleteReturning(['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(3);
+    expect($result->toArray())->toBe($deletedData);
 });

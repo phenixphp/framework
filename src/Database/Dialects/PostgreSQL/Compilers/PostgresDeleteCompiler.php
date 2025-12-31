@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
+use Phenix\Util\Arr;
+use Phenix\Database\QueryAst;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
-use Phenix\Database\QueryAst;
 
 class PostgresDeleteCompiler extends DeleteCompiler
 {
@@ -20,13 +21,26 @@ class PostgresDeleteCompiler extends DeleteCompiler
 
     public function compile(QueryAst $ast): CompiledClause
     {
-        $result = parent::compile($ast);
+        $parts = [];
 
-        return new CompiledClause(
-            $this->convertPlaceholders($result->sql),
-            $result->params
-        );
+        $parts[] = 'DELETE FROM';
+        $parts[] = $ast->table;
+
+        if (! empty($ast->wheres)) {
+            $whereCompiled = $this->whereCompiler->compile($ast->wheres);
+
+            $parts[] = 'WHERE';
+            $parts[] = $whereCompiled->sql;
+        }
+
+        if (! empty($ast->returning)) {
+            $parts[] = 'RETURNING';
+            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+        }
+
+        $sql = Arr::implodeDeeply($parts);
+        $sql = $this->convertPlaceholders($sql);
+
+        return new CompiledClause($sql, $ast->params);
     }
-
-    // TODO: Support RETURNING clause
 }

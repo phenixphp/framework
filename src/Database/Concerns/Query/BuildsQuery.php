@@ -150,6 +150,7 @@ trait BuildsQuery
         $ast->rawStatement = $this->rawStatement ?? null;
         $ast->ignore = $this->ignore ?? false;
         $ast->uniqueColumns = $this->uniqueColumns ?? [];
+        $ast->returning = $this->returning ?? [];
         $ast->params = $this->arguments;
 
         return $ast;

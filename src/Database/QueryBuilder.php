@@ -213,6 +213,35 @@ class QueryBuilder extends QueryBase
     }
 
     /**
+     * Delete records and return deleted data (PostgreSQL, SQLite 3.35+)
+     *
+     * @param array<int, string> $columns
+     * @return Collection<array<string, mixed>>
+     */
+    public function deleteReturning(array $columns = ['*']): Collection
+    {
+        $this->returning = array_unique($columns);
+
+        [$dml, $params] = parent::delete();
+
+        try {
+            $result = $this->exec($dml, $params);
+
+            $collection = new Collection('array');
+
+            foreach ($result as $row) {
+                $collection->add($row);
+            }
+
+            return $collection;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return new Collection('array');
+        }
+    }
+
+    /**
      * @return Collection<array<string, mixed>>
      */
     public function get(): Collection

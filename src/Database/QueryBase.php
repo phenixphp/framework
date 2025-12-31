@@ -48,6 +48,8 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
     protected array $uniqueColumns;
 
+    protected array $returning = [];
+
     public function __construct()
     {
         $this->ignore = false;
@@ -68,6 +70,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
         $this->clauses = [];
         $this->arguments = [];
         $this->uniqueColumns = [];
+        $this->returning = [];
     }
 
     public function count(string $column = '*'): array|int
@@ -162,6 +165,18 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
         $this->action = Action::DELETE;
 
         return $this->toSql();
+    }
+
+    /**
+     * Specify columns to return after DELETE/UPDATE (PostgreSQL, SQLite 3.35+)
+     *
+     * @param array<int, string> $columns
+     */
+    public function returning(array $columns = ['*']): static
+    {
+        $this->returning = array_unique($columns);
+
+        return $this;
     }
 
     protected function prepareDataToInsert(array $data): void
