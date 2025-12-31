@@ -210,6 +210,7 @@ trait RefreshDatabase
             try {
                 $connection->prepare('DELETE FROM sqlite_sequence')->execute();
             } catch (Throwable) {
+                // Best-effort reset of AUTOINCREMENT sequences; ignore errors
             }
         } finally {
             try {
