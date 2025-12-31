@@ -9,6 +9,8 @@ use Phenix\Database\Dialects\Compilers\UpdateCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 
+use function count;
+
 class PostgresUpdateCompiler extends UpdateCompiler
 {
     use HasPlaceholders;
@@ -27,7 +29,12 @@ class PostgresUpdateCompiler extends UpdateCompiler
     {
         $result = parent::compile($ast);
 
-        return new CompiledClause($this->convertPlaceholders($result->sql), $result->params);
+        $paramsCount = count($ast->values);
+
+        return new CompiledClause(
+            $this->convertPlaceholders($result->sql, $paramsCount),
+            $result->params
+        );
     }
 
     // TODO: Support RETURNING clause
