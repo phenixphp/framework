@@ -70,7 +70,7 @@ class Where
             return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        return "{$column} {$operator->value} " . SQL::STD_PLACEHOLDER->value;
+        return "{$column} {$operator->value} " . SQL::PLACEHOLDER->value;
     }
 
     private function compileNullClause(NullWhereClause $clause): string

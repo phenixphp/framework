@@ -195,6 +195,6 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
         $this->arguments = \array_merge($this->arguments, array_values($data));
 
-        $this->values[] = array_fill(0, count($data), SQL::STD_PLACEHOLDER->value);
+        $this->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
     }
 }

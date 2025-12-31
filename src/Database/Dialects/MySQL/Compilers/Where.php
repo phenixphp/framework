@@ -62,12 +62,12 @@ class Where
     private function compileBasicClause(BasicWhereClause $clause): string
     {
         if ($clause->isInOperator()) {
-            $placeholders = str_repeat(SQL::STD_PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::STD_PLACEHOLDER->value;
+            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
 
             return "{$clause->getColumn()} {$clause->getOperator()->value} ({$placeholders})";
         }
 
-        return "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::STD_PLACEHOLDER->value;
+        return "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::PLACEHOLDER->value;
     }
 
     private function compileNullClause(NullWhereClause $clause): string

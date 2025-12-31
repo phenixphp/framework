@@ -23,7 +23,7 @@ class Having extends Clause
         $sql = [];
 
         foreach ($this->clauses as $clause) {
-            $clauseSql = "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::STD_PLACEHOLDER->value;
+            $clauseSql = "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::PLACEHOLDER->value;
 
             if ($connector = $clause->getConnector()) {
                 $clauseSql = "{$connector->value} {$clauseSql}";
