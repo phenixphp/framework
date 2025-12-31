@@ -9,13 +9,13 @@ use Phenix\Database\Dialects\Compilers\ExistsCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 
-class PostgresExistsCompiler extends ExistsCompiler
+class Exists extends ExistsCompiler
 {
     use HasPlaceholders;
 
     public function __construct()
     {
-        $this->whereCompiler = new PostgresWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     public function compile(QueryAst $ast): CompiledClause

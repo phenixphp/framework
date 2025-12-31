@@ -6,10 +6,10 @@ namespace Phenix\Database\Dialects\SQLite\Compilers;
 
 use Phenix\Database\Dialects\Compilers\ExistsCompiler;
 
-final class SqliteExistsCompiler extends ExistsCompiler
+class Exists extends ExistsCompiler
 {
     public function __construct()
     {
-        $this->whereCompiler = new SqliteWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 }

@@ -7,11 +7,11 @@ namespace Phenix\Database\Dialects\SQLite\Compilers;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\QueryAst;
 
-final class SqliteSelectCompiler extends SelectCompiler
+class Select extends SelectCompiler
 {
     public function __construct()
     {
-        $this->whereCompiler = new SqliteWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     protected function compileLock(QueryAst $ast): string

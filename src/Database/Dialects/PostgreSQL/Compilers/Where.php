@@ -19,7 +19,7 @@ use Phenix\Database\Dialects\CompiledClause;
 
 use function is_array;
 
-class PostgresWhereCompiler
+class Where
 {
     /**
      * @param array<int, WhereClause> $wheres

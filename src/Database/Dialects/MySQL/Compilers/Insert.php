@@ -8,7 +8,7 @@ use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
-class MysqlInsertCompiler extends InsertCompiler
+class Insert extends InsertCompiler
 {
     protected function compileInsertIgnore(): string
     {

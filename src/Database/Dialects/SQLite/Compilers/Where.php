@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\MySQL\Compilers;
+namespace Phenix\Database\Dialects\SQLite\Compilers;
 
 use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Clauses\BetweenWhereClause;
@@ -14,10 +14,7 @@ use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\CompiledClause;
-
-use function is_array;
 
 class Where
 {
@@ -61,13 +58,16 @@ class Where
 
     private function compileBasicClause(BasicWhereClause $clause): string
     {
-        if ($clause->isInOperator()) {
-            $placeholders = str_repeat(SQL::STD_PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::STD_PLACEHOLDER->value;
+        $column = $clause->getColumn();
+        $operator = $clause->getOperator();
 
-            return "{$clause->getColumn()} {$clause->getOperator()->value} ({$placeholders})";
+        if ($operator === Operator::IN || $operator === Operator::NOT_IN) {
+            $placeholders = str_repeat('?, ', $clause->getValueCount() - 1) . '?';
+
+            return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        return "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::STD_PLACEHOLDER->value;
+        return "{$column} {$operator->value} ?";
     }
 
     private function compileNullClause(NullWhereClause $clause): string
@@ -82,7 +82,10 @@ class Where
 
     private function compileBetweenClause(BetweenWhereClause $clause): string
     {
-        return "{$clause->getColumn()} {$clause->getOperator()->value} ? AND ?";
+        $column = $clause->getColumn();
+        $operator = $clause->getOperator();
+
+        return "{$column} {$operator->value} ? AND ?";
     }
 
     private function compileSubqueryClause(SubqueryWhereClause $clause): string
@@ -94,9 +97,13 @@ class Where
         }
 
         $parts[] = $clause->getOperator()->value;
-        $parts[] = $clause->getSubqueryOperator() !== null
-            ? "{$clause->getSubqueryOperator()->value}({$clause->getSql()})"
-            : "({$clause->getSql()})";
+
+        if ($clause->getSubqueryOperator() !== null) {
+            // For ANY/ALL/SOME, no space between operator and subquery
+            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
+        } else {
+            $parts[] = '(' . $clause->getSql() . ')';
+        }
 
         return implode(' ', $parts);
     }

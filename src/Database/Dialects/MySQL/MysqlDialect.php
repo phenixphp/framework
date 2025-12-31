@@ -6,32 +6,32 @@ namespace Phenix\Database\Dialects\MySQL;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Contracts\Dialect;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlDeleteCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlExistsCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlInsertCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlSelectCompiler;
-use Phenix\Database\Dialects\MySQL\Compilers\MysqlUpdateCompiler;
+use Phenix\Database\Dialects\MySQL\Compilers\Delete;
+use Phenix\Database\Dialects\MySQL\Compilers\Exists;
+use Phenix\Database\Dialects\MySQL\Compilers\Insert;
+use Phenix\Database\Dialects\MySQL\Compilers\Select;
+use Phenix\Database\Dialects\MySQL\Compilers\Update;
 use Phenix\Database\QueryAst;
 
-final class MysqlDialect implements Dialect
+class MysqlDialect implements Dialect
 {
-    protected MysqlSelectCompiler $selectCompiler;
+    protected Select $selectCompiler;
 
-    protected MysqlInsertCompiler $insertCompiler;
+    protected Insert $insertCompiler;
 
-    protected MysqlUpdateCompiler $updateCompiler;
+    protected Update $updateCompiler;
 
-    protected MysqlDeleteCompiler $deleteCompiler;
+    protected Delete $deleteCompiler;
 
-    protected MysqlExistsCompiler $existsCompiler;
+    protected Exists $existsCompiler;
 
     public function __construct()
     {
-        $this->selectCompiler = new MysqlSelectCompiler();
-        $this->insertCompiler = new MysqlInsertCompiler();
-        $this->updateCompiler = new MysqlUpdateCompiler();
-        $this->deleteCompiler = new MysqlDeleteCompiler();
-        $this->existsCompiler = new MysqlExistsCompiler();
+        $this->selectCompiler = new Select();
+        $this->insertCompiler = new Insert();
+        $this->updateCompiler = new Update();
+        $this->deleteCompiler = new Delete();
+        $this->existsCompiler = new Exists();
     }
 
     public function compile(QueryAst $ast): array

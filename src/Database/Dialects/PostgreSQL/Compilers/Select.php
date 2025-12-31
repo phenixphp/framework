@@ -10,13 +10,13 @@ use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 
-final class PostgresSelectCompiler extends SelectCompiler
+class Select extends SelectCompiler
 {
     use HasPlaceholders;
 
     public function __construct()
     {
-        $this->whereCompiler = new PostgresWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     public function compile(QueryAst $ast): CompiledClause

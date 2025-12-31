@@ -6,28 +6,28 @@ namespace Phenix\Database\Dialects\SQLite;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Contracts\Dialect;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteDeleteCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteExistsCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteInsertCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteSelectCompiler;
-use Phenix\Database\Dialects\SQLite\Compilers\SqliteUpdateCompiler;
+use Phenix\Database\Dialects\SQLite\Compilers\Delete;
+use Phenix\Database\Dialects\SQLite\Compilers\Exists;
+use Phenix\Database\Dialects\SQLite\Compilers\Insert;
+use Phenix\Database\Dialects\SQLite\Compilers\Select;
+use Phenix\Database\Dialects\SQLite\Compilers\Update;
 use Phenix\Database\QueryAst;
 
-final class SqliteDialect implements Dialect
+class SqliteDialect implements Dialect
 {
-    private SqliteSelectCompiler $selectCompiler;
-    private SqliteInsertCompiler $insertCompiler;
-    private SqliteUpdateCompiler $updateCompiler;
-    private SqliteDeleteCompiler $deleteCompiler;
-    private SqliteExistsCompiler $existsCompiler;
+    private Select $selectCompiler;
+    private Insert $insertCompiler;
+    private Update $updateCompiler;
+    private Delete $deleteCompiler;
+    private Exists $existsCompiler;
 
     public function __construct()
     {
-        $this->selectCompiler = new SqliteSelectCompiler();
-        $this->insertCompiler = new SqliteInsertCompiler();
-        $this->updateCompiler = new SqliteUpdateCompiler();
-        $this->deleteCompiler = new SqliteDeleteCompiler();
-        $this->existsCompiler = new SqliteExistsCompiler();
+        $this->selectCompiler = new Select();
+        $this->insertCompiler = new Insert();
+        $this->updateCompiler = new Update();
+        $this->deleteCompiler = new Delete();
+        $this->existsCompiler = new Exists();
     }
 
     public function compile(QueryAst $ast): array

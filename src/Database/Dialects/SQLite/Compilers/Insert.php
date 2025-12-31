@@ -13,7 +13,7 @@ use Phenix\Util\Arr;
  * - INSERT OR IGNORE INTO (silently skip conflicts)
  * - INSERT ... ON CONFLICT (...) DO UPDATE SET (upsert functionality)
  */
-class SqliteInsertCompiler extends InsertCompiler
+class Insert extends InsertCompiler
 {
     protected function compileInsertIgnore(): string
     {

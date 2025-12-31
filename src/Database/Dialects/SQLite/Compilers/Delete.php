@@ -2,21 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
+namespace Phenix\Database\Dialects\SQLite\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
-class PostgresDeleteCompiler extends DeleteCompiler
+class Delete extends DeleteCompiler
 {
-    use HasPlaceholders;
-
     public function __construct()
     {
-        $this->whereCompiler = new PostgresWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     public function compile(QueryAst $ast): CompiledClause
@@ -39,7 +36,6 @@ class PostgresDeleteCompiler extends DeleteCompiler
         }
 
         $sql = Arr::implodeDeeply($parts);
-        $sql = $this->convertPlaceholders($sql);
 
         return new CompiledClause($sql, $ast->params);
     }

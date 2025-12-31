@@ -11,13 +11,13 @@ use Phenix\Database\QueryAst;
 
 use function count;
 
-class PostgresUpdateCompiler extends UpdateCompiler
+class Update extends UpdateCompiler
 {
     use HasPlaceholders;
 
     public function __construct()
     {
-        $this->whereCompiler = new PostgresWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     protected function compileSetClause(string $column, int $paramIndex): string

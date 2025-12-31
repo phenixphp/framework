@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\SQLite\Compilers;
+namespace Phenix\Database\Dialects\MySQL\Compilers;
 
 use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Clauses\BetweenWhereClause;
@@ -14,9 +14,12 @@ use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\CompiledClause;
 
-final class SqliteWhereCompiler
+use function is_array;
+
+class Where
 {
     /**
      * @param array<int, WhereClause> $wheres
@@ -58,17 +61,13 @@ final class SqliteWhereCompiler
 
     private function compileBasicClause(BasicWhereClause $clause): string
     {
-        $column = $clause->getColumn();
-        $operator = $clause->getOperator();
+        if ($clause->isInOperator()) {
+            $placeholders = str_repeat(SQL::STD_PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::STD_PLACEHOLDER->value;
 
-        // SQLite uses '?' as placeholder
-        if ($operator === Operator::IN || $operator === Operator::NOT_IN) {
-            $placeholders = str_repeat('?, ', $clause->getValueCount() - 1) . '?';
-
-            return "{$column} {$operator->value} ({$placeholders})";
+            return "{$clause->getColumn()} {$clause->getOperator()->value} ({$placeholders})";
         }
 
-        return "{$column} {$operator->value} ?";
+        return "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::STD_PLACEHOLDER->value;
     }
 
     private function compileNullClause(NullWhereClause $clause): string
@@ -83,10 +82,7 @@ final class SqliteWhereCompiler
 
     private function compileBetweenClause(BetweenWhereClause $clause): string
     {
-        $column = $clause->getColumn();
-        $operator = $clause->getOperator();
-
-        return "{$column} {$operator->value} ? AND ?";
+        return "{$clause->getColumn()} {$clause->getOperator()->value} ? AND ?";
     }
 
     private function compileSubqueryClause(SubqueryWhereClause $clause): string
@@ -98,13 +94,9 @@ final class SqliteWhereCompiler
         }
 
         $parts[] = $clause->getOperator()->value;
-
-        if ($clause->getSubqueryOperator() !== null) {
-            // For ANY/ALL/SOME, no space between operator and subquery
-            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
-        } else {
-            $parts[] = '(' . $clause->getSql() . ')';
-        }
+        $parts[] = $clause->getSubqueryOperator() !== null
+            ? "{$clause->getSubqueryOperator()->value}({$clause->getSql()})"
+            : "({$clause->getSql()})";
 
         return implode(' ', $parts);
     }

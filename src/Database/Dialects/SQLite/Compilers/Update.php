@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\MySQL\Compilers;
+namespace Phenix\Database\Dialects\SQLite\Compilers;
 
 use Phenix\Database\Dialects\Compilers\UpdateCompiler;
 
-class MysqlUpdateCompiler extends UpdateCompiler
+class Update extends UpdateCompiler
 {
     public function __construct()
     {
-        $this->whereCompiler = new MysqlWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 
     protected function compileSetClause(string $column, int $paramIndex): string

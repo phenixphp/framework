@@ -15,7 +15,7 @@ use Phenix\Util\Arr;
  * - INSERT ... ON CONFLICT DO NOTHING (ignore conflicts)
  * - INSERT ... ON CONFLICT (...) DO UPDATE SET (upsert functionality)
  */
-class PostgresInsertCompiler extends InsertCompiler
+class Insert extends InsertCompiler
 {
     use HasPlaceholders;
 

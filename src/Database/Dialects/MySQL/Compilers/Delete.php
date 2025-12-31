@@ -6,10 +6,10 @@ namespace Phenix\Database\Dialects\MySQL\Compilers;
 
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
 
-class MysqlDeleteCompiler extends DeleteCompiler
+class Delete extends DeleteCompiler
 {
     public function __construct()
     {
-        $this->whereCompiler = new MysqlWhereCompiler();
+        $this->whereCompiler = new Where();
     }
 }

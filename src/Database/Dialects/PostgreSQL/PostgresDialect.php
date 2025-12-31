@@ -6,28 +6,28 @@ namespace Phenix\Database\Dialects\PostgreSQL;
 
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Contracts\Dialect;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresDeleteCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresExistsCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresInsertCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresSelectCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\PostgresUpdateCompiler;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\Delete;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\Exists;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\Insert;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\Select;
+use Phenix\Database\Dialects\PostgreSQL\Compilers\Update;
 use Phenix\Database\QueryAst;
 
-final class PostgresDialect implements Dialect
+class PostgresDialect implements Dialect
 {
-    private PostgresSelectCompiler $selectCompiler;
-    private PostgresInsertCompiler $insertCompiler;
-    private PostgresUpdateCompiler $updateCompiler;
-    private PostgresDeleteCompiler $deleteCompiler;
-    private PostgresExistsCompiler $existsCompiler;
+    private Select $selectCompiler;
+    private Insert $insertCompiler;
+    private Update $updateCompiler;
+    private Delete $deleteCompiler;
+    private Exists $existsCompiler;
 
     public function __construct()
     {
-        $this->selectCompiler = new PostgresSelectCompiler();
-        $this->insertCompiler = new PostgresInsertCompiler();
-        $this->updateCompiler = new PostgresUpdateCompiler();
-        $this->deleteCompiler = new PostgresDeleteCompiler();
-        $this->existsCompiler = new PostgresExistsCompiler();
+        $this->selectCompiler = new Select();
+        $this->insertCompiler = new Insert();
+        $this->updateCompiler = new Update();
+        $this->deleteCompiler = new Delete();
+        $this->existsCompiler = new Exists();
     }
 
     public function compile(QueryAst $ast): array
