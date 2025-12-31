@@ -42,6 +42,11 @@ abstract class UpdateCompiler implements ClauseCompiler
             $params = array_merge($params, $ast->params);
         }
 
+        if (! empty($ast->returning)) {
+            $parts[] = 'RETURNING';
+            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+        }
+
         $sql = Arr::implodeDeeply($parts);
 
         return new CompiledClause($sql, $params);

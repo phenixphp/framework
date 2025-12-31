@@ -499,3 +499,99 @@ it('deletes records with returning all columns', function () {
     expect($result->count())->toBe(3);
     expect($result->toArray())->toBe($deletedData);
 });
+
+it('updates records and returns updated data', function () {
+    $updatedData = [
+        ['id' => 1, 'name' => 'John Updated', 'email' => 'john@new.com', 'status' => 'active'],
+        ['id' => 2, 'name' => 'Jane Updated', 'email' => 'jane@new.com', 'status' => 'active'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('status', 'pending')
+        ->updateReturning(
+            ['status' => 'active'],
+            ['id', 'name', 'email', 'status']
+        );
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->toArray())->toBe($updatedData);
+    expect($result->count())->toBe(2);
+});
+
+it('returns empty collection on update returning error', function () {
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Constraint violation'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 1)
+        ->updateReturning(['email' => 'duplicate@test.com'], ['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->isEmpty())->toBeTrue();
+});
+
+it('updates single record and returns its data', function () {
+    $updatedData = [
+        ['id' => 5, 'name' => 'Updated User', 'email' => 'updated@example.com', 'updated_at' => '2024-12-31'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 5)
+        ->updateReturning(
+            ['name' => 'Updated User', 'updated_at' => '2024-12-31'],
+            ['id', 'name', 'email', 'updated_at']
+        );
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(1);
+    expect($result->first())->toBe($updatedData[0]);
+});
+
+it('updates records with returning all columns', function () {
+    $updatedData = [
+        ['id' => 1, 'name' => 'User 1', 'status' => 'active', 'updated_at' => '2024-12-31'],
+        ['id' => 2, 'name' => 'User 2', 'status' => 'active', 'updated_at' => '2024-12-31'],
+        ['id' => 3, 'name' => 'User 3', 'status' => 'active', 'updated_at' => '2024-12-31'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereIn('id', [1, 2, 3])
+        ->updateReturning(['status' => 'active', 'updated_at' => '2024-12-31'], ['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(3);
+    expect($result->toArray())->toBe($updatedData);
+});

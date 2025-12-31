@@ -36,6 +36,4 @@ class PostgresUpdateCompiler extends UpdateCompiler
             $result->params
         );
     }
-
-    // TODO: Support RETURNING clause
 }

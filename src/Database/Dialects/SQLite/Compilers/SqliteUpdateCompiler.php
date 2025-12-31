@@ -17,5 +17,4 @@ class SqliteUpdateCompiler extends UpdateCompiler
     {
         return "{$column} = ?";
     }
-    // TODO: Support RETURNING clause (SQLite 3.35.0+)
 }

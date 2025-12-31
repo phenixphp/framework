@@ -188,6 +188,36 @@ class QueryBuilder extends QueryBase
         }
     }
 
+    /**
+     * Update records and return updated data (PostgreSQL, SQLite 3.35+)
+     *
+     * @param array<string, mixed> $values
+     * @param array<int, string> $columns
+     * @return Collection<array<string, mixed>>
+     */
+    public function updateReturning(array $values, array $columns = ['*']): Collection
+    {
+        $this->returning = array_unique($columns);
+
+        [$dml, $params] = parent::update($values);
+
+        try {
+            $result = $this->exec($dml, $params);
+
+            $collection = new Collection('array');
+
+            foreach ($result as $row) {
+                $collection->add($row);
+            }
+
+            return $collection;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return new Collection('array');
+        }
+    }
+
     public function upsert(array $values, array $columns): bool
     {
         $this->action = Action::INSERT;

@@ -144,3 +144,88 @@ it('generates update statement with multiple columns and complex where', functio
     expect($dml)->toBe($expected);
     expect($params)->toBe([$name, $email, '2024-12-30', 'active', 5]);
 });
+
+it('generates update statement with returning clause', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->table('users')
+        ->whereEqual('id', 1)
+        ->returning(['id', 'name', 'email', 'updated_at'])
+        ->update(['name' => 'John Updated', 'email' => 'john@new.com']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "UPDATE users SET name = ?, email = ? WHERE id = ? RETURNING id, name, email, updated_at";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['John Updated', 'john@new.com', 1]);
+});
+
+it('generates update statement with returning all columns', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->table('users')
+        ->whereIn('status', ['pending', 'inactive'])
+        ->returning(['*'])
+        ->update(['status' => 'active', 'activated_at' => '2024-12-31']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "UPDATE users SET status = ?, activated_at = ? WHERE status IN (?, ?) RETURNING *";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active', '2024-12-31', 'pending', 'inactive']);
+});
+
+it('generates update statement with returning without where clause', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->table('settings')
+        ->returning(['id', 'key', 'value'])
+        ->update(['updated_at' => '2024-12-31']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "UPDATE settings SET updated_at = ? RETURNING id, key, value";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['2024-12-31']);
+});
+
+it('generates update statement with multiple where clauses and returning', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $name = faker()->name;
+
+    $sql = $query->table('users')
+        ->whereEqual('status', 'pending')
+        ->whereGreaterThan('created_at', '2024-01-01')
+        ->whereNotNull('email')
+        ->returning(['id', 'name', 'status', 'created_at'])
+        ->update(['name' => $name, 'status' => 'active']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "UPDATE users SET name = ?, status = ? "
+        . "WHERE status = ? AND created_at > ? AND email IS NOT NULL "
+        . "RETURNING id, name, status, created_at";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([$name, 'active', 'pending', '2024-01-01']);
+});
+
+it('generates update statement with single column and returning', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->table('posts')
+        ->whereEqual('id', 42)
+        ->returning(['id', 'title', 'published_at'])
+        ->update(['published_at' => '2024-12-31 10:00:00']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "UPDATE posts SET published_at = ? WHERE id = ? RETURNING id, title, published_at";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['2024-12-31 10:00:00', 42]);
+});
