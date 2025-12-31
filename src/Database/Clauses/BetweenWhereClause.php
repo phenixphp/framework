@@ -6,6 +6,7 @@ namespace Phenix\Database\Clauses;
 
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SQL;
 
 class BetweenWhereClause extends WhereClause
 {
@@ -44,7 +45,6 @@ class BetweenWhereClause extends WhereClause
 
     public function renderValue(): string
     {
-        // BETWEEN uses placeholders for both values
-        return '? AND ?';
+        return SQL::PLACEHOLDER->value . ' AND ' . SQL::PLACEHOLDER->value;
     }
 }

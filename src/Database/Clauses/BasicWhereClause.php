@@ -6,6 +6,7 @@ namespace Phenix\Database\Clauses;
 
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SQL;
 
 use function count;
 use function is_array;
@@ -54,10 +55,10 @@ class BasicWhereClause extends WhereClause
         if ($this->usePlaceholder) {
             // In WHERE context with parameterized queries, use placeholder
             if (is_array($this->value)) {
-                return '(' . implode(', ', array_fill(0, count($this->value), '?')) . ')';
+                return '(' . implode(', ', array_fill(0, count($this->value), SQL::PLACEHOLDER->value)) . ')';
             }
 
-            return '?';
+            return SQL::PLACEHOLDER->value;
         }
 
         // In JOIN ON context, render the value directly (typically a column name)

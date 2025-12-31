@@ -14,6 +14,7 @@ use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\CompiledClause;
 
 class Where
@@ -62,12 +63,12 @@ class Where
         $operator = $clause->getOperator();
 
         if ($operator === Operator::IN || $operator === Operator::NOT_IN) {
-            $placeholders = str_repeat('?, ', $clause->getValueCount() - 1) . '?';
+            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
 
             return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        return "{$column} {$operator->value} ?";
+        return "{$column} {$operator->value} " . SQL::PLACEHOLDER->value;
     }
 
     private function compileNullClause(NullWhereClause $clause): string

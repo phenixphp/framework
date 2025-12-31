@@ -65,7 +65,7 @@ class Where
         $operator = $clause->getOperator();
 
         if ($clause->isInOperator()) {
-            $placeholders = str_repeat('?, ', $clause->getValueCount() - 1) . '?';
+            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
 
             return "{$column} {$operator->value} ({$placeholders})";
         }
