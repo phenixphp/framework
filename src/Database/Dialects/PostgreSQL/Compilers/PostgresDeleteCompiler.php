@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
-use Phenix\Util\Arr;
-use Phenix\Database\QueryAst;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
+use Phenix\Database\QueryAst;
+use Phenix\Util\Arr;
 
 class PostgresDeleteCompiler extends DeleteCompiler
 {
