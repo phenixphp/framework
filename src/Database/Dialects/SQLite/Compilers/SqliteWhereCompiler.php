@@ -98,13 +98,12 @@ final class SqliteWhereCompiler
         }
 
         $parts[] = $clause->getOperator()->value;
-
+ 
         if ($clause->getSubqueryOperator() !== null) {
             // For ANY/ALL/SOME, no space between operator and subquery
-            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSubquerySql() . ')';
+            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
         } else {
-            // For regular subqueries, add space
-            $parts[] = '(' . $clause->getSubquerySql() . ')';
+            $parts[] = '(' . $clause->getSql() . ')';
         }
 
         return implode(' ', $parts);
