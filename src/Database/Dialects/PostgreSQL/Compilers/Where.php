@@ -48,7 +48,6 @@ class Where extends WhereCompiler
             // For ANY/ALL/SOME, no space between operator and subquery
             $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
         } else {
-            // For regular subqueries, add space
             $parts[] = '(' . $clause->getSql() . ')';
         }
 
