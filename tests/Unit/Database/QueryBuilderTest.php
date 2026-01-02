@@ -595,3 +595,151 @@ it('updates records with returning all columns', function () {
     expect($result->count())->toBe(3);
     expect($result->toArray())->toBe($updatedData);
 });
+
+it('inserts records using insert or ignore successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->insertOrIgnore(['name' => 'Tony', 'email' => 'tony@example.com']);
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on insert or ignore records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Query error'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->insertOrIgnore(['name' => 'Tony', 'email' => 'tony@example.com']);
+
+    expect($result)->toBeFalse();
+});
+
+it('inserts records from subquery successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('inserts records from subquery with ignore flag', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email'],
+        true
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on insert from records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Insert from subquery failed'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email']
+    );
+
+    expect($result)->toBeFalse();
+});
+
+it('upserts records successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        ['name' => 'Tony', 'email' => 'tony@example.com', 'status' => 'active'],
+        ['email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('upserts multiple records successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        [
+            ['name' => 'Tony', 'email' => 'tony@example.com'],
+            ['name' => 'John', 'email' => 'john@example.com'],
+        ],
+        ['email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on upsert records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Upsert failed'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        ['name' => 'Tony', 'email' => 'tony@example.com'],
+        ['email']
+    );
+
+    expect($result)->toBeFalse();
+});
