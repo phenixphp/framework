@@ -16,10 +16,11 @@ use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\Compilers\WhereCompiler;
 
 use function is_array;
 
-class Where
+class Where extends WhereCompiler
 {
     /**
      * @param array<int, WhereClause> $wheres

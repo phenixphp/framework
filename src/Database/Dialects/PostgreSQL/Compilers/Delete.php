@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
-use Phenix\Database\Dialects\Compilers\DeleteCompiler;
 use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
+use Phenix\Database\Dialects\SQLite\Compilers\Delete as SQLiteDelete;
 use Phenix\Database\QueryAst;
-use Phenix\Util\Arr;
 
-class Delete extends DeleteCompiler
+class Delete extends SQLiteDelete
 {
     use HasPlaceholders;
 
@@ -21,26 +20,9 @@ class Delete extends DeleteCompiler
 
     public function compile(QueryAst $ast): CompiledClause
     {
-        $parts = [];
+        $clause = parent::compile($ast);
+        $sql = $this->convertPlaceholders($clause->sql);
 
-        $parts[] = 'DELETE FROM';
-        $parts[] = $ast->table;
-
-        if (! empty($ast->wheres)) {
-            $whereCompiled = $this->whereCompiler->compile($ast->wheres);
-
-            $parts[] = 'WHERE';
-            $parts[] = $whereCompiled->sql;
-        }
-
-        if (! empty($ast->returning)) {
-            $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
-        }
-
-        $sql = Arr::implodeDeeply($parts);
-        $sql = $this->convertPlaceholders($sql);
-
-        return new CompiledClause($sql, $ast->params);
+        return new CompiledClause($sql, $clause->params);
     }
 }

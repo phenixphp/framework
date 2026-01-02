@@ -11,7 +11,7 @@ use Phenix\Util\Arr;
 
 abstract class DeleteCompiler implements ClauseCompiler
 {
-    protected $whereCompiler;
+    protected WhereCompiler $whereCompiler;
 
     public function compile(QueryAst $ast): CompiledClause
     {
