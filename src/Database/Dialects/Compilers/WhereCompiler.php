@@ -9,14 +9,9 @@ use Phenix\Database\Clauses\BetweenWhereClause;
 use Phenix\Database\Clauses\BooleanWhereClause;
 use Phenix\Database\Clauses\ColumnWhereClause;
 use Phenix\Database\Clauses\NullWhereClause;
-use Phenix\Database\Clauses\RawWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
-use Phenix\Database\Constants\LogicalConnector;
-use Phenix\Database\Constants\Operator;
 use Phenix\Database\Dialects\CompiledClause;
-
-use function is_array;
 
 abstract class WhereCompiler
 {
@@ -53,7 +48,6 @@ abstract class WhereCompiler
             $clause instanceof BetweenWhereClause => $this->compileBetweenClause($clause),
             $clause instanceof SubqueryWhereClause => $this->compileSubqueryClause($clause),
             $clause instanceof ColumnWhereClause => $this->compileColumnClause($clause),
-            $clause instanceof RawWhereClause => $this->compileRawClause($clause),
             default => '',
         };
     }
@@ -77,20 +71,5 @@ abstract class WhereCompiler
     protected function compileColumnClause(ColumnWhereClause $clause): string
     {
         return "{$clause->getColumn()} {$clause->getOperator()->value} {$clause->getCompareColumn()}";
-    }
-
-    protected function compileRawClause(RawWhereClause $clause): string
-    {
-        // For backwards compatibility with any remaining raw clauses
-        $parts = array_map(function ($value) {
-            return match (true) {
-                $value instanceof Operator => $value->value,
-                $value instanceof LogicalConnector => $value->value,
-                is_array($value) => '(' . implode(', ', $value) . ')',
-                default => $value,
-            };
-        }, $clause->getParts());
-
-        return implode(' ', $parts);
     }
 }
