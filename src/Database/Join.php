@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Phenix\Database\Clauses\BasicWhereClause;
-use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
@@ -20,18 +19,6 @@ class Join extends Clause implements Builder
         $this->clauses = [];
         $this->arguments = [];
     }
-
-    // protected function pushClause(WhereClause $clause, LogicalConnector $logicalConnector = LogicalConnector::AND): void
-    // {
-    //     // For Join clauses, remove connector from first clause
-    //     if (empty($this->clauses)) {
-    //         $clause->setConnector(null);
-    //     } else {
-    //         $clause->setConnector($logicalConnector);
-    //     }
-
-    //     $this->clauses[] = $clause;
-    // }
 
     public function onEqual(string $column, string $value): self
     {
