@@ -25,7 +25,7 @@ class Where extends WhereCompiler
 
     protected function compileBetweenClause(BetweenWhereClause $clause): string
     {
-        return "{$clause->getColumn()} {$clause->getOperator()->value} ? AND ?";
+        return "{$clause->getColumn()} {$clause->getOperator()->value} {$clause->renderValue()}";
     }
 
     protected function compileSubqueryClause(SubqueryWhereClause $clause): string
