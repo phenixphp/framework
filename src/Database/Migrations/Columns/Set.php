@@ -16,11 +16,17 @@ class Set extends Column
 
     public function getType(): string
     {
+        if ($this->isSQLite()) {
+            return 'string';
+        }
+
         return 'set';
     }
 
     public function values(array $values): static
     {
+        $this->values = $values;
+
         $this->options['values'] = $values;
 
         return $this;
