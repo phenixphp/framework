@@ -153,6 +153,12 @@ class ParallelQueue extends Queue
     {
         $this->cleanupCompletedTasks();
 
+        if (empty($this->runningTasks) && parent::size() === 0) {
+            $this->disableProcessing();
+
+            return;
+        }
+
         if (! empty($this->runningTasks)) {
             return;
         }

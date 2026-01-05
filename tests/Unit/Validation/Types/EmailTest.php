@@ -115,7 +115,7 @@ it('runs validation to check if email is unique in database except one other ema
     $this->app->swap(Connection::default(), $connection);
 
     $rules = Email::required()->unique(table: 'users', query: function (QueryBuilder $queryBuilder): void {
-        $queryBuilder->whereDistinct('email', 'john.doe@mail.com');
+        $queryBuilder->whereNotEqual('email', 'john.doe@mail.com');
     })->toArray();
 
     foreach ($rules['type'] as $rule) {

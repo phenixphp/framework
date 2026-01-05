@@ -48,7 +48,7 @@ it('generates query using join with distinct clasue', function () {
         ])
         ->from('products')
         ->innerJoin('categories', function (Join $join) {
-            $join->onDistinct('products.category_id', 'categories.id');
+            $join->onNotEqual('products.category_id', 'categories.id');
         })
         ->get();
 
@@ -106,7 +106,7 @@ it('generates query with join and multi clauses', function (
         ['php'],
     ],
     [
-        'orOnDistinct',
+        'orOnNotEqual',
         ['products.location_id', 'categories.location_id'],
         'OR products.location_id != categories.location_id',
         [],

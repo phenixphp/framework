@@ -7,9 +7,6 @@ namespace Phenix\Database\Models\QueryBuilders;
 use Amp\Sql\Common\SqlCommonConnectionPool;
 use Closure;
 use Phenix\App;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
-use Phenix\Database\Concerns\Query\HasSentences;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Exceptions\ModelException;
@@ -22,36 +19,15 @@ use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Models\Relationships\RelationshipParser;
-use Phenix\Database\QueryBase;
+use Phenix\Database\QueryBuilder;
 use Phenix\Util\Arr;
 
 use function array_key_exists;
 use function is_array;
 use function is_string;
 
-class DatabaseQueryBuilder extends QueryBase
+class DatabaseQueryBuilder extends QueryBuilder
 {
-    use BuildsQuery, HasSentences {
-        HasSentences::count insteadof BuildsQuery;
-        HasSentences::insert insteadof BuildsQuery;
-        HasSentences::exists insteadof BuildsQuery;
-        HasSentences::doesntExist insteadof BuildsQuery;
-        HasSentences::update insteadof BuildsQuery;
-        HasSentences::delete insteadof BuildsQuery;
-        BuildsQuery::table as protected;
-        BuildsQuery::from as protected;
-        BuildsQuery::insert as protected insertRows;
-        BuildsQuery::insertOrIgnore as protected insertOrIgnoreRows;
-        BuildsQuery::upsert as protected upsertRows;
-        BuildsQuery::insertFrom as protected insertFromRows;
-        BuildsQuery::update as protected updateRow;
-        BuildsQuery::delete as protected deleteRows;
-        BuildsQuery::count as protected countRows;
-        BuildsQuery::exists as protected existsRows;
-        BuildsQuery::doesntExist as protected doesntExistRows;
-    }
-    use HasJoinClause;
-
     protected DatabaseModel $model;
 
     /**

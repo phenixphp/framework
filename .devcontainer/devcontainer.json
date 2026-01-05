@@ -1,0 +1,28 @@
+{
+	"name": "PHP",
+	"build": {
+		"dockerfile": "./Dockerfile",
+		"context": ".."
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bmewburn.vscode-intelephense-client",
+				"xdebug.php-pack",
+				"devsense.phptools-vscode",
+				"mehedidracula.php-namespace-resolver",
+				"devsense.composer-php-vscode",
+				"phiter.phpstorm-snippets"
+			]
+		}
+	},
+	"forwardPorts": [
+		8080
+	],
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,readonly,type=bind"
+	],
+	"remoteEnv": {
+		"SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
+	}
+}

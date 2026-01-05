@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\Common\SqlCommonConnectionPool;
+use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlTransactionError;
+use Closure;
+use League\Uri\Components\Query;
+use League\Uri\Http;
 use Phenix\App;
 use Phenix\Data\Collection;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
-use Phenix\Database\Concerns\Query\HasSentences;
+use Phenix\Database\Concerns\Query\HasTransaction;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 
@@ -17,24 +21,7 @@ use function is_string;
 
 class QueryBuilder extends QueryBase
 {
-    use BuildsQuery, HasSentences {
-        HasSentences::count insteadof BuildsQuery;
-        HasSentences::insert insteadof BuildsQuery;
-        HasSentences::exists insteadof BuildsQuery;
-        HasSentences::doesntExist insteadof BuildsQuery;
-        HasSentences::update insteadof BuildsQuery;
-        HasSentences::delete insteadof BuildsQuery;
-        BuildsQuery::insert as protected insertRows;
-        BuildsQuery::insertOrIgnore as protected insertOrIgnoreRows;
-        BuildsQuery::upsert as protected upsertRows;
-        BuildsQuery::insertFrom as protected insertFromRows;
-        BuildsQuery::update as protected updateRow;
-        BuildsQuery::delete as protected deleteRows;
-        BuildsQuery::count as protected countRows;
-        BuildsQuery::exists as protected existsRows;
-        BuildsQuery::doesntExist as protected doesntExistRows;
-    }
-    use HasJoinClause;
+    use HasTransaction;
 
     protected SqlCommonConnectionPool $connection;
 
@@ -67,6 +54,223 @@ class QueryBuilder extends QueryBase
         return $this;
     }
 
+    public function count(string $column = '*'): int
+    {
+        $this->action = Action::SELECT;
+
+        [$dml, $params] = parent::count($column);
+
+        /** @var array<string, int> $count */
+        $count = $this->exec($dml, $params)->fetchRow();
+
+        return array_values($count)[0];
+    }
+
+    public function exists(): bool
+    {
+        $this->action = Action::EXISTS;
+
+        [$dml, $params] = parent::exists();
+
+        $results = $this->exec($dml, $params)->fetchRow();
+
+        return (bool) array_values($results)[0];
+    }
+
+    public function doesntExist(): bool
+    {
+        return ! $this->exists();
+    }
+
+    public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
+    {
+        $this->action = Action::SELECT;
+
+        $query = Query::fromUri($uri);
+
+        $currentPage = filter_var($query->get('page') ?? $defaultPage, FILTER_SANITIZE_NUMBER_INT);
+        $currentPage = $currentPage === false ? $defaultPage : $currentPage;
+
+        $perPage = filter_var($query->get('per_page') ?? $defaultPerPage, FILTER_SANITIZE_NUMBER_INT);
+        $perPage = $perPage === false ? $defaultPerPage : $perPage;
+
+        $countQuery = clone $this;
+
+        $total = $countQuery->count();
+
+        $data = $this->page((int) $currentPage, (int) $perPage)->get();
+
+        return new Paginator($uri, $data, (int) $total, (int) $currentPage, (int) $perPage);
+    }
+
+    public function insert(array $data): bool
+    {
+        [$dml, $params] = parent::insert($data);
+
+        try {
+            $this->exec($dml, $params);
+
+            return true;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    public function insertOrIgnore(array $values): bool
+    {
+        $this->ignore = true;
+
+        return $this->insert($values);
+    }
+
+    public function insertFrom(Closure $subquery, array $columns, bool $ignore = false): bool
+    {
+        $builder = new Subquery($this->driver);
+        $builder->selectAllColumns();
+
+        $subquery($builder);
+
+        [$dml, $arguments] = $builder->toSql();
+
+        $this->rawStatement = trim($dml, '()');
+
+        $this->arguments = array_merge($this->arguments, $arguments);
+
+        $this->action = Action::INSERT;
+
+        $this->ignore = $ignore;
+
+        $this->columns = $columns;
+
+        try {
+            [$dml, $params] = $this->toSql();
+
+            $this->exec($dml, $params);
+
+            return true;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    public function insertRow(array $data): int|string|bool
+    {
+        [$dml, $params] = parent::insert($data);
+
+        try {
+            /** @var MysqlPooledResult $result */
+            $result = $this->exec($dml, $params);
+
+            return $result->getLastInsertId();
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    public function update(array $values): bool
+    {
+        [$dml, $params] = parent::update($values);
+
+        try {
+            $this->exec($dml, $params);
+
+            return true;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    /**
+     * Update records and return updated data (PostgreSQL, SQLite 3.35+)
+     *
+     * @param array<string, mixed> $values
+     * @param array<int, string> $columns
+     * @return Collection<array<string, mixed>>
+     */
+    public function updateReturning(array $values, array $columns = ['*']): Collection
+    {
+        $this->returning = array_unique($columns);
+
+        [$dml, $params] = parent::update($values);
+
+        try {
+            $result = $this->exec($dml, $params);
+
+            $collection = new Collection('array');
+
+            foreach ($result as $row) {
+                $collection->add($row);
+            }
+
+            return $collection;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return new Collection('array');
+        }
+    }
+
+    public function upsert(array $values, array $columns): bool
+    {
+        $this->action = Action::INSERT;
+
+        $this->uniqueColumns = $columns;
+
+        return $this->insert($values);
+    }
+
+    public function delete(): bool
+    {
+        [$dml, $params] = parent::delete();
+
+        try {
+            $this->exec($dml, $params);
+
+            return true;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    /**
+     * Delete records and return deleted data (PostgreSQL, SQLite 3.35+)
+     *
+     * @param array<int, string> $columns
+     * @return Collection<array<string, mixed>>
+     */
+    public function deleteReturning(array $columns = ['*']): Collection
+    {
+        $this->returning = array_unique($columns);
+
+        [$dml, $params] = parent::delete();
+
+        try {
+            $result = $this->exec($dml, $params);
+
+            $collection = new Collection('array');
+
+            foreach ($result as $row) {
+                $collection->add($row);
+            }
+
+            return $collection;
+        } catch (SqlQueryError|SqlTransactionError $e) {
+            report($e);
+
+            return new Collection('array');
+        }
+    }
+
     /**
      * @return Collection<array<string, mixed>>
      */
@@ -88,9 +292,9 @@ class QueryBuilder extends QueryBase
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return object|array<string, mixed>|null
      */
-    public function first(): array|null
+    public function first(): object|array|null
     {
         $this->action = Action::SELECT;
 

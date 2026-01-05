@@ -67,10 +67,20 @@ trait RefreshDatabase
 
     protected function truncateDatabase(): void
     {
-        /** @var SqlCommonConnectionPool $connection */
+        /** @var SqlCommonConnectionPool|object $connection */
         $connection = App::make(Connection::default());
 
         $driver = $this->resolveDriver();
+
+        if ($driver === Driver::SQLITE) {
+            try {
+                $this->truncateSqliteDatabase($connection);
+            } catch (Throwable $e) {
+                report($e);
+            }
+
+            return;
+        }
 
         try {
             $tables = $this->getDatabaseTables($connection, $driver);
@@ -123,7 +133,6 @@ trait RefreshDatabase
                 }
             }
         } else {
-            // Unsupported driver (sqlite, etc.) – return empty so caller exits gracefully.
             return [];
         }
 
@@ -163,6 +172,52 @@ trait RefreshDatabase
             }
         } catch (Throwable $e) {
             report($e);
+        }
+    }
+
+    protected function truncateSqliteDatabase(object $connection): void
+    {
+        $stmt = $connection->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
+        $result = $stmt->execute();
+
+        $tables = [];
+
+        foreach ($result as $row) {
+            $table = $row['name'] ?? null;
+
+            if ($table) {
+                $tables[] = $table;
+            }
+        }
+
+        $tables = $this->filterTruncatableTables($tables);
+
+        if (empty($tables)) {
+            return;
+        }
+
+        try {
+            $connection->prepare('BEGIN IMMEDIATE')->execute();
+        } catch (Throwable) {
+            // If BEGIN fails, continue best-effort without explicit transaction
+        }
+
+        try {
+            foreach ($tables as $table) {
+                $connection->prepare('DELETE FROM ' . '"' . str_replace('"', '""', $table) . '"')->execute();
+            }
+
+            try {
+                $connection->prepare('DELETE FROM sqlite_sequence')->execute();
+            } catch (Throwable) {
+                // Best-effort reset of AUTOINCREMENT sequences; ignore errors
+            }
+        } finally {
+            try {
+                $connection->prepare('COMMIT')->execute();
+            } catch (Throwable) {
+                // Best-effort commit; ignore errors
+            }
         }
     }
 }

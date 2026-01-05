@@ -16,9 +16,9 @@ trait HasWhereRowClause
         return $this;
     }
 
-    public function whereRowDistinct(array $columns, Closure $subquery): static
+    public function whereRowNotEqual(array $columns, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operator::DISTINCT, $this->prepareRowFields($columns));
+        $this->whereSubquery($subquery, Operator::NOT_EQUAL, $this->prepareRowFields($columns));
 
         return $this;
     }
