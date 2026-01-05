@@ -31,10 +31,6 @@ class Select extends SelectCompiler
 
     protected function compileLock(QueryAst $ast): string
     {
-        if ($ast->lock === null) {
-            return '';
-        }
-
         return match ($ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',
@@ -46,6 +42,7 @@ class Select extends SelectCompiler
             Lock::FOR_UPDATE_NOWAIT => 'FOR UPDATE NOWAIT',
             Lock::FOR_SHARE_NOWAIT => 'FOR SHARE NOWAIT',
             Lock::FOR_NO_KEY_UPDATE_NOWAIT => 'FOR NO KEY UPDATE NOWAIT',
+            default => '',
         };
     }
 }

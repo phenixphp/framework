@@ -65,11 +65,6 @@ class SubqueryWhereClause extends WhereClause
         return $this->sql;
     }
 
-    public function getParams(): array
-    {
-        return $this->params;
-    }
-
     public function renderValue(): string
     {
         // Render subquery with optional operator (ANY, ALL, SOME)

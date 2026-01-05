@@ -21,10 +21,6 @@ abstract class WhereCompiler
      */
     public function compile(array $wheres): CompiledClause
     {
-        if (empty($wheres)) {
-            return new CompiledClause('', []);
-        }
-
         $sql = [];
 
         foreach ($wheres as $index => $where) {

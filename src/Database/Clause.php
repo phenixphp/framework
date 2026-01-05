@@ -13,10 +13,8 @@ use Phenix\Database\Concerns\Query\PrepareColumns;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Contracts\Builder;
-use Phenix\Util\Arr;
 
 use function count;
-use function is_array;
 
 abstract class Clause extends Grammar implements Builder
 {
@@ -94,19 +92,5 @@ abstract class Clause extends Grammar implements Builder
         }
 
         $this->clauses[] = $where;
-    }
-
-    protected function prepareClauses(array $clauses): array
-    {
-        return array_map(function (array $clause): array {
-            return array_map(function ($value) {
-                return match (true) {
-                    $value instanceof Operator => $value->value,
-                    $value instanceof LogicalConnector => $value->value,
-                    is_array($value) => '(' . Arr::implodeDeeply($value, ', ') . ')',
-                    default => $value,
-                };
-            }, $clause);
-        }, $clauses);
     }
 }

@@ -30,9 +30,4 @@ abstract class WhereClause
     {
         return $this->connector;
     }
-
-    public function isFirstClause(): bool
-    {
-        return $this->getConnector() === null;
-    }
 }

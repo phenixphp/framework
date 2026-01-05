@@ -50,13 +50,6 @@ class Join extends Clause implements Builder
 
     public function toSql(): array
     {
-        if (empty($this->clauses)) {
-            return [
-                "{$this->type->value} {$this->relationship}",
-                [],
-            ];
-        }
-
         $sql = [];
 
         foreach ($this->clauses as $clause) {

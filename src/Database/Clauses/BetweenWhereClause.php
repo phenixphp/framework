@@ -38,11 +38,6 @@ class BetweenWhereClause extends WhereClause
         return $this->operator;
     }
 
-    public function getValues(): array
-    {
-        return $this->values;
-    }
-
     public function renderValue(): string
     {
         return SQL::PLACEHOLDER->value . ' AND ' . SQL::PLACEHOLDER->value;

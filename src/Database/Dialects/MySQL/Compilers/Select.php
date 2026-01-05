@@ -17,10 +17,6 @@ class Select extends SelectCompiler
 
     protected function compileLock(QueryAst $ast): string
     {
-        if ($ast->lock === null) {
-            return '';
-        }
-
         return match ($ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',

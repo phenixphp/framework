@@ -16,10 +16,6 @@ class Having extends Clause
 
     public function toSql(): array
     {
-        if (empty($this->clauses)) {
-            return ['', []];
-        }
-
         $sql = [];
 
         foreach ($this->clauses as $clause) {
