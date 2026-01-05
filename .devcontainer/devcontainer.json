@@ -19,5 +19,7 @@
 	"forwardPorts": [
 		8080
 	],
-	"remoteUser": "root"
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly,type=bind"
+	]
 }
