@@ -144,7 +144,8 @@ it('runs at given using facade', function (): void {
 });
 
 it('sets interval for every two seconds', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyTwoSeconds();
 
     $ref = new ReflectionClass($timer);
@@ -155,7 +156,8 @@ it('sets interval for every two seconds', function (): void {
 });
 
 it('sets interval for every five seconds', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyFiveSeconds();
 
     $ref = new ReflectionClass($timer);
@@ -166,7 +168,8 @@ it('sets interval for every five seconds', function (): void {
 });
 
 it('sets interval for every ten seconds', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyTenSeconds();
 
     $ref = new ReflectionClass($timer);
@@ -177,7 +180,8 @@ it('sets interval for every ten seconds', function (): void {
 });
 
 it('sets interval for every fifteen seconds', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyFifteenSeconds();
 
     $ref = new ReflectionClass($timer);
@@ -188,7 +192,8 @@ it('sets interval for every fifteen seconds', function (): void {
 });
 
 it('sets interval for every thirty seconds', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyThirtySeconds();
 
     $ref = new ReflectionClass($timer);
@@ -199,7 +204,8 @@ it('sets interval for every thirty seconds', function (): void {
 });
 
 it('sets interval for every minute', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyMinute();
 
     $ref = new ReflectionClass($timer);
@@ -210,7 +216,8 @@ it('sets interval for every minute', function (): void {
 });
 
 it('sets interval for every two minutes', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyTwoMinutes();
 
     $ref = new ReflectionClass($timer);
@@ -221,7 +228,8 @@ it('sets interval for every two minutes', function (): void {
 });
 
 it('sets interval for every five minutes', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyFiveMinutes();
 
     $ref = new ReflectionClass($timer);
@@ -232,7 +240,8 @@ it('sets interval for every five minutes', function (): void {
 });
 
 it('sets interval for every ten minutes', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyTenMinutes();
 
     $ref = new ReflectionClass($timer);
@@ -243,7 +252,8 @@ it('sets interval for every ten minutes', function (): void {
 });
 
 it('sets interval for every fifteen minutes', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyFifteenMinutes();
 
     $ref = new ReflectionClass($timer);
@@ -254,7 +264,8 @@ it('sets interval for every fifteen minutes', function (): void {
 });
 
 it('sets interval for every thirty minutes', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->everyThirtyMinutes();
 
     $ref = new ReflectionClass($timer);
@@ -265,7 +276,8 @@ it('sets interval for every thirty minutes', function (): void {
 });
 
 it('sets interval for hourly', function (): void {
-    $timer = new Timer(function (): void {});
+    $timer = new Timer(function (): void {
+    });
     $timer->hourly();
 
     $ref = new ReflectionClass($timer);

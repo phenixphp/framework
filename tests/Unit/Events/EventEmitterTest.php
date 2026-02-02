@@ -614,8 +614,12 @@ it('supports limited fake then switching to only one infinite event', function (
     $limitedCalled = 0;
     $onlyCalled = 0;
 
-    EventFacade::on('assoc.limited', function () use (&$limitedCalled): void { $limitedCalled++; });
-    EventFacade::on('assoc.only', function () use (&$onlyCalled): void { $onlyCalled++; });
+    EventFacade::on('assoc.limited', function () use (&$limitedCalled): void {
+        $limitedCalled++;
+    });
+    EventFacade::on('assoc.only', function () use (&$onlyCalled): void {
+        $onlyCalled++;
+    });
 
     EventFacade::fakeTimes('assoc.limited', 1); // fake first occurrence only
 
@@ -651,7 +655,9 @@ it('supports conditional closure based faking', function (): void {
         return $count <= 2;
     });
 
-    EventFacade::on('conditional.event', function () use (&$called): void { $called++; });
+    EventFacade::on('conditional.event', function () use (&$called): void {
+        $called++;
+    });
 
     EventFacade::emit('conditional.event');
     EventFacade::emit('conditional.event');
@@ -677,7 +683,9 @@ it('supports single event closure predicate faking', function (): void {
         return $count <= 2;
     });
 
-    EventFacade::on('single.closure.event', function () use (&$called): void { $called++; });
+    EventFacade::on('single.closure.event', function () use (&$called): void {
+        $called++;
+    });
 
     EventFacade::emit('single.closure.event'); // fake
     EventFacade::emit('single.closure.event'); // fake
@@ -751,12 +759,18 @@ it('does not fake events in production environment', function (): void {
 });
 
 it('fakes multiple events provided sequentially', function (): void {
-    EventFacade::on('list.one', function (): never { throw new RuntimeError('Should not run'); });
-    EventFacade::on('list.two', function (): never { throw new RuntimeError('Should not run'); });
+    EventFacade::on('list.one', function (): never {
+        throw new RuntimeError('Should not run');
+    });
+    EventFacade::on('list.two', function (): never {
+        throw new RuntimeError('Should not run');
+    });
 
     $executedThree = false;
 
-    EventFacade::on('list.three', function () use (&$executedThree): void { $executedThree = true; });
+    EventFacade::on('list.three', function () use (&$executedThree): void {
+        $executedThree = true;
+    });
 
     EventFacade::fakeOnly('list.one');
     EventFacade::fakeTimes('list.two', PHP_INT_MAX);
@@ -778,7 +792,9 @@ it('fakes multiple events provided sequentially', function (): void {
 it('ignores events configured with zero count', function (): void {
     $executed = 0;
 
-    EventFacade::on('zero.count.event', function () use (&$executed): void { $executed++; });
+    EventFacade::on('zero.count.event', function () use (&$executed): void {
+        $executed++;
+    });
 
     EventFacade::fakeTimes('zero.count.event', 0);
 
@@ -793,7 +809,9 @@ it('ignores events configured with zero count', function (): void {
 it('does not fake when closure throws exception', function (): void {
     $executed = false;
 
-    EventFacade::on('closure.exception.event', function () use (&$executed): void { $executed = true; });
+    EventFacade::on('closure.exception.event', function () use (&$executed): void {
+        $executed = true;
+    });
 
     EventFacade::fakeWhen('closure.exception.event', function (Collection $log): bool {
         throw new RuntimeError('Predicate error');
