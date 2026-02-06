@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Concerns\Query;
 
+use Amp\Sql\SqlConnection;
 use Amp\Sql\SqlTransaction;
 use Closure;
+use Phenix\Database\TransactionManager;
 use Throwable;
 
 trait HasTransaction
@@ -14,35 +16,30 @@ trait HasTransaction
 
     public function transaction(Closure $callback): mixed
     {
-        /** @var SqlTransaction $transaction */
-        $transaction = $this->connection->beginTransaction();
-
-        $this->transaction = $transaction;
+        $this->transaction = $this->connection->beginTransaction();
 
         try {
-            $result = $callback($this);
+            $scope = new TransactionManager($this);
 
-            $transaction->commit();
+            $result = $callback($scope);
 
-            unset($this->transaction);
+            $this->transaction->commit();
 
             return $result;
         } catch (Throwable $e) {
             report($e);
 
-            $transaction->rollBack();
-
-            unset($this->transaction);
+            $this->transaction->rollBack();
 
             throw $e;
         }
     }
 
-    public function beginTransaction(): SqlTransaction
+    public function beginTransaction(): TransactionManager
     {
         $this->transaction = $this->connection->beginTransaction();
 
-        return $this->transaction;
+        return new TransactionManager($this);
     }
 
     public function commit(): void
@@ -68,8 +65,11 @@ trait HasTransaction
 
     protected function exec(string $dml, array $params = []): mixed
     {
-        $executor = $this->hasActiveTransaction() ? $this->transaction : $this->connection;
+        return $this->getExecutor()->prepare($dml)->execute($params);
+    }
 
-        return $executor->prepare($dml)->execute($params);
+    protected function getExecutor(): SqlTransaction|SqlConnection
+    {
+        return $this->hasActiveTransaction() ? $this->transaction : $this->connection;
     }
 }

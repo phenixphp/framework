@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Queue\StateManagers;
 
 use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
@@ -13,7 +14,7 @@ use Throwable;
 
 class DatabaseTaskState implements TaskState
 {
-    protected QueryBuilder|null $queryBuilder = null;
+    protected TransactionManager|null $transactionManager = null;
 
     public function __construct(
         protected string $connection = 'default',
@@ -21,9 +22,9 @@ class DatabaseTaskState implements TaskState
     ) {
     }
 
-    public function setBuilder(QueryBuilder $builder): void
+    public function setTransactionManager(TransactionManager $transactionManager): void
     {
-        $this->queryBuilder = $builder;
+        $this->transactionManager = $transactionManager;
     }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
@@ -127,8 +128,8 @@ class DatabaseTaskState implements TaskState
 
     protected function newScopedBuilder(): QueryBuilder
     {
-        if ($this->queryBuilder instanceof QueryBuilder) {
-            return clone $this->queryBuilder;
+        if ($this->transactionManager instanceof TransactionManager) {
+            return $this->transactionManager->clone();
         }
 
         return DB::connection($this->connection);

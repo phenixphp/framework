@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Testing\Concerns;
 
-use Amp\Sql\Common\SqlCommonConnectionPool;
+use Amp\Sql\SqlConnection;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
@@ -67,7 +67,7 @@ trait RefreshDatabase
 
     protected function truncateDatabase(): void
     {
-        /** @var SqlCommonConnectionPool|object $connection */
+        /** @var SqlConnection|object $connection */
         $connection = App::make(Connection::default());
 
         $driver = $this->resolveDriver();
@@ -108,7 +108,7 @@ trait RefreshDatabase
     /**
      * @return array<int, string>
      */
-    protected function getDatabaseTables(SqlCommonConnectionPool $connection, Driver $driver): array
+    protected function getDatabaseTables(SqlConnection $connection, Driver $driver): array
     {
         $tables = [];
 
@@ -154,7 +154,7 @@ trait RefreshDatabase
     /**
      * @param array<int, string> $tables
      */
-    protected function truncateTables(SqlCommonConnectionPool $connection, Driver $driver, array $tables): void
+    protected function truncateTables(SqlConnection $connection, Driver $driver, array $tables): void
     {
         try {
             if ($driver === Driver::MYSQL) {
