@@ -11,6 +11,7 @@ use Amp\Postgres\PostgresConnectionPool;
 use Closure;
 use Phenix\Database\Constants\Driver;
 use Phenix\Redis\ClientWrapper;
+use Phenix\Sqlite\SqliteConfig;
 use Phenix\Sqlite\SqliteConnection;
 use SensitiveParameter;
 
@@ -32,7 +33,9 @@ class ConnectionFactory
 
     private static function createSqliteConnection(#[SensitiveParameter] array $settings): Closure
     {
-        return static fn (): SqliteConnection => connect($settings['database']);
+        $config = SqliteConfig::fromPath($settings['database']);
+
+        return static fn (): SqliteConnection => connect($config);
     }
 
     private static function createMySqlConnection(#[SensitiveParameter] array $settings): Closure
