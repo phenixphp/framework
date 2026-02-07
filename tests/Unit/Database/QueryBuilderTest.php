@@ -330,8 +330,8 @@ it('execute database transaction successfully', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $result = $query->transaction(function (TransactionManager $tx): Collection {
-        return $tx->from('users')->get();
+    $result = $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 
     expect($result)->toBeInstanceOf(Collection::class);
@@ -356,8 +356,8 @@ it('rollback transaction on error', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $query->transaction(function (TransactionManager $tx): Collection {
-        return $tx->from('users')->get();
+    $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 })->throws(SqlQueryError::class);
 

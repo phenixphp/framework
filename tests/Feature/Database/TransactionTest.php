@@ -22,8 +22,8 @@ beforeEach(function (): void {
 });
 
 it('execute database transaction successfully', function (): void {
-    DB::connection('sqlite')->transaction(function (TransactionManager $tx): void {
-        $tx->from('users')->insert([
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $transactionManager->from('users')->insert([
             'name' => 'John Doe',
             'email' => 'john.doe@example.com',
         ]);
@@ -37,27 +37,27 @@ it('execute database transaction successfully', function (): void {
 });
 
 it('executes multiple operations within transaction callback', function (): void {
-    DB::connection('sqlite')->transaction(function (TransactionManager $tx): void {
-        $tx->from('users')->insert([
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $transactionManager->from('users')->insert([
             'name' => 'John Doe',
             'email' => 'john.doe@example.com',
         ]);
 
-        $tx->from('users')->insert([
+        $transactionManager->from('users')->insert([
             'name' => 'Jane Smith',
             'email' => 'jane.smith@example.com',
         ]);
 
-        $tx->from('users')->insert([
+        $transactionManager->from('users')->insert([
             'name' => 'Bob Johnson',
             'email' => 'bob.johnson@example.com',
         ]);
 
-        $tx->from('users')
+        $transactionManager->from('users')
             ->whereEqual('name', 'Jane Smith')
             ->update(['email' => 'jane.updated@example.com']);
 
-        $tx->from('users')
+        $transactionManager->from('users')
             ->whereEqual('name', 'Bob Johnson')
             ->delete();
     });
@@ -72,35 +72,35 @@ it('executes multiple operations within transaction callback', function (): void
 });
 
 it('executes transaction with manual begin, commit and rollback', function (): void {
-    $tx = DB::connection('sqlite')->beginTransaction();
+    $transactionManager = DB::connection('sqlite')->beginTransaction();
 
     try {
-        $tx->from('users')->insert([
+        $transactionManager->from('users')->insert([
             'name' => 'Alice Brown',
             'email' => 'alice.brown@example.com',
         ]);
 
-        $tx->from('users')->insert([
+        $transactionManager->from('users')->insert([
             'name' => 'Charlie Wilson',
             'email' => 'charlie.wilson@example.com',
         ]);
 
-        $tx->from('users')->insert([
+        $transactionManager->from('users')->insert([
             'name' => 'Diana Prince',
             'email' => 'diana.prince@example.com',
         ]);
 
-        $tx->from('users')
+        $transactionManager->from('users')
             ->whereEqual('name', 'Charlie Wilson')
             ->update(['name' => 'Charles Wilson']);
 
-        $tx->from('users')
+        $transactionManager->from('users')
             ->whereEqual('name', 'Diana Prince')
             ->delete();
 
-        $tx->commit();
+        $transactionManager->commit();
     } catch (Throwable $e) {
-        $tx->rollBack();
+        $transactionManager->rollBack();
         throw $e;
     }
 
