@@ -49,6 +49,11 @@ class TransactionManager
         $this->queryBuilder->rollBack();
     }
 
+    public function getQueryBuilder(): QueryBuilder
+    {
+        return $this->queryBuilder;
+    }
+
     public function clone(): QueryBuilder
     {
         return clone $this->queryBuilder;

@@ -61,6 +61,11 @@ class QueryBuilder extends QueryBase
         return $this;
     }
 
+    public function getConnection(): SqlConnection
+    {
+        return $this->connection;
+    }
+
     public function count(string $column = '*'): int
     {
         $this->action = Action::SELECT;

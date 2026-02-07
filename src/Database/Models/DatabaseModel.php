@@ -13,6 +13,7 @@ use Phenix\Database\Models\Concerns\BuildModelData;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Database\Models\Relationships\Relationship;
+use Phenix\Database\TransactionManager;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 use stdClass;
@@ -47,9 +48,19 @@ abstract class DatabaseModel implements Arrayable
 
     abstract protected static function table(): string;
 
-    public static function query(): DatabaseQueryBuilder
+    public static function query(TransactionManager|null $transactionManager = null): DatabaseQueryBuilder
     {
         $queryBuilder = static::newQueryBuilder();
+
+        if ($transactionManager !== null) {
+            $transactionQueryBuilder = $transactionManager->getQueryBuilder();
+            $queryBuilder->connection($transactionQueryBuilder->getConnection());
+
+            if ($transaction = $transactionQueryBuilder->getTransaction()) {
+                $queryBuilder->setTransaction($transaction);
+            }
+        }
+
         $queryBuilder->setModel(new static());
 
         return $queryBuilder;

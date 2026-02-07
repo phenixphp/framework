@@ -63,6 +63,18 @@ trait HasTransaction
         return isset($this->transaction) && $this->transaction !== null;
     }
 
+    public function getTransaction(): SqlTransaction|null
+    {
+        return $this->transaction;
+    }
+
+    public function setTransaction(SqlTransaction $transaction): self
+    {
+        $this->transaction = $transaction;
+
+        return $this;
+    }
+
     protected function exec(string $dml, array $params = []): mixed
     {
         return $this->getExecutor()->prepare($dml)->execute($params);
