@@ -101,6 +101,7 @@ it('executes transaction with manual begin, commit and rollback', function (): v
         $transactionManager->commit();
     } catch (Throwable $e) {
         $transactionManager->rollBack();
+
         throw $e;
     }
 
