@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Phenix\Database\Migrations\Columns\Set;
 use Phinx\Db\Adapter\AdapterInterface;
+use Phinx\Db\Adapter\AdapterWrapper;
 use Phinx\Db\Adapter\MysqlAdapter;
 use Phinx\Db\Adapter\PostgresAdapter;
+use Phinx\Db\Adapter\SQLiteAdapter;
 
 beforeEach(function (): void {
     $this->mockAdapter = $this->getMockBuilder(AdapterInterface::class)->getMock();
@@ -15,6 +17,10 @@ beforeEach(function (): void {
         ->getMock();
 
     $this->mockPostgresAdapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $this->mockSQLiteAdapter = $this->getMockBuilder(SQLiteAdapter::class)
         ->disableOriginalConstructor()
         ->getMock();
 });
@@ -95,4 +101,55 @@ it('can have comment', function (): void {
     $column->comment('User permissions');
 
     expect($column->getOptions()['comment'])->toBe('User permissions');
+});
+
+it('returns string type for SQLite adapter', function (): void {
+    $column = new Set('permissions', ['read', 'write', 'execute']);
+    $column->setAdapter($this->mockSQLiteAdapter);
+
+    expect($column->getType())->toBe('string');
+});
+
+it('returns set type for MySQL adapter', function (): void {
+    $column = new Set('permissions', ['read', 'write', 'execute']);
+    $column->setAdapter($this->mockMysqlAdapter);
+
+    expect($column->getType())->toBe('set');
+});
+
+it('returns set type for PostgreSQL adapter', function (): void {
+    $column = new Set('permissions', ['read', 'write', 'execute']);
+    $column->setAdapter($this->mockPostgresAdapter);
+
+    expect($column->getType())->toBe('set');
+});
+
+it('returns string type for SQLite wrapped in AdapterWrapper', function (): void {
+    $wrapper = $this->getMockBuilder(AdapterWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper->expects($this->any())
+        ->method('getAdapter')
+        ->willReturn($this->mockSQLiteAdapter);
+
+    $column = new Set('permissions', ['read', 'write', 'execute']);
+    $column->setAdapter($wrapper);
+
+    expect($column->getType())->toBe('string');
+});
+
+it('returns set type for MySQL wrapped in AdapterWrapper', function (): void {
+    $wrapper = $this->getMockBuilder(AdapterWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper->expects($this->any())
+        ->method('getAdapter')
+        ->willReturn($this->mockMysqlAdapter);
+
+    $column = new Set('permissions', ['read', 'write', 'execute']);
+    $column->setAdapter($wrapper);
+
+    expect($column->getType())->toBe('set');
 });

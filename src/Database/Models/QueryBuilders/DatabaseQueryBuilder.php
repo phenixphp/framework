@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models\QueryBuilders;
 
-use Amp\Sql\Common\SqlCommonConnectionPool;
 use Closure;
 use Phenix\App;
 use Phenix\Database\Constants\Action;
@@ -24,7 +23,6 @@ use Phenix\Util\Arr;
 
 use function array_key_exists;
 use function is_array;
-use function is_string;
 
 class DatabaseQueryBuilder extends QueryBuilder
 {
@@ -34,8 +32,6 @@ class DatabaseQueryBuilder extends QueryBuilder
      * @var array<int, Relationship>
      */
     protected array $relationships;
-
-    protected SqlCommonConnectionPool $connection;
 
     public function __construct()
     {
@@ -53,19 +49,6 @@ class DatabaseQueryBuilder extends QueryBuilder
         $this->relationships = [];
         $this->isLocked = false;
         $this->lockType = null;
-    }
-
-    public function connection(SqlCommonConnectionPool|string $connection): self
-    {
-        if (is_string($connection)) {
-            $connection = App::make(Connection::name($connection));
-        }
-
-        $this->connection = $connection;
-
-        $this->resolveDriverFromConnection($this->connection);
-
-        return $this;
     }
 
     public function addSelect(array $columns): static

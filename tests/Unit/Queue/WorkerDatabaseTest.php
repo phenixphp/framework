@@ -43,23 +43,18 @@ it('processes a successful task', function (): void {
             ],
         ]));
 
-    $transaction->expects($this->exactly(2))
+    $transaction->expects($this->exactly(4))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             $databaseStatement,
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
     $connection->expects($this->once())
         ->method('beginTransaction')
         ->willReturn($transaction);
-
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
 
     $queueManager = new QueueManager();
 
@@ -93,23 +88,18 @@ it('processes a failed task and retries', function (): void {
             ],
         ]));
 
-    $transaction->expects($this->exactly(2))
+    $transaction->expects($this->exactly(4))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             $databaseStatement,
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
     $connection->expects($this->once())
         ->method('beginTransaction')
         ->willReturn($transaction);
-
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
 
     $queueManager = new QueueManager();
 
@@ -143,23 +133,18 @@ it('processes a failed task and last retry', function (): void {
             ],
         ]));
 
-    $transaction->expects($this->exactly(2))
+    $transaction->expects($this->exactly(4))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             $databaseStatement,
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result([['Query OK']])),
             new Statement(new Result([['Query OK']])),
         );
 
     $connection->expects($this->once())
         ->method('beginTransaction')
         ->willReturn($transaction);
-
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
 
     $queueManager = new QueueManager();
 

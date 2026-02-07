@@ -8,14 +8,15 @@ use Amp\Mysql\MysqlConfig;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
-use Amp\SQLite3\SQLite3WorkerConnection;
 use Closure;
 use Phenix\Database\Constants\Driver;
 use Phenix\Redis\ClientWrapper;
+use Phenix\Sqlite\SqliteConfig;
+use Phenix\Sqlite\SqliteConnection;
 use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
-use function Amp\SQLite3\connect;
+use function Phenix\Sqlite\connect;
 use function sprintf;
 
 class ConnectionFactory
@@ -32,7 +33,9 @@ class ConnectionFactory
 
     private static function createSqliteConnection(#[SensitiveParameter] array $settings): Closure
     {
-        return static fn (): SQLite3WorkerConnection => connect($settings['database']);
+        $config = SqliteConfig::fromPath($settings['database']);
+
+        return static fn (): SqliteConnection => connect($config);
     }
 
     private static function createMySqlConnection(#[SensitiveParameter] array $settings): Closure

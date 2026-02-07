@@ -9,6 +9,7 @@ use Phenix\Data\Collection;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
 use Phenix\Util\URL;
 use Tests\Mocks\Database\MysqlConnectionPool;
@@ -329,8 +330,8 @@ it('execute database transaction successfully', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $result = $query->transaction(function (QueryBuilder $qb): Collection {
-        return $qb->from('users')->get();
+    $result = $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 
     expect($result)->toBeInstanceOf(Collection::class);
@@ -355,8 +356,8 @@ it('rollback transaction on error', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $query->transaction(function (QueryBuilder $qb): Collection {
-        return $qb->from('users')->get();
+    $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 })->throws(SqlQueryError::class);
 

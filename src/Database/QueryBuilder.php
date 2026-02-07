@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Amp\Mysql\Internal\MysqlPooledResult;
-use Amp\Sql\Common\SqlCommonConnectionPool;
+use Amp\Sql\SqlConnection;
 use Amp\Sql\SqlQueryError;
+use Amp\Sql\SqlResult;
 use Amp\Sql\SqlTransactionError;
 use Closure;
 use League\Uri\Components\Query;
@@ -23,7 +24,7 @@ class QueryBuilder extends QueryBase
 {
     use HasTransaction;
 
-    protected SqlCommonConnectionPool $connection;
+    protected SqlConnection $connection;
 
     public function __construct()
     {
@@ -36,12 +37,18 @@ class QueryBuilder extends QueryBase
 
     public function __clone(): void
     {
+        $connection = $this->connection;
+        $transaction = $this->transaction;
+
         parent::__clone();
+
+        $this->connection = $connection;
+        $this->transaction = $transaction;
         $this->isLocked = false;
         $this->lockType = null;
     }
 
-    public function connection(SqlCommonConnectionPool|string $connection): self
+    public function connection(SqlConnection|string $connection): self
     {
         if (is_string($connection)) {
             $connection = App::make(Connection::name($connection));
@@ -52,6 +59,11 @@ class QueryBuilder extends QueryBase
         $this->resolveDriverFromConnection($this->connection);
 
         return $this;
+    }
+
+    public function getConnection(): SqlConnection
+    {
+        return $this->connection;
     }
 
     public function count(string $column = '*'): int
@@ -301,5 +313,10 @@ class QueryBuilder extends QueryBase
         $this->limit(1);
 
         return $this->get()->first();
+    }
+
+    public function unprepared(string $sql): SqlResult
+    {
+        return $this->getExecutor()->query($sql);
     }
 }

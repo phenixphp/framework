@@ -30,11 +30,11 @@ abstract class DatabaseCommand extends AbstractCommand
                 'default_environment' => 'default',
                 'default' => [
                     'adapter' => $driver->value,
-                    'host' => $settings['host'],
+                    'host' => $settings['host'] ?? '',
                     'name' => $settings['database'],
-                    'user' => $settings['username'],
-                    'pass' => $settings['password'],
-                    'port' => $settings['port'],
+                    'user' => $settings['username'] ?? '',
+                    'pass' => $settings['password'] ?? '',
+                    'port' => $settings['port'] ?? '',
                 ],
             ],
         ]);

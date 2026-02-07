@@ -6,6 +6,7 @@ namespace Phenix\Queue;
 
 use Phenix\Database\Constants\Order;
 use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
 use Phenix\Queue\StateManagers\DatabaseTaskState;
 use Phenix\Tasks\QueuableTask;
@@ -63,12 +64,12 @@ class DatabaseQueue extends Queue
         /** @var QueryBuilder $builder */
         $builder = DB::connection($this->connection);
 
-        return $builder->transaction(function (QueryBuilder $queryBuilder) use ($queueName): QueuableTask|null {
+        return $builder->transaction(function (TransactionManager $transactionManager) use ($queueName): QueuableTask|null {
             if ($this->stateManager instanceof DatabaseTaskState) {
-                $this->stateManager->setBuilder($queryBuilder);
+                $this->stateManager->setTransactionManager($transactionManager);
             }
 
-            $queuedTask = $queryBuilder
+            $queuedTask = $transactionManager
                 ->table($this->table)
                 ->whereEqual('queue_name', $queueName)
                 ->whereNull('reserved_at')

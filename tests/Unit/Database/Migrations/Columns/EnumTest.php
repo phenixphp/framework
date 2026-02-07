@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Phenix\Database\Migrations\Columns\Enum;
+use Phinx\Db\Adapter\AdapterWrapper;
+use Phinx\Db\Adapter\MysqlAdapter;
+use Phinx\Db\Adapter\PostgresAdapter;
+use Phinx\Db\Adapter\SQLiteAdapter;
 
 it('can create enum column with values', function (): void {
     $column = new Enum('status', ['active', 'inactive', 'pending']);
@@ -41,4 +45,106 @@ it('can have comment', function (): void {
     $column->comment('User status');
 
     expect($column->getOptions()['comment'])->toBe('User status');
+});
+
+it('returns string type for SQLite adapter', function (): void {
+    $adapter = $this->getMockBuilder(SQLiteAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($adapter);
+
+    expect($column->getType())->toBe('string');
+});
+
+it('returns enum type for MySQL adapter', function (): void {
+    $adapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($adapter);
+
+    expect($column->getType())->toBe('enum');
+});
+
+it('returns enum type for PostgreSQL adapter', function (): void {
+    $adapter = $this->getMockBuilder(PostgresAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($adapter);
+
+    expect($column->getType())->toBe('enum');
+});
+
+it('adds CHECK constraint for SQLite in options', function (): void {
+    $adapter = $this->getMockBuilder(SQLiteAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($adapter);
+
+    $options = $column->getOptions();
+
+    expect($options['comment'])->toContain('CHECK(status IN (');
+    expect($options['comment'])->toContain("'active'");
+    expect($options['comment'])->toContain("'inactive'");
+    expect($options['comment'])->toContain("'pending'");
+});
+
+it('preserves existing comment when adding CHECK constraint', function (): void {
+    $adapter = $this->getMockBuilder(SQLiteAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $column = new Enum('status', ['active', 'inactive']);
+    $column->setAdapter($adapter);
+    $column->comment('User status field');
+
+    $options = $column->getOptions();
+
+    expect($options['comment'])->toContain('User status field');
+    expect($options['comment'])->toContain('CHECK(status IN (');
+});
+
+it('returns string type for SQLite wrapped in AdapterWrapper', function (): void {
+    $sqliteAdapter = $this->getMockBuilder(SQLiteAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper = $this->getMockBuilder(AdapterWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper->expects($this->any())
+        ->method('getAdapter')
+        ->willReturn($sqliteAdapter);
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($wrapper);
+
+    expect($column->getType())->toBe('string');
+});
+
+it('returns enum type for MySQL wrapped in AdapterWrapper', function (): void {
+    $mysqlAdapter = $this->getMockBuilder(MysqlAdapter::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper = $this->getMockBuilder(AdapterWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $wrapper->expects($this->any())
+        ->method('getAdapter')
+        ->willReturn($mysqlAdapter);
+
+    $column = new Enum('status', ['active', 'inactive', 'pending']);
+    $column->setAdapter($wrapper);
+
+    expect($column->getType())->toBe('enum');
 });

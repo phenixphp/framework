@@ -113,7 +113,8 @@ it('does nothing when no expression is set', function (): void {
 });
 
 it('sets cron for weekly', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->weekly();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->weekly();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -124,7 +125,8 @@ it('sets cron for weekly', function (): void {
 });
 
 it('sets cron for monthly', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->monthly();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->monthly();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -135,7 +137,8 @@ it('sets cron for monthly', function (): void {
 });
 
 it('sets cron for every ten minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyTenMinutes();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyTenMinutes();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -146,7 +149,8 @@ it('sets cron for every ten minutes', function (): void {
 });
 
 it('sets cron for every fifteen minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyFifteenMinutes();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyFifteenMinutes();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -157,7 +161,8 @@ it('sets cron for every fifteen minutes', function (): void {
 });
 
 it('sets cron for every thirty minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyThirtyMinutes();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyThirtyMinutes();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -168,7 +173,8 @@ it('sets cron for every thirty minutes', function (): void {
 });
 
 it('sets cron for every two hours', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyTwoHours();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyTwoHours();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -179,7 +185,8 @@ it('sets cron for every two hours', function (): void {
 });
 
 it('sets cron for every two days', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyTwoDays();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyTwoDays();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -190,7 +197,8 @@ it('sets cron for every two days', function (): void {
 });
 
 it('sets cron for every weekday', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyWeekday();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyWeekday();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -201,7 +209,8 @@ it('sets cron for every weekday', function (): void {
 });
 
 it('sets cron for every weekend', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->everyWeekend();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->everyWeekend();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -212,7 +221,8 @@ it('sets cron for every weekend', function (): void {
 });
 
 it('sets cron for mondays', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->mondays();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->mondays();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -223,7 +233,8 @@ it('sets cron for mondays', function (): void {
 });
 
 it('sets cron for fridays', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->fridays();
+    $scheduler = (new Schedule())->call(function (): void {
+    })->fridays();
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
@@ -234,7 +245,8 @@ it('sets cron for fridays', function (): void {
 });
 
 it('sets cron for weeklyAt at specific time', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {})->weeklyAt('10:15');
+    $scheduler = (new Schedule())->call(function (): void {
+    })->weeklyAt('10:15');
 
     $ref = new ReflectionClass($scheduler);
     $prop = $ref->getProperty('expression');
