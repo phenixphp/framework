@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Auth\User;
+use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
 use Phenix\Testing\Concerns\RefreshDatabase;
@@ -324,4 +325,23 @@ it('can combine select operations with other operations in transaction', functio
     expect($users)->toHaveCount(2);
     expect($users[1]['name'])->toBe('Helen White');
     expect($users[1]['email'])->toBe('helen.updated@example.com');
+});
+
+it('rolls back transaction on exception', function (): void {
+    try {
+        DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+            $transactionManager->from('users')->insert([
+                'name' => 'Ian Scott',
+                'email' => 'ian.scott@example.com',
+            ]);
+
+            throw new QueryErrorException('Simulated exception to trigger rollback');
+        });
+    } catch (QueryErrorException $e) {
+        //
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(0);
 });
