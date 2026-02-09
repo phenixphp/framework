@@ -8,7 +8,7 @@ use Phenix\Facades\Config as Configuration;
 use Phenix\Session\Constants\Driver;
 use Phenix\Session\Constants\SameSite;
 
-class Config
+class SessionConfig
 {
     private array $config;
 

@@ -6,7 +6,7 @@ namespace Phenix\Cache\RateLimit;
 
 use Phenix\Facades\Config as Configuration;
 
-class Config
+class RateLimitConfig
 {
     private array $config;
 

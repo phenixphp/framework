@@ -8,7 +8,7 @@ use Phenix\Facades\Config as Configuration;
 use Phenix\Mail\Constants\MailerType;
 use Symfony\Component\Mime\Address;
 
-class Config
+class MailConfig
 {
     private array $config;
 

@@ -10,7 +10,7 @@ use Phenix\Util\Date;
 class Cookie
 {
     public function __construct(
-        private Config $config,
+        private SessionConfig $config,
         private string $host
     ) {
     }

@@ -7,7 +7,7 @@ namespace Phenix\Queue;
 use Phenix\Facades\Config as Configuration;
 use Phenix\Queue\Constants\QueueDriver;
 
-class Config
+class QueueConfig
 {
     private array $config;
 

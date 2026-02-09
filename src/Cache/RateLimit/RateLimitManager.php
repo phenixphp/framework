@@ -8,13 +8,13 @@ use Kelunik\RateLimit\RateLimit;
 
 class RateLimitManager
 {
-    protected Config $config;
+    protected RateLimitConfig $config;
 
     protected array $rateLimiters = [];
 
-    public function __construct(Config|null $config = null)
+    public function __construct(RateLimitConfig|null $config = null)
     {
-        $this->config = $config ?? new Config();
+        $this->config = $config ?? new RateLimitConfig();
     }
 
     public function get(string $key): int

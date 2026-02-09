@@ -7,7 +7,7 @@ namespace Phenix\Views;
 use Phenix\Facades\Config as Configuration;
 use Phenix\Util\Str;
 
-class Config
+class ViewsConfig
 {
     private array $config;
 

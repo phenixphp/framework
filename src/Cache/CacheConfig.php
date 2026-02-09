@@ -7,7 +7,7 @@ namespace Phenix\Cache;
 use Phenix\Cache\Constants\Store;
 use Phenix\Facades\Config as Configuration;
 
-class Config
+class CacheConfig
 {
     private array $config;
 

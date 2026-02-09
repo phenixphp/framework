@@ -18,11 +18,11 @@ class CacheManager
 {
     protected array $stores = [];
 
-    protected Config $config;
+    protected CacheConfig $config;
 
-    public function __construct(Config|null $config = null)
+    public function __construct(CacheConfig|null $config = null)
     {
-        $this->config = $config ?? new Config();
+        $this->config = $config ?? new CacheConfig();
     }
 
     public function store(Store|null $storeName = null): CacheStore
