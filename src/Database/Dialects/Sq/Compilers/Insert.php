@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\SQLite\Compilers;
+namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\QueryAst;

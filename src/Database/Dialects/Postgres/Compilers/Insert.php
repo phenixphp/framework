@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\PostgreSQL\Compilers;
+namespace Phenix\Database\Dialects\Postgres\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
-use Phenix\Database\Dialects\PostgreSQL\Concerns\HasPlaceholders;
+use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 

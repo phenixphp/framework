@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Dialects\DialectFactory;
-use Phenix\Database\Dialects\MySQL\MysqlDialect;
-use Phenix\Database\Dialects\PostgreSQL\PostgresDialect;
-use Phenix\Database\Dialects\SQLite\SqliteDialect;
+use Phenix\Database\Dialects\Mysql\MysqlDialect;
+use Phenix\Database\Dialects\Postgres\PostgresDialect;
+use Phenix\Database\Dialects\Sqlite\SqliteDialect;
 
 afterEach(function (): void {
     DialectFactory::clearCache();

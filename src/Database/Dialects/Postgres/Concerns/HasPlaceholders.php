@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\PostgreSQL\Concerns;
+namespace Phenix\Database\Dialects\Postgres\Concerns;
 
 trait HasPlaceholders
 {

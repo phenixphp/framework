@@ -6,9 +6,9 @@ namespace Phenix\Database\Dialects;
 
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Contracts\Dialect;
-use Phenix\Database\Dialects\MySQL\MysqlDialect;
-use Phenix\Database\Dialects\PostgreSQL\PostgresDialect;
-use Phenix\Database\Dialects\SQLite\SqliteDialect;
+use Phenix\Database\Dialects\Mysql\MysqlDialect;
+use Phenix\Database\Dialects\Postgres\PostgresDialect;
+use Phenix\Database\Dialects\Sqlite\SqliteDialect;
 
 class DialectFactory
 {

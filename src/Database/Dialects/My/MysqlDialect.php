@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\SQLite;
+namespace Phenix\Database\Dialects\Mysql;
 
 use Phenix\Database\Dialects\Dialect;
-use Phenix\Database\Dialects\SQLite\Compilers\Delete;
-use Phenix\Database\Dialects\SQLite\Compilers\Exists;
-use Phenix\Database\Dialects\SQLite\Compilers\Insert;
-use Phenix\Database\Dialects\SQLite\Compilers\Select;
-use Phenix\Database\Dialects\SQLite\Compilers\Update;
+use Phenix\Database\Dialects\Mysql\Compilers\Delete;
+use Phenix\Database\Dialects\Mysql\Compilers\Exists;
+use Phenix\Database\Dialects\Mysql\Compilers\Insert;
+use Phenix\Database\Dialects\Mysql\Compilers\Select;
+use Phenix\Database\Dialects\Mysql\Compilers\Update;
 
-class SqliteDialect extends Dialect
+class MysqlDialect extends Dialect
 {
     public function __construct()
     {

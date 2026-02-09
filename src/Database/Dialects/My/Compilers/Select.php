@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\MySQL\Compilers;
+namespace Phenix\Database\Dialects\Mysql\Compilers;
 
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;

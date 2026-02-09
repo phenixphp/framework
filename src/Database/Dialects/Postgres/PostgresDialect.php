@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Database\Dialects\PostgreSQL;
+namespace Phenix\Database\Dialects\Postgres;
 
 use Phenix\Database\Dialects\Dialect;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\Delete;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\Exists;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\Insert;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\Select;
-use Phenix\Database\Dialects\PostgreSQL\Compilers\Update;
+use Phenix\Database\Dialects\Postgres\Compilers\Delete;
+use Phenix\Database\Dialects\Postgres\Compilers\Exists;
+use Phenix\Database\Dialects\Postgres\Compilers\Insert;
+use Phenix\Database\Dialects\Postgres\Compilers\Select;
+use Phenix\Database\Dialects\Postgres\Compilers\Update;
 
 class PostgresDialect extends Dialect
 {
