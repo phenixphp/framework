@@ -17,7 +17,7 @@ class SessionMiddlewareFactory
 {
     public static function make(string $host): Middleware
     {
-        $config = new Config();
+        $config = new SessionConfig();
         $cookie = new Cookie($config, $host);
 
         $driver = $config->driver();

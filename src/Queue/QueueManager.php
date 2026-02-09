@@ -17,11 +17,11 @@ class QueueManager
 
     protected array $drivers = [];
 
-    protected Config $config;
+    protected QueueConfig $config;
 
-    public function __construct(Config|null $config = null)
+    public function __construct(QueueConfig|null $config = null)
     {
-        $this->config = $config ?? new Config();
+        $this->config = $config ?? new QueueConfig();
     }
 
     public function push(QueuableTask $task): void

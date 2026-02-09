@@ -18,11 +18,11 @@ class MailManager
 
     protected MailerType|null $loggableMailerType;
 
-    protected Config $config;
+    protected MailConfig $config;
 
     public function __construct(
         #[SensitiveParameter]
-        Config|null $config = new Config()
+        MailConfig|null $config = new MailConfig()
     ) {
         $this->config = $config;
         $this->loggableMailerType = null;

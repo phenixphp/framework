@@ -10,7 +10,7 @@ use Phenix\Util\Str;
 class TemplateCache
 {
     public function __construct(
-        protected Config $config = new Config(),
+        protected ViewsConfig $config = new ViewsConfig(),
     ) {
     }
 
