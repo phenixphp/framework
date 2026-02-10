@@ -8,6 +8,7 @@ use Phenix\Database\Connections\ConnectionFactory;
 use Phenix\Database\Console\MakeMigration;
 use Phenix\Database\Console\MakeSeeder;
 use Phenix\Database\Console\Migrate;
+use Phenix\Database\Console\MigrateFresh;
 use Phenix\Database\Console\Rollback;
 use Phenix\Database\Console\SeedRun;
 use Phenix\Database\Constants\Connection;
@@ -69,6 +70,7 @@ class DatabaseServiceProvider extends ServiceProvider
             MakeMigration::class,
             MakeSeeder::class,
             Migrate::class,
+            MigrateFresh::class,
             Rollback::class,
             SeedRun::class,
         ]);
