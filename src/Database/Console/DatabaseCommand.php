@@ -20,6 +20,19 @@ abstract class DatabaseCommand extends AbstractCommand
 
         $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
+        $environment = [
+            'adapter' => $driver->value,
+            'host' => $settings['host'] ?? '',
+            'name' => $settings['database'],
+            'user' => $settings['username'] ?? '',
+            'pass' => $settings['password'] ?? '',
+            'port' => $settings['port'] ?? '',
+        ];
+
+        if ($driver === Driver::SQLITE) {
+            $environment['suffix'] = '';
+        }
+
         $this->config = new MigrationConfig([
             'paths' => [
                 'migrations' => Config::get('database.paths.migrations'),
@@ -28,14 +41,7 @@ abstract class DatabaseCommand extends AbstractCommand
             'environments' => [
                 'default_migration_table' => 'migrations',
                 'default_environment' => 'default',
-                'default' => [
-                    'adapter' => $driver->value,
-                    'host' => $settings['host'] ?? '',
-                    'name' => $settings['database'],
-                    'user' => $settings['username'] ?? '',
-                    'pass' => $settings['password'] ?? '',
-                    'port' => $settings['port'] ?? '',
-                ],
+                'default' => $environment,
             ],
         ]);
 
