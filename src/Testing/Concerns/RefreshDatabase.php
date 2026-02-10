@@ -37,17 +37,23 @@ trait RefreshDatabase
 
         $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
+        $databaseName = $settings['database'] ?? 'database';
+        
+        if ($driver === Driver::SQLITE) {
+            $databaseName = preg_replace('/\.sqlite3?$/', '', $databaseName);
+        }
+
         $environment = [
             'adapter' => $driver->value,
             'host' => $settings['host'] ?? null,
-            'name' => $settings['database'] ?? null,
+            'name' => $databaseName,
             'user' => $settings['username'] ?? null,
             'pass' => $settings['password'] ?? null,
             'port' => $settings['port'] ?? null,
         ];
 
         if ($driver === Driver::SQLITE) {
-            $environment['suffix'] = '';
+            $environment['suffix'] = '.sqlite3';
         }
 
         $config = new MigrationConfig([
