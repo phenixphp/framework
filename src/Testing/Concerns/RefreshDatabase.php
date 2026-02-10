@@ -37,6 +37,19 @@ trait RefreshDatabase
 
         $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
+        $environment = [
+            'adapter' => $driver->value,
+            'host' => $settings['host'] ?? null,
+            'name' => $settings['database'] ?? null,
+            'user' => $settings['username'] ?? null,
+            'pass' => $settings['password'] ?? null,
+            'port' => $settings['port'] ?? null,
+        ];
+
+        if ($driver === Driver::SQLITE) {
+            $environment['suffix'] = '';
+        }
+
         $config = new MigrationConfig([
             'paths' => [
                 'migrations' => Config::get('database.paths.migrations'),
@@ -45,14 +58,7 @@ trait RefreshDatabase
             'environments' => [
                 'default_migration_table' => 'migrations',
                 'default_environment' => 'default',
-                'default' => [
-                    'adapter' => $driver->value,
-                    'host' => $settings['host'] ?? null,
-                    'name' => $settings['database'] ?? null,
-                    'user' => $settings['username'] ?? null,
-                    'pass' => $settings['password'] ?? null,
-                    'port' => $settings['port'] ?? null,
-                ],
+                'default' => $environment,
             ],
         ]);
 
