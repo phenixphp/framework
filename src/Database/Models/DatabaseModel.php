@@ -79,7 +79,7 @@ abstract class DatabaseModel implements Arrayable
      * @throws ModelException
      * @return static
      */
-    public static function create(array $attributes): static
+    public static function create(array $attributes, TransactionManager|null $transactionManager = null): static
     {
         $model = new static();
         $propertyBindings = $model->getPropertyBindings();
@@ -94,7 +94,7 @@ abstract class DatabaseModel implements Arrayable
             $model->{$property->getName()} = $value;
         }
 
-        $model->save();
+        $model->save($transactionManager);
 
         return $model;
     }
@@ -104,15 +104,13 @@ abstract class DatabaseModel implements Arrayable
      * @param array $columns<int, string>
      * @return DatabaseModel|null
      */
-    public static function find(string|int $id, array $columns = ['*']): self|null
+    public static function find(string|int $id, array $columns = ['*'], TransactionManager|null $transactionManager = null): self|null
     {
-        $model = new static();
-        $queryBuilder = static::newQueryBuilder();
-        $queryBuilder->setModel($model);
+        $queryBuilder = static::query($transactionManager);
 
         return $queryBuilder
             ->select($columns)
-            ->whereEqual($model->getModelKeyName(), $id)
+            ->whereEqual($queryBuilder->getModel()->getModelKeyName(), $id)
             ->first();
     }
 
@@ -196,11 +194,11 @@ abstract class DatabaseModel implements Arrayable
         return json_encode($this->toArray());
     }
 
-    public function save(): bool
+    public function save(TransactionManager|null $transactionManager = null): bool
     {
         $data = $this->buildSavingData();
 
-        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder = static::query($transactionManager);
         $queryBuilder->setModel($this);
 
         if ($this->isExisting()) {
@@ -225,9 +223,9 @@ abstract class DatabaseModel implements Arrayable
         return false;
     }
 
-    public function delete(): bool
+    public function delete(TransactionManager|null $transactionManager = null): bool
     {
-        $queryBuilder = static::newQueryBuilder();
+        $queryBuilder = static::query($transactionManager);
         $queryBuilder->setModel($this);
 
         return $queryBuilder

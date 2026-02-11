@@ -17,7 +17,10 @@ beforeEach(function (): void {
         CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            email TEXT NOT NULL
+            email TEXT NOT NULL,
+            password TEXT,
+            created_at TEXT,
+            updated_at TEXT
         )
     ");
 });
@@ -344,4 +347,313 @@ it('rolls back transaction on exception', function (): void {
     $users = DB::connection('sqlite')->from('users')->get();
 
     expect($users)->toHaveCount(0);
+});
+
+it('creates a model using static create method within transaction callback', function (): void {
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        User::create([
+            'name' => 'Transaction User',
+            'email' => 'transaction@example.com',
+        ], $transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Transaction User');
+    expect($users[0]['email'])->toBe('transaction@example.com');
+});
+
+it('creates multiple models using static create method within transaction', function (): void {
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        User::create(['name' => 'Alice', 'email' => 'alice@example.com'], $transactionManager);
+        User::create(['name' => 'Bob', 'email' => 'bob@example.com'], $transactionManager);
+        User::create(['name' => 'Charlie', 'email' => 'charlie@example.com'], $transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(3);
+    expect($users[0]['name'])->toBe('Alice');
+    expect($users[1]['name'])->toBe('Bob');
+    expect($users[2]['name'])->toBe('Charlie');
+});
+
+it('rolls back model create on transaction failure', function (): void {
+    try {
+        DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+            User::create(['name' => 'Will Rollback', 'email' => 'rollback@example.com'], $transactionManager);
+
+            throw new QueryErrorException('Force rollback');
+        });
+    } catch (QueryErrorException $e) {
+        //
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(0);
+});
+
+it('creates model with manual transaction control', function (): void {
+    $transactionManager = DB::connection('sqlite')->beginTransaction();
+
+    try {
+        User::create([
+            'name' => 'Manual Transaction User',
+            'email' => 'manual@example.com',
+        ], $transactionManager);
+
+        $transactionManager->commit();
+    } catch (Throwable $e) {
+        $transactionManager->rollBack();
+
+        throw $e;
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Manual Transaction User');
+});
+
+it('finds a model within transaction using static find method', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Existing User', 'existing@example.com')
+    ");
+
+    $transactionManager = DB::connection('sqlite')->beginTransaction();
+
+    try {
+        $user = User::find(1, ['*'], $transactionManager);
+
+        expect($user)->not->toBeNull();
+        expect($user->name)->toBe('Existing User');
+        expect($user->email)->toBe('existing@example.com');
+
+        $transactionManager->commit();
+    } catch (Throwable $e) {
+        $transactionManager->rollBack();
+
+        throw $e;
+    }
+});
+
+it('finds model within transaction callback', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Find Me', 'findme@example.com')
+    ");
+
+    $foundUser = null;
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager) use (&$foundUser): void {
+        $foundUser = User::find(1, ['*'], $transactionManager);
+    });
+
+    expect($foundUser)->not->toBeNull();
+    expect($foundUser->name)->toBe('Find Me');
+});
+
+it('saves a model instance within transaction callback', function (): void {
+    $user = new User();
+    $user->name = 'Save Test';
+    $user->email = 'save@example.com';
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager) use ($user): void {
+        $result = $user->save($transactionManager);
+
+        expect($result)->toBeTrue();
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Save Test');
+    expect($users[0]['email'])->toBe('save@example.com');
+});
+
+it('updates existing model within transaction using save', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Original Name', 'original@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user = User::find(1, ['*'], $transactionManager);
+
+        $user->name = 'Updated Name';
+        $user->email = 'updated@example.com';
+
+        $result = $user->save($transactionManager);
+
+        expect($result)->toBeTrue();
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Updated Name');
+    expect($users[0]['email'])->toBe('updated@example.com');
+});
+
+it('saves multiple model instances within transaction', function (): void {
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user1 = new User();
+        $user1->name = 'User One';
+        $user1->email = 'one@example.com';
+        $user1->save($transactionManager);
+
+        $user2 = new User();
+        $user2->name = 'User Two';
+        $user2->email = 'two@example.com';
+        $user2->save($transactionManager);
+
+        $user3 = new User();
+        $user3->name = 'User Three';
+        $user3->email = 'three@example.com';
+        $user3->save($transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(3);
+});
+
+it('rolls back save on transaction failure', function (): void {
+    $user = new User();
+    $user->name = 'Rollback Save';
+    $user->email = 'rollback@example.com';
+
+    try {
+        DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager) use ($user): void {
+            $user->save($transactionManager);
+
+            throw new QueryErrorException('Force rollback after save');
+        });
+    } catch (QueryErrorException $e) {
+        //
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(0);
+});
+
+it('deletes a model within transaction callback', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'To Delete', 'delete@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user = User::find(1, ['*'], $transactionManager);
+
+        $result = $user->delete($transactionManager);
+
+        expect($result)->toBeTrue();
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(0);
+});
+
+it('deletes multiple models within transaction', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Delete One', 'delete1@example.com'),
+        (2, 'Delete Two', 'delete2@example.com'),
+        (3, 'Keep Three', 'keep3@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user1 = User::find(1, ['*'], $transactionManager);
+        $user1->delete($transactionManager);
+
+        $user2 = User::find(2, ['*'], $transactionManager);
+        $user2->delete($transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Keep Three');
+});
+
+it('rolls back delete on transaction failure', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Should Not Delete', 'should-not-delete@example.com')
+    ");
+
+    try {
+        DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+            $user = User::find(1, ['*'], $transactionManager);
+
+            $user->delete($transactionManager);
+
+            throw new QueryErrorException('Force rollback after delete');
+        });
+    } catch (QueryErrorException $e) {
+        //
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Should Not Delete');
+});
+
+it('performs complex operations mixing create, find, save, and delete in transaction', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Existing User', 'existing@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        User::create(['name' => 'New User', 'email' => 'new@example.com'], $transactionManager);
+
+        $existingUser = User::find(1, ['*'], $transactionManager);
+        $existingUser->name = 'Updated Existing';
+        $existingUser->save($transactionManager);
+
+        $temporaryUser = User::create(['name' => 'Temporary', 'email' => 'temp@example.com'], $transactionManager);
+
+        $foundTemp = User::find($temporaryUser->id, ['*'], $transactionManager);
+        $foundTemp->delete($transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->orderBy('id')->get();
+
+    expect($users)->toHaveCount(2);
+    expect($users[0]['id'])->toBe(1);
+    expect($users[0]['name'])->toBe('Updated Existing');
+    expect($users[1]['name'])->toBe('New User');
+});
+
+it('works without transaction manager when parameter is null', function (): void {
+    $user = User::create(['name' => 'No Transaction', 'email' => 'no-tx@example.com'], null);
+
+    expect($user->id)->toBeGreaterThan(0);
+    expect($user->isExisting())->toBeTrue();
+
+    $foundUser = User::find($user->id, ['*'], null);
+
+    expect($foundUser)->not->toBeNull();
+    expect($foundUser->name)->toBe('No Transaction');
+
+    $foundUser->name = 'Updated No Transaction';
+    $foundUser->save(null);
+
+    $verifyUser = User::find($user->id);
+
+    expect($verifyUser->name)->toBe('Updated No Transaction');
+
+    $verifyUser->delete(null);
+
+    $deletedUser = User::find($user->id);
+
+    expect($deletedUser)->toBeNull();
 });

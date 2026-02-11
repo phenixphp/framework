@@ -71,6 +71,11 @@ class DatabaseQueryBuilder extends QueryBuilder
         return $this;
     }
 
+    public function getModel(): DatabaseModel
+    {
+        return $this->model;
+    }
+
     public function with(array|string $relationships): self
     {
         $modelRelationships = $this->model->getRelationshipBindings();
