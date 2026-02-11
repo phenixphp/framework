@@ -157,6 +157,8 @@ class DatabaseQueryBuilder extends QueryBuilder
             }
         }
 
+        $model->setAsExisting();
+
         return $model;
     }
 

@@ -11,12 +11,14 @@ use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Util\Date;
+use Phenix\Util\Str;
 use Tests\Feature\Database\Models\Comment;
 use Tests\Feature\Database\Models\Invoice;
 use Tests\Feature\Database\Models\Post;
 use Tests\Feature\Database\Models\Product;
 use Tests\Feature\Database\Models\SecureUser;
 use Tests\Feature\Database\Models\User;
+use Tests\Feature\Database\Models\UserWithUuid;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
@@ -788,6 +790,7 @@ it('creates model instance successfully', function () {
     ]);
 
     expect($model->id)->toBe(1);
+    expect($model->isExisting())->toBeTrue();
     expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
 
@@ -878,4 +881,111 @@ it('deletes a model successfully', function () {
     $this->app->swap(Connection::default(), $connection);
 
     expect($model->delete())->toBeTrue();
+});
+
+it('saves a new model with manually assigned string ID as insert', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $uuid = Str::uuid()->toString();
+    $model = new UserWithUuid();
+    $model->id = $uuid;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->isExisting())->toBeFalse();
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('updates an existing model with string ID correctly', function () {
+    $uuid = Str::uuid()->toString();
+    $data = [
+        'id' => $uuid,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    /** @var UserWithUuid $model */
+    $model = UserWithUuid::find($uuid);
+
+    expect($model)->toBeInstanceOf(UserWithUuid::class);
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+
+    $model->name = 'Jane Doe';
+
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
+});
+
+it('marks new model as not existing initially', function () {
+    $model = new User();
+
+    expect($model->isExisting())->toBeFalse();
+});
+
+it('marks model from database query as existing', function () {
+    $data = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    /** @var User $model */
+    $model = User::find(1);
+
+    expect($model->isExisting())->toBeTrue();
+});
+
+it('changes exists flag to true after successful insert', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = new User();
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->isExisting())->toBeFalse();
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
 });

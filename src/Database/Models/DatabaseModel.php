@@ -27,13 +27,20 @@ abstract class DatabaseModel implements Arrayable
 
     protected ModelProperty|null $modelKey;
 
+    protected bool $exists;
+
     public stdClass $pivot;
 
     /**
      * @var array<int, ModelProperty>|null
      */
     protected array|null $propertyBindings = null;
+
+    /**
+     * @var array<string, array<int, Relationship>>|null
+     */
     protected array|null $relationshipBindings = null;
+
     protected DatabaseQueryBuilder|null $queryBuilder;
 
     public function __construct()
@@ -43,6 +50,7 @@ abstract class DatabaseModel implements Arrayable
         $this->queryBuilder = null;
         $this->propertyBindings = null;
         $this->relationshipBindings = null;
+        $this->exists = false;
         $this->pivot = new stdClass();
     }
 
@@ -106,6 +114,16 @@ abstract class DatabaseModel implements Arrayable
             ->select($columns)
             ->whereEqual($model->getModelKeyName(), $id)
             ->first();
+    }
+
+    public function setAsExisting(): void
+    {
+        $this->exists = true;
+    }
+
+    public function isExisting(): bool
+    {
+        return $this->exists;
     }
 
     /**
@@ -185,7 +203,7 @@ abstract class DatabaseModel implements Arrayable
         $queryBuilder = static::newQueryBuilder();
         $queryBuilder->setModel($this);
 
-        if ($this->keyIsInitialized()) {
+        if ($this->isExisting()) {
             unset($data[$this->getModelKeyName()]);
 
             return $queryBuilder->whereEqual($this->getModelKeyName(), $this->getKey())
@@ -195,7 +213,11 @@ abstract class DatabaseModel implements Arrayable
         $result = $queryBuilder->insertRow($data);
 
         if ($result) {
-            $this->{$this->getModelKeyName()} = $result;
+            if (! $this->keyIsInitialized()) {
+                $this->{$this->getModelKeyName()} = $result;
+            }
+
+            $this->setAsExisting();
 
             return true;
         }
