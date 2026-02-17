@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models;
 
+use Amp\Sql\SqlConnection;
 use Phenix\Contracts\Arrayable;
 use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Attributes\DateTime;
@@ -43,6 +44,8 @@ abstract class DatabaseModel implements Arrayable
 
     protected DatabaseQueryBuilder|null $queryBuilder;
 
+    protected SqlConnection|string|null $modelConnection = null;
+
     public function __construct()
     {
         $this->table = static::table();
@@ -70,6 +73,14 @@ abstract class DatabaseModel implements Arrayable
         }
 
         $queryBuilder->setModel(new static());
+
+        return $queryBuilder;
+    }
+
+    public static function on(SqlConnection|string $connection): DatabaseQueryBuilder
+    {
+        $queryBuilder = static::query();
+        $queryBuilder->connection($connection);
 
         return $queryBuilder;
     }
@@ -162,6 +173,16 @@ abstract class DatabaseModel implements Arrayable
         return $this->modelKey->getName();
     }
 
+    public function setConnection(SqlConnection|string $connection): void
+    {
+        $this->modelConnection = $connection;
+    }
+
+    public function getConnection(): SqlConnection|string|null
+    {
+        return $this->modelConnection;
+    }
+
     public function toArray(): array
     {
         $data = [];
@@ -201,6 +222,10 @@ abstract class DatabaseModel implements Arrayable
         $queryBuilder = static::query($transactionManager);
         $queryBuilder->setModel($this);
 
+        if ($transactionManager === null && $this->modelConnection !== null) {
+            $queryBuilder->connection($this->modelConnection);
+        }
+
         if ($this->isExisting()) {
             unset($data[$this->getModelKeyName()]);
 
@@ -227,6 +252,10 @@ abstract class DatabaseModel implements Arrayable
     {
         $queryBuilder = static::query($transactionManager);
         $queryBuilder->setModel($this);
+
+        if ($transactionManager === null && $this->modelConnection !== null) {
+            $queryBuilder->connection($this->modelConnection);
+        }
 
         return $queryBuilder
             ->whereEqual($this->getModelKeyName(), $this->getKey())

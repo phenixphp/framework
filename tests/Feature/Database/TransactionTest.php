@@ -613,19 +613,19 @@ it('performs complex operations mixing create, find, save, and delete in transac
     ");
 
     DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
-        User::create(['name' => 'New User', 'email' => 'new@example.com'], $transactionManager);
+        User::on('sqlite')->create(['name' => 'New User', 'email' => 'new@example.com'], $transactionManager);
 
-        $existingUser = User::find(1, ['*'], $transactionManager);
+        $existingUser = User::on('sqlite')->find(1, ['*'], $transactionManager);
         $existingUser->name = 'Updated Existing';
         $existingUser->save($transactionManager);
 
-        $temporaryUser = User::create(['name' => 'Temporary', 'email' => 'temp@example.com'], $transactionManager);
+        $temporaryUser = User::on('sqlite')->create(['name' => 'Temporary', 'email' => 'temp@example.com'], $transactionManager);
 
-        $foundTemp = User::find($temporaryUser->id, ['*'], $transactionManager);
+        $foundTemp = User::on('sqlite')->find($temporaryUser->id, ['*'], $transactionManager);
         $foundTemp->delete($transactionManager);
     });
 
-    $users = DB::connection('sqlite')->from('users')->orderBy('id')->get();
+    $users = DB::connection('sqlite')->from('users')->orderBy('id', Order::ASC)->get();
 
     expect($users)->toHaveCount(2);
     expect($users[0]['id'])->toBe(1);
@@ -634,12 +634,12 @@ it('performs complex operations mixing create, find, save, and delete in transac
 });
 
 it('works without transaction manager when parameter is null', function (): void {
-    $user = User::create(['name' => 'No Transaction', 'email' => 'no-tx@example.com'], null);
+    $user = User::on('sqlite')->create(['name' => 'No Transaction', 'email' => 'no-tx@example.com'], null);
 
     expect($user->id)->toBeGreaterThan(0);
     expect($user->isExisting())->toBeTrue();
 
-    $foundUser = User::find($user->id, ['*'], null);
+    $foundUser = User::on('sqlite')->find($user->id, ['*'], null);
 
     expect($foundUser)->not->toBeNull();
     expect($foundUser->name)->toBe('No Transaction');
@@ -647,13 +647,219 @@ it('works without transaction manager when parameter is null', function (): void
     $foundUser->name = 'Updated No Transaction';
     $foundUser->save(null);
 
-    $verifyUser = User::find($user->id);
+    $verifyUser = User::on('sqlite')->find($user->id);
 
     expect($verifyUser->name)->toBe('Updated No Transaction');
 
     $verifyUser->delete(null);
 
-    $deletedUser = User::find($user->id);
+    $deletedUser = User::on('sqlite')->find($user->id);
 
     expect($deletedUser)->toBeNull();
 });
+
+it('creates model using fluent connection syntax with on method', function (): void {
+    $user = User::on('sqlite')->create([
+        'name' => 'Fluent User',
+        'email' => 'fluent@example.com',
+    ]);
+
+    expect($user)->toBeInstanceOf(User::class);
+    expect($user->id)->toBeGreaterThan(0);
+    expect($user->name)->toBe('Fluent User');
+    expect($user->email)->toBe('fluent@example.com');
+    expect($user->isExisting())->toBeTrue();
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Fluent User');
+});
+
+it('queries models using fluent connection syntax', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'User One', 'one@example.com'),
+        (2, 'User Two', 'two@example.com')
+    ");
+
+    $users = User::on('sqlite')->get();
+
+    expect($users)->toHaveCount(2);
+    expect($users[0]->name)->toBe('User One');
+    expect($users[1]->name)->toBe('User Two');
+});
+
+it('finds model using fluent connection syntax', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Find Me', 'findme@example.com')
+    ");
+
+    $user = User::on('sqlite')->whereEqual('id', 1)->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->name)->toBe('Find Me');
+});
+
+it('finds model by id using fluent connection syntax with find method', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Find By ID', 'findbyid@example.com'),
+        (2, 'Another User', 'another@example.com')
+    ");
+
+    $user = User::on('sqlite')->find(1);
+
+    expect($user)->not->toBeNull();
+    expect($user->id)->toBe(1);
+    expect($user->name)->toBe('Find By ID');
+    expect($user->email)->toBe('findbyid@example.com');
+
+    $user2 = User::on('sqlite')->find(2);
+
+    expect($user2)->not->toBeNull();
+    expect($user2->name)->toBe('Another User');
+
+    $nonExistent = User::on('sqlite')->find(999);
+
+    expect($nonExistent)->toBeNull();
+});
+
+it('finds model with specific columns using fluent connection syntax', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Partial User', 'partial@example.com')
+    ");
+
+    $user = User::on('sqlite')->find(1, ['id', 'name']);
+
+    expect($user)->not->toBeNull();
+    expect($user->id)->toBe(1);
+    expect($user->name)->toBe('Partial User');
+});
+
+it('creates model using fluent connection with transaction using with transaction', function (): void {
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->create([
+                'name' => 'Transaction Fluent User',
+                'email' => 'txfluent@example.com',
+            ]);
+
+        expect($user)->toBeInstanceOf(User::class);
+        expect($user->id)->toBeGreaterThan(0);
+        expect($user->name)->toBe('Transaction Fluent User');
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Transaction Fluent User');
+});
+
+it('finds model using fluent connection with transaction using withTransaction()', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Find In Transaction', 'findintx@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $user = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->find(1);
+
+        expect($user)->not->toBeNull();
+        expect($user->name)->toBe('Find In Transaction');
+
+        $user->name = 'Updated In Transaction';
+        $user->save($transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(1);
+    expect($users[0]['name'])->toBe('Updated In Transaction');
+});
+
+it('queries models using fluent connection with transaction using withTransaction()', function (): void {
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->create(['name' => 'User 1', 'email' => 'user1@example.com']);
+
+        User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->create(['name' => 'User 2', 'email' => 'user2@example.com']);
+
+        $users = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->whereEqual('name', 'User 1')
+            ->get();
+
+        expect($users)->toHaveCount(1);
+        expect($users[0]->name)->toBe('User 1');
+    });
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(2);
+});
+
+it('rolls back when using fluent connection with transaction', function (): void {
+    try {
+        DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+            User::on('sqlite')
+                ->withTransaction($transactionManager)
+                ->create(['name' => 'Will Rollback', 'email' => 'rollback@example.com']);
+
+            throw new QueryErrorException('Force rollback');
+        });
+    } catch (QueryErrorException $e) {
+        //
+    }
+
+    $users = DB::connection('sqlite')->from('users')->get();
+
+    expect($users)->toHaveCount(0);
+});
+
+it('performs complex operations with fluent connection and transaction', function (): void {
+    DB::connection('sqlite')->unprepared("
+        INSERT INTO users (id, name, email) VALUES
+        (1, 'Existing', 'existing@example.com')
+    ");
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+        $newUser = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->create(['name' => 'New User', 'email' => 'new@example.com']);
+
+        expect($newUser->id)->toBeGreaterThan(0);
+
+        $existingUser = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->find(1);
+
+        $existingUser->name = 'Updated Existing';
+        $existingUser->save($transactionManager);
+
+        $tempUser = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->create(['name' => 'Temp', 'email' => 'temp@example.com']);
+
+        $foundTemp = User::on('sqlite')
+            ->withTransaction($transactionManager)
+            ->find($tempUser->id);
+
+        $foundTemp->delete($transactionManager);
+    });
+
+    $users = DB::connection('sqlite')->from('users')->orderBy('id', Order::ASC)->get();
+
+    expect($users)->toHaveCount(2);
+    expect($users[0]['name'])->toBe('Updated Existing');
+    expect($users[1]['name'])->toBe('New User');
+});
+
