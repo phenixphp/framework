@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-use Phenix\Auth\User;
+use Phenix\Database\Constants\Order;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
 use Phenix\Testing\Concerns\RefreshDatabase;
+use Tests\Feature\Database\Models\SimpleUser as User;
 
 uses(RefreshDatabase::class);
 
@@ -863,3 +864,45 @@ it('performs complex operations with fluent connection and transaction', functio
     expect($users[1]['name'])->toBe('New User');
 });
 
+it('can execute queries without passing transaction manager explicitly', function (): void {
+    DB::connection('sqlite')->transaction(function (): void {
+        DB::connection('sqlite')->from('users')->insert(['name' => 'Test 1', 'email' => 'test1@example.com']);
+        DB::connection('sqlite')->from('users')->insert(['name' => 'Test 2', 'email' => 'test2@example.com']);
+    });
+
+    $results = DB::connection('sqlite')->from('users')->get();
+
+    expect($results)->toHaveCount(2);
+    expect($results[0]['name'])->toBe('Test 1');
+    expect($results[1]['name'])->toBe('Test 2');
+});
+
+it('rolls back automatically on exception without passing transaction manager', function (): void {
+    try {
+        DB::connection('sqlite')->transaction(function (): void {
+            DB::connection('sqlite')->from('users')->insert(['name' => 'Test 1', 'email' => 'test1@example.com']);
+
+            throw new Exception('Simulated error');
+        });
+    } catch (Exception $e) {
+        //
+    }
+
+    $results = DB::connection('sqlite')->from('users')->get();
+
+    expect($results)->toHaveCount(0);
+});
+
+it('works with nested query builder instances', function (): void {
+    DB::connection('sqlite')->transaction(function (): void {
+        $qb1 = DB::connection('sqlite')->from('users');
+        $qb2 = DB::connection('sqlite')->from('users');
+
+        $qb1->insert(['name' => 'From QB1', 'email' => 'qb1@example.com']);
+        $qb2->insert(['name' => 'From QB2', 'email' => 'qb2@example.com']);
+    });
+
+    $results = DB::connection('sqlite')->from('users')->get();
+
+    expect($results)->toHaveCount(2);
+});

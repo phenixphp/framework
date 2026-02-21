@@ -6,9 +6,7 @@ namespace Tests\Feature\Database\Models;
 
 use Phenix\Database\Models\Attributes\Column;
 use Phenix\Database\Models\Attributes\DateTime;
-use Phenix\Database\Models\Attributes\HasMany;
 use Phenix\Database\Models\Attributes\Id;
-use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Util\Date;
 
