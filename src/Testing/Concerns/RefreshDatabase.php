@@ -38,7 +38,7 @@ trait RefreshDatabase
         $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
         $databaseName = $settings['database'] ?? 'database';
-        
+
         if ($driver === Driver::SQLITE) {
             $databaseName = preg_replace('/\.sqlite3?$/', '', $databaseName);
         }
