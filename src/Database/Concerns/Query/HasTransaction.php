@@ -7,6 +7,7 @@ namespace Phenix\Database\Concerns\Query;
 use Amp\Sql\SqlConnection;
 use Amp\Sql\SqlTransaction;
 use Closure;
+use Phenix\Database\TransactionContext;
 use Phenix\Database\TransactionManager;
 use Throwable;
 
@@ -17,6 +18,8 @@ trait HasTransaction
     public function transaction(Closure $callback): mixed
     {
         $this->transaction = $this->connection->beginTransaction();
+
+        TransactionContext::set($this->transaction);
 
         try {
             $scope = new TransactionManager($this);
@@ -32,12 +35,18 @@ trait HasTransaction
             $this->transaction->rollBack();
 
             throw $e;
+        } finally {
+            TransactionContext::clear();
+
+            $this->transaction = null;
         }
     }
 
     public function beginTransaction(): TransactionManager
     {
         $this->transaction = $this->connection->beginTransaction();
+
+        TransactionContext::set($this->transaction);
 
         return new TransactionManager($this);
     }
@@ -46,6 +55,7 @@ trait HasTransaction
     {
         if ($this->transaction) {
             $this->transaction->commit();
+            TransactionContext::clear();
             $this->transaction = null;
         }
     }
@@ -54,6 +64,7 @@ trait HasTransaction
     {
         if ($this->transaction) {
             $this->transaction->rollBack();
+            TransactionContext::clear();
             $this->transaction = null;
         }
     }
@@ -82,6 +93,14 @@ trait HasTransaction
 
     protected function getExecutor(): SqlTransaction|SqlConnection
     {
-        return $this->hasActiveTransaction() ? $this->transaction : $this->connection;
+        if ($this->transaction !== null) {
+            return $this->transaction;
+        }
+
+        if ($contextTransaction = TransactionContext::get()) {
+            return $contextTransaction;
+        }
+
+        return $this->connection;
     }
 }
