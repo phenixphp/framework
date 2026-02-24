@@ -29,10 +29,12 @@ beforeEach(function (): void {
 });
 
 it('execute database transaction successfully', function (): void {
-    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
+    $email = $this->faker()->freeEmail();
+
+    DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager) use ($email): void {
         $transactionManager->from('users')->insert([
             'name' => 'John Doe',
-            'email' => $this->faker()->freeEmail(),
+            'email' => $email,
         ]);
     });
 
@@ -40,29 +42,29 @@ it('execute database transaction successfully', function (): void {
 
     expect($users)->toHaveCount(1);
     expect($users[0]['name'])->toBe('John Doe');
-    expect($users[0]['email'])->toBe($this->faker()->freeEmail());
+    expect($users[0]['email'])->toBe($email);
 });
 
 it('executes multiple operations within transaction callback', function (): void {
     DB::connection('sqlite')->transaction(function (TransactionManager $transactionManager): void {
         $transactionManager->from('users')->insert([
             'name' => 'John Doe',
-            'email' => $this->faker()->freeEmail(),
+            'email' => 'john.doe@example.com',
         ]);
 
         $transactionManager->from('users')->insert([
             'name' => 'Jane Smith',
-            'email' => $this->faker()->freeEmail(),
+            'email' => 'jane.smith@example.com',
         ]);
 
         $transactionManager->from('users')->insert([
             'name' => 'Bob Johnson',
-            'email' => $this->faker()->freeEmail(),
+            'email' => 'bob.johnson@example.com',
         ]);
 
         $transactionManager->from('users')
             ->whereEqual('name', 'Jane Smith')
-            ->update(['email' => $this->faker()->freeEmail()]);
+            ->update(['email' => 'jane.updated@example.com']);
 
         $transactionManager->from('users')
             ->whereEqual('name', 'Bob Johnson')
