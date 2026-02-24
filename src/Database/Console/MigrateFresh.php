@@ -7,6 +7,7 @@ namespace Phenix\Database\Console;
 use Amp\Sql\SqlConnection;
 use Exception;
 use Phenix\App;
+use Phenix\Database\Console\DatabaseCommand;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
@@ -198,7 +199,7 @@ EOT
     /**
      * Get all tables from the database.
      *
-     * @param \Amp\Sql\SqlConnection $connection Database connection
+     * @param SqlConnection $connection Database connection
      * @param Driver $driver Database driver
      * @return array<int, string>
      */
@@ -234,10 +235,10 @@ EOT
     /**
      * Drop tables from MySQL or PostgreSQL database.
      *
-     * @param \Amp\Sql\SqlConnection $connection Database connection
+     * @param SqlConnection $connection Database connection
      * @param Driver $driver Database driver
      * @param array<int, string> $tables Tables to drop
-     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
+     * @param OutputInterface $output Output
      * @return void
      */
     protected function dropTables(
@@ -277,11 +278,11 @@ EOT
     /**
      * Drop all tables from SQLite database.
      *
-     * @param object $connection Database connection
-     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
+     * @param SqlConnection $connection Database connection
+     * @param OutputInterface $output Output
      * @return void
      */
-    protected function dropAllSqliteTables(object $connection, OutputInterface $output): void
+    protected function dropAllSqliteTables(SqlConnection $connection, OutputInterface $output): void
     {
         try {
             $stmt = $connection->prepare(
