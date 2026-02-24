@@ -17,9 +17,13 @@ trait HasTransaction
 
     public function transaction(Closure $callback): mixed
     {
-        $this->transaction = $this->connection->beginTransaction();
+        $currentTransaction = TransactionContext::get();
 
-        TransactionContext::set($this->transaction);
+        $this->transaction = $currentTransaction !== null
+            ? $currentTransaction->beginTransaction() 
+            : $this->connection->beginTransaction();
+
+        TransactionContext::push($this->transaction);
 
         try {
             $scope = new TransactionManager($this);
@@ -36,7 +40,7 @@ trait HasTransaction
 
             throw $e;
         } finally {
-            TransactionContext::clear();
+            TransactionContext::pop();
 
             $this->transaction = null;
         }
@@ -46,7 +50,7 @@ trait HasTransaction
     {
         $this->transaction = $this->connection->beginTransaction();
 
-        TransactionContext::set($this->transaction);
+        TransactionContext::push($this->transaction);
 
         return new TransactionManager($this);
     }
@@ -55,7 +59,7 @@ trait HasTransaction
     {
         if ($this->transaction) {
             $this->transaction->commit();
-            TransactionContext::clear();
+            TransactionContext::pop();
             $this->transaction = null;
         }
     }
@@ -64,14 +68,9 @@ trait HasTransaction
     {
         if ($this->transaction) {
             $this->transaction->rollBack();
-            TransactionContext::clear();
+            TransactionContext::pop();
             $this->transaction = null;
         }
-    }
-
-    public function hasActiveTransaction(): bool
-    {
-        return isset($this->transaction) && $this->transaction !== null;
     }
 
     public function getTransaction(): SqlTransaction|null
