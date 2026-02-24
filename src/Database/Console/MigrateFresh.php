@@ -7,7 +7,6 @@ namespace Phenix\Database\Console;
 use Amp\Sql\SqlConnection;
 use Exception;
 use Phenix\App;
-use Phenix\Database\Console\DatabaseCommand;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
