@@ -20,7 +20,7 @@ trait HasTransaction
         $currentTransaction = TransactionContext::get();
 
         $this->transaction = $currentTransaction !== null
-            ? $currentTransaction->beginTransaction() 
+            ? $currentTransaction->beginTransaction()
             : $this->connection->beginTransaction();
 
         TransactionContext::push($this->transaction);
