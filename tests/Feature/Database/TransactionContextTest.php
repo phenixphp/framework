@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Database\TransactionContext;
+use Phenix\Database\TransactionNode;
 use Phenix\Facades\DB;
 use Phenix\Testing\Concerns\RefreshDatabase;
 
@@ -25,10 +26,16 @@ it('cleans up context after transaction callback completes', function (): void {
     expect(TransactionContext::depth())->toBe(0);
 
     DB::connection('sqlite')->transaction(function (): void {
+        $root = TransactionContext::getRoot();
+
+        expect($root)->toBeInstanceOf(TransactionNode::class);
+        expect($root->getSavepointIdentifier())->toBeNull();
+        expect($root->isActive())->toBeTrue();
         expect(TransactionContext::has())->toBeTrue();
         expect(TransactionContext::depth())->toBe(1);
     });
 
+    expect(TransactionContext::getRoot())->toBeNull();
     expect(TransactionContext::has())->toBeFalse();
     expect(TransactionContext::depth())->toBe(0);
 });
