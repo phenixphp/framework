@@ -5,9 +5,6 @@ declare(strict_types=1);
 use Phenix\Database\TransactionContext;
 use Phenix\Database\TransactionNode;
 use Phenix\Facades\DB;
-use Phenix\Testing\Concerns\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     DB::connection('sqlite')->unprepared("DROP TABLE IF EXISTS users");

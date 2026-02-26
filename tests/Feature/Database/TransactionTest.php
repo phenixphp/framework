@@ -6,12 +6,10 @@ use Phenix\Database\Constants\Order;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\TransactionManager;
 use Phenix\Facades\DB;
-use Phenix\Testing\Concerns\RefreshDatabase;
 use Phenix\Testing\Concerns\WithFaker;
 use Tests\Feature\Database\Models\SimpleUser as User;
 
 uses(WithFaker::class);
-uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     DB::connection('sqlite')->unprepared("DROP TABLE IF EXISTS users");
