@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Phenix\Console\Phenix;
 use Phenix\Database\Console\DatabaseCommand;
 use Phenix\Database\Console\MigrateFresh;
+use Phenix\Database\Constants\Driver;
+use Phenix\Facades\Config as Configuration;
+use Phenix\Facades\DB;
+use Phenix\Facades\File;
 use Phinx\Config\Config;
 use Phinx\Migration\Manager;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -32,6 +36,8 @@ beforeEach(function () {
 
     $this->input = new ArrayInput([]);
     $this->output = new StreamOutput(fopen('php://memory', 'a', false));
+
+    Configuration::set('database.default', Driver::SQLITE->value);
 });
 
 it('executes fresh migration with sqlite adapter successfully', function () {
@@ -227,7 +233,20 @@ it('handles dry-run option with sqlite adapter', function () {
     $this->assertSame(DatabaseCommand::CODE_SUCCESS, $exitCode);
 });
 
-it('executes fresh migration with sqlite file-based database', function () {
+it('executes fresh migration with sqlite file-based database', function (): void {
+    Configuration::set('database.connections.sqlite.database', '/tmp/phenix_test.sqlite');
+
+    DB::connection('sqlite')->unprepared("
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    ");
+
     $fileConfig = new Config([
         'paths' => [
             'migrations' => __FILE__,
@@ -275,4 +294,6 @@ it('executes fresh migration with sqlite file-based database', function () {
 
     $this->assertStringContainsString('using database /tmp/phenix_test.sqlite', $commandOutput);
     $this->assertSame(DatabaseCommand::CODE_SUCCESS, $exitCode);
+
+    File::deleteFile('/tmp/phenix_test.sqlite');
 });
