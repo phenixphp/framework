@@ -9,8 +9,8 @@ use Exception;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\Exceptions\MigrationErrorException;
 use Phenix\Facades\Config;
-use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -270,7 +270,7 @@ EOT
                 }
             }
         } catch (Throwable $e) {
-            throw new RuntimeException('Failed to drop tables: ' . $e->getMessage(), 0, $e);
+            throw new MigrationErrorException('Failed to drop tables: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -318,7 +318,7 @@ EOT
 
             $connection->prepare('PRAGMA foreign_keys = ON')->execute();
         } catch (Throwable $e) {
-            throw new RuntimeException('Failed to drop SQLite tables: ' . $e->getMessage(), 0, $e);
+            throw new MigrationErrorException('Failed to drop SQLite tables: ' . $e->getMessage(), 0, $e);
         }
     }
 }
