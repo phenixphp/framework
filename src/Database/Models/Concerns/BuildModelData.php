@@ -8,6 +8,7 @@ use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Models\Attributes\BelongsTo as BelongsToAttribute;
 use Phenix\Database\Models\Attributes\BelongsToMany as BelongsToManyAttribute;
 use Phenix\Database\Models\Attributes\Column;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\HasMany as HasManyAttribute;
 use Phenix\Database\Models\Attributes\ModelAttribute;
 use Phenix\Database\Models\Properties\BelongsToManyProperty;
@@ -18,6 +19,7 @@ use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Util\Arr;
+use Phenix\Util\Date;
 use ReflectionAttribute;
 use ReflectionObject;
 use ReflectionProperty;
@@ -101,5 +103,33 @@ trait BuildModelData
         }
 
         return new BelongsTo($property, $foreignKey);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function buildSavingData(): array
+    {
+        $data = [];
+
+        foreach ($this->getPropertyBindings() as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($this->{$propertyName})) {
+                $data[$property->getColumnName()] = $this->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
+                $now = Date::now();
+
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $this->{$propertyName} = $now;
+            }
+        }
+
+
+        return $data;
     }
 }

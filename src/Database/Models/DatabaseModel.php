@@ -6,11 +6,10 @@ namespace Phenix\Database\Models;
 
 use Amp\Sql\SqlConnection;
 use Phenix\Contracts\Arrayable;
-use Phenix\Database\Exceptions\ModelException;
-use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Attributes\Hidden;
 use Phenix\Database\Models\Attributes\Id;
 use Phenix\Database\Models\Concerns\BuildModelData;
+use Phenix\Database\Models\Concerns\WithModelQuery;
 use Phenix\Database\Models\Properties\ModelProperty;
 use Phenix\Database\Models\QueryBuilders\DatabaseQueryBuilder;
 use Phenix\Database\Models\Relationships\Relationship;
@@ -23,6 +22,7 @@ use stdClass;
 abstract class DatabaseModel implements Arrayable
 {
     use BuildModelData;
+    use WithModelQuery;
 
     protected string $table;
 
@@ -58,72 +58,6 @@ abstract class DatabaseModel implements Arrayable
     }
 
     abstract protected static function table(): string;
-
-    public static function query(TransactionManager|null $transactionManager = null): DatabaseQueryBuilder
-    {
-        $queryBuilder = static::newQueryBuilder();
-
-        if ($transactionManager !== null) {
-            $transactionQueryBuilder = $transactionManager->getQueryBuilder();
-            $queryBuilder->connection($transactionQueryBuilder->getConnection());
-
-            if ($transaction = $transactionQueryBuilder->getTransaction()) {
-                $queryBuilder->setTransaction($transaction);
-            }
-        }
-
-        $queryBuilder->setModel(new static());
-
-        return $queryBuilder;
-    }
-
-    public static function on(SqlConnection|string $connection): DatabaseQueryBuilder
-    {
-        $queryBuilder = static::query();
-        $queryBuilder->connection($connection);
-
-        return $queryBuilder;
-    }
-
-    /**
-     * @param array $attributes<string, mixed>
-     * @throws ModelException
-     * @return static
-     */
-    public static function create(array $attributes, TransactionManager|null $transactionManager = null): static
-    {
-        $model = new static();
-        $propertyBindings = $model->getPropertyBindings();
-
-        foreach ($attributes as $key => $value) {
-            $property = $propertyBindings[$key] ?? null;
-
-            if (! $property) {
-                throw new ModelException("Property {$key} not found for model " . static::class);
-            }
-
-            $model->{$property->getName()} = $value;
-        }
-
-        $model->save($transactionManager);
-
-        return $model;
-    }
-
-    /**
-     * @param string|int $id
-     * @param array $columns<int, string>
-     * @return DatabaseModel|null
-     */
-    public static function find(string|int $id, array $columns = ['*'], TransactionManager|null $transactionManager = null): self|null
-    {
-        $queryBuilder = static::query($transactionManager);
-
-        return $queryBuilder
-            ->select($columns)
-            ->whereEqual($queryBuilder->getModel()->getModelKeyName(), $id)
-            ->first();
-    }
 
     public function setAsExisting(): void
     {
@@ -277,33 +211,5 @@ abstract class DatabaseModel implements Arrayable
     protected function keyIsInitialized(): bool
     {
         return isset($this->{$this->getModelKeyName()});
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function buildSavingData(): array
-    {
-        $data = [];
-
-        foreach ($this->getPropertyBindings() as $property) {
-            $propertyName = $property->getName();
-            $attribute = $property->getAttribute();
-
-            if (isset($this->{$propertyName})) {
-                $data[$property->getColumnName()] = $this->{$propertyName};
-            }
-
-            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($this->{$propertyName})) {
-                $now = Date::now();
-
-                $data[$property->getColumnName()] = $now->format($attribute->format);
-
-                $this->{$propertyName} = $now;
-            }
-        }
-
-
-        return $data;
     }
 }
