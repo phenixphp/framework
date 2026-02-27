@@ -168,22 +168,39 @@ trait RefreshDatabase
      */
     protected function truncateTables(SqlConnection $connection, Driver $driver, array $tables): void
     {
+        $transaction = null;
+
+        try {
+            $transaction = $connection->beginTransaction();
+        } catch (Throwable) {
+            // If BEGIN fails, continue best-effort without explicit transaction
+        }
+
+        $executor = $transaction ?? $connection;
+
         try {
             if ($driver === Driver::MYSQL) {
-                $connection->prepare('SET FOREIGN_KEY_CHECKS=0')->execute();
+                $executor->prepare('SET FOREIGN_KEY_CHECKS=0')->execute();
 
                 foreach ($tables as $table) {
-                    $connection->prepare('TRUNCATE TABLE `'.$table.'`')->execute();
+                    $executor->prepare('TRUNCATE TABLE `'.$table.'`')->execute();
                 }
 
-                $connection->prepare('SET FOREIGN_KEY_CHECKS=1')->execute();
+                $executor->prepare('SET FOREIGN_KEY_CHECKS=1')->execute();
             } elseif ($driver === Driver::POSTGRESQL) {
                 $quoted = array_map(static fn (string $t): string => '"' . str_replace('"', '""', $t) . '"', $tables);
-
-                $connection->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
+                $executor->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
             }
         } catch (Throwable $e) {
             report($e);
+        } finally {
+            try {
+                if ($transaction) {
+                    $transaction->commit();
+                }
+            } catch (Throwable) {
+                // Best-effort commit; ignore errors
+            }
         }
     }
 
