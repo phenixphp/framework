@@ -187,7 +187,7 @@ trait RefreshDatabase
         }
     }
 
-    protected function truncateSqliteDatabase(object $connection): void
+    protected function truncateSqliteDatabase(SqlConnection $connection): void
     {
         $stmt = $connection->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
         $result = $stmt->execute();
@@ -208,25 +208,31 @@ trait RefreshDatabase
             return;
         }
 
+        $transaction = null;
+
         try {
-            $connection->prepare('BEGIN IMMEDIATE')->execute();
+            $transaction = $connection->beginTransaction();
         } catch (Throwable) {
             // If BEGIN fails, continue best-effort without explicit transaction
         }
 
+        $executor = $transaction ?? $connection;
+
         try {
             foreach ($tables as $table) {
-                $connection->prepare('DELETE FROM ' . '"' . str_replace('"', '""', $table) . '"')->execute();
+                $executor->prepare('DELETE FROM ' . '"' . str_replace('"', '""', $table) . '"')->execute();
             }
 
             try {
-                $connection->prepare('DELETE FROM sqlite_sequence')->execute();
+                $executor->prepare('DELETE FROM sqlite_sequence')->execute();
             } catch (Throwable) {
                 // Best-effort reset of AUTOINCREMENT sequences; ignore errors
             }
         } finally {
             try {
-                $connection->prepare('COMMIT')->execute();
+                if ($transaction) {
+                    $transaction->commit();
+                }
             } catch (Throwable) {
                 // Best-effort commit; ignore errors
             }
