@@ -79,7 +79,7 @@ trait RefreshDatabase
 
     protected function truncateDatabase(): void
     {
-        /** @var SqlConnection|object $connection */
+        /** @var SqlConnection $connection */
         $connection = App::make(Connection::default());
 
         $driver = $this->resolveDriver();
