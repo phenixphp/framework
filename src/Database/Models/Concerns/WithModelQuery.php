@@ -65,7 +65,7 @@ trait WithModelQuery
     /**
      * @param string|int $id
      * @param array $columns<int, string>
-     * @return static|null
+     * @return self|null
      */
     public static function find(string|int $id, array $columns = ['*'], TransactionManager|null $transactionManager = null): self|null
     {
