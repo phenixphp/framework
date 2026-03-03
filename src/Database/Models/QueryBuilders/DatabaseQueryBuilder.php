@@ -27,6 +27,9 @@ use Phenix\Util\Date;
 use function array_key_exists;
 use function is_array;
 
+/**
+ * @template TModel of DatabaseModel
+ */
 class DatabaseQueryBuilder extends QueryBuilder
 {
     protected DatabaseModel $model;
@@ -63,6 +66,10 @@ class DatabaseQueryBuilder extends QueryBuilder
         return $this;
     }
 
+    /**
+     * @param TModel $model
+     * @return self<TModel>
+     */
     public function setModel(DatabaseModel $model): self
     {
         if (! isset($this->model)) {
@@ -74,6 +81,9 @@ class DatabaseQueryBuilder extends QueryBuilder
         return $this;
     }
 
+    /**
+     * @return TModel
+     */
     public function getModel(): DatabaseModel
     {
         return $this->model;
@@ -118,7 +128,7 @@ class DatabaseQueryBuilder extends QueryBuilder
     }
 
     /**
-     * @return Collection<DatabaseModel>
+     * @return Collection<TModel>
      */
     public function get(): Collection
     {
@@ -142,6 +152,9 @@ class DatabaseQueryBuilder extends QueryBuilder
         return $collection;
     }
 
+    /**
+     * @return TModel|null
+     */
     public function first(): DatabaseModel|null
     {
         $this->action = Action::SELECT;
@@ -153,6 +166,7 @@ class DatabaseQueryBuilder extends QueryBuilder
 
     /**
      * @param array<string, mixed> $attributes
+     * @return TModel
      */
     public function create(array $attributes): DatabaseModel
     {
@@ -211,7 +225,7 @@ class DatabaseQueryBuilder extends QueryBuilder
     /**
      * @param string|int $id
      * @param array<int, string> $columns
-     * @return DatabaseModel|null
+     * @return TModel|null
      */
     public function find(string|int $id, array $columns = ['*']): DatabaseModel|null
     {
@@ -223,7 +237,7 @@ class DatabaseQueryBuilder extends QueryBuilder
 
     /**
      * @param array<int|string, mixed> $row
-     * @return DatabaseModel
+     * @return TModel
      */
     protected function mapToModel(array $row): DatabaseModel
     {

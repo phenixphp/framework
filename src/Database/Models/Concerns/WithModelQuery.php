@@ -11,6 +11,9 @@ use Phenix\Database\TransactionManager;
 
 trait WithModelQuery
 {
+    /**
+     * @return DatabaseQueryBuilder<static>
+     */
     public static function query(TransactionManager|null $transactionManager = null): DatabaseQueryBuilder
     {
         $queryBuilder = static::newQueryBuilder();
@@ -29,6 +32,9 @@ trait WithModelQuery
         return $queryBuilder;
     }
 
+    /**
+     * @return DatabaseQueryBuilder<static>
+     */
     public static function on(SqlConnection|string $connection): DatabaseQueryBuilder
     {
         $queryBuilder = static::query();
@@ -64,10 +70,10 @@ trait WithModelQuery
 
     /**
      * @param string|int $id
-     * @param array $columns<int, string>
-     * @return self|null
+     * @param array<int, string> $columns
+     * @return static|null
      */
-    public static function find(string|int $id, array $columns = ['*'], TransactionManager|null $transactionManager = null): self|null
+    public static function find(string|int $id, array $columns = ['*'], TransactionManager|null $transactionManager = null): static|null
     {
         $queryBuilder = static::query($transactionManager);
 
