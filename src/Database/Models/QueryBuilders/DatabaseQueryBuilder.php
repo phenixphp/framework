@@ -10,6 +10,7 @@ use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Join;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Properties\ModelProperty;
@@ -19,7 +20,9 @@ use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Models\Relationships\RelationshipParser;
 use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Util\Arr;
+use Phenix\Util\Date;
 
 use function array_key_exists;
 use function is_array;
@@ -71,6 +74,23 @@ class DatabaseQueryBuilder extends QueryBuilder
         return $this;
     }
 
+    public function getModel(): DatabaseModel
+    {
+        return $this->model;
+    }
+
+    public function withTransaction(TransactionManager $transactionManager): static
+    {
+        $transactionQueryBuilder = $transactionManager->getQueryBuilder();
+        $this->connection($transactionQueryBuilder->getConnection());
+
+        if ($transaction = $transactionQueryBuilder->getTransaction()) {
+            $this->setTransaction($transaction);
+        }
+
+        return $this;
+    }
+
     public function with(array|string $relationships): self
     {
         $modelRelationships = $this->model->getRelationshipBindings();
@@ -107,8 +127,7 @@ class DatabaseQueryBuilder extends QueryBuilder
 
         [$dml, $params] = $this->toSql();
 
-        $result = $this->connection->prepare($dml)
-            ->execute($params);
+        $result = $this->exec($dml, $params);
 
         $collection = $this->model->newCollection();
 
@@ -130,6 +149,76 @@ class DatabaseQueryBuilder extends QueryBuilder
         $this->limit(1);
 
         return $this->get()->first();
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function create(array $attributes): DatabaseModel
+    {
+        $model = clone $this->model;
+        $propertyBindings = $model->getPropertyBindings();
+
+        foreach ($attributes as $key => $value) {
+            $property = $propertyBindings[$key] ?? null;
+
+            if (! $property) {
+                throw new ModelException("Property {$key} not found for model " . $model::class);
+            }
+
+            $model->{$property->getName()} = $value;
+        }
+
+        $data = [];
+
+        foreach ($propertyBindings as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($model->{$propertyName})) {
+                $data[$property->getColumnName()] = $model->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($model->{$propertyName})) {
+                $now = Date::now();
+
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $model->{$propertyName} = $now;
+            }
+        }
+
+        $queryBuilder = clone $this;
+        $queryBuilder->setModel($model);
+
+        $result = $queryBuilder->insertRow($data);
+
+        if ($result) {
+            $modelKeyName = $model->getModelKeyName();
+
+            if (! isset($model->{$modelKeyName})) {
+                $model->{$modelKeyName} = $result;
+            }
+
+            $model->setAsExisting();
+        }
+
+        $model->setConnection($this->connection);
+
+        return $model;
+    }
+
+    /**
+     * @param string|int $id
+     * @param array<int, string> $columns
+     * @return DatabaseModel|null
+     */
+    public function find(string|int $id, array $columns = ['*']): DatabaseModel|null
+    {
+        return $this
+            ->select($columns)
+            ->whereEqual($this->model->getModelKeyName(), $id)
+            ->first();
     }
 
     /**
@@ -156,6 +245,9 @@ class DatabaseQueryBuilder extends QueryBuilder
                 throw new ModelException("Unknown column '{$columnName}' for model " . $model::class);
             }
         }
+
+        $model->setAsExisting();
+        $model->setConnection($this->connection);
 
         return $model;
     }

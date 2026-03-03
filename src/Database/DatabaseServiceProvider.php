@@ -8,6 +8,7 @@ use Phenix\Database\Connections\ConnectionFactory;
 use Phenix\Database\Console\MakeMigration;
 use Phenix\Database\Console\MakeSeeder;
 use Phenix\Database\Console\Migrate;
+use Phenix\Database\Console\MigrateFresh;
 use Phenix\Database\Console\Rollback;
 use Phenix\Database\Console\SeedRun;
 use Phenix\Database\Constants\Connection;
@@ -24,6 +25,7 @@ class DatabaseServiceProvider extends ServiceProvider
             Connection::name('default'),
             Connection::name('mysql'),
             Connection::name('postgresql'),
+            Connection::name('sqlite'),
             Connection::redis('default'),
         ];
 
@@ -32,9 +34,7 @@ class DatabaseServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $connections = array_filter(array_keys(Config::get('database.connections')), function (string $connection) {
-            return $connection !== Config::get('database.default');
-        });
+        $connections = array_keys(Config::get('database.connections'));
 
         foreach ($connections as $connection) {
             $settings = Config::get("database.connections.{$connection}");
@@ -55,20 +55,16 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $defaultConnection = Config::get('database.default');
 
-        $settings = Config::get("database.connections.{$defaultConnection}");
-
-        $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
-
-        $callback = ConnectionFactory::make($driver, $settings);
-
-        $this->bind(Connection::name('default'), $callback);
-
-        $this->bind(Connection::name($defaultConnection), $callback());
+        $this->bind(
+            Connection::name('default'),
+            fn () => $this->getContainer()->get(Connection::name($defaultConnection))
+        );
 
         $this->commands([
             MakeMigration::class,
             MakeSeeder::class,
             Migrate::class,
+            MigrateFresh::class,
             Rollback::class,
             SeedRun::class,
         ]);

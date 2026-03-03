@@ -37,6 +37,25 @@ trait RefreshDatabase
 
         $driver = Driver::tryFrom($settings['driver']) ?? Driver::MYSQL;
 
+        $databaseName = $settings['database'] ?? 'database';
+
+        if ($driver === Driver::SQLITE) {
+            $databaseName = preg_replace('/\.sqlite3?$/', '', $databaseName);
+        }
+
+        $environment = [
+            'adapter' => $driver->value,
+            'host' => $settings['host'] ?? null,
+            'name' => $databaseName,
+            'user' => $settings['username'] ?? null,
+            'pass' => $settings['password'] ?? null,
+            'port' => $settings['port'] ?? null,
+        ];
+
+        if ($driver === Driver::SQLITE) {
+            $environment['suffix'] = '.sqlite3';
+        }
+
         $config = new MigrationConfig([
             'paths' => [
                 'migrations' => Config::get('database.paths.migrations'),
@@ -45,14 +64,7 @@ trait RefreshDatabase
             'environments' => [
                 'default_migration_table' => 'migrations',
                 'default_environment' => 'default',
-                'default' => [
-                    'adapter' => $driver->value,
-                    'host' => $settings['host'] ?? null,
-                    'name' => $settings['database'] ?? null,
-                    'user' => $settings['username'] ?? null,
-                    'pass' => $settings['password'] ?? null,
-                    'port' => $settings['port'] ?? null,
-                ],
+                'default' => $environment,
             ],
         ]);
 
@@ -67,7 +79,7 @@ trait RefreshDatabase
 
     protected function truncateDatabase(): void
     {
-        /** @var SqlConnection|object $connection */
+        /** @var SqlConnection $connection */
         $connection = App::make(Connection::default());
 
         $driver = $this->resolveDriver();
@@ -156,26 +168,43 @@ trait RefreshDatabase
      */
     protected function truncateTables(SqlConnection $connection, Driver $driver, array $tables): void
     {
+        $transaction = null;
+
+        try {
+            $transaction = $connection->beginTransaction();
+        } catch (Throwable) {
+            // If BEGIN fails, continue best-effort without explicit transaction
+        }
+
+        $executor = $transaction ?? $connection;
+
         try {
             if ($driver === Driver::MYSQL) {
-                $connection->prepare('SET FOREIGN_KEY_CHECKS=0')->execute();
+                $executor->prepare('SET FOREIGN_KEY_CHECKS=0')->execute();
 
                 foreach ($tables as $table) {
-                    $connection->prepare('TRUNCATE TABLE `'.$table.'`')->execute();
+                    $executor->prepare('TRUNCATE TABLE `'.$table.'`')->execute();
                 }
 
-                $connection->prepare('SET FOREIGN_KEY_CHECKS=1')->execute();
+                $executor->prepare('SET FOREIGN_KEY_CHECKS=1')->execute();
             } elseif ($driver === Driver::POSTGRESQL) {
                 $quoted = array_map(static fn (string $t): string => '"' . str_replace('"', '""', $t) . '"', $tables);
-
-                $connection->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
+                $executor->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
             }
         } catch (Throwable $e) {
             report($e);
+        } finally {
+            try {
+                if ($transaction) {
+                    $transaction->commit();
+                }
+            } catch (Throwable) {
+                // Best-effort commit; ignore errors
+            }
         }
     }
 
-    protected function truncateSqliteDatabase(object $connection): void
+    protected function truncateSqliteDatabase(SqlConnection $connection): void
     {
         $stmt = $connection->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
         $result = $stmt->execute();
@@ -196,25 +225,31 @@ trait RefreshDatabase
             return;
         }
 
+        $transaction = null;
+
         try {
-            $connection->prepare('BEGIN IMMEDIATE')->execute();
+            $transaction = $connection->beginTransaction();
         } catch (Throwable) {
             // If BEGIN fails, continue best-effort without explicit transaction
         }
 
+        $executor = $transaction ?? $connection;
+
         try {
             foreach ($tables as $table) {
-                $connection->prepare('DELETE FROM ' . '"' . str_replace('"', '""', $table) . '"')->execute();
+                $executor->prepare('DELETE FROM ' . '"' . str_replace('"', '""', $table) . '"')->execute();
             }
 
             try {
-                $connection->prepare('DELETE FROM sqlite_sequence')->execute();
+                $executor->prepare('DELETE FROM sqlite_sequence')->execute();
             } catch (Throwable) {
                 // Best-effort reset of AUTOINCREMENT sequences; ignore errors
             }
         } finally {
             try {
-                $connection->prepare('COMMIT')->execute();
+                if ($transaction) {
+                    $transaction->commit();
+                }
             } catch (Throwable) {
                 // Best-effort commit; ignore errors
             }

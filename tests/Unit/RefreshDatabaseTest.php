@@ -19,7 +19,7 @@ beforeEach(function (): void {
 it('runs migrations only once and truncates tables between tests', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
-    $connection->expects($this->atLeast(4))
+    $connection->expects($this->once())
         ->method('prepare')
         ->willReturnCallback(function (string $sql) {
             if (str_starts_with($sql, 'SHOW TABLES')) {
@@ -45,7 +45,7 @@ it('truncates tables for postgresql driver', function (): void {
 
     $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
 
-    $connection->expects($this->atLeast(2))
+    $connection->expects($this->once())
         ->method('prepare')
         ->willReturnCallback(function (string $sql) {
             if (str_starts_with($sql, 'SELECT tablename FROM pg_tables')) {
