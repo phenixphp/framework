@@ -50,7 +50,6 @@ it('creates models with query builders successfully', function () {
     expect($users)->toBeInstanceOf(Collection::class);
     expect($users->first())->toBeInstanceOf(User::class);
 
-    /** @var User $user */
     $user = $users->first();
 
     expect($user->id)->toBe($data[0]['id']);
@@ -97,7 +96,6 @@ it('loads relationship when the model belongs to a parent model', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with('user')
         ->first();
@@ -146,7 +144,6 @@ it('loads relationship with short syntax to select columns', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with('user:id,name')
         ->first();
@@ -195,7 +192,6 @@ it('loads relationship when the model belongs to a parent model with column sele
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with([
             'user' => function (BelongsTo $belongsTo) {
@@ -252,7 +248,6 @@ it('loads relationship when the model has many child models without chaperone', 
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -312,7 +307,6 @@ it('loads relationship when the model has many child models loading chaperone fr
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -394,7 +388,6 @@ it('loads relationship when the model has many child models loading chaperone by
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -454,7 +447,6 @@ it('loads relationship when the model belongs to many models', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with(['products'])
         ->get();
@@ -515,7 +507,6 @@ it('loads relationship when the model belongs to many models with pivot columns'
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with([
             'products' => function (BelongsToMany $relation) {
@@ -580,7 +571,6 @@ it('loads relationship when the model belongs to many models with column selecti
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with([
             'products' => function (BelongsToMany $relation) {
@@ -651,7 +641,6 @@ it('loads nested relationship using dot notation', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Comment $comment */
     $comment = Comment::query()
         ->with([
             'product:id,description,price,stock,user_id,created_at',
@@ -854,7 +843,6 @@ it('finds a model successfully', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::find(1);
 
     expect($user)->toBeInstanceOf(User::class);
@@ -927,7 +915,6 @@ it('updates an existing model with string ID correctly', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var UserWithUuid $model */
     $model = UserWithUuid::find($uuid);
 
     expect($model)->toBeInstanceOf(UserWithUuid::class);
@@ -964,7 +951,6 @@ it('marks model from database query as existing', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $model */
     $model = User::find(1);
 
     expect($model->isExisting())->toBeTrue();
