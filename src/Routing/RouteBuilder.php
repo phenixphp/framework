@@ -46,9 +46,11 @@ class RouteBuilder implements Arrayable
         return $this;
     }
 
-    public function middleware(array|string $middleware): self
+    public function middleware(array|string|Middleware $middleware): self
     {
-        foreach ((array) $middleware as $item) {
+        $items = $middleware instanceof Middleware ? [$middleware] : (array) $middleware;
+
+        foreach ($items as $item) {
             $this->pushMiddleware(is_string($item) ? new $item() : $item);
         }
 
