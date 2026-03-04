@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
+use Amp\Http\Server\Middleware;
 use Closure;
 
 class RouteGroupBuilder extends RouteBuilder
@@ -35,9 +36,10 @@ class RouteGroupBuilder extends RouteBuilder
         return $this;
     }
 
-    public function middleware(array|string $middleware): self
+    public function middleware(array|string|Middleware $middleware): self
     {
-        $this->middlewares = array_merge($this->middlewares, (array) $middleware);
+        $items = $middleware instanceof Middleware ? [$middleware] : (array) $middleware;
+        $this->middlewares = array_merge($this->middlewares, $items);
 
         return $this;
     }

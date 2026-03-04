@@ -18,21 +18,34 @@ class RateLimiter implements Middleware
 {
     protected RateLimitManager $rateLimiter;
 
-    public function __construct()
+    protected int|null $perMinuteLimit;
+
+    protected string $prefix;
+
+    public function __construct(int|null $perMinuteLimit = null, string $prefix = 'global')
     {
         $this->rateLimiter = App::make(RateLimitManager::class);
+        $this->perMinuteLimit = $perMinuteLimit;
+        $this->prefix = $prefix;
+    }
+
+    public static function perMinute(int $maxAttempts, string $prefix = 'custom'): self
+    {
+        return new self($maxAttempts, $prefix);
     }
 
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
-        if (! Config::get('cache.rate_limit.enabled', false)) {
+        $isCustom = $this->perMinuteLimit !== null;
+
+        if (! $isCustom && ! Config::get('cache.rate_limit.enabled', false)) {
             return $next->handleRequest($request);
         }
 
-        $clientIp = Ip::make($request)->hash();
+        $clientIp = "{$this->prefix}:" . Ip::make($request)->hash();
         $current = $this->rateLimiter->increment($clientIp);
 
-        $perMinuteLimit = (int) Config::get('cache.rate_limit.per_minute', 60);
+        $perMinuteLimit = $this->perMinuteLimit ?? (int) Config::get('cache.rate_limit.per_minute', 60);
 
         if ($current > $perMinuteLimit) {
             return $this->rateLimitExceededResponse($clientIp);
