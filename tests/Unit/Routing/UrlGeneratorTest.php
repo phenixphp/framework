@@ -7,6 +7,7 @@ use Amp\Http\Server\Request;
 use League\Uri\Http;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Facades\Route as RouteFacade;
 use Phenix\Http\Response;
 use Phenix\Routing\Exceptions\RouteNotFoundException;
 use Phenix\Routing\Route;
@@ -72,6 +73,15 @@ it('generates a URL for a named route', function (): void {
     $generator = new UrlGenerator($route);
 
     $url = $generator->route('users.index');
+
+    expect($url)->toBe('http://127.0.0.1:1337/users');
+});
+
+it('generates a URL for a named route using helper', function (): void {
+    RouteFacade::get('/users', fn (): Response => response()->plain('Ok'))
+        ->name('users.index');
+
+    $url = route('users.index');
 
     expect($url)->toBe('http://127.0.0.1:1337/users');
 });
@@ -142,6 +152,26 @@ it('throws exception for unknown route name', function (): void {
 
     $generator->route('nonexistent');
 })->throws(RouteNotFoundException::class, 'Route [nonexistent] not defined.');
+
+it('generates HTTP URL', function (): void {
+    $route = new Route();
+    $generator = new UrlGenerator($route);
+
+    $url = $generator->to('/dashboard', ['tab' => 'settings']);
+
+    expect($url)->toStartWith('http://')
+        ->and($url)->toBe('http://127.0.0.1:1337/dashboard?tab=settings');
+});
+
+it('generates HTTP URL using helper', function (): void {
+    RouteFacade::get('/dashboard', fn (): Response => response()->plain('Ok'))
+        ->name('dashboard');
+
+    $url = url('/dashboard', ['tab' => 'settings']);
+
+    expect($url)->toStartWith('http://')
+        ->and($url)->toBe('http://127.0.0.1:1337/dashboard?tab=settings');
+});
 
 it('generates a secure HTTPS URL', function (): void {
     $route = new Route();

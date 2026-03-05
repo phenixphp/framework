@@ -48,13 +48,16 @@ class UrlGenerator
         return $uri;
     }
 
-    public function secure(string $path, array $parameters = []): string
+    public function to(string $path, array $parameters = [], bool $secure = false): string
     {
         $path = trim($path, '/');
         $port = Config::get('app.port');
 
         $url = Config::get('app.url');
-        $url = (string) preg_replace('/^http:/', 'https:', $url);
+
+        if ($secure) {
+            $url = (string) preg_replace('/^http:/', 'https:', $url);
+        }
 
         $uri = "{$url}:{$port}/{$path}";
 
@@ -63,6 +66,11 @@ class UrlGenerator
         }
 
         return $uri;
+    }
+
+    public function secure(string $path, array $parameters = []): string
+    {
+        return $this->to($path, $parameters, true);
     }
 
     public function signedRoute(

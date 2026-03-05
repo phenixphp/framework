@@ -7,6 +7,7 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Log;
 use Phenix\Facades\Translator;
 use Phenix\Http\Response;
+use Phenix\Routing\UrlGenerator;
 
 if (! function_exists('base_path()')) {
     function base_path(string $path = ''): string
@@ -45,6 +46,21 @@ if (! function_exists('config')) {
     function config(string $key, mixed $default = null): mixed
     {
         return Config::get($key, $default);
+    }
+}
+
+if (! function_exists('route')) {
+    function route(BackedEnum|string $name, array $parameters = [], bool $absolute = true): string
+    {
+        return App::make(UrlGenerator::class)->route($name, $parameters, $absolute);
+    }
+
+}
+
+if (! function_exists('url')) {
+    function url(string $path, array $parameters = [], bool $secure = false): string
+    {
+        return App::make(UrlGenerator::class)->to($path, $parameters, $secure);
     }
 }
 
