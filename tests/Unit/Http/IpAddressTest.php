@@ -11,7 +11,13 @@ use Amp\Socket\SocketAddressType;
 use League\Uri\Http;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Ip;
-use Phenix\Util\URL;
+use Phenix\Facades\Url;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('generate ip hash from request', function (string $ip, $expected): void {
     $client = $this->createMock(Client::class);
@@ -38,7 +44,7 @@ it('generate ip hash from request', function (string $ip, $expected): void {
         }
     );
 
-    $uri = Http::new(URL::build('posts/7/comments/22'));
+    $uri = Http::new(Url::to('posts/7/comments/22'));
     $request = new ServerRequest($client, HttpMethod::GET->value, $uri);
 
     $ip = Ip::make($request);
@@ -84,7 +90,7 @@ it('parses host and port from remote address IPv6 bracket with port', function (
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $ip = Ip::make($request);
 
     expect($ip->address())->toBe('[2001:db8::1]:443');
@@ -119,7 +125,7 @@ it('parses host only from raw IPv6 without port', function (): void {
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $ip = Ip::make($request);
 
     expect($ip->host())->toBe('2001:db8::2');
@@ -151,7 +157,7 @@ it('parses host and port from IPv4 with port', function (): void {
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $ip = Ip::make($request);
 
     expect($ip->host())->toBe('192.168.0.1');
@@ -183,7 +189,7 @@ it('parses host only from hostname with port', function (): void {
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $ip = Ip::make($request);
 
     expect($ip->host())->toBe('localhost');
@@ -215,7 +221,7 @@ it('parses host only from hostname without port', function (): void {
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $ip = Ip::make($request);
 
     expect($ip->host())->toBe('example.com');
@@ -247,7 +253,7 @@ it('sets forwarding info from X-Forwarded-For header', function (): void {
         }
     );
 
-    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(URL::build('/')));
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
     $request->setHeader('X-Forwarded-For', '203.0.113.1');
     $request->setAttribute(
         Forwarded::class,

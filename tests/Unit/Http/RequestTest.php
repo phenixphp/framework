@@ -13,12 +13,18 @@ use League\Uri\Http;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Ip;
 use Phenix\Http\Request;
-use Phenix\Util\URL;
+use Phenix\Facades\Url;
 use Psr\Http\Message\UriInterface;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('gets route attributes from server request', function () {
     $client = $this->createMock(Client::class);
-    $uri = Http::new(URL::build('posts/7/comments/22'));
+    $uri = Http::new(Url::to('posts/7/comments/22'));
     $request = new ServerRequest($client, HttpMethod::GET->value, $uri);
 
     $args = ['post' => '7', 'comment' => '22'];
@@ -37,7 +43,7 @@ it('gets route attributes from server request', function () {
 
 it('gets query parameters from server request', function () {
     $client = $this->createMock(Client::class);
-    $uri = Http::new(URL::build('posts?page=1&per_page=15&status[]=active&status[]=inactive&object[one]=1&object[two]=2'));
+    $uri = Http::new(Url::to('posts?page=1&per_page=15&status[]=active&status[]=inactive&object[one]=1&object[two]=2'));
     $request = new ServerRequest($client, HttpMethod::GET->value, $uri);
 
     $formRequest = new Request($request);
@@ -139,7 +145,7 @@ it('can decode JSON body', function () {
         'rate' => 10,
     ];
 
-    $uri = Http::new(URL::build('posts'));
+    $uri = Http::new(Url::to('posts'));
 
     $request = new ServerRequest($client, HttpMethod::POST->value, $uri);
     $request->setHeader('content-type', 'application/json');
