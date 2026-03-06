@@ -13,6 +13,7 @@ use Phenix\Runtime\Facade;
  * @method static bool hasValidSignature(\Amp\Http\Server\Request $request, bool $absolute = true, \Closure|array $ignoreQuery = [])
  * @method static bool signatureHasNotExpired(\Amp\Http\Server\Request $request)
  * @method static string route(\BackedEnum|string $name, mixed $parameters = [], bool $absolute = true)
+ * @method static string to(string $path, array $parameters = [], bool $secure = false)
  * @method static string secure(string $path, array $parameters = [])
  *
  * @see \Phenix\Routing\UrlGenerator
