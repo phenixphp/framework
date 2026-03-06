@@ -9,11 +9,11 @@ use Amp\Socket\InternetAddress;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketAddressType;
 use League\Uri\Http;
-use Phenix\Http\Constants\HttpMethod;
-use Phenix\Http\Ip;
-use Phenix\Facades\Url;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Facades\Url;
+use Phenix\Http\Constants\HttpMethod;
+use Phenix\Http\Ip;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());

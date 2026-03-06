@@ -12,6 +12,8 @@ use Phenix\Auth\Middlewares\Authenticated;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
 use Phenix\Database\Constants\Connection;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Event;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
@@ -22,8 +24,6 @@ use Phenix\Util\Str;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Phenix\Facades\Config;
-use Phenix\Facades\Crypto;
 
 use function Amp\delay;
 

@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Response;
 use Tests\Unit\Routing\AcceptJsonResponses;
-use Phenix\Facades\Crypto;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());

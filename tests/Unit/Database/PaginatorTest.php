@@ -5,9 +5,9 @@ declare(strict_types=1);
 use League\Uri\Http;
 use Phenix\Data\Collection;
 use Phenix\Database\Paginator;
-use Phenix\Facades\Url;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
+use Phenix\Facades\Url;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());

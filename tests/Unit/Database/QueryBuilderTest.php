@@ -10,14 +10,14 @@ use Phenix\Database\Constants\Connection;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
 use Phenix\Database\TransactionManager;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\DB;
 use Phenix\Facades\Url;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\PostgresqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
-use Phenix\Facades\Config;
-use Phenix\Facades\Crypto;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Amp\Http\Client\Form;
 use Amp\Http\Server\FormParser\BufferedFile;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Requests\StreamParser;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Feature\Requests\StoreUserRequest;
 use Tests\Feature\Requests\StreamedRequest;
-use Phenix\Facades\Config;
-use Phenix\Facades\Crypto;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());

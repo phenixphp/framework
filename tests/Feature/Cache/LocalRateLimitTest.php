@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Response;
-use Phenix\Facades\Crypto;
 
 use function Amp\delay;
 

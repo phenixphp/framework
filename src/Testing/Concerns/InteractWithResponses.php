@@ -16,9 +16,9 @@ use Amp\Socket\DnsSocketConnector;
 use Amp\Socket\Socket;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketConnector;
+use Phenix\Facades\Url;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Testing\TestResponse;
-use Phenix\Facades\Url;
 
 use function is_array;
 

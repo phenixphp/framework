@@ -10,13 +10,13 @@ use Amp\Http\Server\RequestBody;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\Trailers;
 use League\Uri\Http;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+use Phenix\Facades\Url;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Ip;
 use Phenix\Http\Request;
-use Phenix\Facades\Url;
 use Psr\Http\Message\UriInterface;
-use Phenix\Facades\Config;
-use Phenix\Facades\Crypto;
 
 beforeEach(function (): void {
     Config::set('app.key', Crypto::generateEncodedKey());
