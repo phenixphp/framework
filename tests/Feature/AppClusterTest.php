@@ -6,9 +6,14 @@ use Phenix\Constants\ServerMode;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Response;
+use Phenix\Facades\Crypto;
 
 beforeAll(function (): void {
     $_ENV['APP_SERVER_MODE'] = ServerMode::CLUSTER->value;
+});
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
 });
 
 it('starts server in cluster mode', function (): void {

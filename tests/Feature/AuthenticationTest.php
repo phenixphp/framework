@@ -22,10 +22,16 @@ use Phenix\Util\Str;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 
 use function Amp\delay;
 
 uses(HasApiTokens::class);
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();

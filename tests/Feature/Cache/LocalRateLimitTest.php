@@ -6,8 +6,13 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Response;
+use Phenix\Facades\Crypto;
 
 use function Amp\delay;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();

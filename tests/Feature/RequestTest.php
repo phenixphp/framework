@@ -13,6 +13,12 @@ use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Unit\Routing\AcceptJsonResponses;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();

@@ -10,6 +10,12 @@ use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Feature\Requests\StoreUserRequest;
 use Tests\Feature\Requests\StreamedRequest;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function () {
     $this->app->stop();

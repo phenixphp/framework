@@ -8,12 +8,17 @@ use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Http\Session;
 use Phenix\Session\Constants\Driver;
+use Phenix\Facades\Crypto;
 
-afterEach(function () {
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
+
+afterEach(function (): void {
     $this->app->stop();
 });
 
-it('initializes the session middleware with local driver', function () {
+it('initializes the session middleware with local driver', function (): void {
     Route::get('/', function (Request $request): Response {
         expect($request->session())->toBeInstanceOf(Session::class);
 

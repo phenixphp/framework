@@ -8,6 +8,11 @@ use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('starts server in proxied mode', function (): void {
     Config::set('app.app_mode', AppMode::PROXIED->value);

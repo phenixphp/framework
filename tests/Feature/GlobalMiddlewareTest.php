@@ -6,6 +6,12 @@ use Phenix\Facades\Route;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Http\Session;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function () {
     $this->app->stop();
