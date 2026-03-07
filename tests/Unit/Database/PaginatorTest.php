@@ -5,10 +5,16 @@ declare(strict_types=1);
 use League\Uri\Http;
 use Phenix\Data\Collection;
 use Phenix\Database\Paginator;
-use Phenix\Util\URL;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
+use Phenix\Facades\Url;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('calculates pagination data', function () {
-    $uri = Http::new(URL::build('users', ['page' => 1, 'per_page' => 15]));
+    $uri = Http::new(Url::to('users', ['page' => 1, 'per_page' => 15]));
 
     $paginator = new Paginator($uri, new Collection('array'), 50, 1, 15);
 
@@ -25,21 +31,21 @@ it('calculates pagination data', function () {
 
     $links = array_map(function (int $page) {
         return [
-            'url' => URL::build('users', ['page' => $page, 'per_page' => 15]),
+            'url' => Url::to('users', ['page' => $page, 'per_page' => 15]),
             'label' => $page,
         ];
     }, [1, 2, 3, 4]);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 4,
         'per_page' => 15,
         'total' => 50,
-        'first_page_url' => URL::build('users', ['page' => 1, 'per_page' => 15]),
-        'last_page_url' => URL::build('users', ['page' => 4, 'per_page' => 15]),
+        'first_page_url' => Url::to('users', ['page' => 1, 'per_page' => 15]),
+        'last_page_url' => Url::to('users', ['page' => 4, 'per_page' => 15]),
         'prev_page_url' => null,
-        'next_page_url' => URL::build('users', ['page' => 2, 'per_page' => 15]),
+        'next_page_url' => Url::to('users', ['page' => 2, 'per_page' => 15]),
         'from' => 1,
         'to' => 15,
         'data' => [],
@@ -54,27 +60,27 @@ it('calculates pagination data in custom page', function (
     int $from,
     int $to
 ) {
-    $uri = Http::new(URL::build('users', ['page' => 1, 'per_page' => 15]));
+    $uri = Http::new(Url::to('users', ['page' => 1, 'per_page' => 15]));
 
     $paginator = new Paginator($uri, new Collection('array'), 50, $currentPage, 15);
 
     $links = array_map(function (int $page) {
         return [
-            'url' => URL::build('users', ['page' => $page, 'per_page' => 15]),
+            'url' => Url::to('users', ['page' => $page, 'per_page' => 15]),
             'label' => $page,
         ];
     }, [1, 2, 3, 4]);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => $currentPage,
         'last_page' => 4,
         'per_page' => 15,
         'total' => 50,
-        'first_page_url' => URL::build('users', ['page' => 1, 'per_page' => 15]),
-        'last_page_url' => URL::build('users', ['page' => 4, 'per_page' => 15]),
-        'prev_page_url' => $prevUrl ? URL::build('users', ['page' => $prevUrl, 'per_page' => 15]) : null,
-        'next_page_url' => $nextUrl ? URL::build('users', ['page' => $nextUrl, 'per_page' => 15]) : null,
+        'first_page_url' => Url::to('users', ['page' => 1, 'per_page' => 15]),
+        'last_page_url' => Url::to('users', ['page' => 4, 'per_page' => 15]),
+        'prev_page_url' => $prevUrl ? Url::to('users', ['page' => $prevUrl, 'per_page' => 15]) : null,
+        'next_page_url' => $nextUrl ? Url::to('users', ['page' => $nextUrl, 'per_page' => 15]) : null,
         'from' => $from,
         'to' => $to,
         'data' => [],
@@ -95,14 +101,14 @@ it('calculates pagination data with separators', function (
     int $from,
     int $to
 ) {
-    $uri = Http::new(URL::build('users', ['page' => $currentPage, 'per_page' => 15]));
+    $uri = Http::new(Url::to('users', ['page' => $currentPage, 'per_page' => 15]));
 
     $paginator = new Paginator($uri, new Collection('array'), 150, $currentPage, 15);
 
     $links = array_map(function (string|int $page) {
         $url = \is_string($page)
             ? null
-            : URL::build('users', ['page' => $page, 'per_page' => 15]);
+            : Url::to('users', ['page' => $page, 'per_page' => 15]);
 
         return [
             'url' => $url,
@@ -111,15 +117,15 @@ it('calculates pagination data with separators', function (
     }, $dataset);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => $currentPage,
         'last_page' => 10,
         'per_page' => 15,
         'total' => 150,
-        'first_page_url' => URL::build('users', ['page' => 1, 'per_page' => 15]),
-        'last_page_url' => URL::build('users', ['page' => 10, 'per_page' => 15]),
-        'prev_page_url' => $prevUrl ? URL::build('users', ['page' => $prevUrl, 'per_page' => 15]) : null,
-        'next_page_url' => $nextUrl ? URL::build('users', ['page' => $nextUrl, 'per_page' => 15]) : null,
+        'first_page_url' => Url::to('users', ['page' => 1, 'per_page' => 15]),
+        'last_page_url' => Url::to('users', ['page' => 10, 'per_page' => 15]),
+        'prev_page_url' => $prevUrl ? Url::to('users', ['page' => $prevUrl, 'per_page' => 15]) : null,
+        'next_page_url' => $nextUrl ? Url::to('users', ['page' => $nextUrl, 'per_page' => 15]) : null,
         'from' => $from,
         'to' => $to,
         'data' => [],
@@ -139,27 +145,27 @@ it('calculates pagination data with separators', function (
 ]);
 
 it('calculates pagination data with query params', function () {
-    $uri = Http::new(URL::build('users', ['page' => 1, 'per_page' => 15, 'active' => true]));
+    $uri = Http::new(Url::to('users', ['page' => 1, 'per_page' => 15, 'active' => true]));
 
     $paginator = new Paginator($uri, new Collection('array'), 50, 1, 15);
 
     $links = array_map(function (int $page) {
         return [
-            'url' => URL::build('users', ['page' => $page, 'per_page' => 15, 'active' => true]),
+            'url' => Url::to('users', ['page' => $page, 'per_page' => 15, 'active' => true]),
             'label' => $page,
         ];
     }, [1, 2, 3, 4]);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 4,
         'per_page' => 15,
         'total' => 50,
-        'first_page_url' => URL::build('users', ['page' => 1, 'per_page' => 15, 'active' => true]),
-        'last_page_url' => URL::build('users', ['page' => 4, 'per_page' => 15, 'active' => true]),
+        'first_page_url' => Url::to('users', ['page' => 1, 'per_page' => 15, 'active' => true]),
+        'last_page_url' => Url::to('users', ['page' => 4, 'per_page' => 15, 'active' => true]),
         'prev_page_url' => null,
-        'next_page_url' => URL::build('users', ['page' => 2, 'per_page' => 15, 'active' => true]),
+        'next_page_url' => Url::to('users', ['page' => 2, 'per_page' => 15, 'active' => true]),
         'from' => 1,
         'to' => 15,
         'data' => [],
@@ -168,28 +174,28 @@ it('calculates pagination data with query params', function () {
 });
 
 it('calculates pagination data without query params', function () {
-    $uri = Http::new(URL::build('users', ['page' => 1, 'per_page' => 15, 'active' => true]));
+    $uri = Http::new(Url::to('users', ['page' => 1, 'per_page' => 15, 'active' => true]));
 
     $paginator = new Paginator($uri, new Collection('array'), 50, 1, 15);
     $paginator->withoutQueryParameters();
 
     $links = array_map(function (int $page) {
         return [
-            'url' => URL::build('users', ['page' => $page, 'per_page' => 15]),
+            'url' => Url::to('users', ['page' => $page, 'per_page' => 15]),
             'label' => $page,
         ];
     }, [1, 2, 3, 4]);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 4,
         'per_page' => 15,
         'total' => 50,
-        'first_page_url' => URL::build('users', ['page' => 1, 'per_page' => 15]),
-        'last_page_url' => URL::build('users', ['page' => 4, 'per_page' => 15]),
+        'first_page_url' => Url::to('users', ['page' => 1, 'per_page' => 15]),
+        'last_page_url' => Url::to('users', ['page' => 4, 'per_page' => 15]),
         'prev_page_url' => null,
-        'next_page_url' => URL::build('users', ['page' => 2, 'per_page' => 15]),
+        'next_page_url' => Url::to('users', ['page' => 2, 'per_page' => 15]),
         'from' => 1,
         'to' => 15,
         'data' => [],
@@ -198,7 +204,7 @@ it('calculates pagination data without query params', function () {
 });
 
 it('handles empty dataset gracefully', function () {
-    $uri = Http::new(URL::build('users', ['page' => 1]));
+    $uri = Http::new(Url::to('users', ['page' => 1]));
 
     $paginator = new Paginator($uri, new Collection('array'), 0, 1, 15);
 
@@ -213,12 +219,12 @@ it('handles empty dataset gracefully', function () {
     expect($paginator->to())->toBe(0);
 
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 0,
         'per_page' => 15,
         'total' => 0,
-        'first_page_url' => URL::build('users', ['page' => 1]),
+        'first_page_url' => Url::to('users', ['page' => 1]),
         'last_page_url' => null,
         'prev_page_url' => null,
         'next_page_url' => null,

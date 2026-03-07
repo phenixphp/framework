@@ -10,12 +10,18 @@ use Phenix\Database\Constants\Connection;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
 use Phenix\Database\TransactionManager;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\DB;
-use Phenix\Util\URL;
+use Phenix\Facades\Url;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\PostgresqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('gets all records from database', function () {
     $data = [
@@ -171,7 +177,7 @@ it('counts all database records', function () {
     expect($count)->toBe(1);
 });
 
-it('paginates the query results', function () {
+it('paginates the query results', function (): void {
     $data = [['id' => 1, 'name' => 'John Doe']];
 
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
@@ -186,7 +192,7 @@ it('paginates the query results', function () {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $uri = Http::new(URL::build('users'));
+    $uri = Http::new(Url::to('users'));
 
     $paginator = $query->from('users')
         ->select(['id', 'name'])
@@ -194,13 +200,13 @@ it('paginates the query results', function () {
 
     expect($paginator)->toBeInstanceOf(Paginator::class);
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 1,
         'per_page' => 15,
         'total' => 1,
-        'first_page_url' => URL::build('users', ['page' => 1]),
-        'last_page_url' => URL::build('users', ['page' => 1]),
+        'first_page_url' => Url::to('users', ['page' => 1]),
+        'last_page_url' => Url::to('users', ['page' => 1]),
         'prev_page_url' => null,
         'next_page_url' => null,
         'from' => 1,
@@ -208,7 +214,7 @@ it('paginates the query results', function () {
         'data' => $data,
         'links' => [
             [
-                'url' => URL::build('users', ['page' => 1]),
+                'url' => Url::to('users', ['page' => 1]),
                 'label' => 1,
             ],
         ],

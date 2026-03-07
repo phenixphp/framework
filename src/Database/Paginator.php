@@ -8,7 +8,7 @@ use League\Uri\Components\Query;
 use League\Uri\Http;
 use Phenix\Contracts\Arrayable;
 use Phenix\Data\Collection;
-use Phenix\Util\URL;
+use Phenix\Facades\Url;
 
 class Paginator implements Arrayable
 {
@@ -133,7 +133,7 @@ class Paginator implements Arrayable
     public function toArray(): array
     {
         return [
-            'path' => URL::build($this->uri->getPath()),
+            'path' => Url::to($this->uri->getPath()),
             'current_page' => $this->currentPage,
             'last_page' => $this->lastPage,
             'per_page' => $this->perPage,
@@ -171,7 +171,7 @@ class Paginator implements Arrayable
 
         $parameters = array_merge($this->getQueryParameters(), $parameters);
 
-        return URL::build($this->uri->getPath(), $parameters);
+        return Url::to($this->uri->getPath(), $parameters);
     }
 
     private function getFirstPageUrl(): string

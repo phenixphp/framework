@@ -16,9 +16,9 @@ use Amp\Socket\DnsSocketConnector;
 use Amp\Socket\Socket;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketConnector;
+use Phenix\Facades\Url;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Testing\TestResponse;
-use Phenix\Util\URL;
 
 use function is_array;
 
@@ -31,7 +31,7 @@ trait InteractWithResponses
         Form|array|string|null $body = null,
         array $headers = []
     ): TestResponse {
-        $request = new Request(URL::build($path, $parameters), $method->value);
+        $request = new Request(Url::to($path, $parameters), $method->value);
 
         if ($headers) {
             $request->setHeaders($headers);

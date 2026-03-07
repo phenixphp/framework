@@ -5,9 +5,14 @@ declare(strict_types=1);
 use Phenix\Constants\AppMode;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('starts server in proxied mode', function (): void {
     Config::set('app.app_mode', AppMode::PROXIED->value);

@@ -12,6 +12,8 @@ use Phenix\Auth\Middlewares\Authenticated;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
 use Phenix\Database\Constants\Connection;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Event;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
@@ -26,6 +28,10 @@ use Tests\Mocks\Database\Statement;
 use function Amp\delay;
 
 uses(HasApiTokens::class);
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();

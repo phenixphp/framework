@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
+use Phenix\App;
 use Phenix\Facades\File;
 use Phenix\Providers\ServiceProvider;
 use Phenix\Routing\Console\RouteList;
@@ -12,9 +13,24 @@ use Phenix\Util\NamespaceResolver;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public function provides(string $id): bool
+    {
+        $this->provided = [
+            Route::class,
+            UrlGenerator::class,
+        ];
+
+        return $this->isProvided($id);
+    }
+
     public function boot(): void
     {
         $this->bind(Route::class)->setShared(true);
+
+        $this->bind(
+            UrlGenerator::class,
+            fn (): UrlGenerator => new UrlGenerator(App::make(Route::class))
+        )->setShared(true);
 
         $this->commands([
             RouteList::class,

@@ -6,6 +6,8 @@ use Amp\Http\Client\Form;
 use Amp\Http\Server\Driver\Client;
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\RequestBody;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\ContentType;
 use Phenix\Http\Constants\HttpStatus;
@@ -13,6 +15,10 @@ use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Unit\Routing\AcceptJsonResponses;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();

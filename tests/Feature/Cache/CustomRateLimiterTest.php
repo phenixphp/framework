@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 use Phenix\Cache\RateLimit\Middlewares\RateLimiter;
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Response;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function (): void {
     $this->app->stop();
