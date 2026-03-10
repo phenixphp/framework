@@ -90,16 +90,16 @@ if (! function_exists('e')) {
 }
 
 if (! function_exists('trans')) {
-    function trans(string $key, array $replace = []): array|string
+    function trans(string $key, array $replace = [], string|null $locale = null): array|string
     {
-        return Translator::get($key, $replace);
+        return Translator::get($key, $replace, $locale);
     }
 }
 
 if (! function_exists('trans_choice')) {
-    function trans_choice(string $key, int $number, array $replace = []): string
+    function trans_choice(string $key, int|array|Countable $number, array $replace = [], string|null $locale = null): string
     {
-        return Translator::choice($key, $number, $replace);
+        return Translator::choice($key, $number, $replace, $locale);
     }
 }
 

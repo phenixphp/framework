@@ -69,7 +69,9 @@ it('respects timezone when evaluating due', function (): void {
         $executed = true;
     })->dailyAt('12:00')->timezone('America/New_York');
 
-    $now = Date::now('UTC')->startOfMinute()->setTime(17, 0);
+    $now = Date::today('America/New_York')
+        ->setTime(12, 0)
+        ->utc();
 
     $scheduler->tick($now);
 
