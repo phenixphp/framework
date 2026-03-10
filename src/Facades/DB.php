@@ -13,10 +13,12 @@ use Phenix\Runtime\Facade;
  * @method static \Phenix\Database\QueryBuilder select(array $columns)
  * @method static \Phenix\Database\QueryBuilder selectAllColumns()
  * @method static \Amp\Sql\SqlResult unprepared(string $sql)
- * @method static mixed transaction(\Closure $callback)
+ * @method static mixed transaction(\Closure(\Phenix\Database\TransactionManager):mixed $callback)
  * @method static \Phenix\Database\TransactionManager beginTransaction()
  * @method static void commit()
  * @method static void rollBack()
+ * @method static \Amp\Sql\SqlTransaction|null getTransaction()
+ * @method static \Phenix\Database\QueryBuilder setTransaction(\Amp\Sql\SqlTransaction $transaction)
  *
  * @see \Phenix\Database\QueryBuilder
  */
