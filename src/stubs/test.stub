@@ -2,8 +2,17 @@
 
 declare(strict_types=1);
 
-// uses(RefreshDatabase::class);
+namespace {namespace};
 
-it('asserts truthy', function () {
-    expect(true)->toBeTruthy();
-});
+use Phenix\Testing\Concerns\RefreshDatabase;
+use Phenix\Testing\Concerns\WithFaker;
+use Tests\TestCase;
+
+class {name} extends TestCase
+{
+    /** @test */
+    public function it_asserts_true(): void
+    {
+        $this->assertTrue(true);
+    }
+}
