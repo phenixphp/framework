@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
-it('asserts truthy', function () {
-    expect(true)->toBeTruthy();
-});
+namespace {namespace};
+
+use Phenix\Testing\TestCase;
+
+class {name} extends TestCase
+{
+    /** @test */
+    public function it_asserts_true(): void
+    {
+        $this->assertTrue(true);
+    }
+}
