@@ -26,7 +26,7 @@ it('starts server in proxied mode', function (): void {
 
     $this->get('/proxy', headers: ['X-Forwarded-For' => '10.0.0.1'])
         ->assertOk()
-        ->assertJsonPath('data.message', 'Proxied');
+        ->assertJsonPath('message', 'Proxied');
 
     $this->app->stop();
 });
@@ -48,7 +48,7 @@ it('starts server with TLS certificate', function (): void {
 
     $this->get('/tls')
         ->assertOk()
-        ->assertJsonPath('data.message', 'TLS');
+        ->assertJsonPath('message', 'TLS');
 
     $this->app->stop();
 });

@@ -26,7 +26,7 @@ it('starts server in cluster mode', function (): void {
 
     $this->get('/cluster')
         ->assertOk()
-        ->assertJsonPath('data.message', 'Cluster');
+        ->assertJsonPath('message', 'Cluster');
 
     $this->app->stop();
 });
