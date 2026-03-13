@@ -62,7 +62,7 @@ it('responds with unprocessable entity due invalid data', function () {
 
     $body = json_decode($response->getBody(), true);
 
-    expect($body['data'])->toHaveKeys(['name', 'email']);
+    expect($body)->toHaveKeys(['name', 'email']);
 });
 
 it('validates requests using streamed form request', function () {

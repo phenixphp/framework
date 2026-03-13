@@ -46,7 +46,7 @@ class Response
             $content = $content->toArray();
         }
 
-        $this->body = json_encode(['data' => $content]);
+        $this->body = json_encode($content);
         $this->status = $status;
         $this->headers = [...['content-type' => 'application/json'], ...$headers];
 

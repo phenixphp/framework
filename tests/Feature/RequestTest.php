@@ -172,8 +172,8 @@ it('can assert json contains', function (): void {
     $this->get('/api/user')
         ->assertOk()
         ->assertIsJson()
-        ->assertJsonPath('data.id', 1)
-        ->assertJsonPath('data.name', 'John Doe');
+        ->assertJsonPath('id', 1)
+        ->assertJsonPath('name', 'John Doe');
 });
 
 it('can assert json does not contain', function (): void {
@@ -193,7 +193,7 @@ it('can assert json does not contain', function (): void {
             'name' => 'Jane Doe',
             'password' => 'secret',
         ])
-        ->assertJsonPathNotEquals('data.name', 'Jane Doe');
+        ->assertJsonPathNotEquals('name', 'Jane Doe');
 });
 
 it('can assert json fragment', function (): void {
@@ -281,12 +281,12 @@ it('can assert json path', function (): void {
 
     $this->get('/api/profile')
         ->assertOk()
-        ->assertJsonPath('data.user.profile.name', 'John Doe')
-        ->assertJsonPath('data.user.profile.age', 30)
-        ->assertJsonPath('data.user.settings.theme', 'dark')
-        ->assertJsonPath('data.user.settings.notifications', true)
-        ->assertJsonPath('data.posts.0.title', 'First')
-        ->assertJsonPath('data.posts.1.id', 2);
+        ->assertJsonPath('user.profile.name', 'John Doe')
+        ->assertJsonPath('user.profile.age', 30)
+        ->assertJsonPath('user.settings.theme', 'dark')
+        ->assertJsonPath('user.settings.notifications', true)
+        ->assertJsonPath('posts.0.title', 'First')
+        ->assertJsonPath('posts.1.id', 2);
 });
 
 it('can assert json path not equals', function (): void {
@@ -303,8 +303,8 @@ it('can assert json path not equals', function (): void {
 
     $this->get('/api/user')
         ->assertOk()
-        ->assertJsonPathNotEquals('data.user.name', 'Jane Doe')
-        ->assertJsonPathNotEquals('data.user.role', 'user');
+        ->assertJsonPathNotEquals('user.name', 'Jane Doe')
+        ->assertJsonPathNotEquals('user.role', 'user');
 });
 
 it('can assert json structure', function (): void {
@@ -334,12 +334,10 @@ it('can assert json structure', function (): void {
     $this->get('/api/users')
         ->assertOk()
         ->assertJsonStructure([
-            'data' => [
-                'users' => [
-                    '*' => ['id', 'name', 'email'],
-                ],
-                'meta' => ['total', 'page'],
+            'users' => [
+                '*' => ['id', 'name', 'email'],
             ],
+            'meta' => ['total', 'page'],
         ]);
 });
 
@@ -366,14 +364,12 @@ it('can assert json structure with nested arrays', function (): void {
     $this->get('/api/posts')
         ->assertOk()
         ->assertJsonStructure([
-            'data' => [
-                '*' => [
-                    'id',
-                    'title',
-                    'author' => ['name', 'email'],
-                    'comments' => [
-                        '*' => ['id', 'body'],
-                    ],
+            '*' => [
+                'id',
+                'title',
+                'author' => ['name', 'email'],
+                'comments' => [
+                    '*' => ['id', 'body'],
                 ],
             ],
         ]);
@@ -392,10 +388,10 @@ it('can assert json count', function (): void {
 
     $this->get('/api/items')
         ->assertOk()
-        ->assertJsonPath('data.0.id', 1)
-        ->assertJsonPath('data.1.id', 2)
-        ->assertJsonPath('data.2.id', 3)
-        ->assertJsonCount(3, 'data');
+        ->assertJsonPath('0.id', 1)
+        ->assertJsonPath('1.id', 2)
+        ->assertJsonPath('2.id', 3)
+        ->assertJsonCount(3);
 });
 
 it('can chain multiple json assertions', function (): void {
@@ -417,18 +413,16 @@ it('can chain multiple json assertions', function (): void {
         ->assertOk()
         ->assertIsJson()
         ->assertJsonFragment(['name' => 'John Doe'])
-        ->assertJsonPath('data.status', 'success')
-        ->assertJsonPath('data.code', 200)
-        ->assertJsonPath('data.user.id', 1)
-        ->assertJsonPath('data.user.email', 'john@example.com')
+        ->assertJsonPath('status', 'success')
+        ->assertJsonPath('code', 200)
+        ->assertJsonPath('user.id', 1)
+        ->assertJsonPath('user.email', 'john@example.com')
         ->assertJsonStructure([
-            'data' => [
-                'status',
-                'code',
-                'user' => ['id', 'name', 'email'],
-            ],
+            'status',
+            'code',
+            'user' => ['id', 'name', 'email'],
         ])
-        ->assertJsonPathNotEquals('data.status', 'error')
+        ->assertJsonPathNotEquals('status', 'error')
         ->assertJsonMissingFragment(['error' => 'Something went wrong']);
 });
 
@@ -450,17 +444,17 @@ it('can assert record was created', function (): void {
         ->assertCreated()
         ->assertStatusCode(HttpStatus::CREATED)
         ->assertJsonFragment(['name' => 'John Doe'])
-        ->assertJsonPath('data.id', 1)
-        ->assertJsonPath('data.email', 'john@example.com')
+        ->assertJsonPath('id', 1)
+        ->assertJsonPath('email', 'john@example.com')
         ->assertJsonContains([
             'id' => 1,
             'name' => 'John Doe',
             'email' => 'john@example.com',
-        ], 'data')
+        ])
         ->assertJsonDoesNotContain([
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
-        ], 'data');
+        ]);
 });
 
 it('adds secure headers to responses', function (): void {
