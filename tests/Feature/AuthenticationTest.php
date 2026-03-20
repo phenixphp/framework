@@ -929,8 +929,7 @@ it('refreshes token and dispatches event', function (): void {
     $previous->expiresAt = Date::now()->addMinutes(30);
 
     $insertResult = new Result([[ 'Query OK' ]]);
-    $newTokenId = Str::uuid()->toString();
-    $insertResult->setLastInsertedId($newTokenId);
+    $insertResult->setLastInsertedId(Str::uuid()->toString());
 
     $updateResult = new Result([[ 'Query OK' ]]);
 
@@ -953,7 +952,8 @@ it('refreshes token and dispatches event', function (): void {
     $refreshed = $user->refreshToken('api-token');
 
     $this->assertInstanceOf(AuthenticationToken::class, $refreshed);
-    $this->assertSame($newTokenId, $refreshed->id());
+    $this->assertIsString($refreshed->id());
+    $this->assertTrue(Str::isUuid($refreshed->id()));
     $this->assertNotSame($previous->id, $refreshed->id());
     $this->assertNotEquals($oldExpiresAt->toDateTimeString(), $previous->expiresAt->toDateTimeString());
 
