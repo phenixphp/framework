@@ -11,6 +11,7 @@ use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\PersonalAccessTokenQuery;
 use Phenix\Facades\Event;
 use Phenix\Util\Date;
+use Phenix\Util\Str;
 
 use function sprintf;
 
@@ -21,6 +22,7 @@ trait HasApiTokens
     public function token(): PersonalAccessToken
     {
         $model = new (config('auth.tokens.model'));
+        $model->id = Str::uuid()->toString();
         $model->tokenableType = static::class;
         $model->tokenableId = $this->getKey();
 
