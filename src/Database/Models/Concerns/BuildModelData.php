@@ -79,7 +79,7 @@ trait BuildModelData
         $arguments = [
             $property->getName(),
             (string) $property->getType(),
-            class_exists((string) $property->getType()),
+            class_exists(ltrim((string) $property->getType(), '?')),
             $attribute,
             $property->isInitialized($this) ? $property->getValue($this) : null,
         ];

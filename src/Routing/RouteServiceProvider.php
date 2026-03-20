@@ -16,7 +16,7 @@ class RouteServiceProvider extends ServiceProvider
     public function provides(string $id): bool
     {
         $this->provided = [
-            Route::class,
+            Router::class,
             UrlGenerator::class,
         ];
 
@@ -25,11 +25,11 @@ class RouteServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->bind(Route::class)->setShared(true);
+        $this->bind(Router::class)->setShared(true);
 
         $this->bind(
             UrlGenerator::class,
-            fn (): UrlGenerator => new UrlGenerator(App::make(Route::class))
+            fn (): UrlGenerator => new UrlGenerator(App::make(Router::class))
         )->setShared(true);
 
         $this->commands([

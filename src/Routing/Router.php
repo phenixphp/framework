@@ -17,7 +17,7 @@ use ReflectionParameter;
 
 use function is_array;
 
-class Route implements Arrayable
+class Router implements Arrayable
 {
     private array $collection;
 

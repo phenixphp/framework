@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Util;
 
 use Phenix\Http\Constants\HttpMethod;
-use Phenix\Routing\Route;
+use Phenix\Routing\Router;
 
 class AssertRoute
 {
@@ -14,9 +14,9 @@ class AssertRoute
         // ..
     }
 
-    public static function from(Route|array $route)
+    public static function from(Router|array $route)
     {
-        if ($route instanceof Route) {
+        if ($route instanceof Router) {
             $route = $route->toArray()[0];
         }
 

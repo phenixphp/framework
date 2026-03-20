@@ -10,7 +10,7 @@ use Phenix\Facades\Crypto;
 use Phenix\Facades\Route as RouteFacade;
 use Phenix\Http\Response;
 use Phenix\Routing\Exceptions\RouteNotFoundException;
-use Phenix\Routing\Route;
+use Phenix\Routing\Router;
 use Phenix\Routing\UrlGenerator;
 
 beforeEach(function (): void {
@@ -66,7 +66,7 @@ function createRequest(string $url): Request
 }
 
 it('generates a URL for a named route', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users', fn (): Response => response()->plain('Ok'))
         ->name('users.index');
 
@@ -87,7 +87,7 @@ it('generates a URL for a named route using helper', function (): void {
 });
 
 it('generates a URL with parameter substitution', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users/{user}', fn (): Response => response()->plain('Ok'))
         ->name('users.show');
 
@@ -99,7 +99,7 @@ it('generates a URL with parameter substitution', function (): void {
 });
 
 it('generates a URL with multiple parameter substitution', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users/{user}/posts/{post}', fn (): Response => response()->plain('Ok'))
         ->name('users.posts.show');
 
@@ -111,7 +111,7 @@ it('generates a URL with multiple parameter substitution', function (): void {
 });
 
 it('appends extra parameters as query string', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users/{user}', fn (): Response => response()->plain('Ok'))
         ->name('users.show');
 
@@ -123,7 +123,7 @@ it('appends extra parameters as query string', function (): void {
 });
 
 it('generates a relative URL when absolute is false', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users/{user}', fn (): Response => response()->plain('Ok'))
         ->name('users.show');
 
@@ -135,7 +135,7 @@ it('generates a relative URL when absolute is false', function (): void {
 });
 
 it('generates a relative URL with query parameters', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/users', fn (): Response => response()->plain('Ok'))
         ->name('users.index');
 
@@ -147,14 +147,14 @@ it('generates a relative URL with query parameters', function (): void {
 });
 
 it('throws exception for unknown route name', function (): void {
-    $route = new Route();
+    $route = new Router();
     $generator = new UrlGenerator($route);
 
     $generator->route('nonexistent');
 })->throws(RouteNotFoundException::class, 'Route [nonexistent] not defined.');
 
 it('generates HTTP URL', function (): void {
-    $route = new Route();
+    $route = new Router();
     $generator = new UrlGenerator($route);
 
     $url = $generator->to('/dashboard', ['tab' => 'settings']);
@@ -174,7 +174,7 @@ it('generates HTTP URL using helper', function (): void {
 });
 
 it('generates a secure HTTPS URL', function (): void {
-    $route = new Route();
+    $route = new Router();
     $generator = new UrlGenerator($route);
 
     $url = $generator->secure('/dashboard', ['tab' => 'settings']);
@@ -184,7 +184,7 @@ it('generates a secure HTTPS URL', function (): void {
 });
 
 it('generates a secure URL without query parameters', function (): void {
-    $route = new Route();
+    $route = new Router();
     $generator = new UrlGenerator($route);
 
     $url = $generator->secure('/dashboard');
@@ -193,7 +193,7 @@ it('generates a secure URL without query parameters', function (): void {
 });
 
 it('generates a signed URL with signature query parameter', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/unsubscribe/{user}', fn (): Response => response()->plain('Ok'))
         ->name('unsubscribe');
 
@@ -206,7 +206,7 @@ it('generates a signed URL with signature query parameter', function (): void {
 });
 
 it('generates a signed URL with expiration', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/unsubscribe/{user}', fn (): Response => response()->plain('Ok'))
         ->name('unsubscribe');
 
@@ -219,7 +219,7 @@ it('generates a signed URL with expiration', function (): void {
 });
 
 it('generates a temporary signed URL with both expires and signature', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/download/{file}', fn (): Response => response()->plain('Ok'))
         ->name('download');
 
@@ -232,7 +232,7 @@ it('generates a temporary signed URL with both expires and signature', function 
 });
 
 it('generates a temporary signed URL with DateInterval expiration', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/download/{file}', fn (): Response => response()->plain('Ok'))
         ->name('download');
 
@@ -252,7 +252,7 @@ it('generates a temporary signed URL with DateInterval expiration', function ():
 });
 
 it('generates a temporary signed URL with DateTimeInterface expiration', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/download/{file}', fn (): Response => response()->plain('Ok'))
         ->name('download');
 
@@ -268,7 +268,7 @@ it('generates a temporary signed URL with DateTimeInterface expiration', functio
 });
 
 it('validates a correctly signed URL', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -282,7 +282,7 @@ it('validates a correctly signed URL', function (): void {
 });
 
 it('rejects a tampered signed URL', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -299,7 +299,7 @@ it('rejects a tampered signed URL', function (): void {
 });
 
 it('rejects a request with missing signature', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -313,7 +313,7 @@ it('rejects a request with missing signature', function (): void {
 });
 
 it('rejects an expired signed URL', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -328,7 +328,7 @@ it('rejects an expired signed URL', function (): void {
 });
 
 it('accepts a signed URL without expiration', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -342,7 +342,7 @@ it('accepts a signed URL without expiration', function (): void {
 });
 
 it('validates signature ignoring specified query parameters', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -359,7 +359,7 @@ it('validates signature ignoring specified query parameters', function (): void 
 });
 
 it('validates signature with closure-based ignore query', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))
         ->name('verify');
 
@@ -377,11 +377,11 @@ it('validates signature with closure-based ignore query', function (): void {
 });
 
 it('resolves route names within groups', function (): void {
-    $route = new Route();
+    $route = new Router();
 
     $route->name('admin')
         ->prefix('admin')
-        ->group(function (Route $inner) {
+        ->group(function (Router $inner) {
             $inner->get('users/{user}', fn (): Response => response()->plain('Ok'))
                 ->name('users.show');
         });
@@ -394,7 +394,7 @@ it('resolves route names within groups', function (): void {
 });
 
 it('supports BackedEnum as route name', function (): void {
-    $route = new Route();
+    $route = new Router();
     $route->get('/settings', fn (): Response => response()->plain('Ok'))
         ->name('settings');
 
