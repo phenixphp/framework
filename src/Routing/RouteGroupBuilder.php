@@ -53,7 +53,7 @@ class RouteGroupBuilder extends RouteBuilder
 
     public function toArray(): array
     {
-        $route = new Route($this->name, $this->prefix, $this->middlewares);
+        $route = new Router($this->name, $this->prefix, $this->middlewares);
 
         ($this->group)($route);
 

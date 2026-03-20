@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Phenix\Http\Constants\HttpMethod;
-use Phenix\Routing\Route;
+use Phenix\Routing\Router;
 use Tests\Unit\Routing\AcceptJsonResponses;
 use Tests\Unit\Routing\WelcomeController;
 use Tests\Util\AssertRoute;
 
 it('adds get routes successfully', function (string $method, HttpMethod $httpMethod) {
-    $router = new Route();
+    $router = new Router();
 
     $router->{$method}('/', fn () => 'Hello')
         ->name('awesome')
@@ -30,7 +30,7 @@ it('adds get routes successfully', function (string $method, HttpMethod $httpMet
 ]);
 
 it('adds get routes with params successfully', function () {
-    $router = new Route();
+    $router = new Router();
 
     $router->get('/users/{user}', fn () => 'Hello')
         ->name('users.show');
@@ -42,7 +42,7 @@ it('adds get routes with params successfully', function () {
 });
 
 it('adds get routes with many params successfully', function () {
-    $router = new Route();
+    $router = new Router();
 
     $router->get('/users/{user}/posts/{post}', fn () => 'Hello')
         ->name('users.posts.show');
@@ -56,7 +56,7 @@ it('adds get routes with many params successfully', function () {
 it('can call a class callable method', function () {
     $this->app->register(WelcomeController::class);
 
-    $router = new Route();
+    $router = new Router();
 
     $router->get('/users/{user}/posts/{post}', [WelcomeController::class, 'index'])
         ->name('users.posts.show');
@@ -68,12 +68,12 @@ it('can call a class callable method', function () {
 });
 
 it('can add nested route groups', function () {
-    $router = new Route();
+    $router = new Router();
 
     $router->middleware(AcceptJsonResponses::class)
         ->name('admin')
         ->prefix('admin')
-        ->group(function (Route $route) {
+        ->group(function (Router $route) {
             $route->get('users', fn () => 'User index')
                 ->name('users.index');
 
@@ -82,13 +82,13 @@ it('can add nested route groups', function () {
 
             $route->name('accounting')
                 ->prefix('accounting')
-                ->group(function (Route $route) {
+                ->group(function (Router $route) {
                     $route->get('invoices', fn () => 'Invoice index')
                         ->name('invoices.index');
 
                     $route->prefix('payments')
                         ->name('payments')
-                        ->group(function (Route $route) {
+                        ->group(function (Router $route) {
                             $route->get('pending', fn () => 'Invoice index')
                                 ->name('pending.index');
                         });
@@ -144,9 +144,9 @@ it('can add nested route groups', function () {
 });
 
 it('can create route group from group method', function () {
-    $router = new Route();
+    $router = new Router();
 
-    $router->group(function (Route $route) {
+    $router->group(function (Router $route) {
         $route->get('users', fn () => 'User index')
             ->name('users.index');
     })

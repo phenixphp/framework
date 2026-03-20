@@ -6,7 +6,7 @@ namespace Phenix\Routing\Console;
 
 use Phenix\App;
 use Phenix\Http\Constants\HttpMethod;
-use Phenix\Routing\Route;
+use Phenix\Routing\Router;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,8 +40,8 @@ class RouteList extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var Route $router */
-        $router = App::make(Route::class);
+        /** @var Router $router */
+        $router = App::make(Router::class);
 
         $routes = $router->toArray();
 

@@ -18,11 +18,11 @@ use function array_key_exists;
 
 class UrlGenerator
 {
-    protected Route $routes;
+    protected Router $routes;
 
     protected string $key;
 
-    public function __construct(Route $routes)
+    public function __construct(Router $routes)
     {
         $this->routes = $routes;
         $this->key = Bin2Base64::decode(Config::get('app.key'));
