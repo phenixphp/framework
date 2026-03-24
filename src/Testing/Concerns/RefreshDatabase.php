@@ -90,7 +90,9 @@ trait RefreshDatabase
             } catch (Throwable $e) {
                 report($e);
             } finally {
-                $connection->close();
+                if (method_exists($connection, 'close')) {
+                    $connection->close();
+                }
             }
 
             return;
