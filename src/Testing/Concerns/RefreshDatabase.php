@@ -89,6 +89,8 @@ trait RefreshDatabase
                 $this->truncateSqliteDatabase($connection);
             } catch (Throwable $e) {
                 report($e);
+            } finally {
+                $connection->close();
             }
 
             return;
@@ -96,7 +98,9 @@ trait RefreshDatabase
 
         try {
             $tables = $this->getDatabaseTables($connection, $driver);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
+
             return;
         }
 
@@ -172,7 +176,9 @@ trait RefreshDatabase
 
         try {
             $transaction = $connection->beginTransaction();
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
+
             // If BEGIN fails, continue best-effort without explicit transaction
         }
 
@@ -191,15 +197,15 @@ trait RefreshDatabase
                 $quoted = array_map(static fn (string $t): string => '"' . str_replace('"', '""', $t) . '"', $tables);
                 $executor->prepare('TRUNCATE TABLE '.implode(', ', $quoted).' RESTART IDENTITY CASCADE')->execute();
             }
+
+            if ($transaction) {
+                $transaction->commit();
+            }
         } catch (Throwable $e) {
             report($e);
-        } finally {
-            try {
-                if ($transaction) {
-                    $transaction->commit();
-                }
-            } catch (Throwable) {
-                // Best-effort commit; ignore errors
+
+            if ($transaction) {
+                $transaction->rollback();
             }
         }
     }
@@ -229,7 +235,9 @@ trait RefreshDatabase
 
         try {
             $transaction = $connection->beginTransaction();
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            report($e);
+
             // If BEGIN fails, continue best-effort without explicit transaction
         }
 
@@ -242,17 +250,21 @@ trait RefreshDatabase
 
             try {
                 $executor->prepare('DELETE FROM sqlite_sequence')->execute();
-            } catch (Throwable) {
-                // Best-effort reset of AUTOINCREMENT sequences; ignore errors
-            }
-        } finally {
-            try {
+
                 if ($transaction) {
                     $transaction->commit();
                 }
-            } catch (Throwable) {
-                // Best-effort commit; ignore errors
+            } catch (Throwable $e) {
+                report($e);
+
+                if ($transaction) {
+                    $transaction->rollback();
+                }
+
+                // Best-effort reset of AUTOINCREMENT sequences; ignore errors
             }
+        } catch (Throwable $e) {
+            report($e);
         }
     }
 }
