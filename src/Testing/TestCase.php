@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Testing;
 
+use Amp\Parallel\Worker\ContextWorkerPool;
 use Amp\PHPUnit\AsyncTestCase;
 use Phenix\App;
 use Phenix\AppBuilder;
@@ -19,7 +20,9 @@ use Phenix\Testing\Concerns\InteractWithDatabase;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Throwable;
 
+use function Amp\Parallel\Worker\workerPool;
 use function in_array;
 
 abstract class TestCase extends AsyncTestCase
@@ -35,6 +38,7 @@ abstract class TestCase extends AsyncTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->resetWorkerPool();
 
         if (! isset($this->app)) {
             $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
@@ -66,6 +70,8 @@ abstract class TestCase extends AsyncTestCase
             $this->app->stop();
         }
 
+        $this->shutdownWorkerPool();
+
         $this->app = null;
     }
 
@@ -88,5 +94,27 @@ abstract class TestCase extends AsyncTestCase
     protected function getEnvFile(): string|null
     {
         return null;
+    }
+
+    private function shutdownWorkerPool(): void
+    {
+        try {
+            $pool = workerPool();
+
+            if ($pool->isRunning()) {
+                $pool->shutdown();
+            }
+        } catch (Throwable $e) {
+            report($e);
+
+            workerPool()->kill();
+        }
+    }
+
+    private function resetWorkerPool(): void
+    {
+        $this->shutdownWorkerPool();
+
+        workerPool(new ContextWorkerPool());
     }
 }

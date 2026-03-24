@@ -19,18 +19,6 @@ beforeEach(function (): void {
     Config::set('cache.rate_limit.enabled', false);
 });
 
-function extractPath(string $absoluteUrl): string
-{
-    $parsed = parse_url($absoluteUrl);
-    $path = $parsed['path'] ?? '/';
-
-    if (isset($parsed['query'])) {
-        $path .= '?' . $parsed['query'];
-    }
-
-    return $path;
-}
-
 it('allows access with a valid signed URL', function (): void {
     Route::get('/signed/{user}', fn (): Response => response()->plain('Ok'))
         ->name('signed.show')
@@ -39,9 +27,8 @@ it('allows access with a valid signed URL', function (): void {
     $this->app->run();
 
     $signedUrl = Url::signedRoute('signed.show', ['user' => 42]);
-    $path = extractPath($signedUrl);
 
-    $this->get(path: $path)
+    $this->get(path: $signedUrl)
         ->assertOk();
 });
 
@@ -52,7 +39,7 @@ it('rejects access when signature is missing', function (): void {
 
     $this->app->run();
 
-    $this->get(path: '/signed/42')
+    $this->get(path: route('signed.missing', ['user' => 42]))
         ->assertStatusCode(HttpStatus::FORBIDDEN)
         ->assertBodyContains('Invalid signature.');
 });
@@ -66,9 +53,8 @@ it('rejects access with a tampered signature', function (): void {
 
     $signedUrl = Url::signedRoute('signed.tampered', ['user' => 42]);
     $tamperedUrl = preg_replace('/signature=[a-f0-9]+/', 'signature=tampered', $signedUrl);
-    $path = extractPath($tamperedUrl);
 
-    $this->get(path: $path)
+    $this->get(path: $tamperedUrl)
         ->assertStatusCode(HttpStatus::FORBIDDEN)
         ->assertBodyContains('Invalid signature.');
 });
@@ -82,9 +68,8 @@ it('rejects access with an expired signed URL', function (): void {
 
     // Create a URL that expired 10 seconds ago
     $signedUrl = Url::temporarySignedRoute('signed.expired', -10, ['user' => 42]);
-    $path = extractPath($signedUrl);
 
-    $this->get(path: $path)
+    $this->get(path: $signedUrl)
         ->assertStatusCode(HttpStatus::FORBIDDEN)
         ->assertBodyContains('Signature has expired.');
 });
@@ -97,9 +82,8 @@ it('allows access with a valid non-expired signed URL', function (): void {
     $this->app->run();
 
     $signedUrl = Url::temporarySignedRoute('signed.timed', 300, ['user' => 42]);
-    $path = extractPath($signedUrl);
 
-    $this->get(path: $path)
+    $this->get(path: $signedUrl)
         ->assertOk();
 });
 
@@ -114,8 +98,7 @@ it('rejects access when URL path is modified', function (): void {
 
     // Change the user parameter in the path but keep the same signature
     $modifiedUrl = str_replace('/signed/42', '/signed/99', $signedUrl);
-    $path = extractPath($modifiedUrl);
 
-    $this->get(path: $path)
+    $this->get(path: $modifiedUrl)
         ->assertStatusCode(HttpStatus::FORBIDDEN);
 });

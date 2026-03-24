@@ -53,6 +53,24 @@ it('can send requests to server', function (): void {
         ->assertNotFound();
 });
 
+it('can send requests using route helper with absolute uri and relative path', function (): void {
+    Route::get('/users/{user}', function (Request $request): Response {
+        return response()->json([
+            'user' => $request->route('user'),
+        ]);
+    })->name('users.show');
+
+    $this->app->run();
+
+    $this->get(route('users.show', ['user' => 7]))
+        ->assertOk()
+        ->assertJsonPath('user', '7');
+
+    $this->get(route('users.show', ['user' => 8], absolute: false))
+        ->assertOk()
+        ->assertJsonPath('user', '8');
+});
+
 it('can decode x-www-form-urlencode body', function (): void {
     Route::post('/posts', function (Request $request) {
         expect($request->body()->has('title'))->toBeTruthy();

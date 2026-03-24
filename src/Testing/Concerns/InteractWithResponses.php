@@ -31,7 +31,8 @@ trait InteractWithResponses
         Form|array|string|null $body = null,
         array $headers = []
     ): TestResponse {
-        $request = new Request(Url::to($path, $parameters), $method->value);
+        $uri = $this->resolveRequestUri($path, $parameters);
+        $request = new Request($uri, $method->value);
 
         if ($headers) {
             $request->setHeaders($headers);
@@ -66,12 +67,11 @@ trait InteractWithResponses
         return new TestResponse($client->request($request));
     }
 
-    public function get(string $path, array $parameters = [], array $headers = []): TestResponse
+    public function get(string $path, array $headers = []): TestResponse
     {
         return $this->call(
             method: HttpMethod::GET,
             path: $path,
-            parameters: $parameters,
             headers: $headers
         );
     }
@@ -79,36 +79,47 @@ trait InteractWithResponses
     public function post(
         string $path,
         Form|array|string|null $body = null,
-        array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethod::POST, $path, $parameters, $body, $headers);
+        return $this->call(
+            method: HttpMethod::POST,
+            path: $path,
+            body: $body,
+            headers: $headers
+        );
     }
 
     public function put(
         string $path,
         Form|array|string|null $body = null,
-        array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethod::PUT, $path, $parameters, $body, $headers);
+        return $this->call(
+            method: HttpMethod::PUT,
+            path: $path,
+            body: $body,
+            headers: $headers
+        );
     }
 
     public function patch(
         string $path,
         Form|array|string|null $body = null,
-        array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethod::PATCH, $path, $parameters, $body, $headers);
+        return $this->call(
+            method: HttpMethod::PATCH,
+            path: $path,
+            body: $body,
+            headers: $headers
+        );
     }
 
-    public function delete(string $path, array $parameters = [], array $headers = []): TestResponse
+    public function delete(string $path, array $headers = []): TestResponse
     {
         return $this->call(
             method: HttpMethod::DELETE,
             path: $path,
-            parameters: $parameters,
             headers: $headers
         );
     }
@@ -116,9 +127,34 @@ trait InteractWithResponses
     public function options(
         string $path,
         array|string|null $body = null,
-        array $parameters = [],
         array $headers = []
     ): TestResponse {
-        return $this->call(HttpMethod::OPTIONS, $path, $parameters, $body, $headers);
+        return $this->call(
+            method: HttpMethod::OPTIONS,
+            path: $path,
+            body: $body,
+            headers: $headers
+        );
+    }
+
+    private function resolveRequestUri(string $path, array $parameters = []): string
+    {
+        if (! $this->isAbsoluteUri($path)) {
+            return Url::to($path, $parameters);
+        }
+
+        if (empty($parameters)) {
+            return $path;
+        }
+
+        return $path . (str_contains($path, '?') ? '&' : '?') . http_build_query($parameters);
+    }
+
+    private function isAbsoluteUri(string $path): bool
+    {
+        $scheme = parse_url($path, PHP_URL_SCHEME);
+        $host = parse_url($path, PHP_URL_HOST);
+
+        return is_string($scheme) && $scheme !== '' && is_string($host) && $host !== '';
     }
 }
