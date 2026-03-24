@@ -64,6 +64,9 @@ trait InteractWithResponses
             ->usingPool(new UnlimitedConnectionPool(new DefaultConnectionFactory($connector)))
             ->build();
 
+        return new TestResponse($client->request($request));
+    }
+
     public function get(string $path, array $headers = []): TestResponse
     {
         return $this->call(
@@ -153,6 +156,5 @@ trait InteractWithResponses
         $host = parse_url($path, PHP_URL_HOST);
 
         return is_string($scheme) && $scheme !== '' && is_string($host) && $host !== '';
-    }
     }
 }
