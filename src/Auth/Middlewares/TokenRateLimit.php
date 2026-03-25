@@ -10,19 +10,20 @@ use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Response;
 use Phenix\App;
 use Phenix\Auth\AuthenticationManager;
+use Phenix\Auth\Middlewares\Concerns\InteractsWithBearerTokens;
 use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Ip;
 
-use function str_starts_with;
-
 class TokenRateLimit implements Middleware
 {
+    use InteractsWithBearerTokens;
+
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
         $authorizationHeader = $request->getHeader('Authorization');
 
-        if ($authorizationHeader === null || ! str_starts_with($authorizationHeader, 'Bearer ')) {
+        if (! $this->hasBearerScheme($authorizationHeader)) {
             return $next->handleRequest($request);
         }
 
