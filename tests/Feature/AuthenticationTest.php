@@ -9,6 +9,7 @@ use Phenix\Auth\Events\TokenCreated;
 use Phenix\Auth\Events\TokenRefreshCompleted;
 use Phenix\Auth\Events\TokenValidated;
 use Phenix\Auth\Middlewares\Authenticated;
+use Phenix\Auth\Middlewares\Guest;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
 use Phenix\Database\Constants\Connection;
@@ -45,6 +46,226 @@ it('requires authentication', function (): void {
 
     $this->get('/')
         ->assertUnauthorized();
+});
+
+it('allows guest requests without authorization header', function (): void {
+    Route::get('/guest', fn (): Response => response()->plain('Guest'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest')
+        ->assertOk()
+        ->assertBodyContains('Guest');
+});
+
+it('rejects guest requests with valid bearer token', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $userData = [
+        [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->createdAt->toDateTimeString(),
+        ],
+    ];
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', 'valid-token'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $tokenResult = new Result([['Query OK']]);
+    $tokenResult->setLastInsertedId($tokenData[0]['id']);
+
+    $connection->expects($this->exactly(4))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($tokenResult),
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result($userData)),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $authToken = $user->createToken('api-token');
+
+    Route::get('/guest', fn (): Response => response()->plain('Never reached'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'Bearer ' . $authToken->toString(),
+    ])->assertUnauthorized();
+});
+
+it('allows guest requests with invalid bearer token', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result()));
+
+    $this->app->swap(Connection::default(), $connection);
+
+    Route::get('/guest', fn (): Response => response()->plain('Guest'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'Bearer invalid-token',
+    ])->assertOk()->assertBodyContains('Guest');
+});
+
+it('allows guest requests with expired bearer token', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result()));
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $expiredToken = new AuthenticationToken(
+        id: Str::uuid()->toString(),
+        token: 'expired-token',
+        expiresAt: Date::now()->subMinute()
+    );
+
+    Route::get('/guest', fn (): Response => response()->plain('Guest'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'Bearer ' . $expiredToken->toString(),
+    ])->assertOk()->assertBodyContains('Guest');
+});
+
+it('rejects guest requests with lowercase bearer scheme when token is valid', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $userData = [
+        [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->createdAt->toDateTimeString(),
+        ],
+    ];
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', 'valid-token'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $tokenResult = new Result([['Query OK']]);
+    $tokenResult->setLastInsertedId($tokenData[0]['id']);
+
+    $connection->expects($this->exactly(4))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($tokenResult),
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result($userData)),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $authToken = $user->createToken('api-token');
+
+    Route::get('/guest', fn (): Response => response()->plain('Never reached'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'bearer ' . $authToken->toString(),
+    ])->assertUnauthorized();
+});
+
+it('treats falsy bearer token values as present tokens, not as missing tokens', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $userData = [
+        [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->createdAt->toDateTimeString(),
+        ],
+    ];
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', '0'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(3))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result($userData)),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    Route::get('/guest', fn (): Response => response()->plain('Never reached'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'Bearer 0',
+    ])->assertUnauthorized();
 });
 
 it('authenticates user with valid token', function (): void {
