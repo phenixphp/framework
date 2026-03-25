@@ -4,15 +4,37 @@ declare(strict_types=1);
 
 namespace Phenix\Routing;
 
+use Phenix\App;
+use Phenix\Facades\File;
 use Phenix\Providers\ServiceProvider;
+use Phenix\Routing\Console\RouteList;
 use Phenix\Util\Directory;
 use Phenix\Util\NamespaceResolver;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public function provides(string $id): bool
+    {
+        $this->provided = [
+            Router::class,
+            UrlGenerator::class,
+        ];
+
+        return $this->isProvided($id);
+    }
+
     public function boot(): void
     {
-        $this->bind(Route::class)->setShared(true);
+        $this->bind(Router::class)->setShared(true);
+
+        $this->bind(
+            UrlGenerator::class,
+            fn (): UrlGenerator => new UrlGenerator(App::make(Router::class))
+        )->setShared(true);
+
+        $this->commands([
+            RouteList::class,
+        ]);
 
         $this->registerControllers();
         $this->loadRoutes();
@@ -36,8 +58,10 @@ class RouteServiceProvider extends ServiceProvider
 
     private function loadRoutes(): void
     {
-        foreach (Directory::all(base_path('routes')) as $file) {
-            require $file;
+        $routesPath = base_path('routes' . DIRECTORY_SEPARATOR . 'api.php');
+
+        if (File::exists($routesPath)) {
+            require $routesPath;
         }
     }
 }

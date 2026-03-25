@@ -19,4 +19,13 @@ class DigitsBetween extends Between
 
         return $digits >= $this->min && $digits <= $this->max;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.digits_between', [
+            'field' => $this->getFieldForHumans(),
+            'min' => $this->min,
+            'max' => $this->max,
+        ]);
+    }
 }

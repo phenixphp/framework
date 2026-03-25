@@ -20,4 +20,9 @@ class Format extends Rule
 
         return $dateTime instanceof DateTime;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.format', ['field' => $this->getFieldForHumans(), 'format' => $this->format]);
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Mail;
 
+use Amp\Future;
 use Phenix\Mail\Constants\MailerType;
 use Phenix\Mail\Contracts\Mailer as MailerContract;
 use Phenix\Mail\Mailers\Resend;
@@ -17,11 +18,11 @@ class MailManager
 
     protected MailerType|null $loggableMailerType;
 
-    protected Config $config;
+    protected MailConfig $config;
 
     public function __construct(
         #[SensitiveParameter]
-        Config|null $config = new Config()
+        MailConfig|null $config = new MailConfig()
     ) {
         $this->config = $config;
         $this->loggableMailerType = null;
@@ -44,18 +45,32 @@ class MailManager
         return $this->mailer()->to($to);
     }
 
-    public function send(Mailable $mailable): void
+    public function send(Mailable $mailable): Future
     {
-        $this->mailer()->send($mailable);
+        return $this->mailer()->send($mailable);
     }
 
-    public function log(MailerType|null $mailerType = null): void
+    public function fake(MailerType|null $mailerType = null): void
     {
         $mailerType ??= MailerType::from($this->config->default());
 
         $this->loggableMailerType = $mailerType;
 
         $this->config->setLogTransport($mailerType);
+    }
+
+    public function getSendingLog(MailerType|null $mailerType = null): array
+    {
+        $mailerType ??= MailerType::from($this->config->default());
+
+        return $this->mailer($mailerType)->getSendingLog();
+    }
+
+    public function resetSendingLog(MailerType|null $mailerType = null): void
+    {
+        $mailerType ??= MailerType::from($this->config->default());
+
+        $this->mailer($mailerType)->resetSendingLog();
     }
 
     protected function resolveMailer(MailerType $mailer): MailerContract

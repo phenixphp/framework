@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Phenix\Session;
+
+use Amp\Http\Server\Session\LocalSessionStorage;
+use Amp\Http\Server\Session\RedisSessionStorage;
+use Amp\Http\Server\Session\SessionFactory;
+use Amp\Http\Server\Session\SessionMiddleware as Middleware;
+use Phenix\App;
+use Phenix\Database\Constants\Connection;
+use Phenix\Redis\ClientWrapper;
+use Phenix\Session\Constants\Driver;
+
+class SessionMiddlewareFactory
+{
+    public static function make(string $host): Middleware
+    {
+        $config = new SessionConfig();
+        $cookie = new Cookie($config, $host);
+
+        $driver = $config->driver();
+
+        $storage = new LocalSessionStorage();
+
+        if ($driver === Driver::REDIS) {
+            $connection = Connection::redis($config->connection());
+
+            /** @var ClientWrapper $client */
+            $client = App::make($connection);
+
+            $storage = new RedisSessionStorage($client->getClient());
+        }
+
+        $factory = new SessionFactory(storage: $storage);
+
+        return new Middleware(
+            factory: $factory,
+            cookieAttributes: $cookie->build(),
+            cookieName: $config->cookieName(),
+        );
+    }
+}

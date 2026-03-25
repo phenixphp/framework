@@ -15,4 +15,11 @@ class RegEx extends Rule
     {
         return preg_match($this->regEx, $this->getValue()) > 0;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.regex', [
+            'field' => $this->getFieldForHumans(),
+        ]);
+    }
 }

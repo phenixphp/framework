@@ -15,14 +15,14 @@ use Phenix\Runtime\Facade;
  * @method static \Phenix\Routing\RouteGroupBuilder group(\Closure $closure)
  * @method static \Phenix\Routing\RouteGroupBuilder name(string $name)
  * @method static \Phenix\Routing\RouteGroupBuilder prefix(string $prefix)
- * @method static \Phenix\Routing\RouteGroupBuilder middleware(array|string $middleware)
+ * @method static \Phenix\Routing\RouteGroupBuilder middleware(array|string|\Amp\Http\Server\Middleware $middleware)
  *
- * @see \Phenix\Routing\Route
+ * @see \Phenix\Routing\Router
  */
 class Route extends Facade
 {
     public static function getKeyName(): string
     {
-        return \Phenix\Routing\Route::class;
+        return \Phenix\Routing\Router::class;
     }
 }

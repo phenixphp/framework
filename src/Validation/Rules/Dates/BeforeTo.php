@@ -15,4 +15,12 @@ class BeforeTo extends RelatedTo
 
         return  Date::parse($date)->lessThan($relatedDate);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.date.before_to', [
+            'field' => $this->getFieldForHumans(),
+            'other' => $this->relatedField,
+        ]);
+    }
 }

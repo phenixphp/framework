@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Models\QueryBuilders;
 
-use Amp\Sql\Common\SqlCommonConnectionPool;
 use Closure;
 use Phenix\App;
-use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasJoinClause;
-use Phenix\Database\Concerns\Query\HasSentences;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Exceptions\ModelException;
 use Phenix\Database\Join;
+use Phenix\Database\Models\Attributes\DateTime;
 use Phenix\Database\Models\Collection;
 use Phenix\Database\Models\DatabaseModel;
 use Phenix\Database\Models\Properties\ModelProperty;
@@ -22,44 +19,25 @@ use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Database\Models\Relationships\Relationship;
 use Phenix\Database\Models\Relationships\RelationshipParser;
-use Phenix\Database\QueryBase;
+use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Util\Arr;
+use Phenix\Util\Date;
 
 use function array_key_exists;
 use function is_array;
-use function is_string;
 
-class DatabaseQueryBuilder extends QueryBase
+/**
+ * @template TModel of DatabaseModel
+ */
+class DatabaseQueryBuilder extends QueryBuilder
 {
-    use BuildsQuery, HasSentences {
-        HasSentences::count insteadof BuildsQuery;
-        HasSentences::insert insteadof BuildsQuery;
-        HasSentences::exists insteadof BuildsQuery;
-        HasSentences::doesntExist insteadof BuildsQuery;
-        HasSentences::update insteadof BuildsQuery;
-        HasSentences::delete insteadof BuildsQuery;
-        BuildsQuery::table as protected;
-        BuildsQuery::from as protected;
-        BuildsQuery::insert as protected insertRows;
-        BuildsQuery::insertOrIgnore as protected insertOrIgnoreRows;
-        BuildsQuery::upsert as protected upsertRows;
-        BuildsQuery::insertFrom as protected insertFromRows;
-        BuildsQuery::update as protected updateRow;
-        BuildsQuery::delete as protected deleteRows;
-        BuildsQuery::count as protected countRows;
-        BuildsQuery::exists as protected existsRows;
-        BuildsQuery::doesntExist as protected doesntExistRows;
-    }
-    use HasJoinClause;
-
     protected DatabaseModel $model;
 
     /**
      * @var array<int, Relationship>
      */
     protected array $relationships;
-
-    protected SqlCommonConnectionPool $connection;
 
     public function __construct()
     {
@@ -79,19 +57,6 @@ class DatabaseQueryBuilder extends QueryBase
         $this->lockType = null;
     }
 
-    public function connection(SqlCommonConnectionPool|string $connection): self
-    {
-        if (is_string($connection)) {
-            $connection = App::make(Connection::name($connection));
-        }
-
-        $this->connection = $connection;
-
-        $this->resolveDriverFromConnection($this->connection);
-
-        return $this;
-    }
-
     public function addSelect(array $columns): static
     {
         $this->action = Action::SELECT;
@@ -101,6 +66,10 @@ class DatabaseQueryBuilder extends QueryBase
         return $this;
     }
 
+    /**
+     * @param TModel $model
+     * @return self<TModel>
+     */
     public function setModel(DatabaseModel $model): self
     {
         if (! isset($this->model)) {
@@ -108,6 +77,26 @@ class DatabaseQueryBuilder extends QueryBase
         }
 
         $this->table = $this->model->getTable();
+
+        return $this;
+    }
+
+    /**
+     * @return TModel
+     */
+    public function getModel(): DatabaseModel
+    {
+        return $this->model;
+    }
+
+    public function withTransaction(TransactionManager $transactionManager): static
+    {
+        $transactionQueryBuilder = $transactionManager->getQueryBuilder();
+        $this->connection($transactionQueryBuilder->getConnection());
+
+        if ($transaction = $transactionQueryBuilder->getTransaction()) {
+            $this->setTransaction($transaction);
+        }
 
         return $this;
     }
@@ -139,7 +128,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @return Collection<int, DatabaseModel>
+     * @return Collection<TModel>
      */
     public function get(): Collection
     {
@@ -148,8 +137,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         [$dml, $params] = $this->toSql();
 
-        $result = $this->connection->prepare($dml)
-            ->execute($params);
+        $result = $this->exec($dml, $params);
 
         $collection = $this->model->newCollection();
 
@@ -164,6 +152,9 @@ class DatabaseQueryBuilder extends QueryBase
         return $collection;
     }
 
+    /**
+     * @return TModel|null
+     */
     public function first(): DatabaseModel|null
     {
         $this->action = Action::SELECT;
@@ -174,8 +165,79 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
+     * @param array<string, mixed> $attributes
+     * @return TModel
+     */
+    public function create(array $attributes): DatabaseModel
+    {
+        $model = clone $this->model;
+        $propertyBindings = $model->getPropertyBindings();
+
+        foreach ($attributes as $key => $value) {
+            $property = $propertyBindings[$key] ?? null;
+
+            if (! $property) {
+                throw new ModelException("Property {$key} not found for model " . $model::class);
+            }
+
+            $model->{$property->getName()} = $value;
+        }
+
+        $data = [];
+
+        foreach ($propertyBindings as $property) {
+            $propertyName = $property->getName();
+            $attribute = $property->getAttribute();
+
+            if (isset($model->{$propertyName})) {
+                $data[$property->getColumnName()] = $model->{$propertyName};
+            }
+
+            if ($attribute instanceof DateTime && $attribute->autoInit && ! isset($model->{$propertyName})) {
+                $now = Date::now();
+
+                $data[$property->getColumnName()] = $now->format($attribute->format);
+
+                $model->{$propertyName} = $now;
+            }
+        }
+
+        $queryBuilder = clone $this;
+        $queryBuilder->setModel($model);
+
+        $result = $queryBuilder->insertRow($data);
+
+        if ($result) {
+            $modelKeyName = $model->getModelKeyName();
+
+            if (! isset($model->{$modelKeyName})) {
+                $model->{$modelKeyName} = $result;
+            }
+
+            $model->setAsExisting();
+        }
+
+        $model->setConnection($this->connection);
+
+        return $model;
+    }
+
+    /**
+     * @param string|int $id
+     * @param array<int, string> $columns
+     * @return TModel|null
+     */
+    public function find(string|int $id, array $columns = ['*']): DatabaseModel|null
+    {
+        return $this
+            ->select($columns)
+            ->whereEqual($this->model->getModelKeyName(), $id)
+            ->first();
+    }
+
+    /**
      * @param array<int|string, mixed> $row
-     * @return DatabaseModel
+     * @return TModel
      */
     protected function mapToModel(array $row): DatabaseModel
     {
@@ -198,6 +260,9 @@ class DatabaseQueryBuilder extends QueryBase
             }
         }
 
+        $model->setAsExisting();
+        $model->setConnection($this->connection);
+
         return $model;
     }
 
@@ -215,7 +280,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param BelongsTo $relationship
      * @param Closure $closure
      */
@@ -226,7 +291,7 @@ class DatabaseQueryBuilder extends QueryBase
     ): void {
         $closure($relationship);
 
-        /** @var Collection<int, DatabaseModel> $records */
+        /** @var Collection<DatabaseModel> $records */
         $records = $relationship->query()
             ->whereIn($relationship->getForeignKey()->getColumnName(), $models->modelKeys())
             ->get();
@@ -243,7 +308,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param HasMany $relationship
      * @param Closure $closure
      */
@@ -254,7 +319,7 @@ class DatabaseQueryBuilder extends QueryBase
     ): void {
         $closure($relationship);
 
-        /** @var Collection<int, DatabaseModel> $children */
+        /** @var Collection<DatabaseModel> $children */
         $children = $relationship->query()
             ->whereIn($relationship->getProperty()->getAttribute()->foreignKey, $models->modelKeys())
             ->get();
@@ -284,7 +349,7 @@ class DatabaseQueryBuilder extends QueryBase
     }
 
     /**
-     * @param Collection<int, DatabaseModel> $models
+     * @param Collection<DatabaseModel> $models
      * @param BelongsToMany $relationship
      * @param Closure $closure
      */
@@ -297,7 +362,7 @@ class DatabaseQueryBuilder extends QueryBase
 
         $attr = $relationship->getProperty()->getAttribute();
 
-        /** @var Collection<int, DatabaseModel> $related */
+        /** @var Collection<DatabaseModel> $related */
         $related = $relationship->query()
             ->addSelect($relationship->getColumns())
             ->innerJoin($attr->table, function (Join $join) use ($attr): void {

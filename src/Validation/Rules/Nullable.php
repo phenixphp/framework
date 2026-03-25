@@ -25,4 +25,10 @@ class Nullable extends Required
     {
         return is_null($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        // Nullable itself doesn't produce an error message; defer to Required if fails
+        return null;
+    }
 }

@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Http\Session;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function () {
     $this->app->stop();
@@ -18,7 +24,7 @@ it('handles options request successfully using global cors middleware', function
 
     $this->options('/', headers: ['Access-Control-Request-Method' => 'GET'])
         ->assertOk()
-        ->assertHeaderContains(['Access-Control-Allow-Origin' => '*']);
+        ->assertHeaders(['Access-Control-Allow-Origin' => '*']);
 });
 
 it('initializes the session middleware', function () {

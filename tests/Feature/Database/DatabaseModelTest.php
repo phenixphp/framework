@@ -11,11 +11,14 @@ use Phenix\Database\Models\Relationships\BelongsTo;
 use Phenix\Database\Models\Relationships\BelongsToMany;
 use Phenix\Database\Models\Relationships\HasMany;
 use Phenix\Util\Date;
+use Phenix\Util\Str;
 use Tests\Feature\Database\Models\Comment;
 use Tests\Feature\Database\Models\Invoice;
 use Tests\Feature\Database\Models\Post;
 use Tests\Feature\Database\Models\Product;
+use Tests\Feature\Database\Models\SecureUser;
 use Tests\Feature\Database\Models\User;
+use Tests\Feature\Database\Models\UserWithUuid;
 use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
@@ -47,7 +50,6 @@ it('creates models with query builders successfully', function () {
     expect($users)->toBeInstanceOf(Collection::class);
     expect($users->first())->toBeInstanceOf(User::class);
 
-    /** @var User $user */
     $user = $users->first();
 
     expect($user->id)->toBe($data[0]['id']);
@@ -94,7 +96,6 @@ it('loads relationship when the model belongs to a parent model', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with('user')
         ->first();
@@ -143,7 +144,6 @@ it('loads relationship with short syntax to select columns', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with('user:id,name')
         ->first();
@@ -192,7 +192,6 @@ it('loads relationship when the model belongs to a parent model with column sele
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Post $post */
     $post = Post::query()->selectAllColumns()
         ->with([
             'user' => function (BelongsTo $belongsTo) {
@@ -249,7 +248,6 @@ it('loads relationship when the model has many child models without chaperone', 
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -309,7 +307,6 @@ it('loads relationship when the model has many child models loading chaperone fr
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -391,7 +388,6 @@ it('loads relationship when the model has many child models loading chaperone by
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::query()
         ->selectAllColumns()
         ->whereEqual('id', 1)
@@ -451,7 +447,6 @@ it('loads relationship when the model belongs to many models', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with(['products'])
         ->get();
@@ -512,7 +507,6 @@ it('loads relationship when the model belongs to many models with pivot columns'
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with([
             'products' => function (BelongsToMany $relation) {
@@ -577,7 +571,6 @@ it('loads relationship when the model belongs to many models with column selecti
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Collection<Invoice> $invoices */
     $invoices = Invoice::query()
         ->with([
             'products' => function (BelongsToMany $relation) {
@@ -648,7 +641,6 @@ it('loads nested relationship using dot notation', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var Comment $comment */
     $comment = Comment::query()
         ->with([
             'product:id,description,price,stock,user_id,created_at',
@@ -787,6 +779,7 @@ it('creates model instance successfully', function () {
     ]);
 
     expect($model->id)->toBe(1);
+    expect($model->isExisting())->toBeTrue();
     expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
 
@@ -807,6 +800,31 @@ it('throws an exception when column in invalid on create instance', function () 
     );
 });
 
+it('excludes hidden attributes from array and json output', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([[ 'Query OK' ]])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = new SecureUser();
+    $model->name = 'John Hidden';
+    $model->password = 'secret';
+
+    expect($model->save())->toBeTrue();
+
+    $array = $model->toArray();
+    expect(isset($array['password']))->toBeFalse();
+    expect($array['name'])->toBe('John Hidden');
+
+    $json = $model->toJson();
+    expect($json)->not->toContain('password');
+});
+
 it('finds a model successfully', function () {
     $data = [
         'id' => 1,
@@ -825,7 +843,6 @@ it('finds a model successfully', function () {
 
     $this->app->swap(Connection::default(), $connection);
 
-    /** @var User $user */
     $user = User::find(1);
 
     expect($user)->toBeInstanceOf(User::class);
@@ -852,4 +869,109 @@ it('deletes a model successfully', function () {
     $this->app->swap(Connection::default(), $connection);
 
     expect($model->delete())->toBeTrue();
+});
+
+it('saves a new model with manually assigned string ID as insert', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $uuid = Str::uuid()->toString();
+    $model = new UserWithUuid();
+    $model->id = $uuid;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->isExisting())->toBeFalse();
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('updates an existing model with string ID correctly', function () {
+    $uuid = Str::uuid()->toString();
+    $data = [
+        'id' => $uuid,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(2))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = UserWithUuid::find($uuid);
+
+    expect($model)->toBeInstanceOf(UserWithUuid::class);
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+
+    $model->name = 'Jane Doe';
+
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
+});
+
+it('marks new model as not existing initially', function () {
+    $model = new User();
+
+    expect($model->isExisting())->toBeFalse();
+});
+
+it('marks model from database query as existing', function () {
+    $data = [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john.doe@email.com',
+        'created_at' => Date::now()->toDateTimeString(),
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([$data])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = User::find(1);
+
+    expect($model->isExisting())->toBeTrue();
+});
+
+it('changes exists flag to true after successful insert', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $model = new User();
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->isExisting())->toBeFalse();
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
 });

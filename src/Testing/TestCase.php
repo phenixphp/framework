@@ -4,17 +4,31 @@ declare(strict_types=1);
 
 namespace Phenix\Testing;
 
+use Amp\Parallel\Worker\ContextWorkerPool;
 use Amp\PHPUnit\AsyncTestCase;
 use Phenix\App;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
+use Phenix\Cache\Constants\Store;
 use Phenix\Console\Phenix;
+use Phenix\Facades\Cache;
+use Phenix\Facades\Event;
+use Phenix\Facades\Mail;
+use Phenix\Facades\Queue;
+use Phenix\Facades\View;
+use Phenix\Testing\Concerns\InteractWithDatabase;
 use Phenix\Testing\Concerns\InteractWithResponses;
+use Phenix\Testing\Concerns\RefreshDatabase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Throwable;
+
+use function Amp\Parallel\Worker\workerPool;
+use function in_array;
 
 abstract class TestCase extends AsyncTestCase
 {
     use InteractWithResponses;
+    use InteractWithDatabase;
 
     protected ?AppProxy $app;
     protected string $appDir;
@@ -24,16 +38,39 @@ abstract class TestCase extends AsyncTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->resetWorkerPool();
 
         if (! isset($this->app)) {
             $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
             $this->app->enableTestingMode();
         }
+
+        $uses = class_uses_recursive($this);
+
+        if (in_array(RefreshDatabase::class, $uses, true) && method_exists($this, 'refreshDatabase')) {
+            $this->refreshDatabase();
+        }
+
+        View::clearCache();
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
+
+        Event::resetFaking();
+        Queue::resetFaking();
+        Mail::resetSendingLog();
+
+        if (config('cache.default') === Store::FILE->value) {
+            Cache::clear();
+        }
+
+        if ($this->app instanceof AppProxy) {
+            $this->app->stop();
+        }
+
+        $this->shutdownWorkerPool();
 
         $this->app = null;
     }
@@ -57,5 +94,27 @@ abstract class TestCase extends AsyncTestCase
     protected function getEnvFile(): string|null
     {
         return null;
+    }
+
+    private function shutdownWorkerPool(): void
+    {
+        try {
+            $pool = workerPool();
+
+            if ($pool->isRunning()) {
+                $pool->shutdown();
+            }
+        } catch (Throwable $e) {
+            report($e);
+
+            workerPool()->kill();
+        }
+    }
+
+    private function resetWorkerPool(): void
+    {
+        $this->shutdownWorkerPool();
+
+        workerPool(new ContextWorkerPool());
     }
 }

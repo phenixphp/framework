@@ -7,7 +7,7 @@ namespace Phenix\Database\Constants;
 enum Operator: string
 {
     case EQUAL = '=';
-    case DISTINCT = '!=';
+    case NOT_EQUAL = '!=';
     case GREATER_THAN = '>';
     case GREATER_THAN_OR_EQUAL = '>=';
     case LESS_THAN = '<';

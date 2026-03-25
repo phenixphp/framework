@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Constants\JoinType;
-use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Contracts\Builder;
-use Phenix\Util\Arr;
 
 class Join extends Clause implements Builder
 {
@@ -22,38 +22,54 @@ class Join extends Clause implements Builder
 
     public function onEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::EQUAL, $value]);
+        $this->pushClause(new BasicWhereClause($column, Operator::EQUAL, $value));
 
         return $this;
     }
 
     public function orOnEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::EQUAL, $value], LogicalOperator::OR);
+        $this->pushClause(new BasicWhereClause($column, Operator::EQUAL, $value), LogicalConnector::OR);
 
         return $this;
     }
 
-    public function onDistinct(string $column, string $value): self
+    public function onNotEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::DISTINCT, $value]);
+        $this->pushClause(new BasicWhereClause($column, Operator::NOT_EQUAL, $value));
 
         return $this;
     }
 
-    public function orOnDistinct(string $column, string $value): self
+    public function orOnNotEqual(string $column, string $value): self
     {
-        $this->pushClause([$column, Operator::DISTINCT, $value], LogicalOperator::OR);
+        $this->pushClause(new BasicWhereClause($column, Operator::NOT_EQUAL, $value), LogicalConnector::OR);
 
         return $this;
     }
 
     public function toSql(): array
     {
-        $clauses = Arr::implodeDeeply($this->prepareClauses($this->clauses));
+        $sql = [];
+
+        foreach ($this->clauses as $clause) {
+            $connector = $clause->getConnector();
+
+            $column = $clause->getColumn();
+            $operator = $clause->getOperator();
+            $value = $clause->renderValue();
+
+            $clauseSql = "{$column} {$operator->value} {$value}";
+
+            if ($connector !== null) {
+                $clauseSql = "{$connector->value} {$clauseSql}";
+            }
+
+            $sql[] = $clauseSql;
+        }
 
         return [
-            "{$this->type->value} {$this->relationship} ON {$clauses}",
+            "{$this->type->value} {$this->relationship} ON " . implode(' ', $sql),
             $this->arguments,
         ];
     }

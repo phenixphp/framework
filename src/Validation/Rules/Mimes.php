@@ -17,4 +17,12 @@ class Mimes extends Rule
     {
         return in_array($this->getValue()->getMimeType(), $this->haystack, true);
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.mimes', [
+            'field' => $this->getFieldForHumans(),
+            'values' => implode(', ', $this->haystack),
+        ]);
+    }
 }

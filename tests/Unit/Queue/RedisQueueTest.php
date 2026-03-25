@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Constants\Connection;
 use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
+use Phenix\Queue\QueueManager;
 use Phenix\Queue\RedisQueue;
 use Phenix\Queue\StateManagers\RedisTaskState;
-use Phenix\Redis\Client;
-use Phenix\Redis\Contracts\Client as ClientContract;
+use Phenix\Redis\ClientWrapper;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
 beforeEach(function (): void {
@@ -16,7 +17,7 @@ beforeEach(function (): void {
 });
 
 it('dispatch a task', function (): void {
-    $clientMock = $this->getMockBuilder(Client::class)
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -29,13 +30,15 @@ it('dispatch a task', function (): void {
         )
         ->willReturn(true);
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     BasicQueuableTask::dispatch();
 });
 
 it('push the task', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
@@ -46,13 +49,15 @@ it('push the task', function (): void {
         )
         ->willReturn(true);
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     Queue::push(new BasicQueuableTask());
 });
 
 it('enqueues the task on a custom queue', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
@@ -63,13 +68,15 @@ it('enqueues the task on a custom queue', function (): void {
         )
         ->willReturn(true);
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     Queue::pushOn('custom-queue', new BasicQueuableTask());
 });
 
 it('returns a task', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $payload = serialize(new BasicQueuableTask());
 
@@ -99,7 +106,7 @@ it('returns a task', function (): void {
             1
         );
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     $task = Queue::pop();
     expect($task)->not()->toBeNull();
@@ -107,32 +114,36 @@ it('returns a task', function (): void {
 });
 
 it('returns the queue size', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
         ->with($this->equalTo('LLEN'), $this->equalTo('queues:default'))
         ->willReturn(7);
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     expect(Queue::size())->toBe(7);
 });
 
 it('clear the queue', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
         ->with($this->equalTo('DEL'), $this->equalTo('queues:default'));
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     Queue::clear();
 });
 
 it('gets and sets the connection name via facade', function (): void {
-    $managerMock = $this->getMockBuilder(Phenix\Queue\QueueManager::class)
+    $managerMock = $this->getMockBuilder(QueueManager::class)
         ->disableOriginalConstructor()
         ->getMock();
 
@@ -144,14 +155,17 @@ it('gets and sets the connection name via facade', function (): void {
         ->method('setConnectionName')
         ->with('redis-connection');
 
-    $this->app->swap(Phenix\Queue\QueueManager::class, $managerMock);
+    $this->app->swap(QueueManager::class, $managerMock);
 
     expect(Queue::getConnectionName())->toBe('redis-connection');
+
     Queue::setConnectionName('redis-connection');
 });
 
 it('requeues the payload and returns null when reservation fails', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $payload = serialize(new BasicQueuableTask());
 
@@ -168,7 +182,7 @@ it('requeues the payload and returns null when reservation fails', function (): 
             1         // RPUSH requeues the same payload
         );
 
-    $this->app->swap(ClientContract::class, $clientMock);
+    $this->app->swap(Connection::redis('default'), $clientMock);
 
     $task = Queue::pop();
 
@@ -176,7 +190,9 @@ it('requeues the payload and returns null when reservation fails', function (): 
 });
 
 it('returns null when queue is empty', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
@@ -191,7 +207,9 @@ it('returns null when queue is empty', function (): void {
 });
 
 it('marks a task as failed and cleans reservation/data keys', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $task = new BasicQueuableTask();
     $task->setTaskId('task-123');
@@ -226,7 +244,9 @@ it('marks a task as failed and cleans reservation/data keys', function (): void 
 });
 
 it('retries a task with delay greater than zero by enqueuing into the delayed zset', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $task = new BasicQueuableTask();
     $task->setTaskId('task-retry-1');
@@ -270,7 +290,9 @@ it('retries a task with delay greater than zero by enqueuing into the delayed zs
 });
 
 it('cleans expired reservations via Lua script', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
@@ -287,7 +309,9 @@ it('cleans expired reservations via Lua script', function (): void {
 });
 
 it('returns null from getTaskState when no data exists', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $clientMock->expects($this->once())
         ->method('execute')
@@ -299,7 +323,9 @@ it('returns null from getTaskState when no data exists', function (): void {
 });
 
 it('returns task state array from getTaskState when data exists', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     // Simulate Redis HGETALL flat array response
     $hgetAll = [
@@ -329,7 +355,9 @@ it('returns task state array from getTaskState when data exists', function (): v
 });
 
 it('properly pops tasks in chunks with limited timeout', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $queue = new RedisQueue($clientMock, 'default');
 
@@ -387,7 +415,10 @@ it('properly pops tasks in chunks with limited timeout', function (): void {
 });
 
 it('returns empty chunk when limit is zero', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
     $clientMock->expects($this->never())->method('execute');
 
     $queue = new RedisQueue($clientMock);
@@ -398,7 +429,9 @@ it('returns empty chunk when limit is zero', function (): void {
 });
 
 it('returns empty chunk when first reservation fails', function (): void {
-    $clientMock = $this->getMockBuilder(ClientContract::class)->getMock();
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
 
     $payload1 = serialize(new BasicQueuableTask()); // Will fail reservation
 

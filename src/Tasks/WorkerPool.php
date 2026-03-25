@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Phenix\Tasks;
 
-use Amp\Parallel\Worker;
-use Amp\Parallel\Worker\WorkerPool as Pool;
+use Amp\Future;
+use Amp\Parallel\Worker\Execution;
 use Amp\TimeoutCancellation;
-use Phenix\App;
+use Phenix\Facades\Worker;
 use Phenix\Tasks\Contracts\Task;
 
 class WorkerPool extends AbstractWorker
 {
-    protected function submitTask(Task $parallelTask): Worker\Execution
+    protected function prepareTask(Task $parallelTask): Execution
     {
-        /** @var Pool $pool */
-        $pool = App::make(Pool::class);
-
         $timeout = new TimeoutCancellation($parallelTask->getTimeout());
 
-        return $pool->submit($parallelTask, $timeout);
+        return Worker::submit($parallelTask, $timeout);
+    }
+
+    public static function submit(Task $parallelTask): Future
+    {
+        $timeout = new TimeoutCancellation($parallelTask->getTimeout());
+
+        $execution = Worker::submit($parallelTask, $timeout);
+
+        return $execution->getFuture();
     }
 }

@@ -47,6 +47,10 @@ class MakeTest extends Maker
 
     protected function stub(): string
     {
+        if ($this->input->getOption('unit')) {
+            return 'test.unit.stub';
+        }
+
         return 'test.stub';
     }
 

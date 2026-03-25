@@ -16,9 +16,9 @@ trait HasWhereSomeClause
         return $this;
     }
 
-    public function whereSomeDistinct(string $column, Closure $subquery): static
+    public function whereSomeNotEqual(string $column, Closure $subquery): static
     {
-        $this->whereSubquery($subquery, Operator::DISTINCT, $column, Operator::SOME);
+        $this->whereSubquery($subquery, Operator::NOT_EQUAL, $column, Operator::SOME);
 
         return $this;
     }

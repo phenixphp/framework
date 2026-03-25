@@ -8,13 +8,16 @@ use Amp\Mysql\MysqlConfig;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
-use Amp\Redis\RedisClient;
 use Closure;
-use InvalidArgumentException;
 use Phenix\Database\Constants\Driver;
+use Phenix\Redis\ClientWrapper;
+use Phenix\Sqlite\SqliteConfig;
+use Phenix\Sqlite\SqliteConnection;
 use SensitiveParameter;
 
 use function Amp\Redis\createRedisClient;
+use function Phenix\Sqlite\connect;
+use function sprintf;
 
 class ConnectionFactory
 {
@@ -24,10 +27,15 @@ class ConnectionFactory
             Driver::MYSQL => self::createMySqlConnection($settings),
             Driver::POSTGRESQL => self::createPostgreSqlConnection($settings),
             Driver::REDIS => self::createRedisConnection($settings),
-            default => throw new InvalidArgumentException(
-                sprintf('Unsupported driver: %s', $driver->name)
-            ),
+            Driver::SQLITE => self::createSqliteConnection($settings),
         };
+    }
+
+    private static function createSqliteConnection(#[SensitiveParameter] array $settings): Closure
+    {
+        $config = SqliteConfig::fromPath($settings['database']);
+
+        return static fn (): SqliteConnection => connect($config);
     }
 
     private static function createMySqlConnection(#[SensitiveParameter] array $settings): Closure
@@ -64,7 +72,7 @@ class ConnectionFactory
 
     private static function createRedisConnection(#[SensitiveParameter] array $settings): Closure
     {
-        return static function () use ($settings): RedisClient {
+        return static function () use ($settings): ClientWrapper {
             $auth = $settings['username'] && $settings['password']
                 ? sprintf('%s:%s@', $settings['username'], $settings['password'])
                 : '';
@@ -78,7 +86,7 @@ class ConnectionFactory
                 (int) $settings['database'] ?: 0
             );
 
-            return createRedisClient($uri);
+            return new ClientWrapper(createRedisClient($uri));
         };
     }
 }

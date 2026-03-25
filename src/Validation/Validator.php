@@ -22,11 +22,22 @@ use function is_null;
 class Validator
 {
     protected Dot $data;
+
     protected ArrayIterator $rules;
+
     protected bool $stopOnFail = false;
+
     protected array $failing = [];
+
     protected array $validated = [];
+
     protected array $errors = [];
+
+    public function __construct(Arrayable|array $data = [], array $rules = [])
+    {
+        $this->setData($data);
+        $this->setRules($rules);
+    }
 
     public function setRules(array $rules = []): self
     {
@@ -35,8 +46,12 @@ class Validator
         return $this;
     }
 
-    public function setData(array $data = []): self
+    public function setData(Arrayable|array $data = []): self
     {
+        if ($data instanceof Arrayable) {
+            $data = $data->toArray();
+        }
+
         $this->data = new Dot($data);
 
         return $this;
@@ -162,7 +177,7 @@ class Validator
         $passes = $rule->passes();
 
         if (! $passes) {
-            $this->failing[$field][] = $rule::class;
+            $this->failing[$field][] = $rule->message();
         }
 
         $this->validated[] = $field;

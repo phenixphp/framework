@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Phenix\Util\Arr;
+use Phenix\Database\Constants\SQL;
 
 class Having extends Clause
 {
@@ -16,8 +16,18 @@ class Having extends Clause
 
     public function toSql(): array
     {
-        $clauses = Arr::implodeDeeply($this->prepareClauses($this->clauses));
+        $sql = [];
 
-        return ["HAVING {$clauses}", $this->arguments];
+        foreach ($this->clauses as $clause) {
+            $clauseSql = "{$clause->getColumn()} {$clause->getOperator()->value} " . SQL::PLACEHOLDER->value;
+
+            if ($connector = $clause->getConnector()) {
+                $clauseSql = "{$connector->value} {$clauseSql}";
+            }
+
+            $sql[] = $clauseSql;
+        }
+
+        return ['HAVING ' . implode(' ', $sql), $this->arguments];
     }
 }

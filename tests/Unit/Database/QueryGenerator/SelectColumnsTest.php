@@ -214,7 +214,7 @@ it('generates query with select-cases using comparisons', function (
     expect($params)->toBeEmpty();
 })->with([
     ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
-    ['whenDistinct', ['price', 100, 'expensive'], 'cheap', Operator::DISTINCT->value],
+    ['whenNotEqual', ['price', 100, 'expensive'], 'cheap', Operator::NOT_EQUAL->value],
     ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
     ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
     ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],

@@ -19,4 +19,9 @@ class Optional extends Required
     {
         return ! $this->data->has($this->field);
     }
+
+    public function message(): string|null
+    {
+        return null; // Optional never triggers its own message
+    }
 }

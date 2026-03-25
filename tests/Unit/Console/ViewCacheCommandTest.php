@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Phenix\Facades\File;
 use Phenix\Facades\View;
 use Phenix\Tasks\Result;
-use Phenix\Views\Config;
 use Phenix\Views\Tasks\CompileTemplates;
+use Phenix\Views\ViewsConfig;
 use Symfony\Component\Console\Tester\CommandTester;
 
 it('compile all available views', function (): void {
-    $config = new Config();
+    $config = new ViewsConfig();
 
     /** @var CommandTester $command */
     $command = $this->phenix('view:cache');

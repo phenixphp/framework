@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Queue\Console;
 
 use Phenix\App;
-use Phenix\Queue\Config;
+use Phenix\Queue\QueueConfig;
 use Phenix\Queue\Worker;
 use Phenix\Queue\WorkerOptions;
 use Symfony\Component\Console\Command\Command;
@@ -45,7 +45,7 @@ class WorkCommand extends Command
         /** @var Worker $worker */
         $worker = App::make(Worker::class);
 
-        $config = new Config();
+        $config = new QueueConfig();
 
         $connection = $input->getArgument('connection') ?? $config->getConnection();
         $queue = $input->getOption('queue');

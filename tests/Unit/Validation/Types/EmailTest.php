@@ -11,7 +11,7 @@ use Tests\Mocks\Database\MysqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
 
-it('runs validation for emails with default validators', function (array $data, bool $expected) {
+it('runs validation for emails with default validators', function (array $data, bool $expected): void {
     $rules = Email::required()->toArray();
 
     foreach ($rules['type'] as $rule) {
@@ -29,7 +29,7 @@ it('runs validation for emails with default validators', function (array $data, 
     'invalid email' => [['email' => 'john.doe.gmail.com'], false],
 ]);
 
-it('runs validation for emails with custom validators', function () {
+it('runs validation for emails with custom validators', function (): void {
     $rules = Email::required()->validations(new DNSCheckValidation())->toArray();
 
     foreach ($rules['type'] as $rule) {
@@ -40,7 +40,7 @@ it('runs validation for emails with custom validators', function () {
     }
 });
 
-it('runs validation to check if email exists in database', function () {
+it('runs validation to check if email exists in database', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->exactly(1))
@@ -61,7 +61,7 @@ it('runs validation to check if email exists in database', function () {
     }
 });
 
-it('runs validation to check if email exists in database with custom column', function () {
+it('runs validation to check if email exists in database with custom column', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->exactly(1))
@@ -82,13 +82,13 @@ it('runs validation to check if email exists in database with custom column', fu
     }
 });
 
-it('runs validation to check if email is unique in database', function () {
+it('runs validation to check if email is unique in database', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->exactly(1))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['COUNT(*)' => 1]])),
+            new Statement(new Result([['COUNT(*)' => 0]])),
         );
 
     $this->app->swap(Connection::default(), $connection);
@@ -103,19 +103,19 @@ it('runs validation to check if email is unique in database', function () {
     }
 });
 
-it('runs validation to check if email is unique in database except one other email', function () {
+it('runs validation to check if email is unique in database except one other email', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
 
     $connection->expects($this->exactly(1))
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['COUNT(*)' => 1]])),
+            new Statement(new Result([['COUNT(*)' => 0]])),
         );
 
     $this->app->swap(Connection::default(), $connection);
 
-    $rules = Email::required()->unique(table: 'users', query: function (QueryBuilder $queryBuilder) {
-        $queryBuilder->whereDistinct('email', 'john.doe@mail.com');
+    $rules = Email::required()->unique(table: 'users', query: function (QueryBuilder $queryBuilder): void {
+        $queryBuilder->whereNotEqual('email', 'john.doe@mail.com');
     })->toArray();
 
     foreach ($rules['type'] as $rule) {

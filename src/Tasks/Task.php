@@ -53,12 +53,7 @@ abstract class Task implements TaskContract
 
     public function output(): Result
     {
-        /** @var Result $result */
-        [$result] = Worker::batch([
-            $this,
-        ]);
-
-        return $result;
+        return WorkerPool::submit($this)->await();
     }
 
     public function setTimeout(int $timeout): void

@@ -28,4 +28,9 @@ class IsList extends TypeRule
 
         return true;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.list', ['field' => $this->getFieldForHumans()]);
+    }
 }

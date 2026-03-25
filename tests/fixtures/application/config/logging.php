@@ -19,5 +19,5 @@ return [
         'stream',
     ],
 
-    'path' => base_path('storage/framework/logs/phenix.log'),
+    'path' => base_path('storage/logs/phenix.log'),
 ];

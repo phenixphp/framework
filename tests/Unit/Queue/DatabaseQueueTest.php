@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Amp\Sql\SqlTransaction;
 use Phenix\Database\Constants\Connection;
-use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
 use Phenix\Facades\Config;
 use Phenix\Facades\Queue;
 use Phenix\Queue\Constants\QueueDriver;
@@ -247,8 +247,8 @@ it('returns null when reservation fails (state manager returns false)', function
         ->getMock();
 
     $stateManager->expects($this->once())
-        ->method('setBuilder')
-        ->with($this->isInstanceOf(QueryBuilder::class));
+        ->method('setTransactionManager')
+        ->with($this->isInstanceOf(TransactionManager::class));
 
     $stateManager->expects($this->once())
         ->method('reserve')

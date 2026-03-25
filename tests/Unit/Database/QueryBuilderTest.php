@@ -9,11 +9,19 @@ use Phenix\Data\Collection;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
+use Phenix\Database\TransactionManager;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\DB;
-use Phenix\Util\URL;
+use Phenix\Facades\Url;
 use Tests\Mocks\Database\MysqlConnectionPool;
+use Tests\Mocks\Database\PostgresqlConnectionPool;
 use Tests\Mocks\Database\Result;
 use Tests\Mocks\Database\Statement;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 it('gets all records from database', function () {
     $data = [
@@ -169,7 +177,7 @@ it('counts all database records', function () {
     expect($count)->toBe(1);
 });
 
-it('paginates the query results', function () {
+it('paginates the query results', function (): void {
     $data = [['id' => 1, 'name' => 'John Doe']];
 
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
@@ -184,7 +192,7 @@ it('paginates the query results', function () {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $uri = Http::new(URL::build('users'));
+    $uri = Http::new(Url::to('users'));
 
     $paginator = $query->from('users')
         ->select(['id', 'name'])
@@ -192,13 +200,13 @@ it('paginates the query results', function () {
 
     expect($paginator)->toBeInstanceOf(Paginator::class);
     expect($paginator->toArray())->toBe([
-        'path' => URL::build('users'),
+        'path' => Url::to('users'),
         'current_page' => 1,
         'last_page' => 1,
         'per_page' => 15,
         'total' => 1,
-        'first_page_url' => URL::build('users', ['page' => 1]),
-        'last_page_url' => URL::build('users', ['page' => 1]),
+        'first_page_url' => Url::to('users', ['page' => 1]),
+        'last_page_url' => Url::to('users', ['page' => 1]),
         'prev_page_url' => null,
         'next_page_url' => null,
         'from' => 1,
@@ -206,7 +214,7 @@ it('paginates the query results', function () {
         'data' => $data,
         'links' => [
             [
-                'url' => URL::build('users', ['page' => 1]),
+                'url' => Url::to('users', ['page' => 1]),
                 'label' => 1,
             ],
         ],
@@ -328,8 +336,8 @@ it('execute database transaction successfully', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $result = $query->transaction(function (QueryBuilder $qb): Collection {
-        return $qb->from('users')->get();
+    $result = $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 
     expect($result)->toBeInstanceOf(Collection::class);
@@ -354,8 +362,8 @@ it('rollback transaction on error', function (): void {
     $query = new QueryBuilder();
     $query->connection($connection);
 
-    $query->transaction(function (QueryBuilder $qb): Collection {
-        return $qb->from('users')->get();
+    $query->transaction(function (TransactionManager $transactionManager): Collection {
+        return $transactionManager->from('users')->get();
     });
 })->throws(SqlQueryError::class);
 
@@ -407,4 +415,338 @@ it('rollback transaction manually', function (): void {
     } catch (Throwable $th) {
         $query->rollBack();
     }
+});
+
+it('deletes records and returns deleted data', function () {
+    $deletedData = [
+        ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com'],
+        ['id' => 2, 'name' => 'Jane Doe', 'email' => 'jane@example.com'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('status', 'inactive')
+        ->deleteReturning(['id', 'name', 'email']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->toArray())->toBe($deletedData);
+    expect($result->count())->toBe(2);
+});
+
+it('returns empty collection on delete returning error', function () {
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Foreign key violation'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 1)
+        ->deleteReturning(['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->isEmpty())->toBeTrue();
+});
+
+it('deletes single record and returns its data', function () {
+    $deletedData = [
+        ['id' => 5, 'name' => 'Old User', 'email' => 'old@example.com', 'status' => 'deleted'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 5)
+        ->deleteReturning(['id', 'name', 'email', 'status']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(1);
+    expect($result->first())->toBe($deletedData[0]);
+});
+
+it('deletes records with returning all columns', function () {
+    $deletedData = [
+        ['id' => 1, 'name' => 'User 1', 'email' => 'user1@test.com', 'created_at' => '2024-01-01'],
+        ['id' => 2, 'name' => 'User 2', 'email' => 'user2@test.com', 'created_at' => '2024-01-02'],
+        ['id' => 3, 'name' => 'User 3', 'email' => 'user3@test.com', 'created_at' => '2024-01-03'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($deletedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereIn('id', [1, 2, 3])
+        ->deleteReturning(['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(3);
+    expect($result->toArray())->toBe($deletedData);
+});
+
+it('updates records and returns updated data', function () {
+    $updatedData = [
+        ['id' => 1, 'name' => 'John Updated', 'email' => 'john@new.com', 'status' => 'active'],
+        ['id' => 2, 'name' => 'Jane Updated', 'email' => 'jane@new.com', 'status' => 'active'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('status', 'pending')
+        ->updateReturning(
+            ['status' => 'active'],
+            ['id', 'name', 'email', 'status']
+        );
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->toArray())->toBe($updatedData);
+    expect($result->count())->toBe(2);
+});
+
+it('returns empty collection on update returning error', function () {
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Constraint violation'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 1)
+        ->updateReturning(['email' => 'duplicate@test.com'], ['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->isEmpty())->toBeTrue();
+});
+
+it('updates single record and returns its data', function () {
+    $updatedData = [
+        ['id' => 5, 'name' => 'Updated User', 'email' => 'updated@example.com', 'updated_at' => '2024-12-31'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereEqual('id', 5)
+        ->updateReturning(
+            ['name' => 'Updated User', 'updated_at' => '2024-12-31'],
+            ['id', 'name', 'email', 'updated_at']
+        );
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(1);
+    expect($result->first())->toBe($updatedData[0]);
+});
+
+it('updates records with returning all columns', function () {
+    $updatedData = [
+        ['id' => 1, 'name' => 'User 1', 'status' => 'active', 'updated_at' => '2024-12-31'],
+        ['id' => 2, 'name' => 'User 2', 'status' => 'active', 'updated_at' => '2024-12-31'],
+        ['id' => 3, 'name' => 'User 3', 'status' => 'active', 'updated_at' => '2024-12-31'],
+    ];
+
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturn(new Statement(new Result($updatedData)));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')
+        ->whereIn('id', [1, 2, 3])
+        ->updateReturning(['status' => 'active', 'updated_at' => '2024-12-31'], ['*']);
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(3);
+    expect($result->toArray())->toBe($updatedData);
+});
+
+it('inserts records using insert or ignore successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->insertOrIgnore(['name' => 'Tony', 'email' => 'tony@example.com']);
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on insert or ignore records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Query error'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->insertOrIgnore(['name' => 'Tony', 'email' => 'tony@example.com']);
+
+    expect($result)->toBeFalse();
+});
+
+it('inserts records from subquery successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('inserts records from subquery with ignore flag', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email'],
+        true
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on insert from records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Insert from subquery failed'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users_backup')->insertFrom(
+        function ($subquery) {
+            $subquery->from('users')->whereEqual('status', 'active');
+        },
+        ['id', 'name', 'email']
+    );
+
+    expect($result)->toBeFalse();
+});
+
+it('upserts records successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        ['name' => 'Tony', 'email' => 'tony@example.com', 'status' => 'active'],
+        ['email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('upserts multiple records successfully', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement(new Result()));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        [
+            ['name' => 'Tony', 'email' => 'tony@example.com'],
+            ['name' => 'John', 'email' => 'john@example.com'],
+        ],
+        ['email']
+    );
+
+    expect($result)->toBeTrue();
+});
+
+it('fails on upsert records', function () {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willThrowException(new SqlQueryError('Upsert failed'));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $result = $query->table('users')->upsert(
+        ['name' => 'Tony', 'email' => 'tony@example.com'],
+        ['email']
+    );
+
+    expect($result)->toBeFalse();
 });

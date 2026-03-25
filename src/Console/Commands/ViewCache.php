@@ -45,7 +45,7 @@ class ViewCache extends Command
 
         $this->compile(Config::get('view.path'));
 
-        WorkerPool::batch($this->tasks);
+        WorkerPool::awaitAll($this->tasks);
 
         $output->writeln('<info>All views were compiled successfully!.</info>');
 

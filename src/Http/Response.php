@@ -46,7 +46,7 @@ class Response
             $content = $content->toArray();
         }
 
-        $this->body = json_encode(['data' => $content]);
+        $this->body = json_encode($content);
         $this->status = $status;
         $this->headers = [...['content-type' => 'application/json'], ...$headers];
 
@@ -62,6 +62,15 @@ class Response
         $this->body = View::view($template, $data)->render();
         $this->status = $status;
         $this->headers = [...['content-type' => 'text/html; charset=utf-8'], ...$headers];
+
+        return $this;
+    }
+
+    public function redirect(string $location, HttpStatus $status = HttpStatus::FOUND, array $headers = []): self
+    {
+        $this->body = json_encode(['redirectTo' => $location]);
+        $this->status = $status;
+        $this->headers = [...['Location' => $location, 'content-type' => 'application/json'], ...$headers];
 
         return $this;
     }

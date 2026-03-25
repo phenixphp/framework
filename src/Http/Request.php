@@ -20,6 +20,7 @@ use Phenix\Http\Contracts\BodyParser;
 use Phenix\Http\Requests\Concerns\HasCookies;
 use Phenix\Http\Requests\Concerns\HasHeaders;
 use Phenix\Http\Requests\Concerns\HasQueryParameters;
+use Phenix\Http\Requests\Concerns\HasUser;
 use Phenix\Http\Requests\FormParser;
 use Phenix\Http\Requests\JsonParser;
 use Phenix\Http\Requests\RouteAttributes;
@@ -28,22 +29,29 @@ use Psr\Http\Message\UriInterface;
 
 class Request implements Arrayable
 {
+    use HasUser;
     use HasHeaders;
     use HasCookies;
     use HasQueryParameters;
 
     protected readonly BodyParser $body;
+
     protected readonly Query $query;
-    protected readonly RouteAttributes|null $attributes;
+
+    protected readonly RouteAttributes|null $routeAttributes;
+
     protected Session|null $session;
 
-    public function __construct(protected ServerRequest $request)
-    {
-        $attributes = [];
+    protected Ip|null $ip;
+
+    public function __construct(
+        protected ServerRequest $request
+    ) {
+        $routeAttributes = [];
         $this->session = null;
 
         if ($request->hasAttribute(Router::class)) {
-            $attributes = $request->getAttribute(Router::class);
+            $routeAttributes = $request->getAttribute(Router::class);
         }
 
         if ($request->hasAttribute(ServerSession::class)) {
@@ -51,7 +59,7 @@ class Request implements Arrayable
         }
 
         $this->query = Query::fromUri($request->getUri());
-        $this->attributes = new RouteAttributes($attributes);
+        $this->routeAttributes = new RouteAttributes($routeAttributes);
         $this->body = $this->getParser();
     }
 
@@ -108,10 +116,10 @@ class Request implements Arrayable
     public function route(string|null $key = null, string|int|null $default = null): RouteAttributes|string|int|null
     {
         if ($key) {
-            return $this->attributes->get($key, $default);
+            return $this->routeAttributes->get($key, $default);
         }
 
-        return $this->attributes;
+        return $this->routeAttributes;
     }
 
     public function query(string|null $key = null, array|string|int|null $default = null): Query|array|string|null
@@ -139,6 +147,11 @@ class Request implements Arrayable
         }
 
         return $this->session;
+    }
+
+    public function ip(): Ip
+    {
+        return $this->ip ??= Ip::make($this->request);
     }
 
     public function toArray(): array

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Phenix\Logging;
 
 use Amp\ByteStream;
+use Amp\Cluster\Cluster;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
+use Phenix\Constants\ServerMode;
 use Phenix\Contracts\Makeable;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
@@ -17,15 +19,19 @@ use Phenix\Facades\File;
 
 class LoggerFactory implements Makeable
 {
-    public static function make(string $key): Logger
+    public static function make(string $key, ServerMode $serverMode = ServerMode::SINGLE): Logger
     {
-        $logHandler = match ($key) {
-            'file' => self::fileHandler(),
-            'stream' => self::streamHandler(),
-            default => throw new RuntimeError("Unsupported logging channel: {$key}")
-        };
+        if ($serverMode === ServerMode::CLUSTER && Cluster::isWorker()) {
+            $logHandler = Cluster::createLogHandler();
+        } else {
+            $logHandler = match ($key) {
+                'file' => self::fileHandler(),
+                'stream' => self::streamHandler(),
+                default => throw new RuntimeError("Unsupported logging channel: {$key}"),
+            };
+        }
 
-        $logger = new Logger('phenix');
+        $logger = new Logger(self::buildName($serverMode));
         $logger->pushHandler($logHandler);
 
         return $logger;
@@ -55,5 +61,14 @@ class LoggerFactory implements Makeable
         $logHandler->setFormatter(new LineFormatter());
 
         return $logHandler;
+    }
+
+    private static function buildName(ServerMode $serverMode = ServerMode::SINGLE): string
+    {
+        if ($serverMode === ServerMode::CLUSTER && Cluster::isWorker()) {
+            return 'phenix-worker-' . (Cluster::getContextId() ?? getmypid());
+        }
+
+        return 'phenix';
     }
 }

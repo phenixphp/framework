@@ -14,4 +14,9 @@ class IsFile extends TypeRule
 
         return $value instanceof BufferedFile;
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.file', ['field' => $this->getFieldForHumans()]);
+    }
 }

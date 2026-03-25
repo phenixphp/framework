@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace};
+
+use Phenix\Validation\Rules\Rule;
+
+class {name} extends Rule
+{
+    public function passes(): bool
+    {
+        return true;
+    }
+
+    public function message(): string|null
+    {
+        return trans('validation.custom', ['field' => $this->getFieldForHumans()]);
+    }
+}

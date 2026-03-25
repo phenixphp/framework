@@ -54,13 +54,6 @@ it('processes a successful task', function (): void {
         ->method('beginTransaction')
         ->willReturn($transaction);
 
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
-
     $queueManager = new QueueManager();
 
     $this->app->swap(Connection::default(), $connection);
@@ -104,13 +97,6 @@ it('processes a failed task and retries', function (): void {
         ->method('beginTransaction')
         ->willReturn($transaction);
 
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
-
     $queueManager = new QueueManager();
 
     $this->app->swap(Connection::default(), $connection);
@@ -153,13 +139,6 @@ it('processes a failed task and last retry', function (): void {
     $connection->expects($this->once())
         ->method('beginTransaction')
         ->willReturn($transaction);
-
-    $connection->expects($this->exactly(2))
-        ->method('prepare')
-        ->willReturnOnConsecutiveCalls(
-            new Statement(new Result([['Query OK']])),
-            new Statement(new Result([['Query OK']])),
-        );
 
     $queueManager = new QueueManager();
 

@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 use Amp\Http\Client\Form;
 use Amp\Http\Server\FormParser\BufferedFile;
+use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
 use Phenix\Http\Requests\StreamParser;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
 use Tests\Feature\Requests\StoreUserRequest;
 use Tests\Feature\Requests\StreamedRequest;
+
+beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+});
 
 afterEach(function () {
     $this->app->stop();
@@ -56,7 +62,7 @@ it('responds with unprocessable entity due invalid data', function () {
 
     $body = json_decode($response->getBody(), true);
 
-    expect($body['data'])->toHaveKeys(['name', 'email']);
+    expect($body)->toHaveKeys(['name', 'email']);
 });
 
 it('validates requests using streamed form request', function () {

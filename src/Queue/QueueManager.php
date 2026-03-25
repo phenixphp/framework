@@ -4,31 +4,50 @@ declare(strict_types=1);
 
 namespace Phenix\Queue;
 
-use Phenix\App;
 use Phenix\Database\Constants\Driver as DatabaseDriver;
+use Phenix\Facades\Redis;
+use Phenix\Queue\Concerns\CaptureTasks;
 use Phenix\Queue\Constants\QueueDriver;
 use Phenix\Queue\Contracts\Queue;
-use Phenix\Redis\Contracts\Client;
 use Phenix\Tasks\QueuableTask;
 
 class QueueManager
 {
+    use CaptureTasks;
+
     protected array $drivers = [];
 
-    protected Config $config;
+    protected QueueConfig $config;
 
-    public function __construct(Config|null $config = null)
+    public function __construct(QueueConfig|null $config = null)
     {
-        $this->config = $config ?? new Config();
+        $this->config = $config ?? new QueueConfig();
     }
 
     public function push(QueuableTask $task): void
     {
+        $this->recordPush($task);
+
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
+            return;
+        }
+
         $this->driver()->push($task);
     }
 
     public function pushOn(string $queueName, QueuableTask $task): void
     {
+        $task->setQueueName($queueName);
+        $this->recordPush($task);
+
+        if ($this->shouldFakeTask($task)) {
+            $this->consumeFakedTask($task);
+
+            return;
+        }
+
         $this->driver()->pushOn($queueName, $task);
     }
 
@@ -106,8 +125,10 @@ class QueueManager
     {
         $config = $this->config->getDriver(QueueDriver::REDIS->value);
 
+        $client = Redis::connection($this->config->getConnection())->client();
+
         return new RedisQueue(
-            redis: App::make(Client::class),
+            redis: $client,
             queueName: $config['queue'] ?? 'default'
         );
     }

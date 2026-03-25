@@ -14,4 +14,9 @@ class IsNumeric extends TypeRule
     {
         return is_numeric($this->getValue());
     }
+
+    public function message(): string|null
+    {
+        return trans('validation.numeric', ['field' => $this->getFieldForHumans()]);
+    }
 }

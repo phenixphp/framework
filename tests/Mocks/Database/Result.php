@@ -12,6 +12,9 @@ use Traversable;
 class Result implements SqlResult, IteratorAggregate
 {
     protected int $count;
+
+    protected string|int|null $lastInsertId = null;
+
     protected ArrayIterator $fakeResult;
 
     public function __construct(array $fakeResult = [])
@@ -45,8 +48,13 @@ class Result implements SqlResult, IteratorAggregate
         return $this->fakeResult;
     }
 
-    public function getLastInsertId(): int
+    public function getLastInsertId(): int|string
     {
-        return 1;
+        return $this->lastInsertId ?? 1;
+    }
+
+    public function setLastInsertedId(string|int|null $id): void
+    {
+        $this->lastInsertId = $id;
     }
 }

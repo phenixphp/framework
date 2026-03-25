@@ -18,7 +18,7 @@ class TemplateEngine implements TemplateEngineContract
 
     public function __construct(
         protected TemplateCompiler $compiler = new TemplateCompiler(),
-        protected ViewCache $cache = new ViewCache(),
+        protected TemplateCache $cache = new TemplateCache(),
         TemplateFactory|null $templateFactory = null
     ) {
         $this->templateFactory = $templateFactory ?? new TemplateFactory($this->cache);

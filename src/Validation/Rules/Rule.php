@@ -6,6 +6,7 @@ namespace Phenix\Validation\Rules;
 
 use Adbar\Dot;
 use Amp\Http\Server\FormParser\BufferedFile;
+use Phenix\Facades\Translator;
 use Phenix\Validation\Contracts\Rule as RuleContract;
 
 use function is_array;
@@ -14,6 +15,7 @@ use function is_array;
 abstract class Rule implements RuleContract
 {
     protected string $field;
+
     protected Dot $data;
 
     public function __construct(array|null $data = null)
@@ -50,5 +52,14 @@ abstract class Rule implements RuleContract
     protected function getValueType(): string
     {
         return gettype($this->data->get($this->field) ?? null);
+    }
+
+    protected function getFieldForHumans(): string
+    {
+        if (Translator::has("validation.fields.{$this->field}")) {
+            return Translator::get("validation.fields.{$this->field}");
+        }
+
+        return $this->field;
     }
 }

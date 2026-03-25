@@ -7,6 +7,7 @@ namespace Phenix\Events;
 use Phenix\Events\Console\MakeEvent;
 use Phenix\Events\Console\MakeListener;
 use Phenix\Events\Contracts\EventEmitter as EventEmitterContract;
+use Phenix\Facades\File;
 use Phenix\Providers\ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -21,17 +22,25 @@ class EventServiceProvider extends ServiceProvider
         return in_array($id, $this->provides);
     }
 
-    public function register(): void
+    public function boot(): void
     {
         $this->getContainer()->addShared(EventEmitter::class, EventEmitter::class);
         $this->getContainer()->add(EventEmitterContract::class, EventEmitter::class);
-    }
 
-    public function boot(): void
-    {
         $this->commands([
             MakeEvent::class,
             MakeListener::class,
         ]);
+
+        $this->loadEvents();
+    }
+
+    private function loadEvents(): void
+    {
+        $eventsPath = base_path('listen' . DIRECTORY_SEPARATOR . 'events.php');
+
+        if (File::exists($eventsPath)) {
+            require $eventsPath;
+        }
     }
 }

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Closure;
-use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Clauses\BetweenWhereClause;
+use Phenix\Database\Clauses\BooleanWhereClause;
+use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Clauses\NullWhereClause;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\SQL;
 
 trait HasWhereClause
 {
@@ -26,21 +29,21 @@ trait HasWhereClause
 
     public function orWhereEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::EQUAL, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
 
-    public function whereDistinct(string $column, Closure|string|int $value): static
+    public function whereNotEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::DISTINCT, $value);
+        $this->resolveWhereMethod($column, Operator::NOT_EQUAL, $value);
 
         return $this;
     }
 
-    public function orWhereDistinct(string $column, Closure|string|int $value): static
+    public function orWhereNotEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::DISTINCT, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::NOT_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -54,7 +57,7 @@ trait HasWhereClause
 
     public function orWhereGreaterThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::GREATER_THAN, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -68,7 +71,7 @@ trait HasWhereClause
 
     public function orWhereGreaterThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -82,7 +85,7 @@ trait HasWhereClause
 
     public function orWhereLessThan(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::LESS_THAN, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -96,7 +99,7 @@ trait HasWhereClause
 
     public function orWhereLessThanOrEqual(string $column, Closure|string|int $value): static
     {
-        $this->resolveWhereMethod($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -110,7 +113,7 @@ trait HasWhereClause
 
     public function orWhereIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operator::IN, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::IN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -124,76 +127,135 @@ trait HasWhereClause
 
     public function orWhereNotIn(string $column, Closure|array $value): static
     {
-        $this->resolveWhereMethod($column, Operator::NOT_IN, $value, LogicalOperator::OR);
+        $this->resolveWhereMethod($column, Operator::NOT_IN, $value, LogicalConnector::OR);
 
         return $this;
     }
 
     public function whereNull(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_NULL]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new NullWhereClause(
+            column: $column,
+            operator: Operator::IS_NULL,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function orWhereNull(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_NULL], LogicalOperator::OR);
+        $clause = new NullWhereClause(
+            column: $column,
+            operator: Operator::IS_NULL,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function whereNotNull(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_NOT_NULL]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new NullWhereClause(
+            column: $column,
+            operator: Operator::IS_NOT_NULL,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function orWhereNotNull(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_NOT_NULL], LogicalOperator::OR);
+        $clause = new NullWhereClause(
+            column: $column,
+            operator: Operator::IS_NOT_NULL,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function whereTrue(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_TRUE]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new BooleanWhereClause(
+            column: $column,
+            operator: Operator::IS_TRUE,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function orWhereTrue(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_TRUE], LogicalOperator::OR);
+        $clause = new BooleanWhereClause(
+            column: $column,
+            operator: Operator::IS_TRUE,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function whereFalse(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_FALSE]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new BooleanWhereClause(
+            column: $column,
+            operator: Operator::IS_FALSE,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function orWhereFalse(string $column): static
     {
-        $this->pushClause([$column, Operator::IS_FALSE], LogicalOperator::OR);
+        $clause = new BooleanWhereClause(
+            column: $column,
+            operator: Operator::IS_FALSE,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }
 
     public function whereBetween(string $column, array $values): static
     {
-        $this->pushClause([
-            $column,
-            Operator::BETWEEN,
-            SQL::PLACEHOLDER->value,
-            LogicalOperator::AND,
-            SQL::PLACEHOLDER->value,
-        ]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new BetweenWhereClause(
+            column: $column,
+            operator: Operator::BETWEEN,
+            values: $values,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -202,13 +264,14 @@ trait HasWhereClause
 
     public function orWhereBetween(string $column, array $values): static
     {
-        $this->pushClause([
-            $column,
-            Operator::BETWEEN,
-            SQL::PLACEHOLDER->value,
-            LogicalOperator::AND,
-            SQL::PLACEHOLDER->value,
-        ], LogicalOperator::OR);
+        $clause = new BetweenWhereClause(
+            column: $column,
+            operator: Operator::BETWEEN,
+            values: $values,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -217,13 +280,16 @@ trait HasWhereClause
 
     public function whereNotBetween(string $column, array $values): static
     {
-        $this->pushClause([
-            $column,
-            Operator::NOT_BETWEEN,
-            SQL::PLACEHOLDER->value,
-            LogicalOperator::AND,
-            SQL::PLACEHOLDER->value,
-        ]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new BetweenWhereClause(
+            column: $column,
+            operator: Operator::NOT_BETWEEN,
+            values: $values,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -232,13 +298,14 @@ trait HasWhereClause
 
     public function orWhereNotBetween(string $column, array $values): static
     {
-        $this->pushClause([
-            $column,
-            Operator::NOT_BETWEEN,
-            SQL::PLACEHOLDER->value,
-            LogicalOperator::AND,
-            SQL::PLACEHOLDER->value,
-        ], LogicalOperator::OR);
+        $clause = new BetweenWhereClause(
+            column: $column,
+            operator: Operator::NOT_BETWEEN,
+            values: $values,
+            connector: LogicalConnector::OR
+        );
+
+        $this->clauses[] = $clause;
 
         $this->arguments = array_merge($this->arguments, (array) $values);
 
@@ -257,7 +324,7 @@ trait HasWhereClause
         $this->whereSubquery(
             subquery: $subquery,
             comparisonOperator: Operator::EXISTS,
-            logicalConnector: LogicalOperator::OR
+            logicalConnector: LogicalConnector::OR
         );
 
         return $this;
@@ -275,7 +342,7 @@ trait HasWhereClause
         $this->whereSubquery(
             subquery: $subquery,
             comparisonOperator: Operator::NOT_EXISTS,
-            logicalConnector: LogicalOperator::OR
+            logicalConnector: LogicalConnector::OR
         );
 
         return $this;
@@ -283,7 +350,16 @@ trait HasWhereClause
 
     public function whereColumn(string $localColumn, string $foreignColumn): static
     {
-        $this->pushClause([$localColumn, Operator::EQUAL, $foreignColumn]);
+        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
+
+        $clause = new ColumnWhereClause(
+            column: $localColumn,
+            operator: Operator::EQUAL,
+            compareColumn: $foreignColumn,
+            connector: $connector
+        );
+
+        $this->clauses[] = $clause;
 
         return $this;
     }

@@ -27,6 +27,6 @@
     </logging>
     <php>
         <env name="APP_NAME" value="Phenix"/>
-        <env name="APP_ENV" value="testing"/>
+        <env name="APP_ENV" value="local"/>
     </php>
 </phpunit>

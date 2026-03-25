@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Carbon\CarbonInterface;
-use Phenix\Database\Constants\LogicalOperator;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Functions;
 
@@ -20,7 +20,7 @@ trait HasWhereDateClause
 
     public function orWhereDateEqual(string $column, CarbonInterface|string $value): static
     {
-        $this->pushDateClause($column, Operator::EQUAL, $value, LogicalOperator::OR);
+        $this->pushDateClause($column, Operator::EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -34,7 +34,7 @@ trait HasWhereDateClause
 
     public function orWhereDateGreaterThan(string $column, CarbonInterface|string $value): static
     {
-        $this->pushDateClause($column, Operator::GREATER_THAN, $value, LogicalOperator::OR);
+        $this->pushDateClause($column, Operator::GREATER_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -48,7 +48,7 @@ trait HasWhereDateClause
 
     public function orWhereDateGreaterThanOrEqual(string $column, CarbonInterface|string $value): static
     {
-        $this->pushDateClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushDateClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -62,7 +62,7 @@ trait HasWhereDateClause
 
     public function orWhereDateLessThan(string $column, CarbonInterface|string $value): static
     {
-        $this->pushDateClause($column, Operator::LESS_THAN, $value, LogicalOperator::OR);
+        $this->pushDateClause($column, Operator::LESS_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -76,7 +76,7 @@ trait HasWhereDateClause
 
     public function orWhereDateLessThanOrEqual(string $column, CarbonInterface|string $value): static
     {
-        $this->pushDateClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushDateClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -90,7 +90,7 @@ trait HasWhereDateClause
 
     public function orWhereMonthEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushMonthClause($column, Operator::EQUAL, $value, LogicalOperator::OR);
+        $this->pushMonthClause($column, Operator::EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -104,7 +104,7 @@ trait HasWhereDateClause
 
     public function orWhereMonthGreaterThan(string $column, CarbonInterface|int $value): static
     {
-        $this->pushMonthClause($column, Operator::GREATER_THAN, $value, LogicalOperator::OR);
+        $this->pushMonthClause($column, Operator::GREATER_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -118,7 +118,7 @@ trait HasWhereDateClause
 
     public function orWhereMonthGreaterThanOrEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushMonthClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushMonthClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -132,7 +132,7 @@ trait HasWhereDateClause
 
     public function orWhereMonthLessThan(string $column, CarbonInterface|int $value): static
     {
-        $this->pushMonthClause($column, Operator::LESS_THAN, $value, LogicalOperator::OR);
+        $this->pushMonthClause($column, Operator::LESS_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -146,7 +146,7 @@ trait HasWhereDateClause
 
     public function orWhereMonthLessThanOrEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushMonthClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushMonthClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -160,7 +160,7 @@ trait HasWhereDateClause
 
     public function orWhereYearEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushYearClause($column, Operator::EQUAL, $value, LogicalOperator::OR);
+        $this->pushYearClause($column, Operator::EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -174,7 +174,7 @@ trait HasWhereDateClause
 
     public function orWhereYearGreaterThan(string $column, CarbonInterface|int $value): static
     {
-        $this->pushYearClause($column, Operator::GREATER_THAN, $value, LogicalOperator::OR);
+        $this->pushYearClause($column, Operator::GREATER_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -188,7 +188,7 @@ trait HasWhereDateClause
 
     public function orWhereYearGreaterThanOrEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushYearClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushYearClause($column, Operator::GREATER_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -202,7 +202,7 @@ trait HasWhereDateClause
 
     public function orWhereYearLessThan(string $column, CarbonInterface|int $value): static
     {
-        $this->pushYearClause($column, Operator::LESS_THAN, $value, LogicalOperator::OR);
+        $this->pushYearClause($column, Operator::LESS_THAN, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -216,7 +216,7 @@ trait HasWhereDateClause
 
     public function orWhereYearLessThanOrEqual(string $column, CarbonInterface|int $value): static
     {
-        $this->pushYearClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalOperator::OR);
+        $this->pushYearClause($column, Operator::LESS_THAN_OR_EQUAL, $value, LogicalConnector::OR);
 
         return $this;
     }
@@ -225,7 +225,7 @@ trait HasWhereDateClause
         string $column,
         Operator $operator,
         CarbonInterface|string $value,
-        LogicalOperator $logicalConnector = LogicalOperator::AND
+        LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         if ($value instanceof CarbonInterface) {
             $value = $value->format('Y-m-d');
@@ -243,7 +243,7 @@ trait HasWhereDateClause
         string $column,
         Operator $operator,
         CarbonInterface|int $value,
-        LogicalOperator $logicalConnector = LogicalOperator::AND
+        LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         if ($value instanceof CarbonInterface) {
             $value = (int) $value->format('m');
@@ -261,7 +261,7 @@ trait HasWhereDateClause
         string $column,
         Operator $operator,
         CarbonInterface|int $value,
-        LogicalOperator $logicalConnector = LogicalOperator::AND
+        LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         if ($value instanceof CarbonInterface) {
             $value = (int) $value->format('Y');
@@ -279,7 +279,7 @@ trait HasWhereDateClause
         Functions $function,
         Operator $operator,
         CarbonInterface|string|int $value,
-        LogicalOperator $logicalConnector = LogicalOperator::AND
+        LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         $this->pushWhereWithArgs((string) $function, $operator, $value, $logicalConnector);
     }
