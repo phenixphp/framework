@@ -19,13 +19,8 @@ class Guest implements Middleware
 
     public function handleRequest(Request $request, RequestHandler $next): Response
     {
-        $authorizationHeader = $request->getHeader('Authorization');
-
-        if (! $this->hasBearerScheme($authorizationHeader)) {
-            return $next->handleRequest($request);
-        }
-
-        $token = $this->extractBearerToken($authorizationHeader);
+        $header = $request->getHeader('Authorization');
+        $token = $this->hasBearerScheme($header) ? $this->extractBearerToken($header) : null;
 
         if ($token === null) {
             return $next->handleRequest($request);
@@ -34,11 +29,11 @@ class Guest implements Middleware
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        if (! $auth->validate($token)) {
-            return $next->handleRequest($request);
+        if ($auth->validate($token)) {
+            return $this->unauthorized();
         }
 
-        return $this->unauthorized();
+        return $next->handleRequest($request);
     }
 
     protected function unauthorized(): Response

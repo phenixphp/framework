@@ -217,6 +217,57 @@ it('rejects guest requests with lowercase bearer scheme when token is valid', fu
     ])->assertUnauthorized();
 });
 
+it('treats falsy bearer token values as present tokens, not as missing tokens', function (): void {
+    $user = new User();
+    $user->id = 1;
+    $user->name = 'John Doe';
+    $user->email = 'john@example.com';
+    $user->createdAt = Date::now();
+
+    $userData = [
+        [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->createdAt->toDateTimeString(),
+        ],
+    ];
+
+    $tokenData = [
+        [
+            'id' => Str::uuid()->toString(),
+            'tokenable_type' => $user::class,
+            'tokenable_id' => $user->id,
+            'name' => 'api-token',
+            'token' => hash('sha256', '0'),
+            'created_at' => Date::now()->toDateTimeString(),
+            'last_used_at' => null,
+            'expires_at' => null,
+        ],
+    ];
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(3))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement(new Result($tokenData)),
+            new Statement(new Result([['Query OK']])),
+            new Statement(new Result($userData)),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    Route::get('/guest', fn (): Response => response()->plain('Never reached'))
+        ->middleware(Guest::class);
+
+    $this->app->run();
+
+    $this->get('/guest', headers: [
+        'Authorization' => 'Bearer 0',
+    ])->assertUnauthorized();
+});
+
 it('authenticates user with valid token', function (): void {
     Event::fake();
 
