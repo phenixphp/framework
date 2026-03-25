@@ -11,11 +11,9 @@ use Amp\Http\Server\Response;
 use Phenix\App;
 use Phenix\Auth\AuthenticationManager;
 use Phenix\Auth\Middlewares\Concerns\InteractsWithBearerTokens;
-use Phenix\Facades\Config;
 use Phenix\Http\Constants\HttpStatus;
-use Phenix\Http\Ip;
 
-class TokenRateLimit implements Middleware
+class Guest implements Middleware
 {
     use InteractsWithBearerTokens;
 
@@ -27,24 +25,26 @@ class TokenRateLimit implements Middleware
             return $next->handleRequest($request);
         }
 
+        $token = $this->extractBearerToken($authorizationHeader);
+
+        if ($token === null) {
+            return $next->handleRequest($request);
+        }
+
         /** @var AuthenticationManager $auth */
         $auth = App::make(AuthenticationManager::class);
 
-        $clientIp = Ip::make($request)->hash();
-
-        $attemptLimit = (int) (Config::get('auth.tokens.rate_limit.attempts', 5));
-        $windowSeconds = (int) (Config::get('auth.tokens.rate_limit.window', 300));
-
-        if ($auth->getAttempts($clientIp) >= $attemptLimit) {
-            return response()->json(
-                content: ['error' => 'Too many token validation attempts'],
-                status: HttpStatus::TOO_MANY_REQUESTS,
-                headers: [
-                    'Retry-After' => (string) $windowSeconds,
-                ]
-            )->send();
+        if (! $auth->validate($token)) {
+            return $next->handleRequest($request);
         }
 
-        return $next->handleRequest($request);
+        return $this->unauthorized();
+    }
+
+    protected function unauthorized(): Response
+    {
+        return response()->json([
+            'message' => 'Unauthorized',
+        ], HttpStatus::UNAUTHORIZED)->send();
     }
 }
