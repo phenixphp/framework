@@ -29,7 +29,7 @@ trait InteractsWithBearerTokens
 
         $authorizationHeader = trim((string) $authorizationHeader);
 
-        if (preg_match('/^Bearer\s+([A-Za-z0-9\\-._~+\\/]+=*)$/i', $authorizationHeader, $matches) !== 1) {
+        if (preg_match('/^Bearer\s+([A-Za-z0-9._~+\\/-]+=*)$/i', $authorizationHeader, $matches) !== 1) {
             return null;
         }
 
