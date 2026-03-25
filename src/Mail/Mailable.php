@@ -48,49 +48,49 @@ abstract class Mailable implements MailableContract
 
     abstract public function build(): self;
 
-    public function to(array|string $to): self
+    public function to(array|string $to): static
     {
         $this->to = array_merge($this->to, (array) $to);
 
         return $this;
     }
 
-    public function cc(array|string $cc): self
+    public function cc(array|string $cc): static
     {
         $this->cc = (array) $cc;
 
         return $this;
     }
 
-    public function bcc(array|string $bcc): self
+    public function bcc(array|string $bcc): static
     {
         $this->bcc = (array) $bcc;
 
         return $this;
     }
 
-    public function tagHeader(string $value): self
+    public function tagHeader(string $value): static
     {
         $this->headers[] = new TagHeader($value);
 
         return $this;
     }
 
-    public function metadataHeader(string $key, string $value): self
+    public function metadataHeader(string $key, string $value): static
     {
         $this->headers[] = new MetadataHeader($key, $value);
 
         return $this;
     }
 
-    public function textHeader(string $name, string $value): self
+    public function textHeader(string $name, string $value): static
     {
         $this->headers[] = new UnstructuredHeader($name, $value);
 
         return $this;
     }
 
-    public function idHeader(string $name, array|string $value): self
+    public function idHeader(string $name, array|string $value): static
     {
         $this->headers[] = new IdentificationHeader($name, $value);
 
@@ -130,28 +130,28 @@ abstract class Mailable implements MailableContract
         return $email;
     }
 
-    public function from(Address|array|string $from): self
+    public function from(Address|array|string $from): static
     {
         $this->from = $from instanceof Address ? [$from] : (array) $from;
 
         return $this;
     }
 
-    protected function replyTo(array|string $replyTo): self
+    protected function replyTo(array|string $replyTo): static
     {
         $this->replyTo = (array) $replyTo;
 
         return $this;
     }
 
-    protected function subject(string $subject): self
+    protected function subject(string $subject): static
     {
         $this->subject = $subject;
 
         return $this;
     }
 
-    protected function view(string $view, array $viewData = []): self
+    protected function view(string $view, array $viewData = []): static
     {
         $this->view = $view;
         $this->viewData = $viewData;
@@ -159,7 +159,7 @@ abstract class Mailable implements MailableContract
         return $this;
     }
 
-    protected function attachment(string $path, string|null $name = null, string|null $mime = null): self
+    protected function attachment(string $path, string|null $name = null, string|null $mime = null): static
     {
         if (File::exists($path) === false) {
             throw new InvalidArgumentException("File {$path} does not exist.");
@@ -174,7 +174,7 @@ abstract class Mailable implements MailableContract
         return $this;
     }
 
-    protected function attachments(array $attachments): self
+    protected function attachments(array $attachments): static
     {
         foreach ($attachments as $attachment) {
             if (is_string($attachment)) {
