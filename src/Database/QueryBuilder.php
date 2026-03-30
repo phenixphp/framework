@@ -17,6 +17,7 @@ use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\HasTransaction;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
+use Phenix\Database\Constants\Driver;
 
 use function is_string;
 
@@ -32,7 +33,7 @@ class QueryBuilder extends QueryBase
 
         $this->connection = App::make(Connection::default());
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
     }
 
     public function __clone(): void
@@ -56,7 +57,7 @@ class QueryBuilder extends QueryBase
 
         $this->connection = $connection;
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
 
         return $this;
     }

@@ -46,7 +46,7 @@ class DatabaseQueryBuilder extends QueryBuilder
         $this->relationships = [];
         $this->connection = App::make(Connection::default());
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
     }
 
     public function __clone(): void
