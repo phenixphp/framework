@@ -74,6 +74,48 @@ it('generates insert ignore into statement', function () {
     expect($params)->toBe([$email, $name]);
 });
 
+it('generates insert into statement with returning clause', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $name = faker()->name;
+    $email = faker()->freeEmail;
+
+    $sql = $query->table('users')
+        ->returning(['id'])
+        ->insert([
+            'name' => $name,
+            'email' => $email,
+        ]);
+
+    [$dml, $params] = $sql;
+
+    $expected = "INSERT INTO users (email, name) VALUES ($1, $2) RETURNING id";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([$email, $name]);
+});
+
+it('generates insert ignore into statement with returning clause', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $name = faker()->name;
+    $email = faker()->freeEmail;
+
+    $sql = $query->table('users')
+        ->returning(['id', 'email'])
+        ->insertOrIgnore([
+            'name' => $name,
+            'email' => $email,
+        ]);
+
+    [$dml, $params] = $sql;
+
+    $expected = "INSERT INTO users (email, name) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING id, email";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([$email, $name]);
+});
+
 it('generates upsert statement to handle duplicate keys', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 

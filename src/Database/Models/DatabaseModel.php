@@ -107,6 +107,13 @@ abstract class DatabaseModel implements Arrayable
         return $this->modelKey->getName();
     }
 
+    public function getModelKeyColumnName(): string
+    {
+        $this->modelKey ??= $this->findModelKey();
+
+        return $this->modelKey->getColumnName();
+    }
+
     public function setConnection(SqlConnection|string $connection): void
     {
         $this->modelConnection = $connection;
@@ -167,7 +174,8 @@ abstract class DatabaseModel implements Arrayable
                 ->update($data);
         }
 
-        $result = $queryBuilder->insertRow($data);
+        $result = $queryBuilder
+            ->insertGetId($data, $this->getModelKeyColumnName());
 
         if ($result) {
             if (! $this->keyIsInitialized()) {

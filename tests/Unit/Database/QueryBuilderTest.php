@@ -7,6 +7,7 @@ use Amp\Sql\SqlTransaction;
 use League\Uri\Http;
 use Phenix\Data\Collection;
 use Phenix\Database\Constants\Connection;
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Paginator;
 use Phenix\Database\QueryBuilder;
 use Phenix\Database\TransactionManager;
@@ -97,6 +98,69 @@ it('insert records', function () {
     $result = $query->table('users')->insert(['name' => 'Tony']);
 
     expect($result)->toBeTrue();
+});
+
+it('inserts row and returns generated id on postgresql', function () {
+    $capturedSql = '';
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(function (string $sql) use (&$capturedSql): Statement {
+            $capturedSql = $sql;
+
+            return new Statement(new Result([['id' => 123]]));
+        });
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+    $query->setDriver(Driver::POSTGRESQL);
+
+    $insertedId = $query->table('users')->insertGetId(['name' => 'Tony']);
+
+    expect($insertedId)->toBe(123);
+    expect($capturedSql)->toContain('RETURNING id');
+});
+
+it('inserts row and returns generated id on mysql', function () {
+    $result = new Result();
+    $result->setLastInsertedId(321);
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(fn () => new Statement($result));
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+
+    $insertedId = $query->table('users')->insertGetId(['name' => 'Tony']);
+
+    expect($insertedId)->toBe(321);
+});
+
+it('inserts row and returns generated custom id on postgresql', function (): void {
+    $capturedSql = '';
+    $connection = $this->getMockBuilder(PostgresqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->once())
+        ->method('prepare')
+        ->willReturnCallback(function (string $sql) use (&$capturedSql): Statement {
+            $capturedSql = $sql;
+
+            return new Statement(new Result([['user_id' => 456]]));
+        });
+
+    $query = new QueryBuilder();
+    $query->connection($connection);
+    $query->setDriver(Driver::POSTGRESQL);
+
+    $insertedId = $query->table('users')
+        ->insertGetId(['name' => 'Tony'], 'user_id');
+
+    expect($insertedId)->toBe(456);
+    expect($capturedSql)->toContain('RETURNING user_id');
 });
 
 it('fails on insert records', function () {

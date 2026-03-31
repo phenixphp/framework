@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\SqlConnection;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlResult;
@@ -170,15 +169,25 @@ class QueryBuilder extends QueryBase
         }
     }
 
-    public function insertRow(array $data): int|string|bool
+    public function insertGetId(array $data, string $columns = 'id'): int|string|false|null
     {
-        [$dml, $params] = parent::insert($data);
+        $this->returning((array) $columns);
 
         try {
-            /** @var MysqlPooledResult $result */
+            [$dml, $params] = parent::insert($data);
             $result = $this->exec($dml, $params);
 
-            return $result->getLastInsertId();
+            if (method_exists($result, 'getLastInsertId') && $this->driver !== Driver::POSTGRESQL) {
+                /** @var int|string|null $lastInsertId */
+                $lastInsertId = $result->getLastInsertId();
+
+                return $lastInsertId;
+            }
+
+            $row = $result->fetchRow();
+            $row ??= [];
+
+            return array_values($row)[0] ?? null;
         } catch (SqlQueryError|SqlTransactionError $e) {
             report($e);
 

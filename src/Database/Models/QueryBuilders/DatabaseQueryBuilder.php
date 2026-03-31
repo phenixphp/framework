@@ -204,8 +204,7 @@ class DatabaseQueryBuilder extends QueryBuilder
 
         $queryBuilder = clone $this;
         $queryBuilder->setModel($model);
-
-        $result = $queryBuilder->insertRow($data);
+        $result = $queryBuilder->insertGetId($data, $model->getModelKeyColumnName());
 
         if ($result) {
             $modelKeyName = $model->getModelKeyName();

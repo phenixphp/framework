@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Amp\Sql\SqlConnection;
+use Amp\Sql\SqlResult;
 use Amp\Sql\SqlTransaction;
 use Closure;
 use Phenix\Database\TransactionContext;
@@ -85,7 +86,7 @@ trait HasTransaction
         return $this;
     }
 
-    protected function exec(string $dml, array $params = []): mixed
+    protected function exec(string $dml, array $params = []): SqlResult
     {
         return $this->getExecutor()->prepare($dml)->execute($params);
     }
