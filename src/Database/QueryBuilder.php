@@ -178,10 +178,7 @@ class QueryBuilder extends QueryBase
             $result = $this->exec($dml, $params);
 
             if (method_exists($result, 'getLastInsertId') && $this->driver !== Driver::POSTGRESQL) {
-                /** @var int|string|null $lastInsertId */
-                $lastInsertId = $result->getLastInsertId();
-
-                return $lastInsertId;
+                return $result->getLastInsertId();
             }
 
             $row = $result->fetchRow();
