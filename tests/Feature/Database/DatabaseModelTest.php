@@ -783,6 +783,34 @@ it('creates model instance successfully', function () {
     expect($model->createdAt)->toBeInstanceOf(Date::class);
 });
 
+it('creates model with manually assigned string ID when insertGetId returns zero', function () {
+    $insertResult = new Result([['Query OK']]);
+    $insertResult->setLastInsertedId(0);
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($insertResult),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $uuid = Str::uuid()->toString();
+
+    $model = UserWithUuid::create([
+        'id' => $uuid,
+        'name' => 'John Doe',
+        'email' => faker()->email(),
+        'created_at' => Date::now(),
+    ]);
+
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
 it('throws an exception when column in invalid on create instance', function () {
     expect(function () {
         $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
@@ -878,6 +906,33 @@ it('saves a new model with manually assigned string ID as insert', function () {
         ->method('prepare')
         ->willReturnOnConsecutiveCalls(
             new Statement(new Result([['Query OK']])),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    $uuid = Str::uuid()->toString();
+    $model = new UserWithUuid();
+    $model->id = $uuid;
+    $model->name = 'John Doe';
+    $model->email = faker()->email();
+
+    expect($model->isExisting())->toBeFalse();
+    expect($model->save())->toBeTrue();
+    expect($model->isExisting())->toBeTrue();
+    expect($model->id)->toBe($uuid);
+    expect($model->createdAt)->toBeInstanceOf(Date::class);
+});
+
+it('saves a new model with manually assigned string ID when insertGetId returns zero', function () {
+    $insertResult = new Result([['Query OK']]);
+    $insertResult->setLastInsertedId(0);
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+
+    $connection->expects($this->exactly(1))
+        ->method('prepare')
+        ->willReturnOnConsecutiveCalls(
+            new Statement($insertResult),
         );
 
     $this->app->swap(Connection::default(), $connection);
