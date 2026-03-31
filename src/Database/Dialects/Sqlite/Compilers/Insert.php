@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
+use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
@@ -38,6 +39,22 @@ class Insert extends InsertCompiler
             'ON CONFLICT (%s) DO UPDATE SET %s',
             $conflictColumns,
             Arr::implodeDeeply($updateColumns, ', ')
+        );
+    }
+
+    public function compile(QueryAst $ast): CompiledClause
+    {
+        $result = parent::compile($ast);
+        $parts = [$result->sql];
+
+        if (! empty($ast->returning)) {
+            $parts[] = 'RETURNING';
+            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+        }
+
+        return new CompiledClause(
+            Arr::implodeDeeply($parts),
+            $result->params
         );
     }
 }

@@ -6,7 +6,6 @@ namespace Phenix\Database;
 
 use Closure;
 use Phenix\Database\Concerns\Query\BuildsQuery;
-use Phenix\Database\Concerns\Query\HasDriver;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasLock;
 use Phenix\Database\Constants\Action;
@@ -17,7 +16,6 @@ use Phenix\Database\Contracts\QueryBuilder;
 
 abstract class QueryBase extends Clause implements QueryBuilder, Builder
 {
-    use HasDriver;
     use BuildsQuery;
     use HasLock;
     use HasJoinClause;

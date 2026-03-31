@@ -46,7 +46,7 @@ class DatabaseQueryBuilder extends QueryBuilder
         $this->relationships = [];
         $this->connection = App::make(Connection::default());
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
     }
 
     public function __clone(): void
@@ -204,8 +204,7 @@ class DatabaseQueryBuilder extends QueryBuilder
 
         $queryBuilder = clone $this;
         $queryBuilder->setModel($model);
-
-        $result = $queryBuilder->insertRow($data);
+        $result = $queryBuilder->insertGetId($data, $model->getModelKeyColumnName());
 
         if ($result) {
             $modelKeyName = $model->getModelKeyName();

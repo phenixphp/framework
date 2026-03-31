@@ -61,6 +61,11 @@ class Insert extends InsertCompiler
 
             $parts[] = 'ON CONFLICT DO NOTHING';
 
+            if (! empty($ast->returning)) {
+                $parts[] = 'RETURNING';
+                $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+            }
+
             $sql = Arr::implodeDeeply($parts);
             $sql = $this->convertPlaceholders($sql);
 
@@ -68,9 +73,15 @@ class Insert extends InsertCompiler
         }
 
         $result = parent::compile($ast);
+        $parts = [$result->sql];
+
+        if (! empty($ast->returning)) {
+            $parts[] = 'RETURNING';
+            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+        }
 
         return new CompiledClause(
-            $this->convertPlaceholders($result->sql),
+            $this->convertPlaceholders(Arr::implodeDeeply($parts)),
             $result->params
         );
     }
