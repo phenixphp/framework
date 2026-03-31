@@ -177,17 +177,17 @@ abstract class DatabaseModel implements Arrayable
         $result = $queryBuilder
             ->insertGetId($data, $this->getModelKeyColumnName());
 
-        if ($result) {
-            if (! $this->keyIsInitialized()) {
-                $this->{$this->getModelKeyName()} = $result;
-            }
-
-            $this->setAsExisting();
-
-            return true;
+        if ($result === false) {
+            return false;
         }
 
-        return false;
+        if (! $this->keyIsInitialized() && $result !== null) {
+            $this->{$this->getModelKeyName()} = $result;
+        }
+
+        $this->setAsExisting();
+
+        return true;
     }
 
     public function delete(TransactionManager|null $transactionManager = null): bool
