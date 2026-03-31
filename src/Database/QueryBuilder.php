@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
-use Amp\Mysql\Internal\MysqlPooledResult;
 use Amp\Sql\SqlConnection;
 use Amp\Sql\SqlQueryError;
 use Amp\Sql\SqlResult;
@@ -17,6 +16,7 @@ use Phenix\Data\Collection;
 use Phenix\Database\Concerns\Query\HasTransaction;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
+use Phenix\Database\Constants\Driver;
 
 use function is_string;
 
@@ -32,7 +32,7 @@ class QueryBuilder extends QueryBase
 
         $this->connection = App::make(Connection::default());
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
     }
 
     public function __clone(): void
@@ -56,7 +56,7 @@ class QueryBuilder extends QueryBase
 
         $this->connection = $connection;
 
-        $this->resolveDriverFromConnection($this->connection);
+        $this->resolveDriver($this->connection);
 
         return $this;
     }
@@ -169,15 +169,22 @@ class QueryBuilder extends QueryBase
         }
     }
 
-    public function insertRow(array $data): int|string|bool
+    public function insertGetId(array $data, string $columns = 'id'): int|string|false|null
     {
-        [$dml, $params] = parent::insert($data);
+        $this->returning((array) $columns);
 
         try {
-            /** @var MysqlPooledResult $result */
+            [$dml, $params] = parent::insert($data);
             $result = $this->exec($dml, $params);
 
-            return $result->getLastInsertId();
+            if (method_exists($result, 'getLastInsertId') && $this->driver !== Driver::POSTGRESQL) {
+                return $result->getLastInsertId();
+            }
+
+            $row = $result->fetchRow();
+            $row ??= [];
+
+            return array_values($row)[0] ?? null;
         } catch (SqlQueryError|SqlTransactionError $e) {
             report($e);
 
