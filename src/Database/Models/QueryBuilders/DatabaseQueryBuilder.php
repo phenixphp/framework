@@ -204,12 +204,12 @@ class DatabaseQueryBuilder extends QueryBuilder
 
         $queryBuilder = clone $this;
         $queryBuilder->setModel($model);
+        $modelKeyName = $model->getModelKeyName();
+        $keyWasInitialized = isset($model->{$modelKeyName});
         $result = $queryBuilder->insertGetId($data, $model->getModelKeyColumnName());
 
-        if ($result) {
-            $modelKeyName = $model->getModelKeyName();
-
-            if (! isset($model->{$modelKeyName})) {
+        if ($result !== false && ($keyWasInitialized || $result !== null)) {
+            if (! $keyWasInitialized) {
                 $model->{$modelKeyName} = $result;
             }
 
