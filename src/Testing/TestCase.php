@@ -12,6 +12,7 @@ use Phenix\AppProxy;
 use Phenix\Cache\Constants\Store;
 use Phenix\Console\Phenix;
 use Phenix\Facades\Cache;
+use Phenix\Facades\Config;
 use Phenix\Facades\Event;
 use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
@@ -19,6 +20,7 @@ use Phenix\Facades\View;
 use Phenix\Testing\Concerns\InteractWithDatabase;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
+use Phenix\Util\Str;
 use Symfony\Component\Console\Tester\CommandTester;
 use Throwable;
 
@@ -44,6 +46,8 @@ abstract class TestCase extends AsyncTestCase
             $this->app = AppBuilder::build($this->getAppDir(), $this->getEnvFile());
             $this->app->enableTestingMode();
         }
+
+        Config::set('cache.prefix', sprintf('phenix_test_%s_', Str::random(16)));
 
         $uses = class_uses_recursive($this);
 

@@ -165,7 +165,7 @@ it('deletes single value', function (): void {
     expect(Cache::has('gamma'))->toBeFalse();
 });
 
-it('clears all values', function (): void {
+it('clears all values across scan iterations', function (): void {
     $client = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()
         ->getMock();
@@ -190,19 +190,26 @@ it('clears all values', function (): void {
                 expect($args[4])->toBe('COUNT');
                 expect($args[5])->toBe(1000);
 
-                return [["{$prefix}a", "{$prefix}b"], '0'];
+                return ['12', []];
             }
 
             if ($callCount === 4) {
+                expect($args[0])->toBe('SCAN');
+                expect($args[1])->toBe('12');
+                expect($args[2])->toBe('MATCH');
+                expect($args[3])->toBe("{$prefix}*");
+                expect($args[4])->toBe('COUNT');
+                expect($args[5])->toBe(1000);
+
+                return ['0', ["{$prefix}a", "{$prefix}b"]];
+            }
+
+            if ($callCount === 5) {
                 expect($args[0])->toBe('DEL');
                 expect($args[1])->toBe("{$prefix}a");
                 expect($args[2])->toBe("{$prefix}b");
 
                 return 2;
-            }
-
-            if ($callCount === 5) {
-                return 0;
             }
 
             return null;
@@ -214,8 +221,6 @@ it('clears all values', function (): void {
     Cache::set('b', 2);
 
     Cache::clear();
-
-    expect(Cache::has('a'))->toBeFalse();
 });
 
 it('stores forever without expiration', function (): void {

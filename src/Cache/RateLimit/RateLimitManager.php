@@ -47,7 +47,7 @@ class RateLimitManager
     protected function resolveStore(): RateLimit
     {
         return match ($this->config->default()) {
-            'redis' => RateLimitFactory::redis($this->config->ttl(), $this->config->connection()),
+            'redis' => RateLimitFactory::redis($this->config->ttl(), $this->config->connection(), $this->config->prefix()),
             'local' => RateLimitFactory::local($this->config->ttl()),
             default => RateLimitFactory::local($this->config->ttl()),
         };
