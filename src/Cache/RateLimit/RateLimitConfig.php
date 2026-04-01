@@ -25,6 +25,11 @@ class RateLimitConfig
         return $this->config['connection'] ?? 'default';
     }
 
+    public function prefix(): string
+    {
+        return (string) Configuration::get('cache.prefix', '');
+    }
+
     public function ttl(): int
     {
         return 60;
