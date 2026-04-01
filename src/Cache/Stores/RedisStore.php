@@ -59,7 +59,7 @@ class RedisStore extends CacheStore
         $iterator = null;
 
         do {
-            [$keys, $iterator] = $this->client->execute('SCAN', $iterator ?? 0, 'MATCH', $this->getPrefixedKey('*'), 'COUNT', 1000);
+            [$iterator, $keys] = $this->client->execute('SCAN', $iterator ?? 0, 'MATCH', $this->getPrefixedKey('*'), 'COUNT', 1000);
 
             if (! empty($keys)) {
                 $this->client->execute('DEL', ...$keys);
