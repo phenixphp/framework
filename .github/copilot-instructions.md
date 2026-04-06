@@ -1,6 +1,6 @@
 # Phenix Framework AI Instructions
 
-Phenix is an async-first PHP web framework built on Amphp v3 for high-performance applications. This guide helps AI agents understand the framework's unique patterns and architecture. **Phenix** is an asynchronous PHP web framework built on the [AmPHP](https://amphp.org/) ecosystem. It serves as the core framework for building scalable, async-first API applications. Official documentation can be found at [Phenix Documentation](https://phenix.omarbarbosa.com/).
+Phenix is an async-first PHP web framework built on Amphp v3 for high-performance applications. This guide helps AI agents understand the framework's unique patterns and architecture. **Phenix** is an asynchronous PHP web framework built on the [AmPHP](https://amphp.org/) ecosystem. It serves as the core framework for building scalable, async-first API applications. Official documentation can be found at [Phenix Documentation](https://phenixphp.com/).
 
 ## Core Architecture
 
