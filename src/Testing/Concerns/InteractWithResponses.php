@@ -24,6 +24,15 @@ use function is_array;
 
 trait InteractWithResponses
 {
+    protected int $redirectsFollowed = 0;
+
+    protected function followingRedirects(): static
+    {
+        $this->redirectsFollowed = 10;
+
+        return $this;
+    }
+
     public function call(
         HttpMethod $method,
         string $path,
@@ -61,6 +70,7 @@ trait InteractWithResponses
         };
 
         $client = (new HttpClientBuilder())
+            ->followRedirects($this->redirectsFollowed)
             ->usingPool(new UnlimitedConnectionPool(new DefaultConnectionFactory($connector)))
             ->build();
 
