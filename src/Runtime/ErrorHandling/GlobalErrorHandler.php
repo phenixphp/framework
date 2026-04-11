@@ -9,7 +9,7 @@ use Throwable;
 
 use function in_array;
 
-class GlobalErrorBootstrap
+class GlobalErrorHandler
 {
     private const FATAL_ERRORS = [
         E_ERROR,
@@ -85,11 +85,17 @@ class GlobalErrorBootstrap
 
     public static function handleShutdown(): void
     {
+        self::handleShutdownError(error_get_last());
+    }
+
+    /**
+     * @param array{type: int, message: string, file: string, line: int}|null $error
+     */
+    public static function handleShutdownError(array|null $error): void
+    {
         if (! self::$active) {
             return;
         }
-
-        $error = error_get_last();
 
         if ($error === null || ! in_array($error['type'], self::FATAL_ERRORS, true)) {
             return;

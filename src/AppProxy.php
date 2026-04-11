@@ -6,7 +6,7 @@ namespace Phenix;
 
 use Phenix\Contracts\App as AppContract;
 use Phenix\Facades\Config;
-use Phenix\Runtime\ErrorHandling\GlobalErrorBootstrap;
+use Phenix\Runtime\ErrorHandling\GlobalErrorHandler;
 use Throwable;
 
 class AppProxy implements AppContract
@@ -23,7 +23,7 @@ class AppProxy implements AppContract
     {
         $this->configureErrorReporting();
 
-        GlobalErrorBootstrap::register();
+        GlobalErrorHandler::register();
 
         if ($this->testingMode) {
             $this->app->disableSignalTrapping();
@@ -32,7 +32,7 @@ class AppProxy implements AppContract
         try {
             $this->app->run();
         } catch (Throwable $exception) {
-            GlobalErrorBootstrap::restore();
+            GlobalErrorHandler::restore();
 
             throw $exception;
         }
@@ -42,7 +42,7 @@ class AppProxy implements AppContract
     {
         $this->app->stop();
 
-        GlobalErrorBootstrap::restore();
+        GlobalErrorHandler::restore();
     }
 
     public function swap(string $key, object $concrete): void
