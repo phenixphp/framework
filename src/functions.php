@@ -72,12 +72,14 @@ if (! function_exists('value')) {
 }
 
 if (! function_exists('report')) {
-    function report(Throwable $e): void
+    function report(Throwable $e, array $context = []): void
     {
         Log::error($e->getMessage(), [
+            'exception' => $e::class,
             'file' => $e->getFile(),
             'line' => $e->getLine(),
             'trace' => $e->getTraceAsString(),
+            ...$context,
         ]);
     }
 }

@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Phenix;
 
 use Amp\Cluster\Cluster;
-use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\Driver\ConnectionLimitingClientFactory;
 use Amp\Http\Server\Driver\ConnectionLimitingServerSocketFactory;
 use Amp\Http\Server\Driver\SocketClientFactory;
+use Amp\Http\Server\ExceptionHandler as ExceptionHandlerContract;
 use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Middleware\CompressionMiddleware;
+use Amp\Http\Server\Middleware\ExceptionHandlerMiddleware;
 use Amp\Http\Server\Middleware\ForwardedHeaderType;
 use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
@@ -33,6 +34,8 @@ use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Constants\Protocol;
+use Phenix\Http\ErrorHandler as AppErrorHandler;
+use Phenix\Http\ExceptionHandler as AppExceptionHandler;
 use Phenix\Logging\LoggerFactory;
 use Phenix\Runtime\Log;
 use Phenix\Scheduling\TimerRegistry;
@@ -60,7 +63,9 @@ class App implements AppContract, Makeable
 
     protected bool $signalTrapping = true;
 
-    protected DefaultErrorHandler $errorHandler;
+    protected AppErrorHandler $errorHandler;
+
+    protected ExceptionHandlerContract $exceptionHandler;
 
     protected Protocol $protocol = Protocol::HTTP;
 
@@ -75,7 +80,8 @@ class App implements AppContract, Makeable
         self::$path = $path;
         self::$container = new Container();
 
-        $this->errorHandler = new DefaultErrorHandler();
+        $this->errorHandler = new AppErrorHandler();
+        $this->exceptionHandler = new AppExceptionHandler($this->errorHandler);
     }
 
     public function setup(): void
@@ -242,18 +248,24 @@ class App implements AppContract, Makeable
             }
 
             return SocketHttpServer::createForBehindProxy(
-                $this->logger,
-                ForwardedHeaderType::XForwardedFor,
-                $trustedProxies
+                logger: $this->logger,
+                headerType: ForwardedHeaderType::XForwardedFor,
+                trustedProxies: $trustedProxies,
+                exceptionHandler: $this->exceptionHandler
             );
         }
 
-        return SocketHttpServer::createForDirectAccess($this->logger);
+        return SocketHttpServer::createForDirectAccess(
+            logger: $this->logger,
+            exceptionHandler: $this->exceptionHandler
+        );
     }
 
     protected function createClusterServer(): SocketHttpServer
     {
-        $middleware = [];
+        $middleware = [
+            new ExceptionHandlerMiddleware($this->exceptionHandler),
+        ];
         $allowedMethods = Middleware\AllowedMethodsMiddleware::DEFAULT_ALLOWED_METHODS;
 
         if (extension_loaded('zlib')) {
@@ -271,11 +283,11 @@ class App implements AppContract, Makeable
             $middleware[] = new Middleware\ForwardedMiddleware(ForwardedHeaderType::XForwardedFor, $trustedProxies);
 
             return new SocketHttpServer(
-                $this->logger,
-                Cluster::getServerSocketFactory(),
-                new SocketClientFactory($this->logger),
-                $middleware,
-                $allowedMethods,
+                logger: $this->logger,
+                serverSocketFactory: Cluster::getServerSocketFactory(),
+                clientFactory: new SocketClientFactory(logger: $this->logger),
+                middleware: $middleware,
+                allowedMethods: $allowedMethods,
             );
         }
 
@@ -283,22 +295,22 @@ class App implements AppContract, Makeable
         $connectionLimitPerIp = 10;
 
         $serverSocketFactory = new ConnectionLimitingServerSocketFactory(
-            new LocalSemaphore($connectionLimit),
-            Cluster::getServerSocketFactory(),
+            semaphore: new LocalSemaphore($connectionLimit),
+            socketServerFactory: Cluster::getServerSocketFactory(),
         );
 
         $clientFactory = new ConnectionLimitingClientFactory(
-            new SocketClientFactory($this->logger),
-            $this->logger,
-            $connectionLimitPerIp,
+            clientFactory: new SocketClientFactory(logger: $this->logger),
+            logger: $this->logger,
+            connectionsPerIpLimit: $connectionLimitPerIp,
         );
 
         return new SocketHttpServer(
-            $this->logger,
-            $serverSocketFactory,
-            $clientFactory,
-            $middleware,
-            $allowedMethods,
+            logger: $this->logger,
+            serverSocketFactory: $serverSocketFactory,
+            clientFactory: $clientFactory,
+            middleware: $middleware,
+            allowedMethods: $allowedMethods,
         );
     }
 
