@@ -509,3 +509,21 @@ it('does not add secure headers to redirect responses', function (): void {
             'Cross-Origin-Opener-Policy',
         ]);
 });
+
+it('can follow redirects when enabled', function (): void {
+    Route::get('/redirect-follow', fn (): Response => response()->redirect('/redirect-target'));
+    Route::get('/redirect-target', fn (): Response => response()->json([
+        'message' => 'Redirect followed',
+        'redirected' => true,
+    ]));
+
+    $this->app->run();
+
+    $this->followingRedirects()
+        ->get('/redirect-follow')
+        ->assertOk()
+        ->assertIsJson()
+        ->assertJsonPath('message', 'Redirect followed')
+        ->assertJsonPath('redirected', true)
+        ->assertHeaderIsMissing('Location');
+});

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Constants\AppMode;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
@@ -64,4 +65,26 @@ it('resets rate limit after time window', function (): void {
 
     $this->get(path: '/')
         ->assertOk();
+});
+
+it('uses forwarded client ip for rate limiting behind a trusted proxy', function (): void {
+    Config::set('app.app_mode', AppMode::PROXIED->value);
+    Config::set('app.trusted_proxies', ['127.0.0.1/32', '127.0.0.1']);
+    Config::set('cache.rate_limit.per_minute', 1);
+
+    Route::get('/', fn (): Response => response()->plain('Ok'));
+
+    $this->app->run();
+
+    $this->get(path: '/', headers: [
+        'X-Forwarded-For' => '203.0.113.10',
+    ])->assertOk();
+
+    $this->get(path: '/', headers: [
+        'X-Forwarded-For' => '203.0.113.10',
+    ])->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS);
+
+    $this->get(path: '/', headers: [
+        'X-Forwarded-For' => '203.0.113.11',
+    ])->assertOk();
 });

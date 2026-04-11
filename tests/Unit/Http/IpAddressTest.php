@@ -269,4 +269,50 @@ it('sets forwarding info from X-Forwarded-For header', function (): void {
 
     expect($ip->isForwarded())->toBeTrue();
     expect($ip->forwardingAddress())->toBe('203.0.113.1:4711');
+    expect($ip->hash())->toBe(hash('sha256', '203.0.113.1'));
+});
+
+it('uses forwarded ipv6 host for hash when request is behind a trusted proxy', function (): void {
+    $client = $this->createMock(Client::class);
+    $client->method('getRemoteAddress')->willReturn(
+        new class ('10.0.0.1:1234') implements SocketAddress {
+            public function __construct(private string $address)
+            {
+            }
+
+            public function toString(): string
+            {
+                return $this->address;
+            }
+
+            public function getType(): SocketAddressType
+            {
+                return SocketAddressType::Internet;
+            }
+
+            public function __toString(): string
+            {
+                return $this->address;
+            }
+        }
+    );
+
+    $request = new ServerRequest($client, HttpMethod::GET->value, Http::new(Url::to('/')));
+    $request->setHeader('X-Forwarded-For', '2001:db8::10');
+    $request->setAttribute(
+        Forwarded::class,
+        new Forwarded(
+            new InternetAddress('2001:db8::10', 4711),
+            [
+                'for' => '[2001:db8::10]:4711',
+            ]
+        )
+    );
+
+    $ip = Ip::make($request);
+
+    expect($ip->isForwarded())->toBeTrue();
+    expect($ip->forwardingAddress())->toBe('[2001:db8::10]:4711');
+    expect($ip->host())->toBe('10.0.0.1');
+    expect($ip->hash())->toBe(hash('sha256', '2001:db8::10'));
 });

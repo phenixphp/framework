@@ -61,26 +61,32 @@ class Ip
 
     public function hash(): string
     {
-        return hash('sha256', $this->host);
+        [$host] = $this->parseAddress($this->forwardingAddress ?? $this->host);
+
+        return hash('sha256', $host);
     }
 
     protected function parse(): void
     {
-        $address = trim($this->address);
+        [$this->host, $this->port] = $this->parseAddress($this->address);
+    }
+
+    /**
+     * @return array{0: string, 1: int|null}
+     */
+    protected function parseAddress(string $address): array
+    {
+        $address = trim($address);
 
         if (preg_match('/^\[(?<addr>[^\]]+)\](?::(?<port>\d+))?$/', $address, $m) === 1) {
-            $this->host = $m['addr'];
-            $this->port = isset($m['port']) ? (int) $m['port'] : null;
-
-            return;
+            return [$m['addr'], isset($m['port']) ? (int) $m['port'] : null];
         }
 
         if (filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $this->host = $address;
-            $this->port = null;
-
-            return;
+            return [$address, null];
         }
+
+        $result = [$address, null];
 
         if (str_contains($address, ':')) {
             [$maybeHost, $maybePort] = explode(':', $address, 2);
@@ -89,14 +95,10 @@ class Ip
                 filter_var($maybeHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ||
                 filter_var($maybeHost, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
             ) {
-                $this->host = $maybeHost;
-                $this->port = is_numeric($maybePort) ? (int) $maybePort : null;
-
-                return;
+                $result = [$maybeHost, is_numeric($maybePort) ? (int) $maybePort : null];
             }
         }
 
-        $this->host = $address;
-        $this->port = null;
+        return $result;
     }
 }

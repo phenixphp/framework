@@ -12,6 +12,7 @@ use Phenix\Auth\Middlewares\Authenticated;
 use Phenix\Auth\Middlewares\Guest;
 use Phenix\Auth\PersonalAccessToken;
 use Phenix\Auth\User;
+use Phenix\Constants\AppMode;
 use Phenix\Database\Constants\Connection;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
@@ -387,6 +388,42 @@ it('rate limits failed token validations and sets retry-after header', function 
         'Authorization' => 'Bearer invalid-token',
         'X-Forwarded-For' => '203.0.113.10',
     ])->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS)->assertHeaders(['Retry-After' => '300']);
+});
+
+it('tracks failed token validation attempts by forwarded client ip behind a trusted proxy', function (): void {
+    Config::set('app.app_mode', AppMode::PROXIED->value);
+    Config::set('app.trusted_proxies', ['127.0.0.1/32', '127.0.0.1']);
+
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $connection->expects($this->any())
+        ->method('prepare')
+        ->willReturn(
+            new Statement(new Result()),
+        );
+
+    $this->app->swap(Connection::default(), $connection);
+
+    Route::get('/limited-proxy', fn (): Response => response()->plain('Never reached'))
+        ->middleware(Authenticated::class);
+
+    $this->app->run();
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->get('/limited-proxy', headers: [
+            'Authorization' => 'Bearer invalid-token',
+            'X-Forwarded-For' => '203.0.113.10',
+        ])->assertUnauthorized();
+    }
+
+    $this->get('/limited-proxy', headers: [
+        'Authorization' => 'Bearer invalid-token',
+        'X-Forwarded-For' => '203.0.113.10',
+    ])->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS)->assertHeaders(['Retry-After' => '300']);
+
+    $this->get('/limited-proxy', headers: [
+        'Authorization' => 'Bearer invalid-token',
+        'X-Forwarded-For' => '203.0.113.11',
+    ])->assertUnauthorized();
 });
 
 it('resets rate limit counter on successful authentication', function (): void {
