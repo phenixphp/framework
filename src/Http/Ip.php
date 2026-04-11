@@ -86,6 +86,8 @@ class Ip
             return [$address, null];
         }
 
+        $result = [$address, null];
+
         if (str_contains($address, ':')) {
             [$maybeHost, $maybePort] = explode(':', $address, 2);
 
@@ -93,10 +95,10 @@ class Ip
                 filter_var($maybeHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ||
                 filter_var($maybeHost, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
             ) {
-                return [$maybeHost, is_numeric($maybePort) ? (int) $maybePort : null];
+                $result = [$maybeHost, is_numeric($maybePort) ? (int) $maybePort : null];
             }
         }
 
-        return [$address, null];
+        return $result;
     }
 }
