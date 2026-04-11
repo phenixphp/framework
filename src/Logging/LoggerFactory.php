@@ -9,6 +9,7 @@ use Amp\Cluster\Cluster;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
 use Monolog\Formatter\LineFormatter;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Phenix\Constants\ServerMode;
@@ -21,12 +22,16 @@ class LoggerFactory implements Makeable
 {
     public static function make(string $key, ServerMode $serverMode = ServerMode::SINGLE): Logger
     {
+        /** @var int|string|null $levelConfig */
+        $levelConfig = Config::get('app.debug_level');
+        $level = Level::tryFrom((int) $levelConfig) ?? Level::Debug;
+
         if ($serverMode === ServerMode::CLUSTER && Cluster::isWorker()) {
-            $logHandler = Cluster::createLogHandler();
+            $logHandler = Cluster::createLogHandler($level);
         } else {
             $logHandler = match ($key) {
-                'file' => self::fileHandler(),
-                'stream' => self::streamHandler(),
+                'file' => self::fileHandler($level),
+                'stream' => self::streamHandler($level),
                 default => throw new RuntimeError("Unsupported logging channel: {$key}"),
             };
         }
@@ -37,16 +42,16 @@ class LoggerFactory implements Makeable
         return $logger;
     }
 
-    private static function streamHandler(): StreamHandler
+    private static function streamHandler(Level $level): StreamHandler
     {
-        $logHandler = new StreamHandler(ByteStream\getStdout());
+        $logHandler = new StreamHandler(ByteStream\getStdout(), $level);
         $logHandler->pushProcessor(new PsrLogMessageProcessor());
         $logHandler->setFormatter(new ConsoleFormatter());
 
         return $logHandler;
     }
 
-    private static function fileHandler(): StreamHandler
+    private static function fileHandler(Level $level): StreamHandler
     {
         $path = Config::get('logging.path');
 
@@ -56,7 +61,7 @@ class LoggerFactory implements Makeable
 
         $file = File::openFile($path, 'a');
 
-        $logHandler = new StreamHandler($file);
+        $logHandler = new StreamHandler($file, $level);
         $logHandler->pushProcessor(new PsrLogMessageProcessor());
         $logHandler->setFormatter(new LineFormatter());
 
