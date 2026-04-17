@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests;
 
+use Amp\ByteStream\BufferException;
+use Amp\Http\HttpStatus;
 use Amp\Http\Server\FormParser\BufferedFile;
+use Amp\Http\Server\HttpErrorException;
 use Amp\Http\Server\Request;
 
 use function is_numeric;
@@ -13,14 +16,15 @@ class JsonParser extends BodyParser
 {
     private array $body;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly int $bodySizeLimit = 120 * 1024 * 1024
+    ) {
         $this->body = [];
     }
 
     public static function fromRequest(Request $request, array $options = []): self
     {
-        return (new self())->parse($request);
+        return (new self($options['body_size_limit'] ?? 120 * 1024 * 1024))->parse($request);
     }
 
     public function get(string $key, array|string|int|null $default = null): array|string|int|null
@@ -66,9 +70,15 @@ class JsonParser extends BodyParser
 
     protected function parse(Request $request): self
     {
-        $body = json_decode($request->getBody()->read() ?? '', true);
+        try {
+            $raw = $request->getBody()->buffer(limit: $this->bodySizeLimit);
+        } catch (BufferException $exception) {
+            throw new HttpErrorException(HttpStatus::PAYLOAD_TOO_LARGE, 'Request body is too large', $exception);
+        }
 
-        if (json_last_error() === JSON_ERROR_NONE) {
+        $body = json_decode($raw, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($body)) {
             $this->body = $body;
         }
 

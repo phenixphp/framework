@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests;
 
+use Amp\ByteStream\BufferException;
+use Amp\Http\HttpStatus;
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\FormParser\Form;
+use Amp\Http\Server\FormParser\FormParser as AmpFormParser;
+use Amp\Http\Server\HttpErrorException;
 use Amp\Http\Server\Request;
 
+use function Amp\Http\Server\FormParser\parseContentBoundary;
 use function is_array;
 use function is_null;
 use function is_numeric;
@@ -16,14 +21,19 @@ class FormParser extends BodyParser
 {
     private Form|null $form;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly int $bodySizeLimit = 120 * 1024 * 1024,
+        private readonly int|null $fieldCountLimit = null
+    ) {
         $this->form = null;
     }
 
     public static function fromRequest(Request $request, array $options = []): self
     {
-        $parser = new self();
+        $parser = new self(
+            $options['body_size_limit'] ?? 120 * 1024 * 1024,
+            $options['field_count_limit'] ?? null
+        );
         $parser->parse($request);
 
         return $parser;
@@ -79,7 +89,15 @@ class FormParser extends BodyParser
 
     protected function parse(Request $request): self
     {
-        $this->form = Form::fromRequest($request);
+        $boundary = parseContentBoundary($request->getHeader('content-type') ?? '');
+
+        try {
+            $body = $boundary === null ? '' : $request->getBody()->buffer(limit: $this->bodySizeLimit);
+        } catch (BufferException $exception) {
+            throw new HttpErrorException(HttpStatus::PAYLOAD_TOO_LARGE, 'Request body is too large', $exception);
+        }
+
+        $this->form = (new AmpFormParser($this->fieldCountLimit))->parseBody($body, $boundary);
 
         return $this;
     }
