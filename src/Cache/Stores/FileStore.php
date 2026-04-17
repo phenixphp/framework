@@ -6,10 +6,12 @@ namespace Phenix\Cache\Stores;
 
 use Closure;
 use Phenix\Cache\CacheStore;
+use Phenix\Facades\Config;
 use Phenix\Facades\File;
 use Phenix\Util\Arr;
 use Phenix\Util\Date;
 
+use function hash_equals;
 use function is_array;
 
 class FileStore extends CacheStore
@@ -31,7 +33,7 @@ class FileStore extends CacheStore
 
         $data = json_decode($raw, true);
 
-        if (! is_array($data) || ! Arr::has($data, ['expires_at', 'value'])) {
+        if (! is_array($data) || ! Arr::has($data, ['expires_at', 'value', 'mac']) || ! $this->hasValidMac($data)) {
             $this->delete($key);
 
             return $this->resolveCallback($key, $callback);
@@ -58,6 +60,8 @@ class FileStore extends CacheStore
             'value' => base64_encode(serialize($value)),
         ];
 
+        $payload['mac'] = $this->mac($payload['value'], $expiresAt);
+
         File::put($this->filename($key), json_encode($payload, JSON_THROW_ON_ERROR));
     }
 
@@ -67,6 +71,8 @@ class FileStore extends CacheStore
             'expires_at' => null,
             'value' => base64_encode(serialize($value)),
         ];
+
+        $payload['mac'] = $this->mac($payload['value'], null);
 
         File::put($this->filename($key), json_encode($payload, JSON_THROW_ON_ERROR));
     }
@@ -81,7 +87,7 @@ class FileStore extends CacheStore
 
         $data = json_decode($raw, true);
 
-        if (! is_array($data)) {
+        if (! is_array($data) || ! Arr::has($data, ['expires_at', 'value', 'mac']) || ! $this->hasValidMac($data)) {
             return false;
         }
 
@@ -119,6 +125,23 @@ class FileStore extends CacheStore
     protected function filename(string $key): string
     {
         return $this->path . DIRECTORY_SEPARATOR . sha1($this->prefix . $key) . '.cache';
+    }
+
+    protected function hasValidMac(array $data): bool
+    {
+        return hash_equals(
+            (string) $data['mac'],
+            $this->mac((string) $data['value'], $data['expires_at'])
+        );
+    }
+
+    protected function mac(string $value, int|string|null $expiresAt): string
+    {
+        return hash_hmac(
+            'sha256',
+            $value . '|' . ($expiresAt ?? 'forever'),
+            (string) Config::get('app.key', Config::get('cache.prefix', ''))
+        );
     }
 
     protected function resolveCallback(string $key, Closure|null $callback): mixed

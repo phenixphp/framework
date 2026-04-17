@@ -178,6 +178,29 @@ it('handles corrupted cache file gracefully', function (): void {
     expect(Cache::has('corrupted'))->toBeTrue();
 });
 
+it('rejects unsigned serialized cache payloads', function (): void {
+    $cachePath = Config::get('cache.stores.file.path');
+    $prefix = Config::get('cache.prefix');
+
+    $filename = $cachePath . DIRECTORY_SEPARATOR . sha1("{$prefix}unsigned") . '.cache';
+
+    File::put($filename, json_encode([
+        'expires_at' => time() + 3600,
+        'value' => base64_encode(serialize(new stdClass())),
+    ], JSON_THROW_ON_ERROR));
+
+    $callCount = 0;
+
+    $value = Cache::get('unsigned', function () use (&$callCount): string {
+        $callCount++;
+
+        return 'safe_value';
+    });
+
+    expect($value)->toBe('safe_value');
+    expect($callCount)->toBe(1);
+});
+
 it('handles corrupted trying to check cache exists', function (): void {
     $cachePath = Config::get('cache.stores.file.path');
     $prefix = Config::get('cache.prefix');
