@@ -24,11 +24,11 @@ class Cookie
             ->withPath($this->config->path());
 
         if ($this->config->httpOnly()) {
-            $cookieAttributes->withHttpOnly();
+            $cookieAttributes = $cookieAttributes->withHttpOnly();
         }
 
         if ($this->config->secure()) {
-            $cookieAttributes->withSecure();
+            $cookieAttributes = $cookieAttributes->withSecure();
         }
 
         return $cookieAttributes;
