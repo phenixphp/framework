@@ -83,7 +83,12 @@ class DatabaseQueue extends Queue
                 return null;
             }
 
-            $task = unserialize($queuedTask['payload']);
+            $task = $this->restoreTask($queuedTask['payload']);
+
+            if ($task === null) {
+                return null;
+            }
+
             $task->setTaskId($queuedTask['id']);
             $task->setAttempts($queuedTask['attempts']);
 

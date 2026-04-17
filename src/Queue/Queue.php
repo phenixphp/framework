@@ -7,6 +7,12 @@ namespace Phenix\Queue;
 use Phenix\Queue\Contracts\Queue as QueueContract;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Tasks\QueuableTask;
+use Throwable;
+
+use function class_exists;
+use function is_subclass_of;
+use function preg_match;
+use function unserialize;
 
 abstract class Queue implements QueueContract
 {
@@ -74,5 +80,28 @@ abstract class Queue implements QueueContract
     public function getStateManager(): TaskState
     {
         return $this->stateManager;
+    }
+
+    protected function restoreTask(string $payload): QueuableTask|null
+    {
+        if (preg_match('/^O:\d+:"([^"]+)":/', $payload, $matches) !== 1) {
+            return null;
+        }
+
+        $class = $matches[1];
+
+        if (! class_exists($class) || ! is_subclass_of($class, QueuableTask::class)) {
+            return null;
+        }
+
+        try {
+            $task = unserialize($payload, ['allowed_classes' => [$class]]);
+
+            $queuableTask = $task instanceof QueuableTask ? $task : null;
+        } catch (Throwable) {
+            $queuableTask = null;
+        }
+
+        return $queuableTask;
     }
 }

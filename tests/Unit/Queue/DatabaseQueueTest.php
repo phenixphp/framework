@@ -182,6 +182,40 @@ it('returns a task', function (): void {
     expect($task)->not->toBeNull();
 });
 
+it('rejects unauthorized serialized payloads', function (): void {
+    $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
+    $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
+
+    $databaseStatement = $this->getMockBuilder(Statement::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $databaseStatement->expects($this->once())
+        ->method('execute')
+        ->willReturn(new Result([
+            [
+                'id' => 'unauthorized-task',
+                'payload' => serialize(new stdClass()),
+                'attempts' => 0,
+                'reserved_at' => null,
+                'available_at' => (new DateTime())->format('Y-m-d H:i:s'),
+                'created_at' => (new DateTime())->format('Y-m-d H:i:s'),
+            ],
+        ]));
+
+    $transaction->expects($this->once())
+        ->method('prepare')
+        ->willReturn($databaseStatement);
+
+    $connection->expects($this->once())
+        ->method('beginTransaction')
+        ->willReturn($transaction);
+
+    $this->app->swap(Connection::default(), $connection);
+
+    expect(Queue::pop())->toBeNull();
+});
+
 it('returns null when no queued task exists', function (): void {
     $connection = $this->getMockBuilder(MysqlConnectionPool::class)->getMock();
     $transaction = $this->getMockBuilder(SqlTransaction::class)->getMock();
