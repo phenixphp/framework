@@ -5,12 +5,15 @@ declare(strict_types=1);
 use Phenix\Cache\Constants\Store;
 use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
+use Phenix\Facades\Crypto;
 use Phenix\Facades\File;
 use Phenix\Util\Date;
 
 use function Amp\delay;
 
 beforeEach(function (): void {
+    Config::set('app.key', Crypto::generateEncodedKey());
+
     Config::set('cache.default', Store::FILE->value);
 
     Cache::clear();

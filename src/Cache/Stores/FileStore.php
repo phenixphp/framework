@@ -6,6 +6,7 @@ namespace Phenix\Cache\Stores;
 
 use Closure;
 use Phenix\Cache\CacheStore;
+use Phenix\Crypto\Exceptions\MissingKeyException;
 use Phenix\Facades\Config;
 use Phenix\Facades\File;
 use Phenix\Util\Arr;
@@ -137,10 +138,16 @@ class FileStore extends CacheStore
 
     protected function mac(string $value, int|string|null $expiresAt): string
     {
+        $key = Config::get('app.key');
+
+        if (empty($key)) {
+            throw new MissingKeyException('The application key is not set.');
+        }
+
         return hash_hmac(
             'sha256',
-            $value . '|' . ($expiresAt ?? 'forever'),
-            (string) Config::get('app.key', Config::get('cache.prefix', ''))
+            "{$value}|" . ($expiresAt ?? 'forever'),
+            (string) $key
         );
     }
 
