@@ -58,14 +58,10 @@ class RedisQueue extends Queue
 
         $task = $this->restoreTask($payload);
 
-        if ($task === null) {
-            return null;
-        }
-
-        $task->setQueueName($queueName ?? $this->queueName ?? 'default');
-
-        if ($this->stateManager->reserve($task)) {
-            return $task;
+        if ($task) {
+            $task->setQueueName($queueName ?? $this->queueName ?? 'default');
+    
+            return $this->stateManager->reserve($task) ? $task : null;
         }
 
         $this->redis->execute('RPUSH', $queueKey, $payload);
