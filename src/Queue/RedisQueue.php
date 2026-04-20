@@ -60,7 +60,7 @@ class RedisQueue extends Queue
 
         if ($task) {
             $task->setQueueName($queueName ?? $this->queueName ?? 'default');
-    
+
             return $this->stateManager->reserve($task) ? $task : null;
         }
 
