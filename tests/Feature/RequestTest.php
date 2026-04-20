@@ -14,6 +14,8 @@ use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
 use Phenix\Testing\TestResponse;
+use Tests\Feature\Requests\LimitedBodyRequest;
+use Tests\Feature\Requests\LimitedStreamedRequest;
 use Tests\Unit\Routing\AcceptJsonResponses;
 
 beforeEach(function (): void {
@@ -127,6 +129,48 @@ it('can decode multipart form data body', function (): void {
 
     $this->post('/files', $body)
         ->assertOk();
+});
+
+it('rejects json bodies above the request body limit', function (): void {
+    Route::post('/limited-json', function (LimitedBodyRequest $request): Response {
+        return response()->json($request->toArray());
+    });
+
+    $this->app->run();
+
+    $this->post(
+        path: '/limited-json',
+        body: ['payload' => str_repeat('x', 64)],
+        headers: ['content-type' => ContentType::JSON->value]
+    )->assertStatusCode(HttpStatus::PAYLOAD_TOO_LARGE);
+});
+
+it('rejects buffered form bodies above the request body limit', function (): void {
+    Route::post('/limited-form', function (LimitedBodyRequest $request): Response {
+        return response()->json($request->toArray());
+    });
+
+    $this->app->run();
+
+    $body = new Form();
+    $body->addField('payload', str_repeat('x', 64));
+
+    $this->post('/limited-form', $body)
+        ->assertStatusCode(HttpStatus::PAYLOAD_TOO_LARGE);
+});
+
+it('rejects streamed form bodies above the request body limit', function (): void {
+    Route::post('/limited-stream', function (LimitedStreamedRequest $request): Response {
+        return response()->json($request->toArray());
+    });
+
+    $this->app->run();
+
+    $body = new Form();
+    $body->addField('payload', str_repeat('x', 64));
+
+    $this->post('/limited-stream', $body)
+        ->assertStatusCode(HttpStatus::PAYLOAD_TOO_LARGE);
 });
 
 it('responds with a view', function (): void {

@@ -39,6 +39,9 @@ it('initializes the session middleware with local driver', function (): void {
         ->assertOk();
 
     expect($response->getHeaders())->toHaveKey('set-cookie');
+    expect($response->getHeader('set-cookie'))
+        ->toContain('HttpOnly')
+        ->toContain('SameSite=Lax');
 
     $this->get(path: '/name', headers: ['Cookie' => $response->getHeader('set-cookie')])
         ->assertOk();
@@ -61,6 +64,9 @@ it('initializes the session middleware in secure mode', function () {
         ->assertOk();
 
     expect($response->getHeaders())->toHaveKey('set-cookie');
+    expect($response->getHeader('set-cookie'))
+        ->toContain('HttpOnly')
+        ->toContain('Secure');
 });
 
 it('initializes the session middleware with redis driver', function () {

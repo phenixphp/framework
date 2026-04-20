@@ -102,3 +102,17 @@ it('rejects access when URL path is modified', function (): void {
     $this->get(path: $modifiedUrl)
         ->assertStatusCode(HttpStatus::FORBIDDEN);
 });
+
+it('rejects access when URL query is modified', function (): void {
+    Route::get('/signed/{user}', fn (): Response => response()->plain('Ok'))
+        ->name('signed.query')
+        ->middleware(ValidateSignature::class);
+
+    $this->app->run();
+
+    $signedUrl = Url::signedRoute('signed.query', ['user' => 42, 'scope' => 'read']);
+    $modifiedUrl = str_replace('scope=read', 'scope=write', $signedUrl);
+
+    $this->get(path: $modifiedUrl)
+        ->assertStatusCode(HttpStatus::FORBIDDEN);
+});

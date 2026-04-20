@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Requests;
 
+use Amp\ByteStream\BufferException;
+use Amp\Http\HttpStatus;
 use Amp\Http\Server\FormParser\BufferedFile;
 use Amp\Http\Server\FormParser\StreamedField;
 use Amp\Http\Server\FormParser\StreamingFormParser;
+use Amp\Http\Server\HttpErrorException;
 use Amp\Http\Server\Request;
 use Amp\Pipeline\ConcurrentIterator;
 
@@ -84,21 +87,25 @@ class StreamParser extends BodyParser
     protected function parse(Request $request): self
     {
         /** @var ConcurrentIterator $iterator */
-        $iterator = $this->parser->parseForm($request);
+        $iterator = $this->parser->parseForm($request, $this->bodySizeLimit);
 
         while ($iterator->continue()) {
             /** @var StreamedField $field */
             $field = $iterator->getValue();
 
-            if ($field->isFile()) {
-                $this->files[$field->getName()] = new BufferedFile(
-                    $field->getFilename(),
-                    $field->buffer(),
-                    $field->getMimeType(),
-                    $field->getHeaderPairs()
-                );
-            } else {
-                $this->data[$field->getName()] = $field->buffer();
+            try {
+                if ($field->isFile()) {
+                    $this->files[$field->getName()] = new BufferedFile(
+                        $field->getFilename(),
+                        $field->buffer(limit: $this->bodySizeLimit ?? PHP_INT_MAX),
+                        $field->getMimeType(),
+                        $field->getHeaderPairs()
+                    );
+                } else {
+                    $this->data[$field->getName()] = $field->buffer(limit: $this->bodySizeLimit ?? PHP_INT_MAX);
+                }
+            } catch (BufferException $exception) {
+                throw new HttpErrorException(HttpStatus::PAYLOAD_TOO_LARGE, 'Request body is too large', $exception);
             }
         }
 

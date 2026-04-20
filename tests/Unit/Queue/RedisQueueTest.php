@@ -113,6 +113,30 @@ it('returns a task', function (): void {
     expect($task)->toBeInstanceOf(BasicQueuableTask::class);
 });
 
+it('rejects unauthorized serialized payloads', function (): void {
+    $clientMock = $this->getMockBuilder(ClientWrapper::class)
+        ->disableOriginalConstructor()
+        ->getMock();
+
+    $clientMock->expects($this->once())
+        ->method('execute')
+        ->with(
+            $this->equalTo('EVAL'),
+            $this->isType('string'),
+            $this->equalTo(3),
+            $this->equalTo('queues:default'),
+            $this->equalTo('queues:failed'),
+            $this->equalTo('queues:delayed'),
+            $this->isType('int'),
+            $this->equalTo(60)
+        )
+        ->willReturn(serialize(new stdClass()));
+
+    $this->app->swap(Connection::redis('default'), $clientMock);
+
+    expect(Queue::pop())->toBeNull();
+});
+
 it('returns the queue size', function (): void {
     $clientMock = $this->getMockBuilder(ClientWrapper::class)
         ->disableOriginalConstructor()

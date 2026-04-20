@@ -11,7 +11,6 @@ use Amp\Http\Server\Request as ServerRequest;
 use Amp\Http\Server\RequestBody;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\Session\Session as ServerSession;
-use Amp\Http\Server\Trailers;
 use League\Uri\Components\Query;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\ContentType;
@@ -20,6 +19,7 @@ use Phenix\Http\Contracts\BodyParser;
 use Phenix\Http\Requests\Concerns\HasCookies;
 use Phenix\Http\Requests\Concerns\HasHeaders;
 use Phenix\Http\Requests\Concerns\HasQueryParameters;
+use Phenix\Http\Requests\Concerns\HasTrailers;
 use Phenix\Http\Requests\Concerns\HasUser;
 use Phenix\Http\Requests\FormParser;
 use Phenix\Http\Requests\JsonParser;
@@ -32,9 +32,12 @@ class Request implements Arrayable
     use HasUser;
     use HasHeaders;
     use HasCookies;
+    use HasTrailers;
     use HasQueryParameters;
 
-    protected readonly BodyParser $body;
+    protected const DEFAULT_BODY_SIZE_LIMIT = 120 * 1024 * 1024;
+
+    protected BodyParser|null $body;
 
     protected readonly Query $query;
 
@@ -60,7 +63,7 @@ class Request implements Arrayable
 
         $this->query = Query::fromUri($request->getUri());
         $this->routeAttributes = new RouteAttributes($routeAttributes);
-        $this->body = $this->getParser();
+        $this->body = null;
     }
 
     public function getClient(): Client
@@ -81,21 +84,6 @@ class Request implements Arrayable
     public function setBody(ReadableStream|string $body): void
     {
         $this->request->setBody($body);
-    }
-
-    public function getTrailers(): Trailers|null
-    {
-        return $this->request->getTrailers();
-    }
-
-    public function setTrailers(Trailers $trailers): void
-    {
-        $this->request->setTrailers($trailers);
-    }
-
-    public function removeTrailers(): void
-    {
-        $this->request->removeTrailers();
     }
 
     public function getMethod(): string
@@ -133,11 +121,13 @@ class Request implements Arrayable
 
     public function body(string|null $key = null, array|string|int|null $default = null): BodyParser|BufferedFile|array|string|int|null
     {
+        $body = $this->bodyParser();
+
         if ($key) {
-            return $this->body->hasFile($key) ? $this->body->getFile($key) : $this->body->get($key, $default);
+            return $body->hasFile($key) ? $body->getFile($key) : $body->get($key, $default);
         }
 
-        return $this->body;
+        return $body;
     }
 
     public function session(string|null $key = null, array|string|int|null $default = null): Session|array|string|int|null
@@ -156,7 +146,7 @@ class Request implements Arrayable
 
     public function toArray(): array
     {
-        return $this->body->toArray();
+        return $this->bodyParser()->toArray();
     }
 
     protected function mode(): RequestMode
@@ -164,20 +154,41 @@ class Request implements Arrayable
         return RequestMode::BUFFERED;
     }
 
+    protected function bodySizeLimit(): int
+    {
+        return self::DEFAULT_BODY_SIZE_LIMIT;
+    }
+
+    protected function fieldCountLimit(): int|null
+    {
+        return null;
+    }
+
+    protected function bodyParser(): BodyParser
+    {
+        return $this->body ??= $this->getParser();
+    }
+
     protected function getParser(): BodyParser
     {
         $contentType = ContentType::fromValue($this->request->getHeader('content-type'));
 
         if ($contentType === ContentType::JSON) {
-            return JsonParser::fromRequest($this->request);
+            return JsonParser::fromRequest($this->request, [
+                'body_size_limit' => $this->bodySizeLimit(),
+            ]);
         }
 
         if ($this->mode() === RequestMode::STREAMED) {
             return StreamParser::fromRequest($this->request, [
-                'body_size_limit' => 120 * 1024 * 1024,
+                'body_size_limit' => $this->bodySizeLimit(),
+                'field_count_limit' => $this->fieldCountLimit(),
             ]);
         }
 
-        return FormParser::fromRequest($this->request);
+        return FormParser::fromRequest($this->request, [
+            'body_size_limit' => $this->bodySizeLimit(),
+            'field_count_limit' => $this->fieldCountLimit(),
+        ]);
     }
 }
