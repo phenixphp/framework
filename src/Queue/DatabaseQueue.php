@@ -92,11 +92,7 @@ class DatabaseQueue extends Queue
             $task->setTaskId($queuedTask['id']);
             $task->setAttempts($queuedTask['attempts']);
 
-            if ($this->stateManager->reserve($task)) {
-                return $task;
-            }
-
-            return null;
+            return $this->stateManager->reserve($task) ? $task : null;
         });
     }
 
