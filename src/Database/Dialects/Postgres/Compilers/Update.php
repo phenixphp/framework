@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Compilers;
 
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\UpdateCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 
 use function count;
 
@@ -20,8 +22,10 @@ class Update extends UpdateCompiler
         $this->whereCompiler = new Where();
     }
 
-    protected function compileSetClause(string $column, int $paramIndex): string
+    protected function compileSetClause(Driver $driver, string $column, int $paramIndex): string
     {
+        $column = Wrapper::column($driver, $column);
+
         return "{$column} = $" . $paramIndex;
     }
 

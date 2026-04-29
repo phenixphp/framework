@@ -6,10 +6,13 @@ namespace Phenix\Database;
 
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 
 class QueryAst
 {
+    public Driver $driver;
+
     public Action $action;
 
     public string $table;

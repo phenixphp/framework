@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Contracts\ClauseCompiler;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
+
+use function count;
 
 abstract class UpdateCompiler implements ClauseCompiler
 {
@@ -19,7 +23,7 @@ abstract class UpdateCompiler implements ClauseCompiler
         $params = [];
 
         $parts[] = 'UPDATE';
-        $parts[] = $ast->table;
+        $parts[] = Wrapper::of($ast->driver, $ast->table);
 
         // SET col1 = ?, col2 = ?
         // Extract params from values (these are actual values, not placeholders)
@@ -27,7 +31,7 @@ abstract class UpdateCompiler implements ClauseCompiler
 
         foreach ($ast->values as $column => $value) {
             $params[] = $value;
-            $columns[] = $this->compileSetClause($column, count($params));
+            $columns[] = $this->compileSetClause($ast->driver, $column, count($params));
         }
 
         $parts[] = 'SET';
@@ -44,7 +48,7 @@ abstract class UpdateCompiler implements ClauseCompiler
 
         if (! empty($ast->returning)) {
             $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+            $parts[] = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->returning), ', ');
         }
 
         $sql = Arr::implodeDeeply($parts);
@@ -56,5 +60,5 @@ abstract class UpdateCompiler implements ClauseCompiler
      * Compile the SET clause for a column assignment
      * This is dialect-specific for placeholder syntax
      */
-    abstract protected function compileSetClause(string $column, int $paramIndex): string;
+    abstract protected function compileSetClause(Driver $driver, string $column, int $paramIndex): string;
 }

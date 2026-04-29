@@ -6,6 +6,8 @@ namespace Phenix\Database;
 
 use Phenix\Database\Contracts\RawValue;
 
+use function is_int;
+
 class Value implements RawValue
 {
     public function __construct(
@@ -16,7 +18,11 @@ class Value implements RawValue
 
     public function __toString(): string
     {
-        return "'" . $this->value . "'";
+        if (is_int($this->value)) {
+            return (string) $this->value;
+        }
+
+        return "'" . str_replace("'", "''", $this->value) . "'";
     }
 
     public static function from(string|int $value): self

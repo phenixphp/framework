@@ -7,7 +7,7 @@ namespace Phenix\Database\Dialects\Compilers;
 use Phenix\Database\Contracts\ClauseCompiler;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
-use Phenix\Database\Value;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 abstract class ExistsCompiler implements ClauseCompiler
@@ -24,7 +24,7 @@ abstract class ExistsCompiler implements ClauseCompiler
 
         $subquery = [];
         $subquery[] = 'SELECT 1 FROM';
-        $subquery[] = $ast->table;
+        $subquery[] = Wrapper::of($ast->driver, $ast->table);
 
         if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);
@@ -35,7 +35,7 @@ abstract class ExistsCompiler implements ClauseCompiler
 
         $parts[] = '(' . Arr::implodeDeeply($subquery) . ')';
         $parts[] = 'AS';
-        $parts[] = Value::from('exists');
+        $parts[] = Wrapper::column($ast->driver, 'exists');
 
         $sql = Arr::implodeDeeply($parts);
 

@@ -14,7 +14,8 @@ use Phenix\Database\Having;
 use Phenix\Database\QueryAst;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Util\Arr;
+
+use function is_string;
 
 trait BuildsQuery
 {
@@ -29,6 +30,7 @@ trait BuildsQuery
     {
         if ($table instanceof Closure) {
             $builder = new Subquery($this->driver);
+            $builder->setDriver($this->driver);
             $builder->selectAllColumns();
 
             $table($builder);
@@ -64,12 +66,11 @@ trait BuildsQuery
 
     public function groupBy(Functions|array|string $column): static
     {
-        $column = match (true) {
-            $column instanceof Functions => (string) $column,
-            default => $column,
-        };
+        if ($column instanceof Functions || is_string($column)) {
+            $column = [$column];
+        }
 
-        $this->groupBy = [Operator::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
+        $this->groupBy = $column;
 
         return $this;
     }
@@ -77,6 +78,7 @@ trait BuildsQuery
     public function having(Closure $clause): static
     {
         $having = new Having();
+        $having->setDriver($this->driver);
 
         $clause($having);
 
@@ -91,12 +93,11 @@ trait BuildsQuery
 
     public function orderBy(SelectCase|array|string $column, Order $order = Order::DESC): static
     {
-        $column = match (true) {
-            $column instanceof SelectCase => '(' . $column . ')',
-            default => $column,
-        };
+        if ($column instanceof SelectCase || is_string($column)) {
+            $column = [$column];
+        }
 
-        $this->orderBy = [Operator::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
+        $this->orderBy = [$column, $order->value];
 
         return $this;
     }
@@ -135,6 +136,7 @@ trait BuildsQuery
     protected function buildAst(): QueryAst
     {
         $ast = new QueryAst();
+        $ast->driver = $this->driver;
         $ast->action = $this->action;
         $ast->table = $this->table;
         $ast->columns = $this->columns;

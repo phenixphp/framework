@@ -6,6 +6,7 @@ namespace Phenix\Database;
 
 use Closure;
 use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Concerns\Query\HasWhereClause;
@@ -54,7 +55,8 @@ abstract class Clause extends Grammar implements Builder
         LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         $builder = new Subquery($this->driver);
-        $builder->select(['*']);
+        $builder->setDriver($this->driver);
+        $builder->selectAllColumns();
 
         $subquery($builder);
 
@@ -68,6 +70,36 @@ abstract class Clause extends Grammar implements Builder
             params: $arguments,
             column: $column,
             operator: $operator,
+            connector: $connector
+        );
+
+        $this->arguments = array_merge($this->arguments, $arguments);
+    }
+
+    /**
+     * @param array<int, string> $columns
+     */
+    protected function whereRowSubquery(
+        Closure $subquery,
+        Operator $comparisonOperator,
+        array $columns,
+        LogicalConnector $logicalConnector = LogicalConnector::AND
+    ): void {
+        $builder = new Subquery($this->driver);
+        $builder->setDriver($this->driver);
+        $builder->selectAllColumns();
+
+        $subquery($builder);
+
+        [$dml, $arguments] = $builder->toSql();
+
+        $connector = count($this->clauses) === 0 ? null : $logicalConnector;
+
+        $this->clauses[] = new RowWhereClause(
+            columns: $columns,
+            comparisonOperator: $comparisonOperator,
+            sql: trim($dml, '()'),
+            params: $arguments,
             connector: $connector
         );
 

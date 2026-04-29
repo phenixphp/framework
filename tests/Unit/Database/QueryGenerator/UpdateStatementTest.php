@@ -17,7 +17,7 @@ it('generates update statement', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "UPDATE users SET name = ? WHERE id = ?";
+    $expected = "UPDATE `users` SET `name` = ? WHERE `id` = ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$name, 1]);
@@ -35,7 +35,7 @@ it('generates update statement with many conditions and columns', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "UPDATE users SET name = ?, active = ? WHERE verified_at IS NOT NULL AND role_id = ?";
+    $expected = "UPDATE `users` SET `name` = ?, `active` = ? WHERE `verified_at` IS NOT NULL AND `role_id` = ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$name, true, 2]);

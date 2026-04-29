@@ -23,10 +23,10 @@ it('generates query for all join types', function (string $method, string $joinT
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, products.description, categories.description "
-        . "FROM products "
-        . "{$joinType} categories "
-        . "ON products.category_id = categories.id";
+    $expected = "SELECT \"products\".\"id\", \"products\".\"description\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "{$joinType} \"categories\" "
+        . "ON \"products\".\"category_id\" = \"categories\".\"id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -55,10 +55,10 @@ it('generates query using join with distinct clasue', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, products.description, categories.description "
-        . "FROM products "
-        . "INNER JOIN categories "
-        . "ON products.category_id != categories.id";
+    $expected = "SELECT \"products\".\"id\", \"products\".\"description\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "INNER JOIN \"categories\" "
+        . "ON \"products\".\"category_id\" != \"categories\".\"id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -86,10 +86,10 @@ it('generates query with join and multi clauses', function (
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, products.description, categories.description "
-        . "FROM products "
-        . "INNER JOIN categories "
-        . "ON products.category_id = categories.id {$clause}";
+    $expected = "SELECT \"products\".\"id\", \"products\".\"description\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "INNER JOIN \"categories\" "
+        . "ON \"products\".\"category_id\" = \"categories\".\"id\" {$clause}";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe($joinParams);
@@ -97,25 +97,25 @@ it('generates query with join and multi clauses', function (
     [
         'orOnEqual',
         ['products.location_id', 'categories.location_id'],
-        'OR products.location_id = categories.location_id',
+        'OR "products"."location_id" = "categories"."location_id"',
         [],
     ],
     [
         'whereEqual',
         ['categories.name', 'php'],
-        'AND categories.name = $1',
+        'AND "categories"."name" = $1',
         ['php'],
     ],
     [
         'orOnNotEqual',
         ['products.location_id', 'categories.location_id'],
-        'OR products.location_id != categories.location_id',
+        'OR "products"."location_id" != "categories"."location_id"',
         [],
     ],
     [
         'orWhereEqual',
         ['categories.name', 'php'],
-        'OR categories.name = $1',
+        'OR "categories"."name" = $1',
         ['php'],
     ],
 ]);
@@ -134,10 +134,10 @@ it('generates query with shortcut methods for all join types', function (string 
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, products.description, categories.description "
-        . "FROM products "
-        . "{$joinType} categories "
-        . "ON products.category_id = categories.id";
+    $expected = "SELECT \"products\".\"id\", \"products\".\"description\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "{$joinType} \"categories\" "
+        . "ON \"products\".\"category_id\" = \"categories\".\"id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -146,6 +146,31 @@ it('generates query with shortcut methods for all join types', function (string 
     ['leftJoinOnEqual', JoinType::LEFT->value],
     ['rightJoinOnEqual', JoinType::RIGHT->value],
 ]);
+
+it('generates query with join date clause', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->select([
+            'products.id',
+            'categories.description',
+        ])
+        ->from('products')
+        ->innerJoin('categories', function (Join $join) {
+            $join->onEqual('products.category_id', 'categories.id')
+                ->whereDateEqual('categories.created_at', '2026-01-15');
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT \"products\".\"id\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "INNER JOIN \"categories\" "
+        . "ON \"products\".\"category_id\" = \"categories\".\"id\" AND DATE(\"categories\".\"created_at\") = $1";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['2026-01-15']);
+});
 
 it('generates query with multiple joins', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
@@ -166,10 +191,10 @@ it('generates query with multiple joins', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, categories.name, suppliers.name "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "LEFT JOIN suppliers ON products.supplier_id = suppliers.id";
+    $expected = "SELECT \"products\".\"id\", \"categories\".\"name\", \"suppliers\".\"name\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
+        . "LEFT JOIN \"suppliers\" ON \"products\".\"supplier_id\" = \"suppliers\".\"id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -191,10 +216,10 @@ it('generates query with join and where clause', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT products.id, categories.name "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "WHERE products.status = $1";
+    $expected = "SELECT \"products\".\"id\", \"categories\".\"name\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
+        . "WHERE \"products\".\"status\" = $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active']);

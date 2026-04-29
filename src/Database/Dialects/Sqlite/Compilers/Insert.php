@@ -7,6 +7,7 @@ namespace Phenix\Database\Dialects\Sqlite\Compilers;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 /**
@@ -29,9 +30,11 @@ class Insert extends InsertCompiler
      */
     protected function compileUpsert(QueryAst $ast): string
     {
-        $conflictColumns = Arr::implodeDeeply($ast->uniqueColumns, ', ');
+        $conflictColumns = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->uniqueColumns), ', ');
 
-        $updateColumns = array_map(function (string $column): string {
+        $updateColumns = array_map(function (string $column) use ($ast): string {
+            $column = Wrapper::column($ast->driver, $column);
+
             return "{$column} = excluded.{$column}";
         }, $ast->uniqueColumns);
 
@@ -49,7 +52,7 @@ class Insert extends InsertCompiler
 
         if (! empty($ast->returning)) {
             $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+            $parts[] = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->returning), ', ');
         }
 
         return new CompiledClause(

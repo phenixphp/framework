@@ -7,32 +7,21 @@ namespace Phenix\Database;
 use Amp\Mysql\MysqlConnectionPool;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\Sql\SqlConnection;
+use Phenix\Database\Concerns\HasDriver;
 use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
 use Phenix\Sqlite\SqliteConnection;
 
 abstract class Grammar
 {
-    protected Driver $driver;
-
-    public function setDriver(Driver $driver): static
-    {
-        $this->driver = $driver;
-
-        return $this;
-    }
-
-    public function getDriver(): Driver
-    {
-        return $this->driver;
-    }
+    use HasDriver;
 
     protected function resolveDriver(SqlConnection $connection): void
     {
         $driver = $this->resolveDriverFromConnection($connection);
         $driver ??= $this->resolveDriverFromConfig();
 
-        $this->driver = $driver;
+        $this->setDriver($driver);
     }
 
     protected function resolveDriverFromConfig(): Driver

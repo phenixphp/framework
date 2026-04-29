@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Concerns\HasDriver;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Contracts\RawValue;
 use Phenix\Util\Arr;
 use Stringable;
 
+use function is_int;
+
 class SelectCase implements Stringable
 {
+    use HasDriver;
+
     protected array $cases;
-    protected Value|string $default;
+
+    protected RawValue|string|int $default;
+
     protected string $alias;
 
     public function __construct()
@@ -19,7 +27,7 @@ class SelectCase implements Stringable
         $this->cases = [];
     }
 
-    public function whenEqual(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -31,7 +39,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenNotEqual(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenNotEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -43,7 +51,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenGreaterThan(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenGreaterThan(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -57,8 +65,8 @@ class SelectCase implements Stringable
 
     public function whenGreaterThanOrEqual(
         Functions|string $column,
-        Value|string|int $value,
-        Value|string $result
+        RawValue|string|int $value,
+        RawValue|string|int $result
     ): self {
         $this->pushCase(
             $column,
@@ -70,7 +78,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenLessThan(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenLessThan(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -82,7 +90,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenLessThanOrEqual(Functions|string $column, Value|string|int $value, Value|string $result): self
+    public function whenLessThanOrEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -94,7 +102,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenNull(string $column, Value|string $result): self
+    public function whenNull(string $column, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -105,7 +113,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenNotNull(string $column, Value|string $result): self
+    public function whenNotNull(string $column, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -116,7 +124,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenTrue(string $column, Value|string $result): self
+    public function whenTrue(string $column, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -127,7 +135,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenFalse(string $column, Value|string $result): self
+    public function whenFalse(string $column, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -138,7 +146,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function defaultResult(Value|string|int $value): self
+    public function defaultResult(RawValue|string|int $value): self
     {
         $this->default = $value;
 
@@ -154,25 +162,20 @@ class SelectCase implements Stringable
 
     public function __toString(): string
     {
-        $cases = array_map(function (array $case): array {
-            return array_map(function (Operator|string $item): string {
-                return match (true) {
-                    $item instanceof Operator => $item->value,
-                    default => (string) $item,
-                };
-            }, $case);
-        }, $this->cases);
+        $cases = array_map($this->compileCase(...), $this->cases);
 
         if (isset($this->default)) {
-            $cases[] = ['ELSE ' . strval($this->default)];
+            $cases[] = 'ELSE ' . $this->renderOperand($this->default);
         }
 
         $cases[] = 'END';
 
-        $dml = 'CASE ' . Arr::implodeDeeply($cases);
+        $dml = 'CASE ' . Arr::implodeDeeply($cases, ' ');
 
         if (isset($this->alias)) {
-            $dml = '(' . $dml . ') AS ' . $this->alias;
+            $alias = Wrapper::of($this->getDriver(), $this->alias);
+
+            $dml = "({$dml}) AS {$alias}";
         }
 
         return $dml;
@@ -181,11 +184,41 @@ class SelectCase implements Stringable
     protected function pushCase(
         Functions|string $column,
         Operator $operators,
-        Value|string $result,
-        Value|string|int|null $value = null
+        RawValue|string|int $result,
+        RawValue|string|int|null $value = null
     ): void {
-        $condition = array_filter([$column, $operators, $value]);
+        $condition = array_filter([$column, $operators, $value], static fn (mixed $item): bool => $item !== null);
 
         $this->cases[] = ['WHEN', ...$condition, 'THEN', $result];
+    }
+
+    protected function compileCase(array $case): string
+    {
+        $column = $this->compileColumn($case[1]);
+        $operator = $case[2] instanceof Operator ? $case[2]->value : (string) $case[2];
+
+        if (($case[3] ?? null) === 'THEN') {
+            return "WHEN {$column} {$operator} THEN " . $this->renderOperand($case[4]);
+        }
+
+        return "WHEN {$column} {$operator} " . $this->renderOperand($case[3]) . " THEN " . $this->renderOperand($case[5]);
+    }
+
+    protected function compileColumn(Functions|string $column): string
+    {
+        if ($column instanceof Functions) {
+            return (string) $column->setDriver($this->getDriver());
+        }
+
+        return Wrapper::column($this->getDriver(), $column);
+    }
+
+    protected function renderOperand(RawValue|string|int $value): string
+    {
+        if ($value instanceof RawValue || is_int($value)) {
+            return (string) $value;
+        }
+
+        return (string) Value::from($value);
     }
 }

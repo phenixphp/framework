@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\QueryGenerator;
 
@@ -23,7 +25,7 @@ it('generates query to select a record by date', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE DATE(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE DATE(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereDateEqual', Carbon::now(), Carbon::now()->format('Y-m-d'), Operator::EQUAL->value],
@@ -51,7 +53,7 @@ it('generates query to select a record by condition or by date', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR DATE(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR DATE(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereDateEqual', date('Y-m-d'), date('Y-m-d'), Operator::EQUAL->value],
@@ -77,7 +79,7 @@ it('generates query to select a record by month', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE MONTH(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE MONTH(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operator::EQUAL->value],
@@ -105,7 +107,7 @@ it('generates query to select a record by condition or by month', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR MONTH(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR MONTH(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operator::EQUAL->value],
@@ -132,7 +134,7 @@ it('generates query to select a record by year', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE YEAR(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE YEAR(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operator::EQUAL->value],
@@ -160,7 +162,7 @@ it('generates query to select a record by condition or by year', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR YEAR(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR YEAR(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operator::EQUAL->value],
@@ -170,3 +172,16 @@ it('generates query to select a record by condition or by year', function (
     ['orWhereYearLessThan', date('Y'), date('Y'), Operator::LESS_THAN->value],
     ['orWhereYearLessThanOrEqual', date('Y'), date('Y'), Operator::LESS_THAN_OR_EQUAL->value],
 ]);
+
+it('stores date where clauses as DateWhereClause instances', function () {
+    $query = new QueryGenerator();
+    $query->table('users')->whereDateEqual('created_at', '2026-01-15');
+
+    $reflection = new ReflectionClass($query);
+    $property = $reflection->getProperty('clauses');
+    $clauses = $property->getValue($query);
+
+    expect($clauses)->toHaveCount(1);
+    expect($clauses[0])->toBeInstanceOf(DateWhereClause::class);
+    expect($clauses[0])->not->toBeInstanceOf(BasicWhereClause::class);
+});

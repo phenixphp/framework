@@ -40,7 +40,7 @@ it('saves a new model on postgresql using its mapped key column', function (): v
     expect($model->save())->toBeTrue();
     expect($model->id)->toBe(77);
     expect($model->isExisting())->toBeTrue();
-    expect($capturedSql)->toContain('RETURNING id');
+    expect($capturedSql)->toContain('RETURNING "id"');
 });
 
 it('creates a new model on postgresql using its mapped key column', function (): void {
@@ -68,5 +68,5 @@ it('creates a new model on postgresql using its mapped key column', function ():
 
     expect($model->id)->toBe(88);
     expect($model->isExisting())->toBeTrue();
-    expect($capturedSql)->toContain('RETURNING id');
+    expect($capturedSql)->toContain('RETURNING "id"');
 });

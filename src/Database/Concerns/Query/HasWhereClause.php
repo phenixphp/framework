@@ -12,6 +12,8 @@ use Phenix\Database\Clauses\NullWhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 
+use function count;
+
 trait HasWhereClause
 {
     use HasWhereAllClause;

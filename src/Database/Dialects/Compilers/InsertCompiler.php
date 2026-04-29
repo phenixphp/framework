@@ -7,6 +7,7 @@ namespace Phenix\Database\Dialects\Compilers;
 use Phenix\Database\Contracts\ClauseCompiler;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 abstract class InsertCompiler implements ClauseCompiler
@@ -19,10 +20,10 @@ abstract class InsertCompiler implements ClauseCompiler
         // INSERT [IGNORE] INTO
         $parts[] = $this->compileInsertClause($ast);
 
-        $parts[] = $ast->table;
+        $parts[] = Wrapper::of($ast->driver, $ast->table);
 
         // (column1, column2, ...)
-        $parts[] = '(' . Arr::implodeDeeply($ast->columns, ', ') . ')';
+        $parts[] = '(' . Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->columns), ', ') . ')';
 
         // VALUES (...), (...) or raw statement
         if ($ast->rawStatement !== null) {

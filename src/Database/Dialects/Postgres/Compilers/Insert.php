@@ -8,7 +8,10 @@ use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
+
+use function sprintf;
 
 /**
  * Supports:
@@ -26,9 +29,11 @@ class Insert extends InsertCompiler
 
     protected function compileUpsert(QueryAst $ast): string
     {
-        $conflictColumns = Arr::implodeDeeply($ast->uniqueColumns, ', ');
+        $conflictColumns = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->uniqueColumns), ', ');
 
-        $updateColumns = array_map(function (string $column): string {
+        $updateColumns = array_map(function (string $column) use ($ast): string {
+            $column = Wrapper::column($ast->driver, $column);
+
             return "{$column} = EXCLUDED.{$column}";
         }, $ast->uniqueColumns);
 
@@ -44,8 +49,8 @@ class Insert extends InsertCompiler
         if ($ast->ignore && empty($ast->uniqueColumns)) {
             $parts = [];
             $parts[] = 'INSERT INTO';
-            $parts[] = $ast->table;
-            $parts[] = '(' . Arr::implodeDeeply($ast->columns, ', ') . ')';
+            $parts[] = Wrapper::of($ast->driver, $ast->table);
+            $parts[] = '(' . Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->columns), ', ') . ')';
 
             if ($ast->rawStatement !== null) {
                 $parts[] = $ast->rawStatement;
@@ -63,7 +68,7 @@ class Insert extends InsertCompiler
 
             if (! empty($ast->returning)) {
                 $parts[] = 'RETURNING';
-                $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+                $parts[] = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->returning), ', ');
             }
 
             $sql = Arr::implodeDeeply($parts);
@@ -77,7 +82,7 @@ class Insert extends InsertCompiler
 
         if (! empty($ast->returning)) {
             $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+            $parts[] = Arr::implodeDeeply(Wrapper::columnList($ast->driver, $ast->returning), ', ');
         }
 
         return new CompiledClause(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
@@ -56,8 +57,21 @@ class Join extends Clause implements Builder
             $connector = $clause->getConnector();
 
             $column = $clause->getColumn();
+            $column = $column ? Wrapper::column($this->driver, $clause->getColumn()) : null;
+
             $operator = $clause->getOperator();
-            $value = $clause->renderValue();
+
+            if ($clause instanceof DateWhereClause) {
+                $function = $clause->getFunction()->name;
+                $column = "{$function}({$column})";
+                $value = $clause->renderValue();
+            } else {
+                $value = $clause->renderValue();
+
+                if (! $clause instanceof BasicWhereClause || ! $clause->usesPlaceholder()) {
+                    $value = Wrapper::column($this->driver, $value);
+                }
+            }
 
             $clauseSql = "{$column} {$operator->value} {$value}";
 
@@ -69,8 +83,17 @@ class Join extends Clause implements Builder
         }
 
         return [
-            "{$this->type->value} {$this->relationship} ON " . implode(' ', $sql),
+            "{$this->type->value} {$this->prepareRelationship()} ON " . implode(' ', $sql),
             $this->arguments,
         ];
+    }
+
+    protected function prepareRelationship(): string
+    {
+        if ($this->relationship instanceof Alias) {
+            return (string) $this->relationship->setDriver($this->driver);
+        }
+
+        return (string) Wrapper::of($this->driver, $this->relationship);
     }
 }

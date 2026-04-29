@@ -7,6 +7,7 @@ namespace Phenix\Database\Dialects\Compilers;
 use Phenix\Database\Contracts\ClauseCompiler;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 abstract class DeleteCompiler implements ClauseCompiler
@@ -18,7 +19,7 @@ abstract class DeleteCompiler implements ClauseCompiler
         $parts = [];
 
         $parts[] = 'DELETE FROM';
-        $parts[] = $ast->table;
+        $parts[] = Wrapper::of($ast->driver, $ast->table);
 
         if (! empty($ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($ast->wheres);

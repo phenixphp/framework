@@ -6,6 +6,7 @@ namespace Phenix\Database\Dialects\Mysql\Compilers;
 
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\QueryAst;
+use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 class Insert extends InsertCompiler
@@ -18,7 +19,11 @@ class Insert extends InsertCompiler
     protected function compileUpsert(QueryAst $ast): string
     {
         $columns = array_map(
-            fn (string $column): string => "{$column} = VALUES({$column})",
+            function (string $column) use ($ast): string {
+                $column = Wrapper::column($ast->driver, $column);
+
+                return "{$column} = VALUES({$column})";
+            },
             $ast->uniqueColumns
         );
 
