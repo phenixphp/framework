@@ -20,7 +20,7 @@ it('generates query to select a record by column', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users WHERE id = $1');
+    expect($dml)->toBe('SELECT * FROM "users" WHERE "id" = $1');
     expect($params)->toBe([1]);
 });
 
@@ -37,7 +37,7 @@ it('generates query to select a record using many clause', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users WHERE username = $1 AND email = $2 AND document = $3');
+    expect($dml)->toBe('SELECT * FROM "users" WHERE "username" = $1 AND "email" = $2 AND "document" = $3');
     expect($params)->toBe(['john', 'john@mail.com', 123456]);
 });
 
@@ -55,7 +55,7 @@ it('generates query to select using comparison clause', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE {$column} {$operator} $1");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"{$column}\" {$operator} $1");
     expect($params)->toBe([$value]);
 })->with([
     ['whereNotEqual', 'id', Operator::NOT_EQUAL->value, 1],
@@ -75,7 +75,7 @@ it('generates query selecting specific columns', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT id, name, email FROM users WHERE id = $1');
+    expect($dml)->toBe('SELECT "id", "name", "email" FROM "users" WHERE "id" = $1');
     expect($params)->toBe([1]);
 });
 
@@ -89,7 +89,7 @@ it('generates query using in and not in operators', function (string $method, st
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE id {$operator} ($1, $2, $3)");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"id\" {$operator} ($1, $2, $3)");
     expect($params)->toBe([1, 2, 3]);
 })->with([
     ['whereIn', Operator::IN->value],
@@ -111,8 +111,8 @@ it('generates query using in and not in operators with subquery', function (stri
 
     $date = date('Y-m-d');
 
-    $expected = "SELECT * FROM users WHERE id {$operator} "
-        . "(SELECT id FROM users WHERE created_at >= $1)";
+    $expected = "SELECT * FROM \"users\" WHERE \"id\" {$operator} "
+        . "(SELECT \"id\" FROM \"users\" WHERE \"created_at\" >= $1)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$date]);
@@ -130,7 +130,7 @@ it('generates query to select null or not null columns', function (string $metho
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE verified_at {$operator}");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"verified_at\" {$operator}");
     expect($params)->toBe([]);
 })->with([
     ['whereNull', Operator::IS_NULL->value],
@@ -149,7 +149,7 @@ it('generates query to select by column or null or not null columns', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE created_at > $1 OR verified_at {$operator}");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"created_at\" > $1 OR \"verified_at\" {$operator}");
     expect($params)->toBe([$date]);
 })->with([
     ['orWhereNull', Operator::IS_NULL->value],
@@ -165,7 +165,7 @@ it('generates query to select boolean columns', function (string $method, string
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE enabled {$operator}");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"enabled\" {$operator}");
     expect($params)->toBe([]);
 })->with([
     ['whereTrue', Operator::IS_TRUE->value],
@@ -184,7 +184,7 @@ it('generates query to select by column or boolean column', function (string $me
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE created_at > $1 OR enabled {$operator}");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"created_at\" > $1 OR \"enabled\" {$operator}");
     expect($params)->toBe([$date]);
 })->with([
     ['orWhereTrue', Operator::IS_TRUE->value],
@@ -206,7 +206,7 @@ it('generates query using logical connectors', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE verified_at IS NOT NULL AND created_at > $1 OR updated_at < $2");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"verified_at\" IS NOT NULL AND \"created_at\" > $1 OR \"updated_at\" < $2");
     expect($params)->toBe([$date, $date]);
 });
 
@@ -225,7 +225,7 @@ it('generates query using the or operator between the and operators', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE created_at > $1 OR updated_at < $2 AND verified_at IS NOT NULL");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"created_at\" > $1 OR \"updated_at\" < $2 AND \"verified_at\" IS NOT NULL");
     expect($params)->toBe([$date, $date]);
 });
 
@@ -257,7 +257,7 @@ it('generates queries using logical connectors', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE verified_at IS NOT NULL OR {$column} {$operator} {$placeholders}");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"verified_at\" IS NOT NULL OR \"{$column}\" {$operator} {$placeholders}");
     expect($params)->toBe([...(array)$value]);
 })->with([
     ['orWhereLessThan', 'updated_at', date('Y-m-d'), Operator::LESS_THAN->value],
@@ -280,7 +280,7 @@ it('generates query to select between columns', function (string $method, string
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE age {$operator} $1 AND $2");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"age\" {$operator} $1 AND $2");
     expect($params)->toBe([20, 30]);
 })->with([
     ['whereBetween', Operator::BETWEEN->value],
@@ -301,7 +301,7 @@ it('generates query to select by column or between columns', function (string $m
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE created_at > $1 OR updated_at {$operator} $2 AND $3");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"created_at\" > $1 OR \"updated_at\" {$operator} $2 AND $3");
     expect($params)->toBe([$date, $startDate, $endDate]);
 })->with([
     ['orWhereBetween', Operator::BETWEEN->value],
@@ -319,9 +319,12 @@ it('generates a column-ordered query', function (array|string $column, string $o
 
     $operator = Operator::ORDER_BY->value;
 
-    $column = implode(', ', (array) $column);
+    $column = implode(', ', array_map(
+        fn (string $column): string => '"' . str_replace('.', '"."', $column) . '"',
+        (array) $column
+    ));
 
-    expect($dml)->toBe("SELECT * FROM users {$operator} {$column} {$order}");
+    expect($dml)->toBe("SELECT * FROM \"users\" {$operator} {$column} {$order}");
     expect($params)->toBe($params);
 })->with([
     ['id', Order::ASC->value],
@@ -343,7 +346,7 @@ it('generates a column-ordered query using select-case', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users ORDER BY (CASE WHEN city IS NULL THEN country ELSE city END) ASC");
+    expect($dml)->toBe("SELECT * FROM \"users\" ORDER BY (CASE WHEN \"city\" IS NULL THEN 'country' ELSE 'city' END) ASC");
     expect($params)->toBe($params);
 });
 
@@ -360,9 +363,12 @@ it('generates a limited query', function (array|string $column, string $order) {
 
     $operator = Operator::ORDER_BY->value;
 
-    $column = implode(', ', (array) $column);
+    $column = implode(', ', array_map(
+        fn (string $column): string => '"' . str_replace('.', '"."', $column) . '"',
+        (array) $column
+    ));
 
-    expect($dml)->toBe("SELECT * FROM users WHERE id = $1 {$operator} {$column} {$order} LIMIT 1");
+    expect($dml)->toBe("SELECT * FROM \"users\" WHERE \"id\" = $1 {$operator} {$column} {$order} LIMIT 1");
     expect($params)->toBe([1]);
 })->with([
     ['id', Order::ASC->value],
@@ -385,8 +391,8 @@ it('generates a query with a exists subquery in where clause', function (string 
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM users WHERE {$operator} "
-        . "(SELECT * FROM user_role WHERE user_id = $1 AND role_id = $2 LIMIT 1)";
+    $expected = "SELECT * FROM \"users\" WHERE {$operator} "
+        . "(SELECT * FROM \"user_role\" WHERE \"user_id\" = $1 AND \"role_id\" = $2 LIMIT 1)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1, 9]);
@@ -412,8 +418,8 @@ it('generates a query to select by column or when exists or not exists subquery'
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM users WHERE is_admin IS TRUE OR {$operator} "
-        . "(SELECT * FROM user_role WHERE user_id = $1 LIMIT 1)";
+    $expected = "SELECT * FROM \"users\" WHERE \"is_admin\" IS TRUE OR {$operator} "
+        . "(SELECT * FROM \"user_role\" WHERE \"user_id\" = $1 LIMIT 1)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -437,8 +443,8 @@ it('generates query to select using comparison clause with subqueries and functi
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM products WHERE {$column} {$operator} "
-        . '(SELECT ' . Functions::max('price') . ' FROM products)';
+    $expected = "SELECT * FROM \"products\" WHERE \"{$column}\" {$operator} "
+        . '(SELECT MAX("price") FROM "products")';
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -469,8 +475,8 @@ it('generates query using comparison clause with subqueries and any, all, some o
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT description FROM products WHERE id {$comparisonOperator} {$operator}"
-        . "(SELECT product_id FROM orders WHERE quantity > $1)";
+    $expected = "SELECT \"description\" FROM \"products\" WHERE \"id\" {$comparisonOperator} {$operator}"
+        . "(SELECT \"product_id\" FROM \"orders\" WHERE \"quantity\" > $1)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([10]);
@@ -502,7 +508,7 @@ it('generates query with row subquery', function (string $method, string $operat
 
     $sql = $query->table('employees')
         ->{$method}(['manager_id', 'department_id'], function (Subquery $subquery) {
-            $subquery->select(['id, department_id'])
+            $subquery->select(['id', 'department_id'])
                 ->from('managers')
                 ->whereEqual('location_id', 1);
         })
@@ -511,10 +517,10 @@ it('generates query with row subquery', function (string $method, string $operat
 
     [$dml, $params] = $sql;
 
-    $subquery = 'SELECT id, department_id FROM managers WHERE location_id = $1';
+    $subquery = 'SELECT "id", "department_id" FROM "managers" WHERE "location_id" = $1';
 
-    $expected = "SELECT name FROM employees "
-        . "WHERE ROW(manager_id, department_id) {$operator} ({$subquery})";
+    $expected = "SELECT \"name\" FROM \"employees\" "
+        . "WHERE ROW(\"manager_id\", \"department_id\") {$operator} ({$subquery})";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);

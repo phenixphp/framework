@@ -28,10 +28,10 @@ it('generates a query using having clause', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT COUNT(products.id) AS identifiers, products.category_id, categories.description "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "HAVING identifiers > ? GROUP BY products.category_id";
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"identifiers\", \"products\".\"category_id\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
+        . "HAVING \"identifiers\" > ? GROUP BY \"products\".\"category_id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5]);
@@ -58,10 +58,10 @@ it('generates a query using having with many clauses', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT COUNT(products.id) AS identifiers, products.category_id, categories.description "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
-        . "HAVING identifiers > ? AND products.category_id > ? GROUP BY products.category_id";
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"identifiers\", \"products\".\"category_id\", \"categories\".\"description\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
+        . "HAVING \"identifiers\" > ? AND \"products\".\"category_id\" > ? GROUP BY \"products\".\"category_id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5, 10]);
@@ -84,10 +84,10 @@ it('generates a query using having with where clause', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT COUNT(products.id) AS product_count, products.category_id "
-        . "FROM products "
-        . "WHERE products.status = ? "
-        . "HAVING product_count > ? GROUP BY products.category_id";
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
+        . "FROM \"products\" "
+        . "WHERE \"products\".\"status\" = ? "
+        . "HAVING \"product_count\" > ? GROUP BY \"products\".\"category_id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active', 3]);
@@ -109,9 +109,9 @@ it('generates a query using having with less than', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT SUM(orders.total) AS total_sales, orders.customer_id "
-        . "FROM orders "
-        . "HAVING total_sales < ? GROUP BY orders.customer_id";
+    $expected = "SELECT SUM(\"orders\".\"total\") AS \"total_sales\", \"orders\".\"customer_id\" "
+        . "FROM \"orders\" "
+        . "HAVING \"total_sales\" < ? GROUP BY \"orders\".\"customer_id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1000]);
@@ -133,10 +133,34 @@ it('generates a query using having with equal', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT COUNT(products.id) AS product_count, products.category_id "
-        . "FROM products "
-        . "HAVING product_count = ? GROUP BY products.category_id";
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
+        . "FROM \"products\" "
+        . "HAVING \"product_count\" = ? GROUP BY \"products\".\"category_id\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([10]);
+});
+
+it('generates a query using having with date clause', function () {
+    $query = new QueryGenerator(Driver::SQLITE);
+
+    $sql = $query->select([
+            Functions::count('products.id')->as('product_count'),
+            'products.created_at',
+        ])
+        ->from('products')
+        ->groupBy('products.created_at')
+        ->having(function (Having $having): void {
+            $having->whereDateEqual('products.created_at', '2026-01-15');
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"created_at\" "
+        . "FROM \"products\" "
+        . "HAVING DATE(\"products\".\"created_at\") = ? GROUP BY \"products\".\"created_at\"";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['2026-01-15']);
 });
