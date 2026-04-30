@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Phenix\Database\Alias;
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
+use Phenix\Database\QueryAst;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
@@ -35,6 +37,59 @@ it('generates query to select all columns from table', function (): void {
 
     expect($dml)->toBe('SELECT * FROM `users`');
     expect($params)->toBeEmpty();
+});
+
+it('keeps query ast synchronized as primary query state', function (): void {
+    $query = new class () extends QueryGenerator {
+        public function ast(): QueryAst
+        {
+            return $this->buildAst();
+        }
+    };
+
+    $query->setDriver(Driver::POSTGRESQL)
+        ->table('users')
+        ->select(['id'])
+        ->whereEqual('id', 1);
+
+    $ast = $query->ast();
+    [$dml, $params] = $query->get();
+
+    expect($ast->driver)->toBe(Driver::POSTGRESQL);
+    expect($ast->table)->toBe('users');
+    expect($ast->columns)->toBe(['id']);
+    expect($ast->params)->toBe([1]);
+    expect($dml)->toBe('SELECT "id" FROM "users" WHERE "id" = $1');
+    expect($params)->toBe([1]);
+});
+
+it('stores where and subquery params directly in query ast', function (): void {
+    $query = new class () extends QueryGenerator {
+        public function ast(): QueryAst
+        {
+            return $this->buildAst();
+        }
+    };
+
+    $query->select(['id'])
+        ->from(function (Subquery $subquery): void {
+            $subquery->from('users')
+                ->whereEqual('verified_at', '2026-01-15');
+        })
+        ->whereEqual('status', 'active')
+        ->whereBetween('age', [18, 65])
+        ->whereDateEqual('created_at', '2026-01-30');
+
+    $ast = $query->ast();
+    [$dml, $params] = $query->get();
+
+    $expected = "SELECT `id` FROM (SELECT * FROM `users` WHERE `verified_at` = ?) "
+        . "WHERE `status` = ? AND `age` BETWEEN ? AND ? AND DATE(`created_at`) = ?";
+
+    expect($ast->wheres)->toHaveCount(3);
+    expect($ast->params)->toBe(['2026-01-15', 'active', 18, 65, '2026-01-30']);
+    expect($dml)->toBe($expected);
+    expect($params)->toBe($ast->params);
 });
 
 it('generates a query using sql functions', function (string $function, string $column, string $rawFunction) {

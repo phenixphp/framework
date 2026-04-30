@@ -29,7 +29,7 @@ class Select extends SelectCompiler
         $result = parent::compile($ast);
 
         return new CompiledClause(
-            $this->convertPlaceholders($result->sql),
+            $this->normalizePlaceholders($result->sql),
             $result->params
         );
     }

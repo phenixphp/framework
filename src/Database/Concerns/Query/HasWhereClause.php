@@ -12,8 +12,6 @@ use Phenix\Database\Clauses\NullWhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 
-use function count;
-
 trait HasWhereClause
 {
     use HasWhereAllClause;
@@ -136,15 +134,12 @@ trait HasWhereClause
 
     public function whereNull(string $column): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new NullWhereClause(
             column: $column,
             operator: Operator::IS_NULL,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
         return $this;
     }
@@ -154,25 +149,21 @@ trait HasWhereClause
         $clause = new NullWhereClause(
             column: $column,
             operator: Operator::IS_NULL,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
         return $this;
     }
 
     public function whereNotNull(string $column): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new NullWhereClause(
             column: $column,
             operator: Operator::IS_NOT_NULL,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
         return $this;
     }
@@ -182,25 +173,21 @@ trait HasWhereClause
         $clause = new NullWhereClause(
             column: $column,
             operator: Operator::IS_NOT_NULL,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
         return $this;
     }
 
     public function whereTrue(string $column): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new BooleanWhereClause(
             column: $column,
             operator: Operator::IS_TRUE,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
         return $this;
     }
@@ -210,25 +197,21 @@ trait HasWhereClause
         $clause = new BooleanWhereClause(
             column: $column,
             operator: Operator::IS_TRUE,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
         return $this;
     }
 
     public function whereFalse(string $column): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new BooleanWhereClause(
             column: $column,
             operator: Operator::IS_FALSE,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
         return $this;
     }
@@ -238,28 +221,24 @@ trait HasWhereClause
         $clause = new BooleanWhereClause(
             column: $column,
             operator: Operator::IS_FALSE,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
         return $this;
     }
 
     public function whereBetween(string $column, array $values): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new BetweenWhereClause(
             column: $column,
             operator: Operator::BETWEEN,
             values: $values,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
-        $this->arguments = array_merge($this->arguments, (array) $values);
+        $this->addArguments((array) $values);
 
         return $this;
     }
@@ -270,30 +249,26 @@ trait HasWhereClause
             column: $column,
             operator: Operator::BETWEEN,
             values: $values,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
-        $this->arguments = array_merge($this->arguments, (array) $values);
+        $this->addArguments((array) $values);
 
         return $this;
     }
 
     public function whereNotBetween(string $column, array $values): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new BetweenWhereClause(
             column: $column,
             operator: Operator::NOT_BETWEEN,
             values: $values,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
-        $this->arguments = array_merge($this->arguments, (array) $values);
+        $this->addArguments((array) $values);
 
         return $this;
     }
@@ -304,12 +279,11 @@ trait HasWhereClause
             column: $column,
             operator: Operator::NOT_BETWEEN,
             values: $values,
-            connector: LogicalConnector::OR
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause, LogicalConnector::OR);
 
-        $this->arguments = array_merge($this->arguments, (array) $values);
+        $this->addArguments((array) $values);
 
         return $this;
     }
@@ -352,16 +326,13 @@ trait HasWhereClause
 
     public function whereColumn(string $localColumn, string $foreignColumn): static
     {
-        $connector = count($this->clauses) === 0 ? null : LogicalConnector::AND;
-
         $clause = new ColumnWhereClause(
             column: $localColumn,
             operator: Operator::EQUAL,
             compareColumn: $foreignColumn,
-            connector: $connector
         );
 
-        $this->clauses[] = $clause;
+        $this->pushWhereClause($clause);
 
         return $this;
     }

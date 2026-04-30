@@ -6,7 +6,6 @@ namespace Phenix\Database\Concerns\Query;
 
 use Closure;
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Dialects\DialectFactory;
 use Phenix\Database\Functions;
@@ -21,7 +20,7 @@ trait BuildsQuery
 {
     public function table(string $table): static
     {
-        $this->table = $table;
+        $this->ast->table = $table;
 
         return $this;
     }
@@ -39,7 +38,7 @@ trait BuildsQuery
 
             $this->table($dml);
 
-            $this->arguments = array_merge($this->arguments, $arguments);
+            $this->addArguments($arguments);
 
         } else {
             $this->table($table);
@@ -50,9 +49,9 @@ trait BuildsQuery
 
     public function select(array $columns): static
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
-        $this->columns = $columns;
+        $this->ast->columns = $columns;
 
         return $this;
     }
@@ -70,7 +69,7 @@ trait BuildsQuery
             $column = [$column];
         }
 
-        $this->groupBy = $column;
+        $this->ast->groups = $column;
 
         return $this;
     }
@@ -82,7 +81,7 @@ trait BuildsQuery
 
         $clause($having);
 
-        $this->having = $having;
+        $this->ast->having = $having;
 
         return $this;
     }
@@ -93,14 +92,14 @@ trait BuildsQuery
             $column = [$column];
         }
 
-        $this->orderBy = [$column, $order->value];
+        $this->ast->orders = [$column, $order->value];
 
         return $this;
     }
 
     public function limit(int $number): static
     {
-        $this->limit = [Operator::LIMIT->value, abs($number)];
+        $this->ast->limit = abs($number);
 
         return $this;
     }
@@ -113,7 +112,7 @@ trait BuildsQuery
 
         $offset = $page === 1 ? 0 : (($page - 1) * abs($perPage));
 
-        $this->offset = [Operator::OFFSET->value, $offset];
+        $this->ast->offset = $offset;
 
         return $this;
     }
@@ -131,26 +130,6 @@ trait BuildsQuery
 
     protected function buildAst(): QueryAst
     {
-        $ast = new QueryAst();
-        $ast->driver = $this->driver;
-        $ast->action = $this->action;
-        $ast->table = $this->table;
-        $ast->columns = $this->columns;
-        $ast->values = $this->values ?? [];
-        $ast->wheres = $this->clauses ?? [];
-        $ast->joins = $this->joins ?? [];
-        $ast->groups = $this->groupBy ?? [];
-        $ast->orders = $this->orderBy ?? [];
-        $ast->limit = isset($this->limit) ? $this->limit[1] : null;
-        $ast->offset = isset($this->offset) ? $this->offset[1] : null;
-        $ast->lock = $this->lockType ?? null;
-        $ast->having = $this->having ?? null;
-        $ast->rawStatement = $this->rawStatement ?? null;
-        $ast->ignore = $this->ignore ?? false;
-        $ast->uniqueColumns = $this->uniqueColumns ?? [];
-        $ast->returning = $this->returning ?? [];
-        $ast->params = $this->arguments;
-
-        return $ast;
+        return $this->ast;
     }
 }

@@ -24,7 +24,47 @@ abstract class ClauseBuilder extends Grammar
      */
     protected array $clauses;
 
+    /**
+     * @var array<int, mixed>
+     */
     protected array $arguments;
+
+    /**
+     * @return array<int, WhereClause>
+     */
+    protected function getClauses(): array
+    {
+        return $this->clauses;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function getArguments(): array
+    {
+        return $this->arguments;
+    }
+
+    protected function hasWhereClauses(): bool
+    {
+        return count($this->getClauses()) > 0;
+    }
+
+    protected function addArguments(array $arguments): void
+    {
+        $this->arguments = [...$this->arguments, ...$arguments];
+    }
+
+    protected function pushWhereClause(
+        WhereClause $where,
+        LogicalConnector $logicalConnector = LogicalConnector::AND
+    ): void {
+        if ($this->hasWhereClauses()) {
+            $where->setConnector($logicalConnector);
+        }
+
+        $this->clauses[] = $where;
+    }
 
     protected function resolveWhereMethod(
         string $column,
@@ -59,18 +99,18 @@ abstract class ClauseBuilder extends Grammar
 
         [$dml, $arguments] = $builder->toSql();
 
-        $connector = count($this->clauses) === 0 ? null : $logicalConnector;
+        $connector = $this->hasWhereClauses() ? $logicalConnector : null;
 
-        $this->clauses[] = new SubqueryWhereClause(
+        $this->pushWhereClause(new SubqueryWhereClause(
             comparisonOperator: $comparisonOperator,
             sql: trim($dml, '()'),
             params: $arguments,
             column: $column,
             operator: $operator,
             connector: $connector
-        );
+        ), $logicalConnector);
 
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->addArguments($arguments);
     }
 
     /**
@@ -90,17 +130,17 @@ abstract class ClauseBuilder extends Grammar
 
         [$dml, $arguments] = $builder->toSql();
 
-        $connector = count($this->clauses) === 0 ? null : $logicalConnector;
+        $connector = $this->hasWhereClauses() ? $logicalConnector : null;
 
-        $this->clauses[] = new RowWhereClause(
+        $this->pushWhereClause(new RowWhereClause(
             columns: $columns,
             comparisonOperator: $comparisonOperator,
             sql: trim($dml, '()'),
             params: $arguments,
             connector: $connector
-        );
+        ), $logicalConnector);
 
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->addArguments($arguments);
     }
 
     protected function pushWhereWithArgs(
@@ -111,15 +151,11 @@ abstract class ClauseBuilder extends Grammar
     ): void {
         $this->pushClause(new BasicWhereClause($column, $operator, $value, null, true), $logicalConnector);
 
-        $this->arguments = array_merge($this->arguments, (array) $value);
+        $this->addArguments((array) $value);
     }
 
     protected function pushClause(WhereClause $where, LogicalConnector $logicalConnector = LogicalConnector::AND): void
     {
-        if (count($this->clauses) > 0) {
-            $where->setConnector($logicalConnector);
-        }
-
-        $this->clauses[] = $where;
+        $this->pushWhereClause($where, $logicalConnector);
     }
 }

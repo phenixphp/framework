@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Closure;
+use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Concerns\Query\BuildsQuery;
 use Phenix\Database\Concerns\Query\HasJoinClause;
 use Phenix\Database\Concerns\Query\HasLock;
 use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Driver;
+use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SQL;
 use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Contracts\QueryBuilder;
+
+use function count;
 
 abstract class QueryBase extends Clause implements QueryBuilder, Builder
 {
@@ -20,88 +25,114 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
     use HasLock;
     use HasJoinClause;
 
-    protected string $table;
-
-    protected Action $action;
-
-    protected array $columns;
-
-    protected array $values;
-
-    protected array $joins;
-
-    protected Having|null $having;
-
-    protected array $groupBy;
-
-    protected array $orderBy;
-
-    protected array $limit;
-
-    protected array $offset;
-
-    protected string $rawStatement;
-
-    protected bool $ignore = false;
-
-    protected array $uniqueColumns;
-
-    protected array $returning = [];
+    protected QueryAst $ast;
 
     public function __construct()
     {
-        $this->ignore = false;
-
         $this->resetBaseProperties();
     }
 
     public function __clone(): void
     {
-        $this->resetBaseProperties();
+        $this->ast = clone $this->ast;
+        $this->ast->lock = null;
     }
 
     protected function resetBaseProperties(): void
     {
-        $this->joins = [];
-        $this->columns = [];
-        $this->values = [];
-        $this->having = null;
-        $this->clauses = [];
-        $this->arguments = [];
-        $this->uniqueColumns = [];
-        $this->returning = [];
+        $this->ast = $this->makeFreshAst();
+    }
+
+    public function setDriver(Driver $driver): static
+    {
+        $this->driver = $driver;
+
+        if (isset($this->ast)) {
+            $this->ast->driver = $driver;
+        }
+
+        return $this;
+    }
+
+    protected function makeFreshAst(): QueryAst
+    {
+        $ast = new QueryAst();
+        $ast->columns = [];
+
+        if (isset($this->driver)) {
+            $ast->driver = $this->driver;
+        }
+
+        return $ast;
+    }
+
+    /**
+     * @return array<int, WhereClause>
+     */
+    protected function getClauses(): array
+    {
+        return $this->ast->wheres;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function getArguments(): array
+    {
+        return $this->ast->params;
+    }
+
+    protected function hasWhereClauses(): bool
+    {
+        return count($this->ast->wheres) > 0;
+    }
+
+    protected function addArguments(array $arguments): void
+    {
+        $this->ast->params = [...$this->ast->params, ...$arguments];
+    }
+
+    protected function pushWhereClause(
+        WhereClause $where,
+        LogicalConnector $logicalConnector = LogicalConnector::AND
+    ): void {
+        if ($this->hasWhereClauses()) {
+            $where->setConnector($logicalConnector);
+        }
+
+        $this->ast->wheres[] = $where;
     }
 
     public function count(string $column = '*'): array|int
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
-        $this->columns = [Functions::count($column)];
+        $this->ast->columns = [Functions::count($column)];
 
         return $this->toSql();
     }
 
     public function exists(): array|bool
     {
-        $this->action = Action::EXISTS;
+        $this->ast->action = Action::EXISTS;
 
-        $this->columns = [Operator::EXISTS->value];
+        $this->ast->columns = [Operator::EXISTS->value];
 
         return $this->toSql();
     }
 
     public function doesntExist(): array|bool
     {
-        $this->action = Action::EXISTS;
+        $this->ast->action = Action::EXISTS;
 
-        $this->columns = [Operator::NOT_EXISTS->value];
+        $this->ast->columns = [Operator::NOT_EXISTS->value];
 
         return $this->toSql();
     }
 
     public function insert(array $data): array|bool
     {
-        $this->action = Action::INSERT;
+        $this->ast->action = Action::INSERT;
 
         $this->prepareDataToInsert($data);
 
@@ -110,7 +141,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
     public function insertOrIgnore(array $values): array|bool
     {
-        $this->ignore = true;
+        $this->ast->ignore = true;
 
         $this->insert($values);
 
@@ -126,33 +157,33 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
         [$dml, $arguments] = $builder->toSql();
 
-        $this->rawStatement = trim($dml, '()');
+        $this->ast->rawStatement = trim($dml, '()');
 
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->addArguments($arguments);
 
-        $this->action = Action::INSERT;
+        $this->ast->action = Action::INSERT;
 
-        $this->ignore = $ignore;
+        $this->ast->ignore = $ignore;
 
-        $this->columns = $columns;
+        $this->ast->columns = $columns;
 
         return $this->toSql();
     }
 
     public function update(array $values): array|bool
     {
-        $this->action = Action::UPDATE;
+        $this->ast->action = Action::UPDATE;
 
-        $this->values = $values;
+        $this->ast->values = $values;
 
         return $this->toSql();
     }
 
     public function upsert(array $values, array $columns): array|bool
     {
-        $this->action = Action::INSERT;
+        $this->ast->action = Action::INSERT;
 
-        $this->uniqueColumns = $columns;
+        $this->ast->uniqueColumns = $columns;
 
         $this->prepareDataToInsert($values);
 
@@ -161,7 +192,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
     public function delete(): array|bool
     {
-        $this->action = Action::DELETE;
+        $this->ast->action = Action::DELETE;
 
         return $this->toSql();
     }
@@ -173,7 +204,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
      */
     public function returning(array $columns = ['*']): static
     {
-        $this->returning = array_unique($columns);
+        $this->ast->returning = array_unique($columns);
 
         return $this;
     }
@@ -190,10 +221,10 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
         ksort($data);
 
-        $this->columns = array_unique([...$this->columns, ...array_keys($data)]);
+        $this->ast->columns = array_unique([...$this->ast->columns, ...array_keys($data)]);
 
-        $this->arguments = \array_merge($this->arguments, array_values($data));
+        $this->addArguments(array_values($data));
 
-        $this->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
+        $this->ast->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
     }
 }

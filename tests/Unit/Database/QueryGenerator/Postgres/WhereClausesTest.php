@@ -121,6 +121,27 @@ it('generates query using in and not in operators with subquery', function (stri
     ['whereNotIn', Operator::NOT_IN->value],
 ]);
 
+it('keeps postgres placeholder order across where and subquery params', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->table('users')
+        ->whereEqual('status', 'active')
+        ->whereIn('id', function (Subquery $query) {
+            $query->select(['user_id'])
+                ->from('orders')
+                ->whereGreaterThan('total', 100);
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = 'SELECT * FROM "users" WHERE "status" = $1 AND "id" IN '
+        . '(SELECT "user_id" FROM "orders" WHERE "total" > $2)';
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active', 100]);
+});
+
 it('generates query to select null or not null columns', function (string $method, string $operator) {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 

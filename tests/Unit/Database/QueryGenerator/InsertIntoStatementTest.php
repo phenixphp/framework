@@ -136,6 +136,31 @@ it('generates insert statement from subquery', function () {
     expect($params)->toBeEmpty();
 });
 
+it('stores insert from subquery params directly in query ast', function () {
+    $query = new class () extends QueryGenerator {
+        public function params(): array
+        {
+            return $this->buildAst()->params;
+        }
+    };
+
+    $sql = $query->table('users')
+        ->insertFrom(function (Subquery $subquery) {
+            $subquery->table('customers')
+                ->select(['name', 'email'])
+                ->whereEqual('status', 'active');
+        }, ['name', 'email']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "INSERT INTO `users` (`name`, `email`) "
+        . "SELECT `name`, `email` FROM `customers` WHERE `status` = ?";
+
+    expect($query->params())->toBe(['active']);
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active']);
+});
+
 it('generates insert ignore statement from subquery', function () {
     $query = new QueryGenerator();
 

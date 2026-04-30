@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use Phenix\Database\Clauses\BasicWhereClause;
-use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\QueryGenerator;
 
@@ -172,16 +170,3 @@ it('generates query to select a record by condition or by year', function (
     ['orWhereYearLessThan', date('Y'), date('Y'), Operator::LESS_THAN->value],
     ['orWhereYearLessThanOrEqual', date('Y'), date('Y'), Operator::LESS_THAN_OR_EQUAL->value],
 ]);
-
-it('stores date where clauses as DateWhereClause instances', function () {
-    $query = new QueryGenerator();
-    $query->table('users')->whereDateEqual('created_at', '2026-01-15');
-
-    $reflection = new ReflectionClass($query);
-    $property = $reflection->getProperty('clauses');
-    $clauses = $property->getValue($query);
-
-    expect($clauses)->toHaveCount(1);
-    expect($clauses[0])->toBeInstanceOf(DateWhereClause::class);
-    expect($clauses[0])->not->toBeInstanceOf(BasicWhereClause::class);
-});

@@ -95,6 +95,6 @@ trait HasJoinClause
     {
         $join->setDriver($this->driver);
 
-        $this->joins[] = $join;
+        $this->ast->joins[] = $join;
     }
 }
