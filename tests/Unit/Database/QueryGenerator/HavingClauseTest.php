@@ -30,7 +30,7 @@ it('generates a query using having clause', function () {
     $expected = "SELECT COUNT(`products`.`id`) AS `identifiers`, `products`.`category_id`, `categories`.`description` "
         . "FROM `products` "
         . "LEFT JOIN `categories` ON `products`.`category_id` = `categories`.`id` "
-        . "HAVING `identifiers` > ? GROUP BY `products`.`category_id`";
+        . "GROUP BY `products`.`category_id` HAVING `identifiers` > ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5]);
@@ -60,7 +60,7 @@ it('generates a query using having with many clauses', function () {
     $expected = "SELECT COUNT(`products`.`id`) AS `identifiers`, `products`.`category_id`, `categories`.`description` "
         . "FROM `products` "
         . "LEFT JOIN `categories` ON `products`.`category_id` = `categories`.`id` "
-        . "HAVING `identifiers` > ? AND `products`.`category_id` > ? GROUP BY `products`.`category_id`";
+        . "GROUP BY `products`.`category_id` HAVING `identifiers` > ? AND `products`.`category_id` > ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5, 10]);
@@ -84,7 +84,7 @@ it('generates a query using having with date clause', function () {
 
     $expected = "SELECT COUNT(`products`.`id`) AS `product_count`, `products`.`created_at` "
         . "FROM `products` "
-        . "HAVING DATE(`products`.`created_at`) = ? GROUP BY `products`.`created_at`";
+        . "GROUP BY `products`.`created_at` HAVING DATE(`products`.`created_at`) = ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['2026-01-15']);

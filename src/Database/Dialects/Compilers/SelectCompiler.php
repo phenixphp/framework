@@ -55,13 +55,18 @@ abstract class SelectCompiler extends ClauseCompiler
             }
         }
 
-        if ($ast->having !== null) {
-            $sql[] = $ast->having;
-        }
-
         if (! empty($ast->groups)) {
             $sql[] = Operator::GROUP_BY->value;
             $sql[] = $this->compileGroups($ast->groups, $ast->driver);
+        }
+
+        if ($ast->having !== null) {
+            $having = $this->havingCompiler->compile($ast->having);
+
+            if ($having->sql !== '') {
+                $sql[] = $having->sql;
+                $this->params = [...$this->params, ...$having->params];
+            }
         }
 
         if (! empty($ast->orders)) {

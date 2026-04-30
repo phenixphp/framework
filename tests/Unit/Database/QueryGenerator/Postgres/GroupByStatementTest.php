@@ -116,8 +116,8 @@ it('generates a grouped query with having clause', function (): void {
 
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
         . "FROM \"products\" "
-        . "HAVING \"product_count\" > $1 "
-        . "GROUP BY \"category_id\"";
+        . "GROUP BY \"category_id\" "
+        . "HAVING \"product_count\" > $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5]);

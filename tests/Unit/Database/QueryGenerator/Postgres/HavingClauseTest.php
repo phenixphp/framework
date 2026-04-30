@@ -31,7 +31,7 @@ it('generates a query using having clause', function () {
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"identifiers\", \"products\".\"category_id\", \"categories\".\"description\" "
         . "FROM \"products\" "
         . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
-        . "HAVING \"identifiers\" > $1 GROUP BY \"products\".\"category_id\"";
+        . "GROUP BY \"products\".\"category_id\" HAVING \"identifiers\" > $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5]);
@@ -61,7 +61,7 @@ it('generates a query using having with many clauses', function () {
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"identifiers\", \"products\".\"category_id\", \"categories\".\"description\" "
         . "FROM \"products\" "
         . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" "
-        . "HAVING \"identifiers\" > $1 AND \"products\".\"category_id\" > $2 GROUP BY \"products\".\"category_id\"";
+        . "GROUP BY \"products\".\"category_id\" HAVING \"identifiers\" > $1 AND \"products\".\"category_id\" > $2";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([5, 10]);
@@ -87,7 +87,7 @@ it('generates a query using having with where clause', function () {
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
         . "FROM \"products\" "
         . "WHERE \"products\".\"status\" = $1 "
-        . "HAVING \"product_count\" > $2 GROUP BY \"products\".\"category_id\"";
+        . "GROUP BY \"products\".\"category_id\" HAVING \"product_count\" > $2";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active', 3]);
@@ -111,7 +111,7 @@ it('generates a query using having with less than', function () {
 
     $expected = "SELECT SUM(\"orders\".\"total\") AS \"total_sales\", \"orders\".\"customer_id\" "
         . "FROM \"orders\" "
-        . "HAVING \"total_sales\" < $1 GROUP BY \"orders\".\"customer_id\"";
+        . "GROUP BY \"orders\".\"customer_id\" HAVING \"total_sales\" < $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1000]);
@@ -135,7 +135,7 @@ it('generates a query using having with equal', function () {
 
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
         . "FROM \"products\" "
-        . "HAVING \"product_count\" = $1 GROUP BY \"products\".\"category_id\"";
+        . "GROUP BY \"products\".\"category_id\" HAVING \"product_count\" = $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([10]);
@@ -159,8 +159,65 @@ it('generates a query using having with date clause', function () {
 
     $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"created_at\" "
         . "FROM \"products\" "
-        . "HAVING DATE(\"products\".\"created_at\") = $1 GROUP BY \"products\".\"created_at\"";
+        . "GROUP BY \"products\".\"created_at\" HAVING DATE(\"products\".\"created_at\") = $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['2026-01-15']);
+});
+
+it('orders join where and having params by final sql position', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->select([
+            Functions::count('products.id')->as('product_count'),
+            'products.category_id',
+        ])
+        ->from('products')
+        ->leftJoin('categories', function (Join $join) {
+            $join->onEqual('products.category_id', 'categories.id')
+                ->whereEqual('categories.status', 'enabled');
+        })
+        ->whereEqual('products.status', 'active')
+        ->groupBy('products.category_id')
+        ->having(function (Having $having): void {
+            $having->whereGreaterThan('product_count', 3);
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" AND \"categories\".\"status\" = $1 "
+        . "WHERE \"products\".\"status\" = $2 "
+        . "GROUP BY \"products\".\"category_id\" HAVING \"product_count\" > $3";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['enabled', 'active', 3]);
+});
+
+it('orders where params before having params regardless of call order', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->select([
+            Functions::count('products.id')->as('product_count'),
+            'products.category_id',
+        ])
+        ->from('products')
+        ->groupBy('products.category_id')
+        ->having(function (Having $having): void {
+            $having->whereGreaterThan('product_count', 3);
+        })
+        ->whereEqual('products.status', 'active')
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT COUNT(\"products\".\"id\") AS \"product_count\", \"products\".\"category_id\" "
+        . "FROM \"products\" "
+        . "WHERE \"products\".\"status\" = $1 "
+        . "GROUP BY \"products\".\"category_id\" HAVING \"product_count\" > $2";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active', 3]);
 });

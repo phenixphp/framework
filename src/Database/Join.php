@@ -9,7 +9,6 @@ use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Dialects\Compilers\JoinCompiler;
 
 class Join extends ClauseBuilder
 {

@@ -11,4 +11,6 @@ abstract class ClauseCompiler implements ClauseCompilerContract
     protected WhereCompiler $whereCompiler;
 
     protected JoinCompiler $joinCompiler;
+
+    protected HavingCompiler $havingCompiler;
 }

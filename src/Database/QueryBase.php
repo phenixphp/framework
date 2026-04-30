@@ -30,7 +30,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
     protected array $joins;
 
-    protected string $having;
+    protected Having|null $having;
 
     protected array $groupBy;
 
@@ -65,6 +65,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
         $this->joins = [];
         $this->columns = [];
         $this->values = [];
+        $this->having = null;
         $this->clauses = [];
         $this->arguments = [];
         $this->uniqueColumns = [];

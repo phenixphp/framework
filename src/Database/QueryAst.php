@@ -39,10 +39,7 @@ class QueryAst
      */
     public array $wheres = [];
 
-    /**
-     * @var string|null
-     */
-    public string|null $having = null;
+    public Having|null $having = null;
 
     /**
      * @var array<int, mixed>

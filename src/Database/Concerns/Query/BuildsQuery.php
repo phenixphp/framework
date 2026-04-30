@@ -82,11 +82,7 @@ trait BuildsQuery
 
         $clause($having);
 
-        [$dml, $arguments] = $having->toSql();
-
-        $this->having = $dml;
-
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->having = $having;
 
         return $this;
     }
