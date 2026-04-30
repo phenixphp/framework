@@ -10,7 +10,6 @@ use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Concerns\Query\HasWhereClause;
-use Phenix\Database\Concerns\Query\PrepareColumns;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 
@@ -19,7 +18,6 @@ use function count;
 abstract class ClauseBuilder extends Grammar
 {
     use HasWhereClause;
-    use PrepareColumns;
 
     /**
      * @var array<int, WhereClause>
