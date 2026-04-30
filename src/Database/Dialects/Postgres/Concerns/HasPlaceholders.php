@@ -13,9 +13,7 @@ trait HasPlaceholders
 
         return preg_replace_callback(
             '/\?/',
-            function () use (&$index): string {
-                return '$' . ($index++);
-            },
+            fn (): string => '$' . ($index++),
             $sql
         );
     }
@@ -26,9 +24,7 @@ trait HasPlaceholders
 
         return preg_replace_callback(
             '/\?|\$\d+/',
-            function () use (&$index): string {
-                return '$' . ($index++);
-            },
+            fn (): string => '$' . ($index++),
             $sql
         );
     }
