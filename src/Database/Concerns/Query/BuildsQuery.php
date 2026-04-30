@@ -122,10 +122,9 @@ trait BuildsQuery
      */
     public function toSql(): array
     {
-        $ast = $this->buildAst();
         $dialect = DialectFactory::fromDriver($this->driver);
 
-        return $dialect->compile($ast);
+        return $dialect->compile($this->buildAst());
     }
 
     protected function buildAst(): QueryAst
