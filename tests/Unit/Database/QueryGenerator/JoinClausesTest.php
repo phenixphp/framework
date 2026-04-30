@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;

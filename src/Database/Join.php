@@ -9,10 +9,9 @@ use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Dialects\Compilers\JoinCompiler;
 
-class Join extends Clause implements Builder
+class Join extends ClauseBuilder
 {
     public function __construct(
         protected Alias|string $relationship,
@@ -74,14 +73,5 @@ class Join extends Clause implements Builder
     public function getArguments(): array
     {
         return $this->arguments;
-    }
-
-    /**
-     * @deprecated Join is now a semantic AST node. Let the active SQL dialect compile it instead.
-     * TODO: Remove this method in a future major release.
-     */
-    public function toSql(): array
-    {
-        return (new JoinCompiler($this->driver))->compile($this)->sqlWithParams();
     }
 }

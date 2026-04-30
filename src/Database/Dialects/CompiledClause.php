@@ -15,13 +15,4 @@ readonly class CompiledClause
         public array $params = []
     ) {
     }
-
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     * TODO: Remove
-     */
-    public function sqlWithParams(): array
-    {
-        return [$this->sql, $this->params];
-    }
 }
