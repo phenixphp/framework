@@ -224,3 +224,29 @@ it('generates query with join and where clause', function () {
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active']);
 });
+
+it('orders join params before where params for postgresql placeholders', function () {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->select([
+            'products.id',
+            'categories.name',
+        ])
+        ->from('products')
+        ->leftJoin('categories', function (Join $join) {
+            $join->onEqual('products.category_id', 'categories.id')
+                ->whereEqual('categories.status', 'active');
+        })
+        ->whereEqual('products.status', 'published')
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT \"products\".\"id\", \"categories\".\"name\" "
+        . "FROM \"products\" "
+        . "LEFT JOIN \"categories\" ON \"products\".\"category_id\" = \"categories\".\"id\" AND \"categories\".\"status\" = $1 "
+        . "WHERE \"products\".\"status\" = $2";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active', 'published']);
+});

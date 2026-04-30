@@ -38,7 +38,12 @@ abstract class SelectCompiler extends ClauseCompiler
         ];
 
         if (! empty($ast->joins)) {
-            $sql[] = $ast->joins;
+            $joins = $this->compileJoins($ast);
+
+            if ($joins->sql !== '') {
+                $sql[] = $joins->sql;
+                $this->params = [...$joins->params, ...$this->params];
+            }
         }
 
         if (! empty($ast->wheres)) {
@@ -135,6 +140,21 @@ abstract class SelectCompiler extends ClauseCompiler
         });
 
         return Arr::implodeDeeply([Arr::implodeDeeply($compiled, ', '), $order]);
+    }
+
+    private function compileJoins(QueryAst $ast): CompiledClause
+    {
+        $sql = [];
+        $params = [];
+
+        foreach ($ast->joins as $join) {
+            $compiled = $this->joinCompiler->compile($join);
+
+            $sql[] = $compiled->sql;
+            $params = [...$params, ...$compiled->params];
+        }
+
+        return new CompiledClause(Arr::implodeDeeply($sql), $params);
     }
 
     /**

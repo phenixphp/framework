@@ -30,7 +30,7 @@ class QueryAst
     public array $values = [];
 
     /**
-     * @var array<int, string>
+     * @var array<int, Join>
      */
     public array $joins = [];
 

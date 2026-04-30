@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
@@ -169,4 +170,34 @@ it('generates query with join date clause', function () {
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['2026-01-15']);
+});
+
+it('generates query with multiple joins using params', function () {
+    $query = new QueryGenerator();
+
+    $sql = $query->select([
+            'products.id',
+            'categories.name',
+            'suppliers.name',
+        ])
+        ->from('products')
+        ->leftJoin('categories', function (Join $join) {
+            $join->onEqual('products.category_id', 'categories.id')
+                ->whereEqual('categories.status', 'active');
+        })
+        ->leftJoin('suppliers', function (Join $join) {
+            $join->onEqual('products.supplier_id', 'suppliers.id')
+                ->whereEqual('suppliers.region', 'latam');
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT `products`.`id`, `categories`.`name`, `suppliers`.`name` "
+        . "FROM `products` "
+        . "LEFT JOIN `categories` ON `products`.`category_id` = `categories`.`id` AND `categories`.`status` = ? "
+        . "LEFT JOIN `suppliers` ON `products`.`supplier_id` = `suppliers`.`id` AND `suppliers`.`region` = ?";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active', 'latam']);
 });

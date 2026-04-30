@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Clauses\RowWhereClause;
-use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Functions;

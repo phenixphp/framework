@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Compilers;
 
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\QueryAst;
@@ -17,6 +19,7 @@ class Select extends SelectCompiler
     public function __construct()
     {
         $this->whereCompiler = new Where();
+        $this->joinCompiler = new JoinCompiler(Driver::POSTGRESQL);
     }
 
     public function compile(QueryAst $ast): CompiledClause

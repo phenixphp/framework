@@ -95,10 +95,6 @@ trait HasJoinClause
     {
         $join->setDriver($this->driver);
 
-        [$dml, $arguments] = $join->toSql();
-
-        $this->joins[] = $dml;
-
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->joins[] = $join;
     }
 }

@@ -9,4 +9,6 @@ use Phenix\Database\Contracts\ClauseCompiler as ClauseCompilerContract;
 abstract class ClauseCompiler implements ClauseCompilerContract
 {
     protected WhereCompiler $whereCompiler;
+
+    protected JoinCompiler $joinCompiler;
 }
