@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
@@ -355,7 +355,7 @@ it('generates a column-ordered query', function (array|string $column, string $o
 ]);
 
 it('generates a column-ordered query using select-case', function () {
-    $case = Functions::case()
+    $case = Funct::case()
         ->whenNull('city', 'country')
         ->defaultResult('city');
 
@@ -458,7 +458,7 @@ it('generates query to select using comparison clause with subqueries and functi
 
     $sql = $query->table('products')
         ->{$method}($column, function (Subquery $subquery) {
-            $subquery->select([Functions::max('price')])->from('products');
+            $subquery->select([Funct::max('price')])->from('products');
         })
         ->get();
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
-it('generates a grouped query', function (Functions|string $column, Functions|array|string $groupBy, string $rawGroup, string $rawColumn) {
+it('generates a grouped query', function (Funct|string $column, Funct|array|string $groupBy, string $rawGroup, string $rawColumn) {
     $query = new QueryGenerator();
 
     $sql = $query->select([
@@ -31,14 +31,14 @@ it('generates a grouped query', function (Functions|string $column, Functions|ar
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    [Funct::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
     ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
+    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);
 
 it('generates a grouped and ordered query', function (
-    Functions|string $column,
-    Functions|array|string $groupBy,
+    Funct|string $column,
+    Funct|array|string $groupBy,
     string $rawGroup,
     string $rawColumn
 ) {
@@ -68,7 +68,7 @@ it('generates a grouped and ordered query', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    [Funct::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
     ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
+    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);

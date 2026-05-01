@@ -8,7 +8,7 @@ use Closure;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Dialects\DialectFactory;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Having;
 use Phenix\Database\QueryAst;
 use Phenix\Database\SelectCase;
@@ -63,9 +63,9 @@ trait BuildsQuery
         return $this;
     }
 
-    public function groupBy(Functions|array|string $column): static
+    public function groupBy(Funct|array|string $column): static
     {
-        if ($column instanceof Functions || is_string($column)) {
+        if ($column instanceof Funct || is_string($column)) {
             $column = [$column];
         }
 

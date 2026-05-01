@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Having;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
@@ -11,7 +11,7 @@ it('generates a query using having clause', function () {
     $query = new QueryGenerator();
 
     $sql = $query->select([
-            Functions::count('products.id')->as('identifiers'),
+            Funct::count('products.id')->as('identifiers'),
             'products.category_id',
             'categories.description',
         ])
@@ -40,7 +40,7 @@ it('generates a query using having with many clauses', function () {
     $query = new QueryGenerator();
 
     $sql = $query->select([
-            Functions::count('products.id')->as('identifiers'),
+            Funct::count('products.id')->as('identifiers'),
             'products.category_id',
             'categories.description',
         ])
@@ -70,7 +70,7 @@ it('generates a query using having with date clause', function () {
     $query = new QueryGenerator();
 
     $sql = $query->select([
-            Functions::count('products.id')->as('product_count'),
+            Funct::count('products.id')->as('product_count'),
             'products.created_at',
         ])
         ->from('products')

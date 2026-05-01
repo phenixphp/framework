@@ -27,7 +27,7 @@ class SelectCase implements Stringable
         $this->cases = [];
     }
 
-    public function whenEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
+    public function whenEqual(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -39,7 +39,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenNotEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
+    public function whenNotEqual(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -51,7 +51,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenGreaterThan(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
+    public function whenGreaterThan(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -64,7 +64,7 @@ class SelectCase implements Stringable
     }
 
     public function whenGreaterThanOrEqual(
-        Functions|string $column,
+        Funct|string $column,
         RawValue|string|int $value,
         RawValue|string|int $result
     ): self {
@@ -78,7 +78,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenLessThan(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
+    public function whenLessThan(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -90,7 +90,7 @@ class SelectCase implements Stringable
         return $this;
     }
 
-    public function whenLessThanOrEqual(Functions|string $column, RawValue|string|int $value, RawValue|string|int $result): self
+    public function whenLessThanOrEqual(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): self
     {
         $this->pushCase(
             $column,
@@ -182,7 +182,7 @@ class SelectCase implements Stringable
     }
 
     protected function pushCase(
-        Functions|string $column,
+        Funct|string $column,
         Operator $operators,
         RawValue|string|int $result,
         RawValue|string|int|null $value = null
@@ -204,9 +204,9 @@ class SelectCase implements Stringable
         return "WHEN {$column} {$operator} " . $this->renderOperand($case[3]) . " THEN " . $this->renderOperand($case[5]);
     }
 
-    protected function compileColumn(Functions|string $column): string
+    protected function compileColumn(Funct|string $column): string
     {
-        if ($column instanceof Functions) {
+        if ($column instanceof Funct) {
             return (string) $column->setDriver($this->getDriver());
         }
 

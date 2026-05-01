@@ -8,7 +8,7 @@ use Phenix\Database\Concerns\HasDriver;
 use Phenix\Database\Constants\DatabaseFunction;
 use Stringable;
 
-class Functions implements Stringable
+class Funct implements Stringable
 {
     use HasDriver;
 

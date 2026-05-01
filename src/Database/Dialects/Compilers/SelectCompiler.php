@@ -8,7 +8,7 @@ use Phenix\Database\Alias;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Exceptions\QueryErrorException;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
 use Phenix\Util\Arr;
@@ -95,11 +95,11 @@ abstract class SelectCompiler extends ClauseCompiler
      */
     protected function compileColumns(array $columns): string
     {
-        $compiled = Arr::map($columns, function (string|Alias|Functions|SelectCase|Subquery $value, int|string $key): string {
+        $compiled = Arr::map($columns, function (string|Alias|Funct|SelectCase|Subquery $value, int|string $key): string {
             return match (true) {
                 is_string($key) => (string) Alias::of($key)->as($value)->setDriver($this->ast->driver),
                 $value instanceof Alias => (string) $value->setDriver($this->ast->driver),
-                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
+                $value instanceof Funct => (string) $value->setDriver($this->ast->driver),
                 $value instanceof SelectCase => (string) $value->setDriver($this->ast->driver),
                 $value instanceof Subquery => $this->compileSubquery($value),
                 default => $this->wrap((string) $value),
@@ -115,9 +115,9 @@ abstract class SelectCompiler extends ClauseCompiler
      */
     protected function compileGroups(array $groups): string
     {
-        $compiled = Arr::map($groups, function (string|Functions $value): string {
+        $compiled = Arr::map($groups, function (string|Funct $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
+                $value instanceof Funct => (string) $value->setDriver($this->ast->driver),
                 default => $this->wrap((string) $value),
             };
         });
@@ -129,9 +129,9 @@ abstract class SelectCompiler extends ClauseCompiler
     {
         [$columns, $order] = $orders;
 
-        $compiled = Arr::map($columns, function (string|Functions|SelectCase $value): string {
+        $compiled = Arr::map($columns, function (string|Funct|SelectCase $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
+                $value instanceof Funct => (string) $value->setDriver($this->ast->driver),
                 $value instanceof SelectCase => '(' . (string) $value->setDriver($this->ast->driver) . ')',
                 default => $this->wrap((string) $value),
             };

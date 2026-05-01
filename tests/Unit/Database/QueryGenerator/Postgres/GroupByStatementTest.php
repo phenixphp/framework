@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Having;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
-it('generates a grouped query', function (Functions|string $column, Functions|array|string $groupBy, string $rawGroup, string $rawColumn): void {
+it('generates a grouped query', function (Funct|string $column, Funct|array|string $groupBy, string $rawGroup, string $rawColumn): void {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
@@ -33,14 +33,14 @@ it('generates a grouped query', function (Functions|string $column, Functions|ar
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
+    [Funct::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
     ['location_id', ['category_id', 'location_id'], '"category_id", "location_id"', '"location_id"'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
+    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
 ]);
 
 it('generates a grouped and ordered query', function (
-    Functions|string $column,
-    Functions|array|string $groupBy,
+    Funct|string $column,
+    Funct|array|string $groupBy,
     string $rawGroup,
     string $rawColumn
 ) {
@@ -70,16 +70,16 @@ it('generates a grouped and ordered query', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
+    [Funct::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
     ['location_id', ['category_id', 'location_id'], '"category_id", "location_id"', '"location_id"'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
+    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
 ]);
 
 it('generates a grouped query with where clause', function (): void {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Functions::count('products.id'),
+            Funct::count('products.id'),
             'products.category_id',
         ])
         ->from('products')
@@ -102,7 +102,7 @@ it('generates a grouped query with having clause', function (): void {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Functions::count('products.id')->as('product_count'),
+            Funct::count('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')
@@ -127,9 +127,9 @@ it('generates a grouped query with multiple aggregations', function (): void {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Functions::count('products.id'),
-            Functions::sum('products.price'),
-            Functions::avg('products.price'),
+            Funct::count('products.id'),
+            Funct::sum('products.price'),
+            Funct::avg('products.price'),
             'products.category_id',
         ])
         ->from('products')

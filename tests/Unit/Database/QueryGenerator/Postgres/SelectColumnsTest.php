@@ -7,7 +7,7 @@ use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Exceptions\QueryErrorException;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
@@ -43,7 +43,7 @@ it('generates a query using sql functions', function (string $function, string $
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->table('products')
-        ->select([Functions::{$function}($column)])
+        ->select([Funct::{$function}($column)])
         ->get();
 
     [$dml, $params] = $sql;
@@ -67,7 +67,7 @@ it('generates a query using sql functions with alias', function (
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->table('products')
-        ->select([Functions::{$function}($column)->as($alias)])
+        ->select([Funct::{$function}($column)->as($alias)])
         ->get();
 
     [$dml, $params] = $sql;
@@ -189,7 +189,7 @@ it('generates query with select-cases using comparisons', function (
 
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $case = Functions::case()
+    $case = Funct::case()
         ->{$method}($column, $value, $result)
         ->defaultResult($defaultResult)
         ->as('type');
@@ -228,7 +228,7 @@ it('generates query with select-cases using logical comparisons', function (
 
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $case = Functions::case()
+    $case = Funct::case()
         ->{$method}(...$data)
         ->defaultResult($defaultResult)
         ->as('status');
@@ -260,7 +260,7 @@ it('generates query with select-cases with multiple conditions and string values
 
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $case = Functions::case()
+    $case = Funct::case()
         ->whenNull('created_at', 'inactive')
         ->whenGreaterThan('created_at', $date, 'new user')
         ->defaultResult('old user')
@@ -288,7 +288,7 @@ it('generates query with select-cases without default value', function () {
 
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $case = Functions::case()
+    $case = Funct::case()
         ->whenNull('created_at', 'inactive')
         ->whenGreaterThan('created_at', $date, 'new user')
         ->as('status');
@@ -313,8 +313,8 @@ it('generates query with select-cases without default value', function () {
 it('generates query with select-case using functions', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
-    $case = Functions::case()
-        ->whenGreaterThanOrEqual(Functions::avg('price'), 4, 'expensive')
+    $case = Funct::case()
+        ->whenGreaterThanOrEqual(Funct::avg('price'), 4, 'expensive')
         ->defaultResult('cheap')
         ->as('message');
 

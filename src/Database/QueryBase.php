@@ -107,7 +107,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
     {
         $this->ast->action = Action::SELECT;
 
-        $this->ast->columns = [Functions::count($column)];
+        $this->ast->columns = [Funct::count($column)];
 
         return $this->toSql();
     }
