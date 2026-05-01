@@ -21,8 +21,7 @@ abstract class SelectCompiler extends ClauseCompiler
 
     public function compile(): CompiledClause
     {
-        $ast = $this->ast();
-        $columns = empty($ast->columns) ? ['*'] : $ast->columns;
+        $columns = empty($this->ast->columns) ? ['*'] : $this->ast->columns;
 
         $sql = [
             'SELECT',
@@ -31,17 +30,17 @@ abstract class SelectCompiler extends ClauseCompiler
             $this->compileTable(),
         ];
 
-        if (! empty($ast->joins)) {
+        if (! empty($this->ast->joins)) {
             $joins = $this->compileJoins();
 
             if ($joins->sql !== '') {
                 $sql[] = $joins->sql;
-                $ast->params = [...$joins->params, ...$ast->params];
+                $this->ast->params = [...$joins->params, ...$this->ast->params];
             }
         }
 
-        if (! empty($ast->wheres)) {
-            $whereCompiled = $this->whereCompiler->compile($ast->wheres);
+        if (! empty($this->ast->wheres)) {
+            $whereCompiled = $this->whereCompiler->compile($this->ast->wheres);
 
             if ($whereCompiled->sql !== '') {
                 $sql[] = 'WHERE';
@@ -49,34 +48,34 @@ abstract class SelectCompiler extends ClauseCompiler
             }
         }
 
-        if (! empty($ast->groups)) {
+        if (! empty($this->ast->groups)) {
             $sql[] = Operator::GROUP_BY->value;
-            $sql[] = $this->compileGroups($ast->groups);
+            $sql[] = $this->compileGroups($this->ast->groups);
         }
 
-        if ($ast->having !== null) {
-            $having = $this->havingCompiler->compile($ast->having);
+        if ($this->ast->having !== null) {
+            $having = $this->havingCompiler->compile($this->ast->having);
 
             if ($having->sql !== '') {
                 $sql[] = $having->sql;
-                $ast->params = [...$ast->params, ...$having->params];
+                $this->ast->params = [...$this->ast->params, ...$having->params];
             }
         }
 
-        if (! empty($ast->orders)) {
+        if (! empty($this->ast->orders)) {
             $sql[] = Operator::ORDER_BY->value;
-            $sql[] = $this->compileOrders($ast->orders);
+            $sql[] = $this->compileOrders($this->ast->orders);
         }
 
-        if ($ast->limit !== null) {
-            $sql[] = "LIMIT {$ast->limit}";
+        if ($this->ast->limit !== null) {
+            $sql[] = "LIMIT {$this->ast->limit}";
         }
 
-        if ($ast->offset !== null) {
-            $sql[] = "OFFSET {$ast->offset}";
+        if ($this->ast->offset !== null) {
+            $sql[] = "OFFSET {$this->ast->offset}";
         }
 
-        if ($ast->lock !== null) {
+        if ($this->ast->lock !== null) {
             $lockSql = $this->compileLock();
 
             if ($lockSql !== '') {
@@ -86,7 +85,7 @@ abstract class SelectCompiler extends ClauseCompiler
 
         return new CompiledClause(
             Arr::implodeDeeply($sql),
-            $ast->params
+            $this->ast->params
         );
     }
 
@@ -182,13 +181,12 @@ abstract class SelectCompiler extends ClauseCompiler
 
     private function compileTable(): string
     {
-        $ast = $this->ast();
-        $table = trim($ast->table);
+        $table = trim($this->ast->table);
 
         if ($table !== '' && str_starts_with($table, '(')) {
-            return $ast->table;
+            return $this->ast->table;
         }
 
-        return $this->wrapOf($ast->table);
+        return $this->wrapOf($this->ast->table);
     }
 }
