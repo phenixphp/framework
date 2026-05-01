@@ -161,20 +161,15 @@ abstract class SelectCompiler extends ClauseCompiler
      */
     private function compileSubquery(Subquery $subquery): string
     {
-        $parentAst = $this->ast;
-        $subquery->setDriver($parentAst->driver);
+        $subquery->setDriver($this->ast->driver);
 
-        try {
-            [$dml, $arguments] = $subquery->toSql();
-        } finally {
-            $this->setAst($parentAst);
-        }
+        [$dml, $arguments] = $subquery->toSql();
 
         if (! str_contains($dml, 'LIMIT 1')) {
             throw new QueryErrorException('The subquery must be limited to one record');
         }
 
-        $parentAst->params = [...$parentAst->params, ...$arguments];
+        $this->ast->params = [...$this->ast->params, ...$arguments];
 
         return $dml;
     }

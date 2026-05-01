@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Dialects\DialectFactory;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryAst;
@@ -65,8 +64,6 @@ it('keeps query ast synchronized as primary query state', function (): void {
 });
 
 it('does not leak cached dialect compiler state across compilations', function (): void {
-    DialectFactory::clearCache();
-
     $first = (new QueryGenerator())
         ->table('users')
         ->whereEqual('id', 1)

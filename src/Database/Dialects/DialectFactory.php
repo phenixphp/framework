@@ -12,11 +12,6 @@ use Phenix\Database\Dialects\Sqlite\SqliteDialect;
 
 class DialectFactory
 {
-    /**
-     * @var array<string, Dialect>
-     */
-    private static array $instances = [];
-
     private function __construct()
     {
         // Prevent instantiation
@@ -24,16 +19,11 @@ class DialectFactory
 
     public static function fromDriver(Driver $driver): Dialect
     {
-        return self::$instances[$driver->value] ??= match ($driver) {
+        return match ($driver) {
             Driver::MYSQL => new MysqlDialect(),
             Driver::POSTGRESQL => new PostgresDialect(),
             Driver::SQLITE => new SqliteDialect(),
             default => new MysqlDialect(),
         };
-    }
-
-    public static function clearCache(): void
-    {
-        self::$instances = [];
     }
 }
