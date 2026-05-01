@@ -43,7 +43,7 @@ abstract class Dialect implements DialectContract
      */
     private function compileSelect(QueryAst $ast): array
     {
-        $compiled = $this->selectCompiler->compile($ast);
+        $compiled = $this->selectCompiler->setAst($ast)->compile();
 
         return [$compiled->sql, $compiled->params];
     }
@@ -53,7 +53,7 @@ abstract class Dialect implements DialectContract
      */
     private function compileInsert(QueryAst $ast): array
     {
-        $compiled = $this->insertCompiler->compile($ast);
+        $compiled = $this->insertCompiler->setAst($ast)->compile();
 
         return [$compiled->sql, $compiled->params];
     }
@@ -63,7 +63,7 @@ abstract class Dialect implements DialectContract
      */
     private function compileUpdate(QueryAst $ast): array
     {
-        $compiled = $this->updateCompiler->compile($ast);
+        $compiled = $this->updateCompiler->setAst($ast)->compile();
 
         return [$compiled->sql, $compiled->params];
     }
@@ -73,7 +73,7 @@ abstract class Dialect implements DialectContract
      */
     private function compileDelete(QueryAst $ast): array
     {
-        $compiled = $this->deleteCompiler->compile($ast);
+        $compiled = $this->deleteCompiler->setAst($ast)->compile();
 
         return [$compiled->sql, $compiled->params];
     }
@@ -83,7 +83,7 @@ abstract class Dialect implements DialectContract
      */
     private function compileExists(QueryAst $ast): array
     {
-        $compiled = $this->existsCompiler->compile($ast);
+        $compiled = $this->existsCompiler->setAst($ast)->compile();
 
         return [$compiled->sql, $compiled->params];
     }

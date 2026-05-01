@@ -9,7 +9,6 @@ use Phenix\Database\Constants\Lock;
 use Phenix\Database\Dialects\Compilers\HavingCompiler;
 use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
-use Phenix\Database\QueryAst;
 
 class Select extends SelectCompiler
 {
@@ -20,9 +19,9 @@ class Select extends SelectCompiler
         $this->havingCompiler = new HavingCompiler($this->whereCompiler);
     }
 
-    protected function compileLock(QueryAst $ast): string
+    protected function compileLock(): string
     {
-        return match ($ast->lock) {
+        return match ($this->ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',
             Lock::FOR_UPDATE_SKIP_LOCKED => 'FOR UPDATE SKIP LOCKED',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Dialects\DialectFactory;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
 use Phenix\Database\QueryAst;
@@ -61,6 +62,23 @@ it('keeps query ast synchronized as primary query state', function (): void {
     expect($ast->params)->toBe([1]);
     expect($dml)->toBe('SELECT "id" FROM "users" WHERE "id" = $1');
     expect($params)->toBe([1]);
+});
+
+it('does not leak cached dialect compiler state across compilations', function (): void {
+    DialectFactory::clearCache();
+
+    $first = (new QueryGenerator())
+        ->table('users')
+        ->whereEqual('id', 1)
+        ->get();
+
+    $second = (new QueryGenerator())
+        ->table('posts')
+        ->whereEqual('slug', 'hello')
+        ->get();
+
+    expect($first)->toBe(['SELECT * FROM `users` WHERE `id` = ?', [1]]);
+    expect($second)->toBe(['SELECT * FROM `posts` WHERE `slug` = ?', ['hello']]);
 });
 
 it('stores where and subquery params directly in query ast', function (): void {

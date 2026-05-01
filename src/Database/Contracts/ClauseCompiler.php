@@ -9,5 +9,7 @@ use Phenix\Database\QueryAst;
 
 interface ClauseCompiler
 {
-    public function compile(QueryAst $ast): CompiledClause;
+    public function setAst(QueryAst $ast): static;
+
+    public function compile(): CompiledClause;
 }

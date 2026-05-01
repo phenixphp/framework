@@ -15,9 +15,9 @@ class Update extends UpdateCompiler
         $this->whereCompiler = new Where();
     }
 
-    protected function compileSetClause(Driver $driver, string $column, int $paramIndex): string
+    protected function compileSetClause(string $column, int $paramIndex): string
     {
-        $column = Wrapper::column($driver, $column);
+        $column = $this->wrap($column);
 
         return "{$column} = ?";
     }

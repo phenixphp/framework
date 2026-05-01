@@ -11,7 +11,6 @@ use Phenix\Database\Dialects\Compilers\HavingCompiler;
 use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
-use Phenix\Database\QueryAst;
 
 class Select extends SelectCompiler
 {
@@ -24,9 +23,9 @@ class Select extends SelectCompiler
         $this->havingCompiler = new HavingCompiler($this->whereCompiler);
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $result = parent::compile($ast);
+        $result = parent::compile();
 
         return new CompiledClause(
             $this->normalizePlaceholders($result->sql),
@@ -34,9 +33,9 @@ class Select extends SelectCompiler
         );
     }
 
-    protected function compileLock(QueryAst $ast): string
+    protected function compileLock(): string
     {
-        return match ($ast->lock) {
+        return match ($this->ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',
             Lock::FOR_NO_KEY_UPDATE => 'FOR NO KEY UPDATE',

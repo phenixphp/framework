@@ -5,44 +5,38 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Alias;
-use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Functions;
-use Phenix\Database\QueryAst;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 use function is_string;
 
 abstract class SelectCompiler extends ClauseCompiler
 {
-    protected array $params = [];
+    abstract protected function compileLock(): string;
 
-    abstract protected function compileLock(QueryAst $ast): string;
-
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $this->params = $ast->params;
-
+        $ast = $this->ast();
         $columns = empty($ast->columns) ? ['*'] : $ast->columns;
 
         $sql = [
             'SELECT',
-            $this->compileColumns($columns, $ast->driver),
+            $this->compileColumns($columns),
             'FROM',
-            $this->compileTable($ast->table, $ast->driver),
+            $this->compileTable(),
         ];
 
         if (! empty($ast->joins)) {
-            $joins = $this->compileJoins($ast);
+            $joins = $this->compileJoins();
 
             if ($joins->sql !== '') {
                 $sql[] = $joins->sql;
-                $this->params = [...$joins->params, ...$this->params];
+                $ast->params = [...$joins->params, ...$ast->params];
             }
         }
 
@@ -57,7 +51,7 @@ abstract class SelectCompiler extends ClauseCompiler
 
         if (! empty($ast->groups)) {
             $sql[] = Operator::GROUP_BY->value;
-            $sql[] = $this->compileGroups($ast->groups, $ast->driver);
+            $sql[] = $this->compileGroups($ast->groups);
         }
 
         if ($ast->having !== null) {
@@ -65,13 +59,13 @@ abstract class SelectCompiler extends ClauseCompiler
 
             if ($having->sql !== '') {
                 $sql[] = $having->sql;
-                $this->params = [...$this->params, ...$having->params];
+                $ast->params = [...$ast->params, ...$having->params];
             }
         }
 
         if (! empty($ast->orders)) {
             $sql[] = Operator::ORDER_BY->value;
-            $sql[] = $this->compileOrders($ast->orders, $ast->driver);
+            $sql[] = $this->compileOrders($ast->orders);
         }
 
         if ($ast->limit !== null) {
@@ -83,7 +77,7 @@ abstract class SelectCompiler extends ClauseCompiler
         }
 
         if ($ast->lock !== null) {
-            $lockSql = $this->compileLock($ast);
+            $lockSql = $this->compileLock();
 
             if ($lockSql !== '') {
                 $sql[] = $lockSql;
@@ -92,7 +86,7 @@ abstract class SelectCompiler extends ClauseCompiler
 
         return new CompiledClause(
             Arr::implodeDeeply($sql),
-            $this->params
+            $ast->params
         );
     }
 
@@ -100,16 +94,16 @@ abstract class SelectCompiler extends ClauseCompiler
      * @param array<int, mixed> $columns
      * @return string
      */
-    protected function compileColumns(array $columns, Driver $driver): string
+    protected function compileColumns(array $columns): string
     {
-        $compiled = Arr::map($columns, function (string|Alias|Functions|SelectCase|Subquery $value, int|string $key) use ($driver): string {
+        $compiled = Arr::map($columns, function (string|Alias|Functions|SelectCase|Subquery $value, int|string $key): string {
             return match (true) {
-                is_string($key) => (string) Alias::of($key)->as($value)->setDriver($driver),
-                $value instanceof Alias => (string) $value->setDriver($driver),
-                $value instanceof Functions => (string) $value->setDriver($driver),
-                $value instanceof SelectCase => (string) $value->setDriver($driver),
-                $value instanceof Subquery => $this->compileSubquery($value, $driver),
-                default => (string) Wrapper::column($driver, (string) $value),
+                is_string($key) => (string) Alias::of($key)->as($value)->setDriver($this->ast()->driver),
+                $value instanceof Alias => (string) $value->setDriver($this->ast()->driver),
+                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
+                $value instanceof SelectCase => (string) $value->setDriver($this->ast()->driver),
+                $value instanceof Subquery => $this->compileSubquery($value),
+                default => $this->wrap((string) $value),
             };
         });
 
@@ -120,39 +114,39 @@ abstract class SelectCompiler extends ClauseCompiler
      * @param array<int, mixed> $groups
      * @return string
      */
-    protected function compileGroups(array $groups, Driver $driver): string
+    protected function compileGroups(array $groups): string
     {
-        $compiled = Arr::map($groups, function (string|Functions $value) use ($driver): string {
+        $compiled = Arr::map($groups, function (string|Functions $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($driver),
-                default => (string) Wrapper::column($driver, $value),
+                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
+                default => $this->wrap((string) $value),
             };
         });
 
         return Arr::implodeDeeply($compiled, ', ');
     }
 
-    protected function compileOrders(array $orders, Driver $driver): string
+    protected function compileOrders(array $orders): string
     {
         [$columns, $order] = $orders;
 
-        $compiled = Arr::map($columns, function (string|Functions|SelectCase $value) use ($driver): string {
+        $compiled = Arr::map($columns, function (string|Functions|SelectCase $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($driver),
-                $value instanceof SelectCase => '(' . (string) $value->setDriver($driver) . ')',
-                default => (string) Wrapper::column($driver, $value),
+                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
+                $value instanceof SelectCase => '(' . (string) $value->setDriver($this->ast()->driver) . ')',
+                default => $this->wrap((string) $value),
             };
         });
 
         return Arr::implodeDeeply([Arr::implodeDeeply($compiled, ', '), $order]);
     }
 
-    private function compileJoins(QueryAst $ast): CompiledClause
+    private function compileJoins(): CompiledClause
     {
         $sql = [];
         $params = [];
 
-        foreach ($ast->joins as $join) {
+        foreach ($this->ast()->joins as $join) {
             $compiled = $this->joinCompiler->compile($join);
 
             $sql[] = $compiled->sql;
@@ -166,29 +160,35 @@ abstract class SelectCompiler extends ClauseCompiler
      * @param Subquery $subquery
      * @return string
      */
-    private function compileSubquery(Subquery $subquery, Driver $driver): string
+    private function compileSubquery(Subquery $subquery): string
     {
-        $subquery->setDriver($driver);
+        $parentAst = $this->ast();
+        $subquery->setDriver($parentAst->driver);
 
-        [$dml, $arguments] = $subquery->toSql();
+        try {
+            [$dml, $arguments] = $subquery->toSql();
+        } finally {
+            $this->setAst($parentAst);
+        }
 
         if (! str_contains($dml, 'LIMIT 1')) {
             throw new QueryErrorException('The subquery must be limited to one record');
         }
 
-        $this->params = [...$this->params, ...$arguments];
+        $parentAst->params = [...$parentAst->params, ...$arguments];
 
         return $dml;
     }
 
-    private function compileTable(string $table, Driver $driver): string
+    private function compileTable(): string
     {
-        $trimmed = trim($table);
+        $ast = $this->ast();
+        $table = trim($ast->table);
 
-        if ($trimmed !== '' && str_starts_with($trimmed, '(')) {
-            return $table;
+        if ($table !== '' && str_starts_with($table, '(')) {
+            return $ast->table;
         }
 
-        return (string) Wrapper::of($driver, $table);
+        return $this->wrapOf($ast->table);
     }
 }

@@ -7,7 +7,6 @@ namespace Phenix\Database\Dialects\Postgres\Compilers;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\Dialects\Sqlite\Compilers\Delete as SQLiteDelete;
-use Phenix\Database\QueryAst;
 
 class Delete extends SQLiteDelete
 {
@@ -18,9 +17,9 @@ class Delete extends SQLiteDelete
         $this->whereCompiler = new Where();
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $clause = parent::compile($ast);
+        $clause = parent::compile();
         $sql = $this->convertPlaceholders($clause->sql);
 
         return new CompiledClause($sql, $clause->params);
