@@ -97,10 +97,10 @@ abstract class SelectCompiler extends ClauseCompiler
     {
         $compiled = Arr::map($columns, function (string|Alias|Functions|SelectCase|Subquery $value, int|string $key): string {
             return match (true) {
-                is_string($key) => (string) Alias::of($key)->as($value)->setDriver($this->ast()->driver),
-                $value instanceof Alias => (string) $value->setDriver($this->ast()->driver),
-                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
-                $value instanceof SelectCase => (string) $value->setDriver($this->ast()->driver),
+                is_string($key) => (string) Alias::of($key)->as($value)->setDriver($this->ast->driver),
+                $value instanceof Alias => (string) $value->setDriver($this->ast->driver),
+                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
+                $value instanceof SelectCase => (string) $value->setDriver($this->ast->driver),
                 $value instanceof Subquery => $this->compileSubquery($value),
                 default => $this->wrap((string) $value),
             };
@@ -117,7 +117,7 @@ abstract class SelectCompiler extends ClauseCompiler
     {
         $compiled = Arr::map($groups, function (string|Functions $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
+                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
                 default => $this->wrap((string) $value),
             };
         });
@@ -131,8 +131,8 @@ abstract class SelectCompiler extends ClauseCompiler
 
         $compiled = Arr::map($columns, function (string|Functions|SelectCase $value): string {
             return match (true) {
-                $value instanceof Functions => (string) $value->setDriver($this->ast()->driver),
-                $value instanceof SelectCase => '(' . (string) $value->setDriver($this->ast()->driver) . ')',
+                $value instanceof Functions => (string) $value->setDriver($this->ast->driver),
+                $value instanceof SelectCase => '(' . (string) $value->setDriver($this->ast->driver) . ')',
                 default => $this->wrap((string) $value),
             };
         });
@@ -145,7 +145,7 @@ abstract class SelectCompiler extends ClauseCompiler
         $sql = [];
         $params = [];
 
-        foreach ($this->ast()->joins as $join) {
+        foreach ($this->ast->joins as $join) {
             $compiled = $this->joinCompiler->compile($join);
 
             $sql[] = $compiled->sql;
