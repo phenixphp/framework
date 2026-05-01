@@ -161,7 +161,7 @@ abstract class SelectCompiler extends ClauseCompiler
      */
     private function compileSubquery(Subquery $subquery): string
     {
-        $parentAst = $this->ast();
+        $parentAst = $this->ast;
         $subquery->setDriver($parentAst->driver);
 
         try {

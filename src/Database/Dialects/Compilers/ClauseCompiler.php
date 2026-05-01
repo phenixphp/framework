@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use LogicException;
 use Phenix\Database\Contracts\ClauseCompiler as ClauseCompilerContract;
 use Phenix\Database\QueryAst;
 use Phenix\Database\Wrapper;
@@ -24,15 +23,6 @@ abstract class ClauseCompiler implements ClauseCompilerContract
         $this->ast = $ast;
 
         return $this;
-    }
-
-    protected function ast(): QueryAst
-    {
-        if (! isset($this->ast)) {
-            throw new LogicException('Query AST must be set before compiling.');
-        }
-
-        return $this->ast;
     }
 
     protected function wrap(string $value): string
