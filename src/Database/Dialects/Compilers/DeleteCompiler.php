@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
-use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 abstract class DeleteCompiler extends ClauseCompiler

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
-use Phenix\Database\Constants\Driver;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
-use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 class Delete extends DeleteCompiler

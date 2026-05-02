@@ -7,7 +7,6 @@ namespace Phenix\Database\Dialects\Postgres\Compilers;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
-use Phenix\Database\Wrapper;
 use Phenix\Util\Arr;
 
 use function sprintf;
