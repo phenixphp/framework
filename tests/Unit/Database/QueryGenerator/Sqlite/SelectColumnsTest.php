@@ -114,7 +114,7 @@ it('generates query using subqueries in column selection', function () {
     $sql = $query->select([
             'id',
             'name',
-            subquery()->select(['name'])
+            subquery(['name'])
                 ->from('countries')
                 ->whereColumn('users.country_id', 'countries.id')
                 ->as('country_name')
@@ -139,7 +139,7 @@ it('throws exception on generate query using subqueries in column selection with
         $query->select([
                 'id',
                 'name',
-                subquery()->select(['name'])
+                subquery(['name'])
                     ->from('countries')
                     ->whereColumn('users.country_id', 'countries.id')
                     ->as('country_name'),

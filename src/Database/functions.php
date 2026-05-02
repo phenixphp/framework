@@ -46,9 +46,12 @@ function year(string $column): Funct
     return Funct::year($column);
 }
 
-function subquery(): Subquery
+/**
+ * @param array<int, mixed> $columns
+ */
+function subquery(array $columns = ['*']): Subquery
 {
-    return Subquery::make();
+    return Subquery::make()->select($columns);
 }
 
 function case_of(): SelectCase
