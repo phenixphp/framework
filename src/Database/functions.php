@@ -54,11 +54,6 @@ function subquery(array $columns = ['*']): Subquery
     return Subquery::make()->select($columns);
 }
 
-function case_of(): SelectCase
-{
-    return Funct::case();
-}
-
 function when_equal(Funct|string $column, RawValue|string|int $value, RawValue|string|int $result): SelectCase
 {
     return Funct::case()->whenEqual($column, $value, $result);
