@@ -8,6 +8,10 @@ use Phenix\Database\Having;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
+use function Phenix\Database\avg;
+use function Phenix\Database\count_of;
+use function Phenix\Database\sum;
+
 it('generates a grouped query', function (Funct|string $column, Funct|array|string $groupBy, string $rawGroup, string $rawColumn): void {
     $query = new QueryGenerator(Driver::SQLITE);
 
@@ -33,9 +37,9 @@ it('generates a grouped query', function (Funct|string $column, Funct|array|stri
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Funct::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
+    [count_of('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
     ['location_id', ['category_id', 'location_id'], '"category_id", "location_id"', '"location_id"'],
-    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
 ]);
 
 it('generates a grouped and ordered query', function (
@@ -70,16 +74,16 @@ it('generates a grouped and ordered query', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Funct::count('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
+    [count_of('products.id'), 'category_id', '"category_id"', 'COUNT("products"."id")'],
     ['location_id', ['category_id', 'location_id'], '"category_id", "location_id"', '"location_id"'],
-    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT("products"."id")', 'COUNT("products"."id")'],
 ]);
 
 it('generates a grouped query with where clause', function (): void {
     $query = new QueryGenerator(Driver::SQLITE);
 
     $sql = $query->select([
-            Funct::count('products.id'),
+            count_of('products.id'),
             'products.category_id',
         ])
         ->from('products')
@@ -102,7 +106,7 @@ it('generates a grouped query with having clause', function (): void {
     $query = new QueryGenerator(Driver::SQLITE);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')
@@ -127,9 +131,9 @@ it('generates a grouped query with multiple aggregations', function (): void {
     $query = new QueryGenerator(Driver::SQLITE);
 
     $sql = $query->select([
-            Funct::count('products.id'),
-            Funct::sum('products.price'),
-            Funct::avg('products.price'),
+            count_of('products.id'),
+            sum('products.price'),
+            avg('products.price'),
             'products.category_id',
         ])
         ->from('products')

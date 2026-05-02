@@ -5,9 +5,11 @@ declare(strict_types=1);
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
-use Phenix\Database\Funct;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
+
+use function Phenix\Database\max_of;
+use function Phenix\Database\when_null;
 
 it('generates query to select a record by column', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
@@ -355,8 +357,7 @@ it('generates a column-ordered query', function (array|string $column, string $o
 ]);
 
 it('generates a column-ordered query using select-case', function () {
-    $case = Funct::case()
-        ->whenNull('city', 'country')
+    $case = when_null('city', 'country')
         ->defaultResult('city');
 
     $query = new QueryGenerator(Driver::POSTGRESQL);
@@ -458,7 +459,7 @@ it('generates query to select using comparison clause with subqueries and functi
 
     $sql = $query->table('products')
         ->{$method}($column, function (Subquery $subquery) {
-            $subquery->select([Funct::max('price')])->from('products');
+            $subquery->select([max_of('price')])->from('products');
         })
         ->get();
 

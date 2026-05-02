@@ -7,9 +7,13 @@ use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Exceptions\QueryErrorException;
-use Phenix\Database\Funct;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
+
+use function Phenix\Database\avg;
+use function Phenix\Database\subquery;
+use function Phenix\Database\when_gte;
+use function Phenix\Database\when_null;
 
 it('generates query to select all columns of table', function () {
     $query = new QueryGenerator(Driver::SQLITE);
@@ -41,9 +45,10 @@ it('generates query to select all columns from table', function () {
 
 it('generates a query using sql functions', function (string $function, string $column, string $rawFunction) {
     $query = new QueryGenerator(Driver::SQLITE);
+    $factory = "Phenix\\Database\\{$function}";
 
     $sql = $query->table('products')
-        ->select([Funct::{$function}($column)])
+        ->select([$factory($column)])
         ->get();
 
     [$dml, $params] = $sql;
@@ -53,9 +58,9 @@ it('generates a query using sql functions', function (string $function, string $
 })->with([
     ['avg', 'price', 'AVG("price")'],
     ['sum', 'price', 'SUM("price")'],
-    ['min', 'price', 'MIN("price")'],
-    ['max', 'price', 'MAX("price")'],
-    ['count', 'id', 'COUNT("id")'],
+    ['min_of', 'price', 'MIN("price")'],
+    ['max_of', 'price', 'MAX("price")'],
+    ['count_of', 'id', 'COUNT("id")'],
 ]);
 
 it('generates a query using sql functions with alias', function (
@@ -65,9 +70,10 @@ it('generates a query using sql functions with alias', function (
     string $rawFunction
 ) {
     $query = new QueryGenerator(Driver::SQLITE);
+    $factory = "Phenix\\Database\\{$function}";
 
     $sql = $query->table('products')
-        ->select([Funct::{$function}($column)->as($alias)])
+        ->select([$factory($column)->as($alias)])
         ->get();
 
     [$dml, $params] = $sql;
@@ -77,9 +83,9 @@ it('generates a query using sql functions with alias', function (
 })->with([
     ['avg', 'price', 'value', 'AVG("price") AS "value"'],
     ['sum', 'price', 'value', 'SUM("price") AS "value"'],
-    ['min', 'price', 'value', 'MIN("price") AS "value"'],
-    ['max', 'price', 'value', 'MAX("price") AS "value"'],
-    ['count', 'id', 'value', 'COUNT("id") AS "value"'],
+    ['min_of', 'price', 'value', 'MIN("price") AS "value"'],
+    ['max_of', 'price', 'value', 'MAX("price") AS "value"'],
+    ['count_of', 'id', 'value', 'COUNT("id") AS "value"'],
 ]);
 
 it('selects field from subquery', function () {
@@ -108,7 +114,7 @@ it('generates query using subqueries in column selection', function () {
     $sql = $query->select([
             'id',
             'name',
-            Subquery::make(Driver::SQLITE)->select(['name'])
+            subquery()->select(['name'])
                 ->from('countries')
                 ->whereColumn('users.country_id', 'countries.id')
                 ->as('country_name')
@@ -133,7 +139,7 @@ it('throws exception on generate query using subqueries in column selection with
         $query->select([
                 'id',
                 'name',
-                Subquery::make(Driver::SQLITE)->select(['name'])
+                subquery()->select(['name'])
                     ->from('countries')
                     ->whereColumn('users.country_id', 'countries.id')
                     ->as('country_name'),
@@ -180,7 +186,7 @@ it('generates query with many column alias', function () {
 });
 
 it('generates query with select-cases using comparisons', function (
-    string $method,
+    string $function,
     array $data,
     string $defaultResult,
     string $operator
@@ -189,8 +195,9 @@ it('generates query with select-cases using comparisons', function (
 
     $query = new QueryGenerator(Driver::SQLITE);
 
-    $case = Funct::case()
-        ->{$method}($column, $value, $result)
+    $factory = "Phenix\\Database\\{$function}";
+
+    $case = $factory($column, $value, $result)
         ->defaultResult($defaultResult)
         ->as('type');
 
@@ -210,16 +217,16 @@ it('generates query with select-cases using comparisons', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
-    ['whenNotEqual', ['price', 100, 'expensive'], 'cheap', Operator::NOT_EQUAL->value],
-    ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
-    ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
-    ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],
-    ['whenLessThanOrEqual', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN_OR_EQUAL->value],
+    ['when_equal', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
+    ['when_not_equal', ['price', 100, 'expensive'], 'cheap', Operator::NOT_EQUAL->value],
+    ['when_gt', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
+    ['when_gte', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
+    ['when_lt', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],
+    ['when_lte', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN_OR_EQUAL->value],
 ]);
 
 it('generates query with select-cases using logical comparisons', function (
-    string $method,
+    string $function,
     array $data,
     string $defaultResult,
     string $operator
@@ -228,8 +235,9 @@ it('generates query with select-cases using logical comparisons', function (
 
     $query = new QueryGenerator(Driver::SQLITE);
 
-    $case = Funct::case()
-        ->{$method}(...$data)
+    $factory = "Phenix\\Database\\{$function}";
+
+    $case = $factory(...$data)
         ->defaultResult($defaultResult)
         ->as('status');
 
@@ -249,10 +257,10 @@ it('generates query with select-cases using logical comparisons', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenNull', ['created_at', 'inactive'], 'active', Operator::IS_NULL->value],
-    ['whenNotNull', ['created_at', 'active'], 'inactive', Operator::IS_NOT_NULL->value],
-    ['whenTrue', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
-    ['whenFalse', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
+    ['when_null', ['created_at', 'inactive'], 'active', Operator::IS_NULL->value],
+    ['when_not_null', ['created_at', 'active'], 'inactive', Operator::IS_NOT_NULL->value],
+    ['when_true', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
+    ['when_false', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
 ]);
 
 it('generates query with select-cases with multiple conditions and string values', function () {
@@ -260,8 +268,7 @@ it('generates query with select-cases with multiple conditions and string values
 
     $query = new QueryGenerator(Driver::SQLITE);
 
-    $case = Funct::case()
-        ->whenNull('created_at', 'inactive')
+    $case = when_null('created_at', 'inactive')
         ->whenGreaterThan('created_at', $date, 'new user')
         ->defaultResult('old user')
         ->as('status');
@@ -288,8 +295,7 @@ it('generates query with select-cases without default value', function () {
 
     $query = new QueryGenerator(Driver::SQLITE);
 
-    $case = Funct::case()
-        ->whenNull('created_at', 'inactive')
+    $case = when_null('created_at', 'inactive')
         ->whenGreaterThan('created_at', $date, 'new user')
         ->as('status');
 
@@ -313,8 +319,7 @@ it('generates query with select-cases without default value', function () {
 it('generates query with select-case using functions', function () {
     $query = new QueryGenerator(Driver::SQLITE);
 
-    $case = Funct::case()
-        ->whenGreaterThanOrEqual(Funct::avg('price'), 4, 'expensive')
+    $case = when_gte(avg('price'), 4, 'expensive')
         ->defaultResult('cheap')
         ->as('message');
 

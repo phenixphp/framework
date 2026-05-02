@@ -3,16 +3,18 @@
 declare(strict_types=1);
 
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Funct;
 use Phenix\Database\Having;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
+
+use function Phenix\Database\count_of;
+use function Phenix\Database\sum;
 
 it('generates a query using having clause', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('identifiers'),
+            count_of('products.id')->as('identifiers'),
             'products.category_id',
             'categories.description',
         ])
@@ -41,7 +43,7 @@ it('generates a query using having with many clauses', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('identifiers'),
+            count_of('products.id')->as('identifiers'),
             'products.category_id',
             'categories.description',
         ])
@@ -71,7 +73,7 @@ it('generates a query using having with where clause', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')
@@ -97,7 +99,7 @@ it('generates a query using having with less than', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::sum('orders.total')->as('total_sales'),
+            sum('orders.total')->as('total_sales'),
             'orders.customer_id',
         ])
         ->from('orders')
@@ -121,7 +123,7 @@ it('generates a query using having with equal', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')
@@ -145,7 +147,7 @@ it('generates a query using having with date clause', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.created_at',
         ])
         ->from('products')
@@ -169,7 +171,7 @@ it('orders join where and having params by final sql position', function () {
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')
@@ -200,7 +202,7 @@ it('orders where params before having params regardless of call order', function
     $query = new QueryGenerator(Driver::POSTGRESQL);
 
     $sql = $query->select([
-            Funct::count('products.id')->as('product_count'),
+            count_of('products.id')->as('product_count'),
             'products.category_id',
         ])
         ->from('products')

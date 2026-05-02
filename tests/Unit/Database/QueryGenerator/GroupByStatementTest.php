@@ -6,6 +6,8 @@ use Phenix\Database\Funct;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
+use function Phenix\Database\count_of;
+
 it('generates a grouped query', function (Funct|string $column, Funct|array|string $groupBy, string $rawGroup, string $rawColumn) {
     $query = new QueryGenerator();
 
@@ -31,9 +33,9 @@ it('generates a grouped query', function (Funct|string $column, Funct|array|stri
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Funct::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    [count_of('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
     ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
-    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);
 
 it('generates a grouped and ordered query', function (
@@ -68,7 +70,7 @@ it('generates a grouped and ordered query', function (
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Funct::count('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    [count_of('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
     ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
-    [Funct::count('products.id'), Funct::count('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);
