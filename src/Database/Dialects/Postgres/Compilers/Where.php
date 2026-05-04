@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Compilers;
 
-use Phenix\Database\Clauses\BasicWhereClause;
-use Phenix\Database\Clauses\BetweenWhereClause;
-use Phenix\Database\Clauses\BooleanWhereClause;
-use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Wrapper;
+use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\Driver;
+use Phenix\Database\Clauses\WhereClause;
+use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Clauses\NullWhereClause;
-use Phenix\Database\Clauses\RowWhereClause;
+use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Clauses\BetweenWhereClause;
+use Phenix\Database\Clauses\BooleanWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
-use Phenix\Database\Constants\Driver;
-use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
-use Phenix\Database\Wrapper;
 
 class Where extends WhereCompiler
 {
@@ -86,12 +87,15 @@ class Where extends WhereCompiler
 
     protected function compileNullClause(NullWhereClause $clause): string
     {
-        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
-
-        return "{$column} {$clause->getOperator()->value}";
+        return $this->compileCommonClause($clause);
     }
 
     protected function compileBooleanClause(BooleanWhereClause $clause): string
+    {
+        return $this->compileCommonClause($clause);
+    }
+
+    private function compileCommonClause(WhereClause $clause): string
     {
         $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
 
