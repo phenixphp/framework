@@ -45,7 +45,6 @@ class QueryBuilder extends QueryBase
         $this->connection = $connection;
         $this->transaction = $transaction;
         $this->isLocked = false;
-        $this->lockType = null;
     }
 
     public function connection(SqlConnection|string $connection): self
@@ -68,7 +67,7 @@ class QueryBuilder extends QueryBase
 
     public function count(string $column = '*'): int
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         [$dml, $params] = parent::count($column);
 
@@ -80,7 +79,7 @@ class QueryBuilder extends QueryBase
 
     public function exists(): bool
     {
-        $this->action = Action::EXISTS;
+        $this->ast->action = Action::EXISTS;
 
         [$dml, $params] = parent::exists();
 
@@ -96,7 +95,7 @@ class QueryBuilder extends QueryBase
 
     public function paginate(Http $uri,  int $defaultPage = 1, int $defaultPerPage = 15): Paginator
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         $query = Query::fromUri($uri);
 
@@ -132,7 +131,7 @@ class QueryBuilder extends QueryBase
 
     public function insertOrIgnore(array $values): bool
     {
-        $this->ignore = true;
+        $this->ast->ignore = true;
 
         return $this->insert($values);
     }
@@ -146,15 +145,15 @@ class QueryBuilder extends QueryBase
 
         [$dml, $arguments] = $builder->toSql();
 
-        $this->rawStatement = trim($dml, '()');
+        $this->ast->rawStatement = trim($dml, '()');
 
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->addArguments($arguments);
 
-        $this->action = Action::INSERT;
+        $this->ast->action = Action::INSERT;
 
-        $this->ignore = $ignore;
+        $this->ast->ignore = $ignore;
 
-        $this->columns = $columns;
+        $this->ast->columns = $columns;
 
         try {
             [$dml, $params] = $this->toSql();
@@ -216,7 +215,7 @@ class QueryBuilder extends QueryBase
      */
     public function updateReturning(array $values, array $columns = ['*']): Collection
     {
-        $this->returning = array_unique($columns);
+        $this->ast->returning = array_unique($columns);
 
         [$dml, $params] = parent::update($values);
 
@@ -239,9 +238,9 @@ class QueryBuilder extends QueryBase
 
     public function upsert(array $values, array $columns): bool
     {
-        $this->action = Action::INSERT;
+        $this->ast->action = Action::INSERT;
 
-        $this->uniqueColumns = $columns;
+        $this->ast->uniqueColumns = $columns;
 
         return $this->insert($values);
     }
@@ -269,7 +268,7 @@ class QueryBuilder extends QueryBase
      */
     public function deleteReturning(array $columns = ['*']): Collection
     {
-        $this->returning = array_unique($columns);
+        $this->ast->returning = array_unique($columns);
 
         [$dml, $params] = parent::delete();
 
@@ -295,7 +294,7 @@ class QueryBuilder extends QueryBase
      */
     public function get(): Collection
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         [$dml, $params] = $this->toSql();
 
@@ -315,7 +314,7 @@ class QueryBuilder extends QueryBase
      */
     public function first(): object|array|null
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         $this->limit(1);
 

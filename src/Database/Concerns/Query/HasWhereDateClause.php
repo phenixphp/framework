@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Phenix\Database\Concerns\Query;
 
 use Carbon\CarbonInterface;
+use Phenix\Database\Clauses\DateWhereClause;
+use Phenix\Database\Constants\DatabaseFunction;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Functions;
 
 trait HasWhereDateClause
 {
@@ -231,12 +232,7 @@ trait HasWhereDateClause
             $value = $value->format('Y-m-d');
         }
 
-        $this->pushTimeClause(
-            Functions::date($column),
-            $operator,
-            $value,
-            $logicalConnector
-        );
+        $this->pushTimeClause($column, $operator, DatabaseFunction::DATE, $value, $logicalConnector);
     }
 
     protected function pushMonthClause(
@@ -249,12 +245,7 @@ trait HasWhereDateClause
             $value = (int) $value->format('m');
         }
 
-        $this->pushTimeClause(
-            Functions::month($column),
-            $operator,
-            $value,
-            $logicalConnector
-        );
+        $this->pushTimeClause($column, $operator, DatabaseFunction::MONTH, $value, $logicalConnector);
     }
 
     protected function pushYearClause(
@@ -267,20 +258,17 @@ trait HasWhereDateClause
             $value = (int) $value->format('Y');
         }
 
-        $this->pushTimeClause(
-            Functions::year($column),
-            $operator,
-            $value,
-            $logicalConnector
-        );
+        $this->pushTimeClause($column, $operator, DatabaseFunction::YEAR, $value, $logicalConnector);
     }
 
     protected function pushTimeClause(
-        Functions $function,
+        string $column,
         Operator $operator,
-        CarbonInterface|string|int $value,
+        DatabaseFunction $function,
+        string|int $value,
         LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
-        $this->pushWhereWithArgs((string) $function, $operator, $value, $logicalConnector);
+        $this->pushClause(new DateWhereClause($column, $operator, $function, $value), $logicalConnector);
+        $this->addArguments([$value]);
     }
 }

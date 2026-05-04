@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Phenix\Database\Clauses\BasicWhereClause;
+use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Contracts\Builder;
 
-class Join extends Clause implements Builder
+class Join extends ClauseBuilder
 {
     public function __construct(
         protected Alias|string $relationship,
@@ -48,29 +48,29 @@ class Join extends Clause implements Builder
         return $this;
     }
 
-    public function toSql(): array
+    public function getRelationship(): Alias|string
     {
-        $sql = [];
+        return $this->relationship;
+    }
 
-        foreach ($this->clauses as $clause) {
-            $connector = $clause->getConnector();
+    public function getType(): JoinType
+    {
+        return $this->type;
+    }
 
-            $column = $clause->getColumn();
-            $operator = $clause->getOperator();
-            $value = $clause->renderValue();
+    /**
+     * @return array<int, WhereClause>
+     */
+    public function getClauses(): array
+    {
+        return $this->clauses;
+    }
 
-            $clauseSql = "{$column} {$operator->value} {$value}";
-
-            if ($connector !== null) {
-                $clauseSql = "{$connector->value} {$clauseSql}";
-            }
-
-            $sql[] = $clauseSql;
-        }
-
-        return [
-            "{$this->type->value} {$this->relationship} ON " . implode(' ', $sql),
-            $this->arguments,
-        ];
+    /**
+     * @return array<int, mixed>
+     */
+    public function getArguments(): array
+    {
+        return $this->arguments;
     }
 }

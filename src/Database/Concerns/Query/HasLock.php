@@ -13,19 +13,17 @@ trait HasLock
 {
     protected bool $isLocked = false;
 
-    protected Lock|null $lockType = null;
-
     public function lock(Lock $lockType): static
     {
         if (! $this->supportsLock($lockType)) {
             $this->isLocked = false;
-            $this->lockType = null;
+            $this->ast->lock = null;
 
             return $this;
         }
 
         $this->isLocked = true;
-        $this->lockType = $lockType;
+        $this->ast->lock = $lockType;
 
         return $this;
     }
@@ -83,7 +81,7 @@ trait HasLock
     public function unlock(): static
     {
         $this->isLocked = false;
-        $this->lockType = null;
+        $this->ast->lock = null;
 
         return $this;
     }
@@ -96,7 +94,7 @@ trait HasLock
     protected function buildLock(): string
     {
         if ($this->driver === Driver::POSTGRESQL) {
-            return match ($this->lockType) {
+            return match ($this->ast->lock) {
                 Lock::FOR_UPDATE => 'FOR UPDATE',
                 Lock::FOR_SHARE => 'FOR SHARE',
                 Lock::FOR_NO_KEY_UPDATE => 'FOR NO KEY UPDATE',
@@ -111,7 +109,7 @@ trait HasLock
             };
         }
 
-        return match ($this->lockType) {
+        return match ($this->ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',
             Lock::FOR_UPDATE_SKIP_LOCKED => 'FOR UPDATE SKIP LOCKED',

@@ -8,10 +8,6 @@ use Phenix\Database\Dialects\Mysql\MysqlDialect;
 use Phenix\Database\Dialects\Postgres\PostgresDialect;
 use Phenix\Database\Dialects\Sqlite\SqliteDialect;
 
-afterEach(function (): void {
-    DialectFactory::clearCache();
-});
-
 test('DialectFactory creates MySQL dialect for MySQL driver', function () {
     $dialect = DialectFactory::fromDriver(Driver::MYSQL);
 
@@ -30,19 +26,11 @@ test('DialectFactory creates SQLite dialect for SQLite driver', function () {
     expect($dialect)->toBeInstanceOf(SqliteDialect::class);
 });
 
-test('DialectFactory returns same instance for repeated calls (singleton)', function () {
+test('DialectFactory returns new instance for each call', function () {
     $dialect1 = DialectFactory::fromDriver(Driver::MYSQL);
-    $dialect2 = DialectFactory::fromDriver(Driver::MYSQL);
-
-    expect($dialect1)->toBe($dialect2);
-});
-
-test('DialectFactory clearCache clears cached instances', function () {
-    $dialect1 = DialectFactory::fromDriver(Driver::MYSQL);
-
-    DialectFactory::clearCache();
-
     $dialect2 = DialectFactory::fromDriver(Driver::MYSQL);
 
     expect($dialect1)->not->toBe($dialect2);
+    expect($dialect1)->toBeInstanceOf(MysqlDialect::class);
+    expect($dialect2)->toBeInstanceOf(MysqlDialect::class);
 });

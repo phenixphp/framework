@@ -6,7 +6,6 @@ namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
-use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
 /**
@@ -24,16 +23,17 @@ class Insert extends InsertCompiler
     /**
      * Syntax: ON CONFLICT (col1, col2) DO UPDATE SET col1 = excluded.col1
      *
-     * @param QueryAst $ast Query AST with uniqueColumns
      * @return string ON CONFLICT clause
      */
-    protected function compileUpsert(QueryAst $ast): string
+    protected function compileUpsert(): string
     {
-        $conflictColumns = Arr::implodeDeeply($ast->uniqueColumns, ', ');
+        $conflictColumns = Arr::implodeDeeply($this->wrapList($this->ast->uniqueColumns), ', ');
 
-        $updateColumns = array_map(function (string $column): string {
+        $updateColumns = array_map(function (string $column) {
+            $column = $this->wrap($column);
+
             return "{$column} = excluded.{$column}";
-        }, $ast->uniqueColumns);
+        }, $this->ast->uniqueColumns);
 
         return sprintf(
             'ON CONFLICT (%s) DO UPDATE SET %s',
@@ -42,14 +42,14 @@ class Insert extends InsertCompiler
         );
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $result = parent::compile($ast);
+        $result = parent::compile();
         $parts = [$result->sql];
 
-        if (! empty($ast->returning)) {
+        if (! empty($this->ast->returning)) {
             $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+            $parts[] = Arr::implodeDeeply($this->wrapList($this->ast->returning), ', ');
         }
 
         return new CompiledClause(

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Compilers;
 
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\Compilers\HavingCompiler;
+use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
-use Phenix\Database\QueryAst;
 
 class Select extends SelectCompiler
 {
@@ -17,21 +19,23 @@ class Select extends SelectCompiler
     public function __construct()
     {
         $this->whereCompiler = new Where();
+        $this->joinCompiler = new JoinCompiler(Driver::POSTGRESQL);
+        $this->havingCompiler = new HavingCompiler($this->whereCompiler);
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $result = parent::compile($ast);
+        $result = parent::compile();
 
         return new CompiledClause(
-            $this->convertPlaceholders($result->sql),
+            $this->normalizePlaceholders($result->sql),
             $result->params
         );
     }
 
-    protected function compileLock(QueryAst $ast): string
+    protected function compileLock(): string
     {
-        return match ($ast->lock) {
+        return match ($this->ast->lock) {
             Lock::FOR_UPDATE => 'FOR UPDATE',
             Lock::FOR_SHARE => 'FOR SHARE',
             Lock::FOR_NO_KEY_UPDATE => 'FOR NO KEY UPDATE',

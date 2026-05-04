@@ -21,7 +21,7 @@ it('generates insert into statement', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT INTO users (email, name) VALUES (?, ?)";
+    $expected = "INSERT INTO `users` (`email`, `name`) VALUES (?, ?)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$email, $name]);
@@ -47,7 +47,7 @@ it('generates insert into statement with data collection', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT INTO users (email, name) VALUES (?, ?), (?, ?)";
+    $expected = "INSERT INTO `users` (`email`, `name`) VALUES (?, ?), (?, ?)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$email, $name, $email, $name]);
@@ -67,7 +67,7 @@ it('generates insert ignore into statement', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT IGNORE INTO users (email, name) VALUES (?, ?)";
+    $expected = "INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, ?)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$email, $name]);
@@ -87,8 +87,8 @@ it('generates upsert statement to handle duplicate keys', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT INTO users (email, name) VALUES (?, ?) "
-        . "ON DUPLICATE KEY UPDATE name = VALUES(name)";
+    $expected = "INSERT INTO `users` (`email`, `name`) VALUES (?, ?) "
+        . "ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$email, $name]);
@@ -108,8 +108,8 @@ it('generates upsert statement to handle duplicate keys with many unique columns
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT INTO users (email, name, username) VALUES (?, ?, ?) "
-        . "ON DUPLICATE KEY UPDATE name = VALUES(name), username = VALUES(username)";
+    $expected = "INSERT INTO `users` (`email`, `name`, `username`) VALUES (?, ?, ?) "
+        . "ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `username` = VALUES(`username`)";
 
     \ksort($data);
 
@@ -130,10 +130,35 @@ it('generates insert statement from subquery', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT INTO users (name, email) SELECT name, email FROM customers WHERE verified_at IS NOT NULL";
+    $expected = "INSERT INTO `users` (`name`, `email`) SELECT `name`, `email` FROM `customers` WHERE `verified_at` IS NOT NULL";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
+});
+
+it('stores insert from subquery params directly in query ast', function () {
+    $query = new class () extends QueryGenerator {
+        public function params(): array
+        {
+            return $this->buildAst()->params;
+        }
+    };
+
+    $sql = $query->table('users')
+        ->insertFrom(function (Subquery $subquery) {
+            $subquery->table('customers')
+                ->select(['name', 'email'])
+                ->whereEqual('status', 'active');
+        }, ['name', 'email']);
+
+    [$dml, $params] = $sql;
+
+    $expected = "INSERT INTO `users` (`name`, `email`) "
+        . "SELECT `name`, `email` FROM `customers` WHERE `status` = ?";
+
+    expect($query->params())->toBe(['active']);
+    expect($dml)->toBe($expected);
+    expect($params)->toBe(['active']);
 });
 
 it('generates insert ignore statement from subquery', function () {
@@ -148,8 +173,8 @@ it('generates insert ignore statement from subquery', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "INSERT IGNORE INTO users (name, email) "
-        . "SELECT name, email FROM customers WHERE verified_at IS NOT NULL";
+    $expected = "INSERT IGNORE INTO `users` (`name`, `email`) "
+        . "SELECT `name`, `email` FROM `customers` WHERE `verified_at` IS NOT NULL";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();

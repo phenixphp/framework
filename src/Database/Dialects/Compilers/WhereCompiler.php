@@ -8,7 +8,9 @@ use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Clauses\BetweenWhereClause;
 use Phenix\Database\Clauses\BooleanWhereClause;
 use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Clauses\NullWhereClause;
+use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Dialects\CompiledClause;
@@ -39,9 +41,11 @@ abstract class WhereCompiler
     {
         return match (true) {
             $clause instanceof BasicWhereClause => $this->compileBasicClause($clause),
+            $clause instanceof DateWhereClause => $this->compileDateClause($clause),
             $clause instanceof NullWhereClause => $this->compileNullClause($clause),
             $clause instanceof BooleanWhereClause => $this->compileBooleanClause($clause),
             $clause instanceof BetweenWhereClause => $this->compileBetweenClause($clause),
+            $clause instanceof RowWhereClause => $this->compileRowClause($clause),
             $clause instanceof SubqueryWhereClause => $this->compileSubqueryClause($clause),
             $clause instanceof ColumnWhereClause => $this->compileColumnClause($clause),
             default => '',
@@ -50,22 +54,17 @@ abstract class WhereCompiler
 
     abstract protected function compileBasicClause(BasicWhereClause $clause): string;
 
-    protected function compileNullClause(NullWhereClause $clause): string
-    {
-        return "{$clause->getColumn()} {$clause->getOperator()->value}";
-    }
+    abstract protected function compileDateClause(DateWhereClause $clause): string;
 
-    protected function compileBooleanClause(BooleanWhereClause $clause): string
-    {
-        return "{$clause->getColumn()} {$clause->getOperator()->value}";
-    }
+    abstract protected function compileNullClause(NullWhereClause $clause): string;
+
+    abstract protected function compileBooleanClause(BooleanWhereClause $clause): string;
 
     abstract protected function compileBetweenClause(BetweenWhereClause $clause): string;
 
+    abstract protected function compileRowClause(RowWhereClause $clause): string;
+
     abstract protected function compileSubqueryClause(SubqueryWhereClause $clause): string;
 
-    protected function compileColumnClause(ColumnWhereClause $clause): string
-    {
-        return "{$clause->getColumn()} {$clause->getOperator()->value} {$clause->getCompareColumn()}";
-    }
+    abstract protected function compileColumnClause(ColumnWhereClause $clause): string;
 }

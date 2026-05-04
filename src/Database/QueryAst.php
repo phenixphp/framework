@@ -6,10 +6,13 @@ namespace Phenix\Database;
 
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Action;
+use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 
 class QueryAst
 {
+    public Driver $driver;
+
     public Action $action;
 
     public string $table;
@@ -27,7 +30,7 @@ class QueryAst
     public array $values = [];
 
     /**
-     * @var array<int, string>
+     * @var array<int, Join>
      */
     public array $joins = [];
 
@@ -36,10 +39,7 @@ class QueryAst
      */
     public array $wheres = [];
 
-    /**
-     * @var string|null
-     */
-    public string|null $having = null;
+    public Having|null $having = null;
 
     /**
      * @var array<int, mixed>

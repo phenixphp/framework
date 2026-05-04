@@ -15,6 +15,8 @@ class Update extends UpdateCompiler
 
     protected function compileSetClause(string $column, int $paramIndex): string
     {
+        $column = $this->wrap($column);
+
         return "{$column} = ?";
     }
 }

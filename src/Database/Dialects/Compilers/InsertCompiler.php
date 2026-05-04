@@ -4,42 +4,40 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Contracts\ClauseCompiler;
 use Phenix\Database\Dialects\CompiledClause;
-use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
-abstract class InsertCompiler implements ClauseCompiler
+abstract class InsertCompiler extends ClauseCompiler
 {
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
         $parts = [];
-        $params = $ast->params;
+        $params = $this->ast->params;
 
         // INSERT [IGNORE] INTO
-        $parts[] = $this->compileInsertClause($ast);
+        $parts[] = $this->compileInsertClause();
 
-        $parts[] = $ast->table;
+        $parts[] = $this->wrapOf($this->ast->table);
 
         // (column1, column2, ...)
-        $parts[] = '(' . Arr::implodeDeeply($ast->columns, ', ') . ')';
+        $parts[] = '(' . Arr::implodeDeeply($this->wrapList($this->ast->columns), ', ') . ')';
 
         // VALUES (...), (...) or raw statement
-        if ($ast->rawStatement !== null) {
-            $parts[] = $ast->rawStatement;
+        if ($this->ast->rawStatement !== null) {
+            $parts[] = $this->ast->rawStatement;
         } else {
             $parts[] = 'VALUES';
 
             $placeholders = array_map(function (array $value): string {
                 return '(' . Arr::implodeDeeply($value, ', ') . ')';
-            }, $ast->values);
+            }, $this->ast->values);
 
             $parts[] = Arr::implodeDeeply(array_values($placeholders), ', ');
         }
 
         // Dialect-specific UPSERT/ON CONFLICT handling
-        if (! empty($ast->uniqueColumns)) {
-            $parts[] = $this->compileUpsert($ast);
+        if (! empty($this->ast->uniqueColumns)) {
+            $parts[] = $this->compileUpsert();
         }
 
         $sql = Arr::implodeDeeply($parts);
@@ -47,9 +45,9 @@ abstract class InsertCompiler implements ClauseCompiler
         return new CompiledClause($sql, $params);
     }
 
-    protected function compileInsertClause(QueryAst $ast): string
+    protected function compileInsertClause(): string
     {
-        if ($ast->ignore) {
+        if ($this->ast->ignore) {
             return $this->compileInsertIgnore();
         }
 
@@ -70,8 +68,7 @@ abstract class InsertCompiler implements ClauseCompiler
      * PostgreSQL: ON CONFLICT (...) DO UPDATE SET
      * SQLite: ON CONFLICT (...) DO UPDATE SET
      *
-     * @param QueryAst $ast Query AST with uniqueColumns
      * @return string UPSERT clause
      */
-    abstract protected function compileUpsert(QueryAst $ast): string;
+    abstract protected function compileUpsert(): string;
 }

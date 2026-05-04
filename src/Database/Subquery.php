@@ -20,7 +20,9 @@ class Subquery extends QueryGenerator
         [$dml, $arguments] = parent::toSql();
 
         if (isset($this->alias)) {
-            return ["({$dml}) AS {$this->alias}", $arguments];
+            $alias = Wrapper::column($this->driver, $this->alias);
+
+            return ["({$dml}) AS {$alias}", $arguments];
         }
 
         return ["({$dml})", $arguments];

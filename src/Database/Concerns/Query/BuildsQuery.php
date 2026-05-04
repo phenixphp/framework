@@ -6,21 +6,21 @@ namespace Phenix\Database\Concerns\Query;
 
 use Closure;
 use Phenix\Database\Constants\Action;
-use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\Order;
 use Phenix\Database\Dialects\DialectFactory;
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Having;
 use Phenix\Database\QueryAst;
 use Phenix\Database\SelectCase;
 use Phenix\Database\Subquery;
-use Phenix\Util\Arr;
+
+use function is_string;
 
 trait BuildsQuery
 {
     public function table(string $table): static
     {
-        $this->table = $table;
+        $this->ast->table = $table;
 
         return $this;
     }
@@ -29,6 +29,7 @@ trait BuildsQuery
     {
         if ($table instanceof Closure) {
             $builder = new Subquery($this->driver);
+            $builder->setDriver($this->driver);
             $builder->selectAllColumns();
 
             $table($builder);
@@ -37,7 +38,7 @@ trait BuildsQuery
 
             $this->table($dml);
 
-            $this->arguments = array_merge($this->arguments, $arguments);
+            $this->addArguments($arguments);
 
         } else {
             $this->table($table);
@@ -48,9 +49,9 @@ trait BuildsQuery
 
     public function select(array $columns): static
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
-        $this->columns = $columns;
+        $this->ast->columns = $columns;
 
         return $this;
     }
@@ -62,14 +63,13 @@ trait BuildsQuery
         return $this;
     }
 
-    public function groupBy(Functions|array|string $column): static
+    public function groupBy(Funct|array|string $column): static
     {
-        $column = match (true) {
-            $column instanceof Functions => (string) $column,
-            default => $column,
-        };
+        if ($column instanceof Funct || is_string($column)) {
+            $column = [$column];
+        }
 
-        $this->groupBy = [Operator::GROUP_BY->value, Arr::implodeDeeply((array) $column, ', ')];
+        $this->ast->groups = $column;
 
         return $this;
     }
@@ -77,33 +77,29 @@ trait BuildsQuery
     public function having(Closure $clause): static
     {
         $having = new Having();
+        $having->setDriver($this->driver);
 
         $clause($having);
 
-        [$dml, $arguments] = $having->toSql();
-
-        $this->having = $dml;
-
-        $this->arguments = array_merge($this->arguments, $arguments);
+        $this->ast->having = $having;
 
         return $this;
     }
 
     public function orderBy(SelectCase|array|string $column, Order $order = Order::DESC): static
     {
-        $column = match (true) {
-            $column instanceof SelectCase => '(' . $column . ')',
-            default => $column,
-        };
+        if ($column instanceof SelectCase || is_string($column)) {
+            $column = [$column];
+        }
 
-        $this->orderBy = [Operator::ORDER_BY->value, Arr::implodeDeeply((array) $column, ', '), $order->value];
+        $this->ast->orders = [$column, $order->value];
 
         return $this;
     }
 
     public function limit(int $number): static
     {
-        $this->limit = [Operator::LIMIT->value, abs($number)];
+        $this->ast->limit = abs($number);
 
         return $this;
     }
@@ -116,7 +112,7 @@ trait BuildsQuery
 
         $offset = $page === 1 ? 0 : (($page - 1) * abs($perPage));
 
-        $this->offset = [Operator::OFFSET->value, $offset];
+        $this->ast->offset = $offset;
 
         return $this;
     }
@@ -126,33 +122,13 @@ trait BuildsQuery
      */
     public function toSql(): array
     {
-        $ast = $this->buildAst();
         $dialect = DialectFactory::fromDriver($this->driver);
 
-        return $dialect->compile($ast);
+        return $dialect->compile($this->buildAst());
     }
 
     protected function buildAst(): QueryAst
     {
-        $ast = new QueryAst();
-        $ast->action = $this->action;
-        $ast->table = $this->table;
-        $ast->columns = $this->columns;
-        $ast->values = $this->values ?? [];
-        $ast->wheres = $this->clauses ?? [];
-        $ast->joins = $this->joins ?? [];
-        $ast->groups = $this->groupBy ?? [];
-        $ast->orders = $this->orderBy ?? [];
-        $ast->limit = isset($this->limit) ? $this->limit[1] : null;
-        $ast->offset = isset($this->offset) ? $this->offset[1] : null;
-        $ast->lock = $this->lockType ?? null;
-        $ast->having = $this->having ?? null;
-        $ast->rawStatement = $this->rawStatement ?? null;
-        $ast->ignore = $this->ignore ?? false;
-        $ast->uniqueColumns = $this->uniqueColumns ?? [];
-        $ast->returning = $this->returning ?? [];
-        $ast->params = $this->arguments;
-
-        return $ast;
+        return $this->ast;
     }
 }

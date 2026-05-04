@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Constants\Lock;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Exceptions\QueryErrorException;
-use Phenix\Database\Functions;
+use Phenix\Database\QueryAst;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
-use Phenix\Database\Value;
 
-it('generates query to select all columns of table', function () {
+use function Phenix\Database\avg;
+use function Phenix\Database\subquery;
+use function Phenix\Database\when_gte;
+use function Phenix\Database\when_null;
+
+it('generates query to select all columns of table', function (): void {
     $query = new QueryGenerator();
 
     $sql = $query->table('users')
@@ -22,11 +25,11 @@ it('generates query to select all columns of table', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users');
+    expect($dml)->toBe('SELECT * FROM `users`');
     expect($params)->toBeEmpty();
 });
 
-it('generates query to select all columns from table', function () {
+it('generates query to select all columns from table', function (): void {
     $query = new QueryGenerator();
 
     $sql = $query->from('users')
@@ -36,27 +39,96 @@ it('generates query to select all columns from table', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users');
+    expect($dml)->toBe('SELECT * FROM `users`');
     expect($params)->toBeEmpty();
+});
+
+it('keeps query ast synchronized as primary query state', function (): void {
+    $query = new class () extends QueryGenerator {
+        public function ast(): QueryAst
+        {
+            return $this->buildAst();
+        }
+    };
+
+    $query->setDriver(Driver::POSTGRESQL)
+        ->table('users')
+        ->select(['id'])
+        ->whereEqual('id', 1);
+
+    $ast = $query->ast();
+    [$dml, $params] = $query->get();
+
+    expect($ast->driver)->toBe(Driver::POSTGRESQL);
+    expect($ast->table)->toBe('users');
+    expect($ast->columns)->toBe(['id']);
+    expect($ast->params)->toBe([1]);
+    expect($dml)->toBe('SELECT "id" FROM "users" WHERE "id" = $1');
+    expect($params)->toBe([1]);
+});
+
+it('does not leak cached dialect compiler state across compilations', function (): void {
+    $first = (new QueryGenerator())
+        ->table('users')
+        ->whereEqual('id', 1)
+        ->get();
+
+    $second = (new QueryGenerator())
+        ->table('posts')
+        ->whereEqual('slug', 'hello')
+        ->get();
+
+    expect($first)->toBe(['SELECT * FROM `users` WHERE `id` = ?', [1]]);
+    expect($second)->toBe(['SELECT * FROM `posts` WHERE `slug` = ?', ['hello']]);
+});
+
+it('stores where and subquery params directly in query ast', function (): void {
+    $query = new class () extends QueryGenerator {
+        public function ast(): QueryAst
+        {
+            return $this->buildAst();
+        }
+    };
+
+    $query->select(['id'])
+        ->from(function (Subquery $subquery): void {
+            $subquery->from('users')
+                ->whereEqual('verified_at', '2026-01-15');
+        })
+        ->whereEqual('status', 'active')
+        ->whereBetween('age', [18, 65])
+        ->whereDateEqual('created_at', '2026-01-30');
+
+    $ast = $query->ast();
+    [$dml, $params] = $query->get();
+
+    $expected = "SELECT `id` FROM (SELECT * FROM `users` WHERE `verified_at` = ?) "
+        . "WHERE `status` = ? AND `age` BETWEEN ? AND ? AND DATE(`created_at`) = ?";
+
+    expect($ast->wheres)->toHaveCount(3);
+    expect($ast->params)->toBe(['2026-01-15', 'active', 18, 65, '2026-01-30']);
+    expect($dml)->toBe($expected);
+    expect($params)->toBe($ast->params);
 });
 
 it('generates a query using sql functions', function (string $function, string $column, string $rawFunction) {
     $query = new QueryGenerator();
+    $factory = "Phenix\\Database\\{$function}";
 
     $sql = $query->table('products')
-        ->select([Functions::{$function}($column)])
+        ->select([$factory($column)])
         ->get();
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT {$rawFunction} FROM products");
+    expect($dml)->toBe("SELECT {$rawFunction} FROM `products`");
     expect($params)->toBeEmpty();
 })->with([
-    ['avg', 'price', 'AVG(price)'],
-    ['sum', 'price', 'SUM(price)'],
-    ['min', 'price', 'MIN(price)'],
-    ['max', 'price', 'MAX(price)'],
-    ['count', 'id', 'COUNT(id)'],
+    ['avg', 'price', 'AVG(`price`)'],
+    ['sum', 'price', 'SUM(`price`)'],
+    ['min_of', 'price', 'MIN(`price`)'],
+    ['max_of', 'price', 'MAX(`price`)'],
+    ['count_of', 'id', 'COUNT(`id`)'],
 ]);
 
 it('generates a query using sql functions with alias', function (
@@ -66,21 +138,22 @@ it('generates a query using sql functions with alias', function (
     string $rawFunction
 ) {
     $query = new QueryGenerator();
+    $factory = "Phenix\\Database\\{$function}";
 
     $sql = $query->table('products')
-        ->select([Functions::{$function}($column)->as($alias)])
+        ->select([$factory($column)->as($alias)])
         ->get();
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT {$rawFunction} FROM products");
+    expect($dml)->toBe("SELECT {$rawFunction} FROM `products`");
     expect($params)->toBeEmpty();
 })->with([
-    ['avg', 'price', 'value', 'AVG(price) AS value'],
-    ['sum', 'price', 'value', 'SUM(price) AS value'],
-    ['min', 'price', 'value', 'MIN(price) AS value'],
-    ['max', 'price', 'value', 'MAX(price) AS value'],
-    ['count', 'id', 'value', 'COUNT(id) AS value'],
+    ['avg', 'price', 'value', 'AVG(`price`) AS `value`'],
+    ['sum', 'price', 'value', 'SUM(`price`) AS `value`'],
+    ['min_of', 'price', 'value', 'MIN(`price`) AS `value`'],
+    ['max_of', 'price', 'value', 'MAX(`price`) AS `value`'],
+    ['count_of', 'id', 'value', 'COUNT(`id`) AS `value`'],
 ]);
 
 it('selects field from subquery', function () {
@@ -96,12 +169,22 @@ it('selects field from subquery', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, name, email FROM (SELECT * FROM users WHERE verified_at = ?)";
+    $expected = "SELECT `id`, `name`, `email` FROM (SELECT * FROM `users` WHERE `verified_at` = ?)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([$date]);
 });
 
+it('initializes subquery helper selecting all columns by default', function () {
+    $sql = subquery()
+        ->from('countries')
+        ->toSql();
+
+    [$dml, $params] = $sql;
+
+    expect($dml)->toBe('(SELECT * FROM `countries`)');
+    expect($params)->toBeEmpty();
+});
 
 it('generates query using subqueries in column selection', function () {
     $query = new QueryGenerator();
@@ -109,7 +192,7 @@ it('generates query using subqueries in column selection', function () {
     $sql = $query->select([
             'id',
             'name',
-            Subquery::make()->select(['name'])
+            subquery(['name'])
                 ->from('countries')
                 ->whereColumn('users.country_id', 'countries.id')
                 ->as('country_name')
@@ -120,8 +203,8 @@ it('generates query using subqueries in column selection', function () {
 
     [$dml, $params] = $sql;
 
-    $subquery = "SELECT name FROM countries WHERE users.country_id = countries.id LIMIT 1";
-    $expected = "SELECT id, name, ({$subquery}) AS country_name FROM users";
+    $subquery = "SELECT `name` FROM `countries` WHERE `users`.`country_id` = `countries`.`id` LIMIT 1";
+    $expected = "SELECT `id`, `name`, ({$subquery}) AS `country_name` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -134,7 +217,7 @@ it('throws exception on generate query using subqueries in column selection with
         $query->select([
                 'id',
                 'name',
-                Subquery::make()->select(['name'])
+                subquery(['name'])
                     ->from('countries')
                     ->whereColumn('users.country_id', 'countries.id')
                     ->as('country_name'),
@@ -156,7 +239,7 @@ it('generates query with column alias', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, name AS full_name FROM users";
+    $expected = "SELECT `id`, `name` AS `full_name` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -174,26 +257,25 @@ it('generates query with many column alias', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id AS model_id, name AS full_name FROM users";
+    $expected = "SELECT `id` AS `model_id`, `name` AS `full_name` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 });
 
 it('generates query with select-cases using comparisons', function (
-    string $method,
+    string $function,
     array $data,
     string $defaultResult,
     string $operator
 ) {
     [$column, $value, $result] = $data;
 
-    $value = Value::from($value);
-
     $query = new QueryGenerator();
 
-    $case = Functions::case()
-        ->{$method}($column, $value, $result)
+    $factory = "Phenix\\Database\\{$function}";
+
+    $case = $factory($column, $value, $result)
         ->defaultResult($defaultResult)
         ->as('type');
 
@@ -207,22 +289,22 @@ it('generates query with select-cases using comparisons', function (
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, description, (CASE WHEN {$column} {$operator} {$value} "
-        . "THEN {$result} ELSE $defaultResult END) AS type FROM products";
+    $expected = "SELECT `id`, `description`, (CASE WHEN `{$column}` {$operator} {$value} "
+        . "THEN '{$result}' ELSE '{$defaultResult}' END) AS `type` FROM `products`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenEqual', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
-    ['whenNotEqual', ['price', 100, 'expensive'], 'cheap', Operator::NOT_EQUAL->value],
-    ['whenGreaterThan', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
-    ['whenGreaterThanOrEqual', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
-    ['whenLessThan', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],
-    ['whenLessThanOrEqual', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN_OR_EQUAL->value],
+    ['when_equal', ['price', 100, 'expensive'], 'cheap', Operator::EQUAL->value],
+    ['when_not_equal', ['price', 100, 'expensive'], 'cheap', Operator::NOT_EQUAL->value],
+    ['when_gt', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN->value],
+    ['when_gte', ['price', 100, 'expensive'], 'cheap', Operator::GREATER_THAN_OR_EQUAL->value],
+    ['when_lt', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN->value],
+    ['when_lte', ['price', 100, 'cheap'], 'expensive', Operator::LESS_THAN_OR_EQUAL->value],
 ]);
 
 it('generates query with select-cases using logical comparisons', function (
-    string $method,
+    string $function,
     array $data,
     string $defaultResult,
     string $operator
@@ -231,8 +313,9 @@ it('generates query with select-cases using logical comparisons', function (
 
     $query = new QueryGenerator();
 
-    $case = Functions::case()
-        ->{$method}(...$data)
+    $factory = "Phenix\\Database\\{$function}";
+
+    $case = $factory(...$data)
         ->defaultResult($defaultResult)
         ->as('status');
 
@@ -246,16 +329,16 @@ it('generates query with select-cases using logical comparisons', function (
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, name, (CASE WHEN {$column} {$operator} "
-        . "THEN {$result} ELSE $defaultResult END) AS status FROM users";
+    $expected = "SELECT `id`, `name`, (CASE WHEN `{$column}` {$operator} "
+        . "THEN '{$result}' ELSE '{$defaultResult}' END) AS `status` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    ['whenNull', ['created_at', 'inactive'], 'active', Operator::IS_NULL->value],
-    ['whenNotNull', ['created_at', 'active'], 'inactive', Operator::IS_NOT_NULL->value],
-    ['whenTrue', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
-    ['whenFalse', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
+    ['when_null', ['created_at', 'inactive'], 'active', Operator::IS_NULL->value],
+    ['when_not_null', ['created_at', 'active'], 'inactive', Operator::IS_NOT_NULL->value],
+    ['when_true', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
+    ['when_false', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
 ]);
 
 it('generates query with select-cases with multiple conditions and string values', function () {
@@ -263,10 +346,9 @@ it('generates query with select-cases with multiple conditions and string values
 
     $query = new QueryGenerator();
 
-    $case = Functions::case()
-        ->whenNull('created_at', Value::from('inactive'))
-        ->whenGreaterThan('created_at', Value::from($date), Value::from('new user'))
-        ->defaultResult(Value::from('old user'))
+    $case = when_null('created_at', 'inactive')
+        ->whenGreaterThan('created_at', $date, 'new user')
+        ->defaultResult('old user')
         ->as('status');
 
     $sql = $query->select([
@@ -279,8 +361,8 @@ it('generates query with select-cases with multiple conditions and string values
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, name, (CASE WHEN created_at IS NULL THEN 'inactive' "
-        . "WHEN created_at > '{$date}' THEN 'new user' ELSE 'old user' END) AS status FROM users";
+    $expected = "SELECT `id`, `name`, (CASE WHEN `created_at` IS NULL THEN 'inactive' "
+        . "WHEN `created_at` > '{$date}' THEN 'new user' ELSE 'old user' END) AS `status` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -291,9 +373,8 @@ it('generates query with select-cases without default value', function () {
 
     $query = new QueryGenerator();
 
-    $case = Functions::case()
-        ->whenNull('created_at', Value::from('inactive'))
-        ->whenGreaterThan('created_at', Value::from($date), Value::from('new user'))
+    $case = when_null('created_at', 'inactive')
+        ->whenGreaterThan('created_at', $date, 'new user')
         ->as('status');
 
     $sql = $query->select([
@@ -306,8 +387,8 @@ it('generates query with select-cases without default value', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, name, (CASE WHEN created_at IS NULL THEN 'inactive' "
-        . "WHEN created_at > '{$date}' THEN 'new user' END) AS status FROM users";
+    $expected = "SELECT `id`, `name`, (CASE WHEN `created_at` IS NULL THEN 'inactive' "
+        . "WHEN `created_at` > '{$date}' THEN 'new user' END) AS `status` FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -316,9 +397,8 @@ it('generates query with select-cases without default value', function () {
 it('generates query with select-case using functions', function () {
     $query = new QueryGenerator();
 
-    $case = Functions::case()
-        ->whenGreaterThanOrEqual(Functions::avg('price'), 4, Value::from('expensive'))
-        ->defaultResult(Value::from('cheap'))
+    $case = when_gte(avg('price'), 4, 'expensive')
+        ->defaultResult('cheap')
         ->as('message');
 
     $sql = $query->select([
@@ -332,8 +412,8 @@ it('generates query with select-case using functions', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT id, description, price, (CASE WHEN AVG(price) >= 4 THEN 'expensive' ELSE 'cheap' END) "
-        . "AS message FROM products";
+    $expected = "SELECT `id`, `description`, `price`, (CASE WHEN AVG(`price`) >= 4 THEN 'expensive' ELSE 'cheap' END) "
+        . "AS `message` FROM `products`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -346,7 +426,7 @@ it('counts all records', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT COUNT(*) FROM products";
+    $expected = "SELECT COUNT(*) FROM `products`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -362,7 +442,7 @@ it('generates query to check if record exists', function () {
     [$dml, $params] = $sql;
 
     $expected = "SELECT EXISTS"
-        . " (SELECT 1 FROM products WHERE id = ?) AS 'exists'";
+        . " (SELECT 1 FROM `products` WHERE `id` = ?) AS `exists`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -378,7 +458,7 @@ it('generates query to check if record does not exist', function () {
     [$dml, $params] = $sql;
 
     $expected = "SELECT NOT EXISTS"
-        . " (SELECT 1 FROM products WHERE id = ?) AS 'exists'";
+        . " (SELECT 1 FROM `products` WHERE `id` = ?) AS `exists`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -393,7 +473,7 @@ it('generates query to select first row', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM products WHERE id = ? LIMIT 1";
+    $expected = "SELECT * FROM `products` WHERE `id` = ? LIMIT 1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -408,7 +488,7 @@ it('generates query to select all columns of table without column selection', fu
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users');
+    expect($dml)->toBe('SELECT * FROM `users`');
     expect($params)->toBeEmpty();
 });
 
@@ -422,7 +502,7 @@ it('generate query with lock for update', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE";
+    $expected = "SELECT * FROM `tasks` WHERE `reserved_at` IS NULL FOR UPDATE";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);
@@ -438,7 +518,7 @@ it('generate query with lock for share', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE";
+    $expected = "SELECT * FROM `tasks` WHERE `reserved_at` IS NULL FOR SHARE";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);
@@ -454,237 +534,7 @@ it('generate query with lock for update skip locked', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE SKIP LOCKED";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for update for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForUpdate()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for update no wait', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForUpdateNoWait()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE NOWAIT";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for update skip locked for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForUpdateSkipLocked()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE SKIP LOCKED";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for update skip locked for postgresql using constants', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lock(Lock::FOR_UPDATE_SKIP_LOCKED)
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR UPDATE SKIP LOCKED";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('remove locks from query', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $builder = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lock(Lock::FOR_UPDATE_SKIP_LOCKED)
-        ->unlock();
-
-    expect($builder->isLocked())->toBeFalse();
-
-    [$dml, $params] = $builder->get();
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for share for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForShare()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for no key update for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForNoKeyUpdate()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for key share for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForKeyShare()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR KEY SHARE";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for share skip locked for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForShareSkipLocked()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE SKIP LOCKED";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for share no wait for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForShareNoWait()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR SHARE NOWAIT";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for no key update skip locked for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForNoKeyUpdateSkipLocked()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE SKIP LOCKED";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('generate query with lock for no key update no wait for postgresql', function () {
-    $query = new QueryGenerator(Driver::POSTGRESQL);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForNoKeyUpdateNoWait()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL FOR NO KEY UPDATE NOWAIT";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('tries to generate lock using sqlite', function () {
-    $query = new QueryGenerator(Driver::SQLITE);
-
-    expect($query->getDriver())->toBe(Driver::SQLITE);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lockForNoKeyUpdateNoWait()
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
-
-    expect($dml)->toBe($expected);
-    expect($params)->toBe([]);
-});
-
-it('tries to generate lock using sqlite with constants', function () {
-    $query = new QueryGenerator(Driver::SQLITE);
-
-    expect($query->getDriver())->toBe(Driver::SQLITE);
-
-    $sql = $query->from('tasks')
-        ->whereNull('reserved_at')
-        ->lock(Lock::FOR_NO_KEY_UPDATE)
-        ->get();
-
-    [$dml, $params] = $sql;
-
-    $expected = "SELECT * FROM tasks WHERE reserved_at IS NULL";
+    $expected = "SELECT * FROM `tasks` WHERE `reserved_at` IS NULL FOR UPDATE SKIP LOCKED";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([]);

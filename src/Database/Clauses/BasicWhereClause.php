@@ -78,4 +78,9 @@ class BasicWhereClause extends WhereClause
     {
         return $this->operator === Operator::IN || $this->operator === Operator::NOT_IN;
     }
+
+    public function usesPlaceholder(): bool
+    {
+        return $this->usePlaceholder;
+    }
 }

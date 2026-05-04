@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Functions;
+use Phenix\Database\Funct;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
 
-it('generates a grouped query', function (Functions|string $column, Functions|array|string $groupBy, string $rawGroup) {
+use function Phenix\Database\count_of;
+
+it('generates a grouped query', function (Funct|string $column, Funct|array|string $groupBy, string $rawGroup, string $rawColumn) {
     $query = new QueryGenerator();
 
     $sql = $query->select([
@@ -23,23 +25,24 @@ it('generates a grouped query', function (Functions|string $column, Functions|ar
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT {$column}, products.category_id, categories.description "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
+    $expected = "SELECT {$rawColumn}, `products`.`category_id`, `categories`.`description` "
+        . "FROM `products` "
+        . "LEFT JOIN `categories` ON `products`.`category_id` = `categories`.`id` "
         . "GROUP BY {$rawGroup}";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', 'category_id'],
-    ['location_id', ['category_id', 'location_id'], 'category_id, location_id'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT(products.id)'],
+    [count_of('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);
 
 it('generates a grouped and ordered query', function (
-    Functions|string $column,
-    Functions|array|string $groupBy,
-    string $rawGroup
+    Funct|string $column,
+    Funct|array|string $groupBy,
+    string $rawGroup,
+    string $rawColumn
 ) {
     $query = new QueryGenerator();
 
@@ -58,16 +61,16 @@ it('generates a grouped and ordered query', function (
 
     [$dml, $params] = $sql;
 
-    $expected = "SELECT {$column}, products.category_id, categories.description "
-        . "FROM products "
-        . "LEFT JOIN categories ON products.category_id = categories.id "
+    $expected = "SELECT {$rawColumn}, `products`.`category_id`, `categories`.`description` "
+        . "FROM `products` "
+        . "LEFT JOIN `categories` ON `products`.`category_id` = `categories`.`id` "
         . "GROUP BY {$rawGroup} "
-        . "ORDER BY products.id DESC";
+        . "ORDER BY `products`.`id` DESC";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
 })->with([
-    [Functions::count('products.id'), 'category_id', 'category_id'],
-    ['location_id', ['category_id', 'location_id'], 'category_id, location_id'],
-    [Functions::count('products.id'), Functions::count('products.id'), 'COUNT(products.id)'],
+    [count_of('products.id'), 'category_id', '`category_id`', 'COUNT(`products`.`id`)'],
+    ['location_id', ['category_id', 'location_id'], '`category_id`, `location_id`', '`location_id`'],
+    [count_of('products.id'), count_of('products.id'), 'COUNT(`products`.`id`)', 'COUNT(`products`.`id`)'],
 ]);

@@ -54,14 +54,13 @@ class DatabaseQueryBuilder extends QueryBuilder
         parent::__clone();
         $this->relationships = [];
         $this->isLocked = false;
-        $this->lockType = null;
     }
 
     public function addSelect(array $columns): static
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
-        $this->columns = array_merge($this->columns, $columns);
+        $this->ast->columns = array_merge($this->ast->columns, $columns);
 
         return $this;
     }
@@ -76,7 +75,7 @@ class DatabaseQueryBuilder extends QueryBuilder
             $this->model = $model;
         }
 
-        $this->table = $this->model->getTable();
+        $this->ast->table = $this->model->getTable();
 
         return $this;
     }
@@ -132,8 +131,8 @@ class DatabaseQueryBuilder extends QueryBuilder
      */
     public function get(): Collection
     {
-        $this->action = Action::SELECT;
-        $this->columns = empty($this->columns) ? ['*'] : $this->columns;
+        $this->ast->action = Action::SELECT;
+        $this->ast->columns = empty($this->ast->columns) ? ['*'] : $this->ast->columns;
 
         [$dml, $params] = $this->toSql();
 
@@ -157,7 +156,7 @@ class DatabaseQueryBuilder extends QueryBuilder
      */
     public function first(): DatabaseModel|null
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         $this->limit(1);
 

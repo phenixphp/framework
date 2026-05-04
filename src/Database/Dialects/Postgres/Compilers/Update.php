@@ -7,7 +7,6 @@ namespace Phenix\Database\Dialects\Postgres\Compilers;
 use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\UpdateCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
-use Phenix\Database\QueryAst;
 
 use function count;
 
@@ -22,14 +21,16 @@ class Update extends UpdateCompiler
 
     protected function compileSetClause(string $column, int $paramIndex): string
     {
+        $column = $this->wrap($column);
+
         return "{$column} = $" . $paramIndex;
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): CompiledClause
     {
-        $result = parent::compile($ast);
+        $result = parent::compile();
 
-        $paramsCount = count($ast->values);
+        $paramsCount = count($this->ast->values);
 
         return new CompiledClause(
             $this->convertPlaceholders($result->sql, $paramsCount),
