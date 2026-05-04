@@ -53,13 +53,8 @@ abstract class SelectCompiler extends ClauseCompiler
             $sql[] = $this->compileGroups($this->ast->groups);
         }
 
-        if ($this->ast->having !== null) {
-            $having = $this->havingCompiler->compile($this->ast->having);
-
-            if ($having->sql !== '') {
-                $sql[] = $having->sql;
-                $this->ast->params = [...$this->ast->params, ...$having->params];
-            }
+        if ($this->ast->having !== null && $havingSql = $this->compileHaving()) {
+            $sql[] = $havingSql;
         }
 
         if (! empty($this->ast->orders)) {
@@ -75,12 +70,8 @@ abstract class SelectCompiler extends ClauseCompiler
             $sql[] = "OFFSET {$this->ast->offset}";
         }
 
-        if ($this->ast->lock !== null) {
-            $lockSql = $this->compileLock();
-
-            if ($lockSql !== '') {
-                $sql[] = $lockSql;
-            }
+        if ($this->ast->lock !== null && $lockSql = $this->compileLock()) {
+            $sql[] = $lockSql;
         }
 
         return new CompiledClause(
@@ -107,6 +98,19 @@ abstract class SelectCompiler extends ClauseCompiler
         });
 
         return Arr::implodeDeeply($compiled, ', ');
+    }
+
+    protected function compileHaving(): string|null
+    {
+        $having = $this->havingCompiler->compile($this->ast->having);
+
+        if ($having->sql === '') {
+            return null;
+        }
+
+        $this->ast->params = [...$this->ast->params, ...$having->params];
+
+        return $having->sql;
     }
 
     /**
