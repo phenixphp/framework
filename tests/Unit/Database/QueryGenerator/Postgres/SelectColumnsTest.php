@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Alias;
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
 use Phenix\Database\Constants\Operator;
@@ -11,6 +10,7 @@ use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
 use function Phenix\Database\avg;
+use function Phenix\Database\alias;
 use function Phenix\Database\subquery;
 use function Phenix\Database\when_gte;
 use function Phenix\Database\when_null;
@@ -154,7 +154,7 @@ it('generates query with column alias', function () {
 
     $sql = $query->select([
             'id',
-            Alias::of('name')->as('full_name'),
+            alias('name', 'full_name'),
         ])
         ->from('users')
         ->get();
