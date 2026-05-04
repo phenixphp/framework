@@ -40,7 +40,14 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
     protected function resetBaseProperties(): void
     {
-        $this->ast = $this->makeFreshAst();
+        $ast = new QueryAst();
+        $ast->columns = [];
+
+        if (isset($this->driver)) {
+            $ast->driver = $this->driver;
+        }
+
+        $this->ast = $ast;
     }
 
     public function setDriver(Driver $driver): static
@@ -52,18 +59,6 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
         }
 
         return $this;
-    }
-
-    protected function makeFreshAst(): QueryAst
-    {
-        $ast = new QueryAst();
-        $ast->columns = [];
-
-        if (isset($this->driver)) {
-            $ast->driver = $this->driver;
-        }
-
-        return $ast;
     }
 
     /**
