@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Mysql\Compilers;
 
-use Phenix\Database\Wrapper;
-use Phenix\Database\Constants\SQL;
-use Phenix\Database\Constants\Driver;
-use Phenix\Database\Clauses\WhereClause;
-use Phenix\Database\Clauses\RowWhereClause;
-use Phenix\Database\Clauses\DateWhereClause;
-use Phenix\Database\Clauses\NullWhereClause;
 use Phenix\Database\Clauses\BasicWhereClause;
-use Phenix\Database\Clauses\ColumnWhereClause;
 use Phenix\Database\Clauses\BetweenWhereClause;
 use Phenix\Database\Clauses\BooleanWhereClause;
+use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Clauses\DateWhereClause;
+use Phenix\Database\Clauses\NullWhereClause;
+use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
+use Phenix\Database\Clauses\WhereClause;
+use Phenix\Database\Constants\Driver;
+use Phenix\Database\Constants\SQL;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
+use Phenix\Database\Wrapper;
 
 class Where extends WhereCompiler
 {
