@@ -9,8 +9,8 @@ use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
-use function Phenix\Database\avg;
 use function Phenix\Database\alias;
+use function Phenix\Database\avg;
 use function Phenix\Database\subquery;
 use function Phenix\Database\when_gte;
 use function Phenix\Database\when_null;
