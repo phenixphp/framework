@@ -9,7 +9,7 @@ use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\QueryGenerator;
 use Phenix\Database\Subquery;
 
-use function Phenix\Database\alias;
+use function Phenix\Database\alias_of;
 use function Phenix\Database\avg;
 use function Phenix\Database\subquery;
 use function Phenix\Database\when_gte;
@@ -154,7 +154,7 @@ it('generates query with column alias', function () {
 
     $sql = $query->select([
             'id',
-            alias('name', 'full_name'),
+            alias_of('name', 'full_name'),
         ])
         ->from('users')
         ->get();

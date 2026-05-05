@@ -104,7 +104,7 @@ function when_false(string $column, RawValue|string|int $result): SelectCase
     return Funct::case()->whenFalse($column, $result);
 }
 
-function alias(string $name, string $alias): Alias
+function alias_of(string $name, string $alias): Alias
 {
     return Alias::of($name)->as($alias);
 }
