@@ -28,7 +28,7 @@ abstract class UpdateCompiler extends SqlCompiler
 
         foreach ($this->ast->values as $column => $value) {
             $params[] = $value;
-            $columns[] = $this->compileSetClause($column, count($params));
+            $columns[] = $this->compileSetClause($column);
         }
 
         $parts[] = 'SET';
