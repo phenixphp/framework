@@ -8,8 +8,6 @@ use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
-use function count;
-
 abstract class UpdateCompiler extends SqlCompiler
 {
     public function compile(): SqlData
