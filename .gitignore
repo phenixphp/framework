@@ -13,3 +13,6 @@ Thumbs.db
 build
 .env
 knowledge
+.agents
+AGENTS.md
+.devcontainer
