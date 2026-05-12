@@ -55,7 +55,7 @@ class BasicWhereClause extends WhereClause
         if ($this->usePlaceholder) {
             // In WHERE context with parameterized queries, use placeholder
             if (is_array($this->value)) {
-                return '(' . implode(', ', array_fill(0, count($this->value), SqlMark::PLACEHOLDER->value)) . ')';
+                return '(' . implode(', ', array_fill(0, count($this->value), SqlMark::Placeholder->value)) . ')';
             }
 
             return SqlMark::Placeholder->value;
