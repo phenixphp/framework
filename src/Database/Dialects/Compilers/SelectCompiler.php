@@ -6,7 +6,7 @@ namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Funct;
 use Phenix\Database\SelectCase;
@@ -15,19 +15,22 @@ use Phenix\Util\Arr;
 
 use function is_string;
 
-abstract class SelectCompiler extends ClauseCompiler
+abstract class SelectCompiler extends SqlCompiler
 {
     abstract protected function compileLock(): string;
 
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         $columns = empty($this->ast->columns) ? ['*'] : $this->ast->columns;
+        $columnsCompiled = $this->compileColumns($columns);
+        $tableCompiled = $this->compileTable();
+        $params = [...$columnsCompiled->params, ...$tableCompiled->params];
 
         $sql = [
             'SELECT',
-            $this->compileColumns($columns),
+            $columnsCompiled->sql,
             'FROM',
-            $this->compileTable(),
+            $tableCompiled->sql,
         ];
 
         if (! empty($this->ast->joins)) {
@@ -35,7 +38,7 @@ abstract class SelectCompiler extends ClauseCompiler
 
             if ($joins->sql !== '') {
                 $sql[] = $joins->sql;
-                $this->ast->params = [...$joins->params, ...$this->ast->params];
+                $params = [...$params, ...$joins->params];
             }
         }
 
@@ -45,6 +48,7 @@ abstract class SelectCompiler extends ClauseCompiler
             if ($whereCompiled->sql !== '') {
                 $sql[] = 'WHERE';
                 $sql[] = $whereCompiled->sql;
+                $params = [...$params, ...$whereCompiled->params];
             }
         }
 
@@ -53,8 +57,9 @@ abstract class SelectCompiler extends ClauseCompiler
             $sql[] = $this->compileGroups($this->ast->groups);
         }
 
-        if ($this->ast->having !== null && $havingSql = $this->compileHaving()) {
-            $sql[] = $havingSql;
+        if ($this->ast->having !== null && $havingCompiled = $this->compileHaving()) {
+            $sql[] = $havingCompiled->sql;
+            $params = [...$params, ...$havingCompiled->params];
         }
 
         if (! empty($this->ast->orders)) {
@@ -74,33 +79,45 @@ abstract class SelectCompiler extends ClauseCompiler
             $sql[] = $lockSql;
         }
 
-        return new CompiledClause(
-            Arr::implodeDeeply($sql),
-            $this->ast->params
+        $sql = Arr::implodeDeeply($sql);
+
+        return new SqlData(
+            $this->replacePlaceholders($sql),
+            $params
         );
     }
 
     /**
      * @param array<int, mixed> $columns
-     * @return string
      */
-    protected function compileColumns(array $columns): string
+    protected function compileColumns(array $columns): SqlData
     {
-        $compiled = Arr::map($columns, function (string|Alias|Funct|SelectCase|Subquery $value, int|string $key): string {
-            return match (true) {
+        $compiled = [];
+        $params = [];
+
+        foreach ($columns as $key => $value) {
+            if ($value instanceof Subquery) {
+                $subquery = $this->compileSubquery($value, true);
+
+                $compiled[] = $subquery->sql;
+                $params = [...$params, ...$subquery->params];
+
+                continue;
+            }
+
+            $compiled[] = match (true) {
                 is_string($key) => (string) Alias::of($key)->as($value)->setDriver($this->ast->driver),
                 $value instanceof Alias => (string) $value->setDriver($this->ast->driver),
                 $value instanceof Funct => (string) $value->setDriver($this->ast->driver),
                 $value instanceof SelectCase => (string) $value->setDriver($this->ast->driver),
-                $value instanceof Subquery => $this->compileSubquery($value),
                 default => $this->wrap((string) $value),
             };
-        });
+        }
 
-        return Arr::implodeDeeply($compiled, ', ');
+        return new SqlData(Arr::implodeDeeply($compiled, ', '), $params);
     }
 
-    protected function compileHaving(): string|null
+    protected function compileHaving(): SqlData|null
     {
         $having = $this->havingCompiler->compile($this->ast->having);
 
@@ -108,9 +125,7 @@ abstract class SelectCompiler extends ClauseCompiler
             return null;
         }
 
-        $this->ast->params = [...$this->ast->params, ...$having->params];
-
-        return $having->sql;
+        return $having;
     }
 
     /**
@@ -119,12 +134,13 @@ abstract class SelectCompiler extends ClauseCompiler
      */
     protected function compileGroups(array $groups): string
     {
-        $compiled = Arr::map($groups, function (string|Funct $value): string {
-            return match (true) {
+        $compiled = Arr::map(
+            $groups,
+            fn (string|Funct $value): string => match (true) {
                 $value instanceof Funct => (string) $value->setDriver($this->ast->driver),
                 default => $this->wrap((string) $value),
-            };
-        });
+            }
+        );
 
         return Arr::implodeDeeply($compiled, ', ');
     }
@@ -144,48 +160,30 @@ abstract class SelectCompiler extends ClauseCompiler
         return Arr::implodeDeeply([Arr::implodeDeeply($compiled, ', '), $order]);
     }
 
-    private function compileJoins(): CompiledClause
+    protected function compileJoins(): SqlData
     {
         $sql = [];
         $params = [];
 
         foreach ($this->ast->joins as $join) {
             $compiled = $this->joinCompiler->compile($join);
-
             $sql[] = $compiled->sql;
             $params = [...$params, ...$compiled->params];
         }
 
-        return new CompiledClause(Arr::implodeDeeply($sql), $params);
+        return new SqlData(Arr::implodeDeeply($sql), $params);
     }
 
-    /**
-     * @param Subquery $subquery
-     * @return string
-     */
-    private function compileSubquery(Subquery $subquery): string
+    protected function compileSubquery(Subquery $subquery, bool $requiresLimit = false): SqlData
     {
         $subquery->setDriver($this->ast->driver);
 
         [$dml, $arguments] = $subquery->toSql();
 
-        if (! str_contains($dml, 'LIMIT 1')) {
+        if ($requiresLimit && ! str_contains($dml, 'LIMIT 1')) {
             throw new QueryErrorException('The subquery must be limited to one record');
         }
 
-        $this->ast->params = [...$this->ast->params, ...$arguments];
-
-        return $dml;
-    }
-
-    private function compileTable(): string
-    {
-        $table = trim($this->ast->table);
-
-        if ($table !== '' && str_starts_with($table, '(')) {
-            return $this->ast->table;
-        }
-
-        return $this->wrapOf($this->ast->table);
+        return new SqlData($dml, $arguments);
     }
 }

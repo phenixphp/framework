@@ -47,7 +47,7 @@ it('keeps query ast synchronized as primary query state', function (): void {
     $query = new class () extends QueryGenerator {
         public function ast(): QueryAst
         {
-            return $this->buildAst();
+            return $this->getAst();
         }
     };
 
@@ -62,7 +62,7 @@ it('keeps query ast synchronized as primary query state', function (): void {
     expect($ast->driver)->toBe(Driver::POSTGRESQL);
     expect($ast->table)->toBe('users');
     expect($ast->columns)->toBe(['id']);
-    expect($ast->params)->toBe([1]);
+    expect($ast->params)->toBeEmpty();
     expect($dml)->toBe('SELECT "id" FROM "users" WHERE "id" = $1');
     expect($params)->toBe([1]);
 });
@@ -82,11 +82,11 @@ it('does not leak cached dialect compiler state across compilations', function (
     expect($second)->toBe(['SELECT * FROM `posts` WHERE `slug` = ?', ['hello']]);
 });
 
-it('stores where and subquery params directly in query ast', function (): void {
+it('keeps where and from subquery params on clauses until compile', function (): void {
     $query = new class () extends QueryGenerator {
         public function ast(): QueryAst
         {
-            return $this->buildAst();
+            return $this->getAst();
         }
     };
 
@@ -106,9 +106,10 @@ it('stores where and subquery params directly in query ast', function (): void {
         . "WHERE `status` = ? AND `age` BETWEEN ? AND ? AND DATE(`created_at`) = ?";
 
     expect($ast->wheres)->toHaveCount(3);
-    expect($ast->params)->toBe(['2026-01-15', 'active', 18, 65, '2026-01-30']);
+    expect($ast->table)->toBeInstanceOf(Subquery::class);
+    expect($ast->params)->toBeEmpty();
     expect($dml)->toBe($expected);
-    expect($params)->toBe($ast->params);
+    expect($params)->toBe(['2026-01-15', 'active', 18, 65, '2026-01-30']);
 });
 
 it('generates a query using sql functions', function (string $function, string $column, string $rawFunction) {

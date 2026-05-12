@@ -6,11 +6,11 @@ namespace Phenix\Database\Dialects\Postgres\Compilers;
 
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\Lock;
-use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\HavingCompiler;
 use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
+use Phenix\Database\Dialects\SqlData;
 
 class Select extends SelectCompiler
 {
@@ -23,12 +23,12 @@ class Select extends SelectCompiler
         $this->havingCompiler = new HavingCompiler($this->whereCompiler);
     }
 
-    public function compile(): CompiledClause
+    protected function compileTable(): SqlData
     {
-        $result = parent::compile();
+        $result = parent::compileTable();
 
-        return new CompiledClause(
-            $this->normalizePlaceholders($result->sql),
+        return new SqlData(
+            $this->resetPlaceholders($result->sql),
             $result->params
         );
     }

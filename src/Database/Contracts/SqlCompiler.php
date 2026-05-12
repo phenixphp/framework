@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Contracts;
 
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\QueryAst;
 
-interface ClauseCompiler
+interface SqlCompiler
 {
     public function setAst(QueryAst $ast): static;
 
-    public function compile(): CompiledClause;
+    public function compile(): SqlData;
 }

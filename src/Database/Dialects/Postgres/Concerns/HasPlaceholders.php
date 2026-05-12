@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Concerns;
 
+use Phenix\Database\Constants\SqlMark;
+
 trait HasPlaceholders
 {
-    protected function convertPlaceholders(string $sql, int $startIndex = 0): string
+    protected function replacePlaceholders(string $sql, int $startIndex = 0): string
     {
         $index = $startIndex + 1;
 
         return preg_replace_callback(
-            '/\?/',
+            '/\{\?\}/',
             function () use (&$index): string {
-                return '$' . ($index++);
+                $placeholder = "\${$index}";
+
+                $index++;
+
+                return $placeholder;
             },
             $sql
         );
     }
 
-    protected function normalizePlaceholders(string $sql, int $startIndex = 0): string
+    protected function resetPlaceholders(string $sql): string
     {
-        $index = $startIndex + 1;
-
-        return preg_replace_callback(
-            '/\?|\$\d+/',
-            function () use (&$index): string {
-                return '$' . ($index++);
-            },
-            $sql
-        );
+        return preg_replace('/\$\d+/', SqlMark::Placeholder->value, $sql);
     }
 }

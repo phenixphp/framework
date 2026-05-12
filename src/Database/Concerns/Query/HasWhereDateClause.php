@@ -269,6 +269,5 @@ trait HasWhereDateClause
         LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         $this->pushClause(new DateWhereClause($column, $operator, $function, $value), $logicalConnector);
-        $this->addArguments([$value]);
     }
 }

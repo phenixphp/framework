@@ -7,7 +7,7 @@ namespace Phenix\Database\Clauses;
 use Phenix\Database\Constants\DatabaseFunction;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 
 class DateWhereClause extends WhereClause
 {
@@ -55,6 +55,14 @@ class DateWhereClause extends WhereClause
 
     public function renderValue(): string
     {
-        return SQL::PLACEHOLDER->value;
+        return SqlMark::Placeholder->value;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function getParams(): array
+    {
+        return [$this->value];
     }
 }

@@ -25,7 +25,7 @@ trait BuildsQuery
         return $this;
     }
 
-    public function from(Closure|string $table): static
+    public function from(Closure|Subquery|string $table): static
     {
         if ($table instanceof Closure) {
             $builder = new Subquery($this->driver);
@@ -34,12 +34,11 @@ trait BuildsQuery
 
             $table($builder);
 
-            [$dml, $arguments] = $builder->toSql();
+            $this->ast->table = $builder;
 
-            $this->table($dml);
-
-            $this->addArguments($arguments);
-
+        } elseif ($table instanceof Subquery) {
+            $table->setDriver($this->driver);
+            $this->ast->table = $table;
         } else {
             $this->table($table);
         }
@@ -124,10 +123,10 @@ trait BuildsQuery
     {
         $dialect = DialectFactory::fromDriver($this->driver);
 
-        return $dialect->compile($this->buildAst());
+        return $dialect->compile($this->getAst());
     }
 
-    protected function buildAst(): QueryAst
+    protected function getAst(): QueryAst
     {
         return $this->ast;
     }

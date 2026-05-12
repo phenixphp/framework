@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
 /**
@@ -42,18 +42,20 @@ class Insert extends InsertCompiler
         );
     }
 
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         $result = parent::compile();
-        $parts = [$result->sql];
+        $sql = [$result->sql];
 
         if (! empty($this->ast->returning)) {
-            $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($this->wrapList($this->ast->returning), ', ');
+            $sql[] = 'RETURNING';
+            $sql[] = Arr::implodeDeeply($this->wrapList($this->ast->returning), ', ');
         }
 
-        return new CompiledClause(
-            Arr::implodeDeeply($parts),
+        $sql = Arr::implodeDeeply($sql);
+
+        return new SqlData(
+            $this->replacePlaceholders($sql),
             $result->params
         );
     }

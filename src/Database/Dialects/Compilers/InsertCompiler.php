@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
-abstract class InsertCompiler extends ClauseCompiler
+abstract class InsertCompiler extends SqlCompiler
 {
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         $parts = [];
-        $params = $this->ast->params;
+        $table = $this->compileTable();
+        $params = [...$table->params, ...$this->ast->params];
 
         // INSERT [IGNORE] INTO
         $parts[] = $this->compileInsertClause();
 
-        $parts[] = $this->wrapOf($this->ast->table);
+        $parts[] = $table->sql;
 
         // (column1, column2, ...)
         $parts[] = '(' . Arr::implodeDeeply($this->wrapList($this->ast->columns), ', ') . ')';
@@ -42,7 +43,7 @@ abstract class InsertCompiler extends ClauseCompiler
 
         $sql = Arr::implodeDeeply($parts);
 
-        return new CompiledClause($sql, $params);
+        return new SqlData($this->replacePlaceholders($sql), $params);
     }
 
     protected function compileInsertClause(): string

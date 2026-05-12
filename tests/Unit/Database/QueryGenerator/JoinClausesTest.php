@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Phenix\Database\Constants\JoinType;
 use Phenix\Database\Join;
 use Phenix\Database\QueryGenerator;
+use Phenix\Database\Subquery;
 
 it('generates query for all join types', function (string $method, string $joinType) {
     $query = new QueryGenerator();
@@ -199,4 +200,31 @@ it('generates query with multiple joins using params', function () {
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active', 'latam']);
+});
+
+it('keeps params ordered when from subquery and join both use placeholders', function (): void {
+    $query = new QueryGenerator();
+
+    $sql = $query->select(['products.id'])
+        ->from(function (Subquery $subquery): void {
+            $subquery->from('products')
+                ->whereEqual('tenant_id', 7);
+        })
+        ->leftJoin('categories', function (Join $join): void {
+            $join->onEqual('products.category_id', 'categories.id')
+                ->whereEqual('categories.status', 'active');
+        })
+        ->whereEqual('products.status', 'published')
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT `products`.`id` "
+        . "FROM (SELECT * FROM `products` WHERE `tenant_id` = ?) "
+        . "LEFT JOIN `categories` "
+        . "ON `products`.`category_id` = `categories`.`id` AND `categories`.`status` = ? "
+        . "WHERE `products`.`status` = ?";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([7, 'active', 'published']);
 });

@@ -42,7 +42,7 @@ abstract class ClauseBuilder extends Grammar
      */
     protected function getArguments(): array
     {
-        return $this->arguments;
+        return $this->getClauseArguments();
     }
 
     protected function hasWhereClauses(): bool
@@ -53,6 +53,20 @@ abstract class ClauseBuilder extends Grammar
     protected function addArguments(array $arguments): void
     {
         $this->arguments = [...$this->arguments, ...$arguments];
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function getClauseArguments(): array
+    {
+        $arguments = [];
+
+        foreach ($this->getClauses() as $clause) {
+            $arguments = [...$arguments, ...$clause->getParams()];
+        }
+
+        return $arguments;
     }
 
     protected function pushWhereClause(
@@ -109,8 +123,6 @@ abstract class ClauseBuilder extends Grammar
             operator: $operator,
             connector: $connector
         ), $logicalConnector);
-
-        $this->addArguments($arguments);
     }
 
     /**
@@ -139,8 +151,6 @@ abstract class ClauseBuilder extends Grammar
             params: $arguments,
             connector: $connector
         ), $logicalConnector);
-
-        $this->addArguments($arguments);
     }
 
     protected function pushWhereWithArgs(
@@ -150,8 +160,6 @@ abstract class ClauseBuilder extends Grammar
         LogicalConnector $logicalConnector = LogicalConnector::AND
     ): void {
         $this->pushClause(new BasicWhereClause($column, $operator, $value, null, true), $logicalConnector);
-
-        $this->addArguments((array) $value);
     }
 
     protected function pushClause(WhereClause $where, LogicalConnector $logicalConnector = LogicalConnector::AND): void

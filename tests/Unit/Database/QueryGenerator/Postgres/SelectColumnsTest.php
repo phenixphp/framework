@@ -12,6 +12,7 @@ use Phenix\Database\Subquery;
 use function Phenix\Database\alias_of;
 use function Phenix\Database\avg;
 use function Phenix\Database\subquery;
+use function Phenix\Database\when_equal;
 use function Phenix\Database\when_gte;
 use function Phenix\Database\when_null;
 
@@ -262,6 +263,26 @@ it('generates query with select-cases using logical comparisons', function (
     ['when_true', ['is_verified', 'active'], 'inactive', Operator::IS_TRUE->value],
     ['when_false', ['is_verified', 'inactive'], 'active', Operator::IS_FALSE->value],
 ]);
+
+it('does not rewrite placeholders inside select-case string literals', function (): void {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $case = when_equal('status', 'draft', 'needs?')
+        ->defaultResult("it's ok?")
+        ->as('label');
+
+    $sql = $query->select([$case])
+        ->from('tasks')
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT (CASE WHEN \"status\" = 'draft' "
+        . "THEN 'needs?' ELSE 'it''s ok?' END) AS \"label\" FROM \"tasks\"";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBeEmpty();
+});
 
 it('generates query with select-cases with multiple conditions and string values', function () {
     $date = date('Y-m-d H:i:s');

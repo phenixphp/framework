@@ -13,7 +13,7 @@ use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Contracts\QueryBuilder;
 
@@ -74,7 +74,13 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
      */
     protected function getArguments(): array
     {
-        return $this->ast->params;
+        $arguments = $this->ast->params;
+
+        foreach ($this->ast->wheres as $where) {
+            $arguments = [...$arguments, ...$where->getParams()];
+        }
+
+        return $arguments;
     }
 
     protected function hasWhereClauses(): bool
@@ -220,6 +226,6 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
         $this->addArguments(array_values($data));
 
-        $this->ast->values[] = array_fill(0, count($data), SQL::PLACEHOLDER->value);
+        $this->ast->values[] = array_fill(0, count($data), SqlMark::Placeholder->value);
     }
 }

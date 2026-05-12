@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Postgres\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
 use function sprintf;
@@ -42,12 +42,14 @@ class Insert extends InsertCompiler
         );
     }
 
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         if ($this->ast->ignore && empty($this->ast->uniqueColumns)) {
             $parts = [];
+            $table = $this->compileTable();
+
             $parts[] = 'INSERT INTO';
-            $parts[] = $this->wrapOf($this->ast->table);
+            $parts[] = $table->sql;
             $parts[] = '(' . Arr::implodeDeeply($this->wrapList($this->ast->columns), ', ') . ')';
 
             if ($this->ast->rawStatement !== null) {
@@ -70,9 +72,9 @@ class Insert extends InsertCompiler
             }
 
             $sql = Arr::implodeDeeply($parts);
-            $sql = $this->convertPlaceholders($sql);
+            $sql = $this->replacePlaceholders($sql);
 
-            return new CompiledClause($sql, $this->ast->params);
+            return new SqlData($sql, [...$table->params, ...$this->ast->params]);
         }
 
         $result = parent::compile();
@@ -83,8 +85,8 @@ class Insert extends InsertCompiler
             $parts[] = Arr::implodeDeeply($this->wrapList($this->ast->returning), ', ');
         }
 
-        return new CompiledClause(
-            $this->convertPlaceholders(Arr::implodeDeeply($parts)),
+        return new SqlData(
+            $this->replacePlaceholders(Arr::implodeDeeply($parts)),
             $result->params
         );
     }

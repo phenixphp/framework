@@ -9,7 +9,7 @@ use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Clauses\DateWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\Join;
 use Phenix\Database\Wrapper;
 
@@ -20,16 +20,19 @@ class JoinCompiler
     ) {
     }
 
-    public function compile(Join $join): CompiledClause
+    public function compile(Join $join): SqlData
     {
-        $clauses = array_map(
-            fn (WhereClause $clause): string => $this->compileClause($clause),
-            $join->getClauses()
-        );
+        $clauses = [];
+        $params = [];
 
-        return new CompiledClause(
+        foreach ($join->getClauses() as $clause) {
+            $clauses[] = $this->compileClause($clause);
+            $params = [...$params, ...$clause->getParams()];
+        }
+
+        return new SqlData(
             "{$join->getType()->value} {$this->compileRelationship($join)} ON " . implode(' ', $clauses),
-            $join->getArguments()
+            $params
         );
     }
 

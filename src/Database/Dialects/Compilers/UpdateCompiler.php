@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Constants\SqlMark;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
 use function count;
 
-abstract class UpdateCompiler extends ClauseCompiler
+abstract class UpdateCompiler extends SqlCompiler
 {
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         $parts = [];
         $params = [];
+        $table = $this->compileTable();
 
         $parts[] = 'UPDATE';
-        $parts[] = $this->wrapOf($this->ast->table);
+        $parts[] = $table->sql;
+        $params = [...$params, ...$table->params];
 
         // SET col1 = ?, col2 = ?
         // Extract params from values (these are actual values, not placeholders)
@@ -37,7 +40,7 @@ abstract class UpdateCompiler extends ClauseCompiler
             $parts[] = 'WHERE';
             $parts[] = $whereCompiled->sql;
 
-            $params = array_merge($params, $this->ast->params);
+            $params = [...$params, ...$whereCompiled->params];
         }
 
         if (! empty($this->ast->returning)) {
@@ -47,12 +50,13 @@ abstract class UpdateCompiler extends ClauseCompiler
 
         $sql = Arr::implodeDeeply($parts);
 
-        return new CompiledClause($sql, $params);
+        return new SqlData($this->replacePlaceholders($sql), $params);
     }
 
-    /**
-     * Compile the SET clause for a column assignment
-     * This is dialect-specific for placeholder syntax
-     */
-    abstract protected function compileSetClause(string $column, int $paramIndex): string;
+    protected function compileSetClause(string $column): string
+    {
+        $column = $this->wrap($column);
+
+        return "{$column} = " . SqlMark::Placeholder->value;
+    }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\Having;
 
 class HavingCompiler
@@ -14,17 +14,17 @@ class HavingCompiler
     ) {
     }
 
-    public function compile(Having $having): CompiledClause
+    public function compile(Having $having): SqlData
     {
         $compiled = $this->whereCompiler->compile($having->getClauses());
 
         if ($compiled->sql === '') {
-            return new CompiledClause('', []);
+            return new SqlData('');
         }
 
-        return new CompiledClause(
+        return new SqlData(
             "HAVING {$compiled->sql}",
-            $having->getArguments()
+            $compiled->params
         );
     }
 }

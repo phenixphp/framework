@@ -238,8 +238,6 @@ trait HasWhereClause
 
         $this->pushWhereClause($clause);
 
-        $this->addArguments((array) $values);
-
         return $this;
     }
 
@@ -252,8 +250,6 @@ trait HasWhereClause
         );
 
         $this->pushWhereClause($clause, LogicalConnector::OR);
-
-        $this->addArguments((array) $values);
 
         return $this;
     }
@@ -268,8 +264,6 @@ trait HasWhereClause
 
         $this->pushWhereClause($clause);
 
-        $this->addArguments((array) $values);
-
         return $this;
     }
 
@@ -282,8 +276,6 @@ trait HasWhereClause
         );
 
         $this->pushWhereClause($clause, LogicalConnector::OR);
-
-        $this->addArguments((array) $values);
 
         return $this;
     }

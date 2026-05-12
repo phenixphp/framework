@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects;
 
-readonly class CompiledClause
+readonly class SqlData
 {
     /**
      * @param string $sql The compiled SQL string

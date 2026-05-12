@@ -15,7 +15,7 @@ class QueryAst
 
     public Action $action;
 
-    public string $table;
+    public string|Subquery $table;
 
     /**
      * @var array<int, mixed>

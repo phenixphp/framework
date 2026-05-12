@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\DeleteCompiler;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
 class Delete extends DeleteCompiler
@@ -15,18 +15,22 @@ class Delete extends DeleteCompiler
         $this->whereCompiler = new Where();
     }
 
-    public function compile(): CompiledClause
+    public function compile(): SqlData
     {
         $parts = [];
+        $params = [];
+        $table = $this->compileTable();
 
         $parts[] = 'DELETE FROM';
-        $parts[] = $this->wrapOf($this->ast->table);
+        $parts[] = $table->sql;
+        $params = [...$params, ...$table->params];
 
         if (! empty($this->ast->wheres)) {
             $whereCompiled = $this->whereCompiler->compile($this->ast->wheres);
 
             $parts[] = 'WHERE';
             $parts[] = $whereCompiled->sql;
+            $params = [...$params, ...$whereCompiled->params];
         }
 
         if (! empty($this->ast->returning)) {
@@ -36,6 +40,6 @@ class Delete extends DeleteCompiler
 
         $sql = Arr::implodeDeeply($parts);
 
-        return new CompiledClause($sql, $this->ast->params);
+        return new SqlData($this->replacePlaceholders($sql), $params);
     }
 }

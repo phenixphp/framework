@@ -13,17 +13,18 @@ use Phenix\Database\Clauses\NullWhereClause;
 use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
-use Phenix\Database\Dialects\CompiledClause;
+use Phenix\Database\Dialects\SqlData;
 
 abstract class WhereCompiler
 {
     /**
      * @param array<int, WhereClause> $wheres
-     * @return CompiledClause
+     * @return SqlData
      */
-    public function compile(array $wheres): CompiledClause
+    public function compile(array $wheres): SqlData
     {
         $sql = [];
+        $params = [];
 
         foreach ($wheres as $index => $where) {
             // Add logical connector if not the first clause
@@ -32,9 +33,10 @@ abstract class WhereCompiler
             }
 
             $sql[] = $this->compileClause($where);
+            $params = [...$params, ...$where->getParams()];
         }
 
-        return new CompiledClause(implode(' ', $sql), []);
+        return new SqlData(implode(' ', $sql), $params);
     }
 
     protected function compileClause(WhereClause $clause): string

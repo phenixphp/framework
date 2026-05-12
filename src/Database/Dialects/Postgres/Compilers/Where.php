@@ -14,24 +14,27 @@ use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
+use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\Wrapper;
 
 class Where extends WhereCompiler
 {
+    use HasPlaceholders;
+
     protected function compileBasicClause(BasicWhereClause $clause): string
     {
         $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
         $operator = $clause->getOperator();
 
         if ($clause->isInOperator()) {
-            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
+            $placeholders = str_repeat(SqlMark::Placeholder->value . ', ', $clause->getValueCount() - 1) . SqlMark::Placeholder->value;
 
             return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        return "{$column} {$operator->value} " . SQL::PLACEHOLDER->value;
+        return "{$column} {$operator->value} " . SqlMark::Placeholder->value;
     }
 
     protected function compileDateClause(DateWhereClause $clause): string
@@ -66,13 +69,11 @@ class Where extends WhereCompiler
         }
 
         $parts[] = $clause->getOperator()->value;
+        $sql = $this->resetPlaceholders($clause->getSql());
 
-        if ($clause->getSubqueryOperator() !== null) {
-            // For ANY/ALL/SOME, no space between operator and subquery
-            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
-        } else {
-            $parts[] = '(' . $clause->getSql() . ')';
-        }
+        $parts[] = $clause->getSubqueryOperator() !== null
+            ? "{$clause->getSubqueryOperator()->value}({$sql})" // For ANY/ALL/SOME, no space between operator and subquery
+            : "({$sql})";
 
         return implode(' ', $parts);
     }

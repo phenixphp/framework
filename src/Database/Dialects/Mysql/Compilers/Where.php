@@ -14,7 +14,7 @@ use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
 use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
 use Phenix\Database\Wrapper;
 
@@ -25,12 +25,12 @@ class Where extends WhereCompiler
         $column = Wrapper::column(Driver::MYSQL, $clause->getColumn());
 
         if ($clause->isInOperator()) {
-            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
+            $placeholders = str_repeat(SqlMark::Placeholder->value . ', ', $clause->getValueCount() - 1) . SqlMark::Placeholder->value;
 
             return "{$column} {$clause->getOperator()->value} ({$placeholders})";
         }
 
-        return "{$column} {$clause->getOperator()->value} " . SQL::PLACEHOLDER->value;
+        return "{$column} {$clause->getOperator()->value} " . SqlMark::Placeholder->value;
     }
 
     protected function compileDateClause(DateWhereClause $clause): string

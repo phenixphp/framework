@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database;
 
 use Phenix\Database\Constants\Driver;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Contracts\RawValue;
 
 class Wrapper implements RawValue
@@ -19,7 +19,7 @@ class Wrapper implements RawValue
 
     public function __toString(): string
     {
-        if (empty($this->value) || $this->value === '*' || $this->value === SQL::PLACEHOLDER->value) {
+        if (empty($this->value) || $this->value === '*' || $this->value === SqlMark::Placeholder->value) {
             return $this->value;
         }
 

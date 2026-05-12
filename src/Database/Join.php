@@ -71,6 +71,6 @@ class Join extends ClauseBuilder
      */
     public function getArguments(): array
     {
-        return $this->arguments;
+        return $this->getClauseArguments();
     }
 }

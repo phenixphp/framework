@@ -140,7 +140,7 @@ it('stores insert from subquery params directly in query ast', function () {
     $query = new class () extends QueryGenerator {
         public function params(): array
         {
-            return $this->buildAst()->params;
+            return $this->getAst()->params;
         }
     };
 
