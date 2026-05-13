@@ -16,87 +16,27 @@ use Phenix\Database\QueryAst;
 
 abstract class Dialect implements DialectContract
 {
-    protected SelectCompiler $selectCompiler;
+    abstract protected function getSelectCompiler(): SelectCompiler;
 
-    protected InsertCompiler $insertCompiler;
+    abstract protected function getInsertCompiler(): InsertCompiler;
 
-    protected UpdateCompiler $updateCompiler;
+    abstract protected function getUpdateCompiler(): UpdateCompiler;
 
-    protected DeleteCompiler $deleteCompiler;
+    abstract protected function getDeleteCompiler(): DeleteCompiler;
 
-    protected ExistsCompiler $existsCompiler;
-
-    abstract protected function initializeCompilers(): void;
+    abstract protected function getExistsCompiler(): ExistsCompiler;
 
     public function compile(QueryAst $ast, SqlMode $sqlMode = SqlMode::Prepared): array
     {
-        return match ($ast->action) {
-            Action::SELECT => $this->compileSelect($ast, $sqlMode),
-            Action::INSERT => $this->compileInsert($ast, $sqlMode),
-            Action::UPDATE => $this->compileUpdate($ast, $sqlMode),
-            Action::DELETE => $this->compileDelete($ast, $sqlMode),
-            Action::EXISTS => $this->compileExists($ast, $sqlMode),
+        $compiler = match ($ast->action) {
+            Action::SELECT => $this->getSelectCompiler(),
+            Action::INSERT => $this->getInsertCompiler(),
+            Action::UPDATE => $this->getUpdateCompiler(),
+            Action::DELETE => $this->getDeleteCompiler(),
+            Action::EXISTS => $this->getExistsCompiler(),
         };
-    }
 
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     */
-    private function compileSelect(QueryAst $ast, SqlMode $sqlMode): array
-    {
-        $compiled = $this->selectCompiler
-            ->setAst($ast)
-            ->setSqlMode($sqlMode)
-            ->compile();
-
-        return [$compiled->sql, $compiled->params];
-    }
-
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     */
-    private function compileInsert(QueryAst $ast, SqlMode $sqlMode): array
-    {
-        $compiled = $this->insertCompiler
-            ->setAst($ast)
-            ->setSqlMode($sqlMode)
-            ->compile();
-
-        return [$compiled->sql, $compiled->params];
-    }
-
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     */
-    private function compileUpdate(QueryAst $ast, SqlMode $sqlMode): array
-    {
-        $compiled = $this->updateCompiler
-            ->setAst($ast)
-            ->setSqlMode($sqlMode)
-            ->compile();
-
-        return [$compiled->sql, $compiled->params];
-    }
-
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     */
-    private function compileDelete(QueryAst $ast, SqlMode $sqlMode): array
-    {
-        $compiled = $this->deleteCompiler
-            ->setAst($ast)
-            ->setSqlMode($sqlMode)
-            ->compile();
-
-        return [$compiled->sql, $compiled->params];
-    }
-
-    /**
-     * @return array{0: string, 1: array<int, mixed>}
-     */
-    private function compileExists(QueryAst $ast, SqlMode $sqlMode): array
-    {
-        $compiled = $this->existsCompiler
+        $compiled = $compiler
             ->setAst($ast)
             ->setSqlMode($sqlMode)
             ->compile();
