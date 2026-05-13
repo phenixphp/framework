@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Sqlite\Compilers;
 
-use Phenix\Database\Dialects\CompiledClause;
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
-use Phenix\Database\QueryAst;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
 /**
@@ -24,16 +23,17 @@ class Insert extends InsertCompiler
     /**
      * Syntax: ON CONFLICT (col1, col2) DO UPDATE SET col1 = excluded.col1
      *
-     * @param QueryAst $ast Query AST with uniqueColumns
      * @return string ON CONFLICT clause
      */
-    protected function compileUpsert(QueryAst $ast): string
+    protected function compileUpsert(): string
     {
-        $conflictColumns = Arr::implodeDeeply($ast->uniqueColumns, ', ');
+        $conflictColumns = Arr::implodeDeeply($this->wrapList($this->ast->uniqueColumns), ', ');
 
-        $updateColumns = array_map(function (string $column): string {
+        $updateColumns = array_map(function (string $column) {
+            $column = $this->wrap($column);
+
             return "{$column} = excluded.{$column}";
-        }, $ast->uniqueColumns);
+        }, $this->ast->uniqueColumns);
 
         return sprintf(
             'ON CONFLICT (%s) DO UPDATE SET %s',
@@ -42,18 +42,20 @@ class Insert extends InsertCompiler
         );
     }
 
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): SqlData
     {
-        $result = parent::compile($ast);
-        $parts = [$result->sql];
+        $result = parent::compile();
+        $sql = [$result->sql];
 
-        if (! empty($ast->returning)) {
-            $parts[] = 'RETURNING';
-            $parts[] = Arr::implodeDeeply($ast->returning, ', ');
+        if (! empty($this->ast->returning)) {
+            $sql[] = 'RETURNING';
+            $sql[] = Arr::implodeDeeply($this->wrapList($this->ast->returning), ', ');
         }
 
-        return new CompiledClause(
-            Arr::implodeDeeply($parts),
+        $sql = Arr::implodeDeeply($sql);
+
+        return new SqlData(
+            $this->replacePlaceholders($sql),
             $result->params
         );
     }

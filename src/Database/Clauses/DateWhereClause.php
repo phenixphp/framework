@@ -4,27 +4,32 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Clauses;
 
+use Phenix\Database\Constants\DatabaseFunction;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SqlMark;
 
-class BetweenWhereClause extends WhereClause
+class DateWhereClause extends WhereClause
 {
     protected string $column;
 
     protected Operator $operator;
 
-    protected array $values;
+    protected DatabaseFunction $function;
+
+    protected string|int $value;
 
     public function __construct(
         string $column,
-        Operator $operator, // BETWEEN or NOT_BETWEEN
-        array $values,
+        Operator $operator,
+        DatabaseFunction $function,
+        string|int $value,
         LogicalConnector|null $connector = null
     ) {
         $this->column = $column;
         $this->operator = $operator;
-        $this->values = $values;
+        $this->function = $function;
+        $this->value = $value;
         $this->connector = $connector;
     }
 
@@ -38,9 +43,19 @@ class BetweenWhereClause extends WhereClause
         return $this->operator;
     }
 
+    public function getFunction(): DatabaseFunction
+    {
+        return $this->function;
+    }
+
+    public function getValue(): string|int
+    {
+        return $this->value;
+    }
+
     public function renderValue(): string
     {
-        return SqlMark::Placeholder->value . ' AND ' . SqlMark::Placeholder->value;
+        return SqlMark::Placeholder->value;
     }
 
     /**
@@ -48,6 +63,6 @@ class BetweenWhereClause extends WhereClause
      */
     public function getParams(): array
     {
-        return $this->values;
+        return [$this->value];
     }
 }

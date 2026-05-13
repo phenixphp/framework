@@ -23,7 +23,7 @@ it('generates query to select a record by date', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE DATE(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE DATE(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereDateEqual', Carbon::now(), Carbon::now()->format('Y-m-d'), Operator::EQUAL->value],
@@ -51,7 +51,7 @@ it('generates query to select a record by condition or by date', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR DATE(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR DATE(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereDateEqual', date('Y-m-d'), date('Y-m-d'), Operator::EQUAL->value],
@@ -77,7 +77,7 @@ it('generates query to select a record by month', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE MONTH(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE MONTH(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operator::EQUAL->value],
@@ -105,7 +105,7 @@ it('generates query to select a record by condition or by month', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR MONTH(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR MONTH(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereMonthEqual', Carbon::now(), Carbon::now()->format('m'), Operator::EQUAL->value],
@@ -132,7 +132,7 @@ it('generates query to select a record by year', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE YEAR(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE YEAR(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['whereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operator::EQUAL->value],
@@ -160,7 +160,7 @@ it('generates query to select a record by condition or by year', function (
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe("SELECT * FROM users WHERE active IS FALSE OR YEAR(created_at) {$operator} ?");
+    expect($dml)->toBe("SELECT * FROM `users` WHERE `active` IS FALSE OR YEAR(`created_at`) {$operator} ?");
     expect($params)->toBe([$value]);
 })->with([
     ['orWhereYearEqual', Carbon::now(), Carbon::now()->format('Y'), Operator::EQUAL->value],

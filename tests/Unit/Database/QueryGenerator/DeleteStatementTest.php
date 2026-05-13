@@ -13,7 +13,7 @@ it('generates delete statement', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE id = ?";
+    $expected = "DELETE FROM `users` WHERE `id` = ?";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -27,7 +27,7 @@ it('generates delete statement without clauses', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users";
+    $expected = "DELETE FROM `users`";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();

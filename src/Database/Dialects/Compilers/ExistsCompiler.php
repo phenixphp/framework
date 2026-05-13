@@ -4,41 +4,41 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Contracts\ClauseCompiler;
-use Phenix\Database\Dialects\CompiledClause;
-use Phenix\Database\QueryAst;
-use Phenix\Database\Value;
+use Phenix\Database\Dialects\SqlData;
 use Phenix\Util\Arr;
 
-abstract class ExistsCompiler implements ClauseCompiler
+abstract class ExistsCompiler extends SqlCompiler
 {
-    protected $whereCompiler;
-
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): SqlData
     {
         $parts = [];
+        $params = [];
+        $table = $this->compileTable();
+
         $parts[] = 'SELECT';
 
-        $column = ! empty($ast->columns) ? $ast->columns[0] : 'EXISTS';
+        $column = ! empty($this->ast->columns) ? $this->ast->columns[0] : 'EXISTS';
         $parts[] = $column;
 
         $subquery = [];
         $subquery[] = 'SELECT 1 FROM';
-        $subquery[] = $ast->table;
+        $subquery[] = $table->sql;
+        $params = [...$params, ...$table->params];
 
-        if (! empty($ast->wheres)) {
-            $whereCompiled = $this->whereCompiler->compile($ast->wheres);
+        if (! empty($this->ast->wheres)) {
+            $whereCompiled = $this->whereCompiler->compile($this->ast->wheres);
 
             $subquery[] = 'WHERE';
             $subquery[] = $whereCompiled->sql;
+            $params = [...$params, ...$whereCompiled->params];
         }
 
         $parts[] = '(' . Arr::implodeDeeply($subquery) . ')';
         $parts[] = 'AS';
-        $parts[] = Value::from('exists');
+        $parts[] = $this->wrap('exists');
 
         $sql = Arr::implodeDeeply($parts);
 
-        return new CompiledClause($sql, $ast->params);
+        return new SqlData($this->replacePlaceholders($sql), $params);
     }
 }

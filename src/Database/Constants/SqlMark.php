@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Constants;
 
-enum SQL: string
+enum SqlMark: string
 {
-    case PLACEHOLDER = '?';
+    case Placeholder = '{?}';
 }

@@ -119,7 +119,7 @@ it('inserts row and returns generated id on postgresql', function () {
     $insertedId = $query->table('users')->insertGetId(['name' => 'Tony']);
 
     expect($insertedId)->toBe(123);
-    expect($capturedSql)->toContain('RETURNING id');
+    expect($capturedSql)->toContain('RETURNING "id"');
 });
 
 it('inserts row and returns generated id on mysql', function () {
@@ -160,7 +160,7 @@ it('inserts row and returns generated custom id on postgresql', function (): voi
         ->insertGetId(['name' => 'Tony'], 'user_id');
 
     expect($insertedId)->toBe(456);
-    expect($capturedSql)->toContain('RETURNING user_id');
+    expect($capturedSql)->toContain('RETURNING "user_id"');
 });
 
 it('fails on insert records', function () {

@@ -4,31 +4,37 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Dialects\Compilers;
 
-use Phenix\Database\Contracts\ClauseCompiler;
-use Phenix\Database\Dialects\CompiledClause;
-use Phenix\Database\QueryAst;
+use Phenix\Database\Dialects\SqlData;
+use Phenix\Database\Subquery;
 use Phenix\Util\Arr;
 
-abstract class DeleteCompiler implements ClauseCompiler
+abstract class DeleteCompiler extends SqlCompiler
 {
-    protected WhereCompiler $whereCompiler;
-
-    public function compile(QueryAst $ast): CompiledClause
+    public function compile(): SqlData
     {
         $parts = [];
+        $params = [];
 
         $parts[] = 'DELETE FROM';
-        $parts[] = $ast->table;
 
-        if (! empty($ast->wheres)) {
-            $whereCompiled = $this->whereCompiler->compile($ast->wheres);
+        if ($this->ast->table instanceof Subquery) {
+            $table = $this->compileTable();
+            $parts[] = $table->sql;
+            $params = [...$params, ...$table->params];
+        } else {
+            $parts[] = $this->wrap($this->ast->table);
+        }
+
+        if (! empty($this->ast->wheres)) {
+            $whereCompiled = $this->whereCompiler->compile($this->ast->wheres);
 
             $parts[] = 'WHERE';
             $parts[] = $whereCompiled->sql;
+            $params = [...$params, ...$whereCompiled->params];
         }
 
         $sql = Arr::implodeDeeply($parts);
 
-        return new CompiledClause($sql, $ast->params);
+        return new SqlData($this->replacePlaceholders($sql), $params);
     }
 }

@@ -14,7 +14,7 @@ it('generates delete statement', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE id = $1";
+    $expected = "DELETE FROM \"users\" WHERE \"id\" = $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -28,7 +28,7 @@ it('generates delete statement without clauses', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users";
+    $expected = "DELETE FROM \"users\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -44,7 +44,7 @@ it('generates delete statement with multiple where clauses', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE status = $1 AND role = $2";
+    $expected = "DELETE FROM \"users\" WHERE \"status\" = $1 AND \"role\" = $2";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['inactive', 'user']);
@@ -59,7 +59,7 @@ it('generates delete statement with where in clause', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE id IN ($1, $2, $3)";
+    $expected = "DELETE FROM \"users\" WHERE \"id\" IN ($1, $2, $3)";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1, 2, 3]);
@@ -74,7 +74,7 @@ it('generates delete statement with where not equal', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE status != $1";
+    $expected = "DELETE FROM \"users\" WHERE \"status\" != $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['active']);
@@ -89,7 +89,7 @@ it('generates delete statement with where greater than', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE age > $1";
+    $expected = "DELETE FROM \"users\" WHERE \"age\" > $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([18]);
@@ -104,7 +104,7 @@ it('generates delete statement with where less than', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE age < $1";
+    $expected = "DELETE FROM \"users\" WHERE \"age\" < $1";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([65]);
@@ -119,7 +119,7 @@ it('generates delete statement with where null', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE deleted_at IS NULL";
+    $expected = "DELETE FROM \"users\" WHERE \"deleted_at\" IS NULL";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -134,7 +134,7 @@ it('generates delete statement with where not null', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE email IS NOT NULL";
+    $expected = "DELETE FROM \"users\" WHERE \"email\" IS NOT NULL";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -150,7 +150,7 @@ it('generates delete statement with returning clause', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE id = $1 RETURNING id, name, email";
+    $expected = "DELETE FROM \"users\" WHERE \"id\" = $1 RETURNING \"id\", \"name\", \"email\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe([1]);
@@ -166,7 +166,7 @@ it('generates delete statement with returning all columns', function () {
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE status IN ($1, $2) RETURNING *";
+    $expected = "DELETE FROM \"users\" WHERE \"status\" IN ($1, $2) RETURNING *";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['inactive', 'deleted']);
@@ -181,7 +181,7 @@ it('generates delete statement with returning without where clause', function ()
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users RETURNING id, email";
+    $expected = "DELETE FROM \"users\" RETURNING \"id\", \"email\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBeEmpty();
@@ -198,7 +198,7 @@ it('generates delete statement with multiple where clauses and returning', funct
 
     [$dml, $params] = $sql;
 
-    $expected = "DELETE FROM users WHERE status = $1 AND created_at > $2 RETURNING id, name, status, created_at";
+    $expected = "DELETE FROM \"users\" WHERE \"status\" = $1 AND \"created_at\" > $2 RETURNING \"id\", \"name\", \"status\", \"created_at\"";
 
     expect($dml)->toBe($expected);
     expect($params)->toBe(['inactive', '2024-01-01']);

@@ -6,7 +6,7 @@ namespace Phenix\Database\Clauses;
 
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Constants\SqlMark;
 
 use function count;
 use function is_array;
@@ -55,10 +55,10 @@ class BasicWhereClause extends WhereClause
         if ($this->usePlaceholder) {
             // In WHERE context with parameterized queries, use placeholder
             if (is_array($this->value)) {
-                return '(' . implode(', ', array_fill(0, count($this->value), SQL::PLACEHOLDER->value)) . ')';
+                return '(' . implode(', ', array_fill(0, count($this->value), SqlMark::Placeholder->value)) . ')';
             }
 
-            return SQL::PLACEHOLDER->value;
+            return SqlMark::Placeholder->value;
         }
 
         // In JOIN ON context, render the value directly (typically a column name)
@@ -77,5 +77,22 @@ class BasicWhereClause extends WhereClause
     public function isInOperator(): bool
     {
         return $this->operator === Operator::IN || $this->operator === Operator::NOT_IN;
+    }
+
+    public function usesPlaceholder(): bool
+    {
+        return $this->usePlaceholder;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function getParams(): array
+    {
+        if (! $this->usePlaceholder) {
+            return [];
+        }
+
+        return (array) $this->value;
     }
 }

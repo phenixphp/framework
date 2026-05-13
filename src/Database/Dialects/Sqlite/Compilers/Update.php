@@ -12,9 +12,4 @@ class Update extends UpdateCompiler
     {
         $this->whereCompiler = new Where();
     }
-
-    protected function compileSetClause(string $column, int $paramIndex): string
-    {
-        return "{$column} = ?";
-    }
 }

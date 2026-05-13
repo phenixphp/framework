@@ -6,32 +6,55 @@ namespace Phenix\Database\Dialects\Postgres\Compilers;
 
 use Phenix\Database\Clauses\BasicWhereClause;
 use Phenix\Database\Clauses\BetweenWhereClause;
+use Phenix\Database\Clauses\BooleanWhereClause;
+use Phenix\Database\Clauses\ColumnWhereClause;
+use Phenix\Database\Clauses\DateWhereClause;
+use Phenix\Database\Clauses\NullWhereClause;
+use Phenix\Database\Clauses\RowWhereClause;
 use Phenix\Database\Clauses\SubqueryWhereClause;
-use Phenix\Database\Constants\SQL;
+use Phenix\Database\Clauses\WhereClause;
+use Phenix\Database\Constants\Driver;
+use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
+use Phenix\Database\Wrapper;
 
 class Where extends WhereCompiler
 {
     protected function compileBasicClause(BasicWhereClause $clause): string
     {
-        $column = $clause->getColumn();
+        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
         $operator = $clause->getOperator();
 
         if ($clause->isInOperator()) {
-            $placeholders = str_repeat(SQL::PLACEHOLDER->value . ', ', $clause->getValueCount() - 1) . SQL::PLACEHOLDER->value;
+            $placeholders = str_repeat(SqlMark::Placeholder->value . ', ', $clause->getValueCount() - 1) . SqlMark::Placeholder->value;
 
             return "{$column} {$operator->value} ({$placeholders})";
         }
 
-        return "{$column} {$operator->value} " . SQL::PLACEHOLDER->value;
+        return "{$column} {$operator->value} " . SqlMark::Placeholder->value;
+    }
+
+    protected function compileDateClause(DateWhereClause $clause): string
+    {
+        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
+        $function = $clause->getFunction()->name;
+
+        return "{$function}({$column}) {$clause->getOperator()->value} {$clause->renderValue()}";
     }
 
     protected function compileBetweenClause(BetweenWhereClause $clause): string
     {
-        $column = $clause->getColumn();
+        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
         $operator = $clause->getOperator();
 
         return "{$column} {$operator->value} {$clause->renderValue()}";
+    }
+
+    protected function compileRowClause(RowWhereClause $clause): string
+    {
+        $columns = implode(', ', Wrapper::columnList(Driver::POSTGRESQL, $clause->getColumns()));
+
+        return "ROW({$columns}) {$clause->getOperator()->value} {$clause->renderValue()}";
     }
 
     protected function compileSubqueryClause(SubqueryWhereClause $clause): string
@@ -39,18 +62,41 @@ class Where extends WhereCompiler
         $parts = [];
 
         if ($clause->getColumn() !== null) {
-            $parts[] = $clause->getColumn();
+            $parts[] = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
         }
 
         $parts[] = $clause->getOperator()->value;
+        $sql = $clause->getSql();
 
-        if ($clause->getSubqueryOperator() !== null) {
-            // For ANY/ALL/SOME, no space between operator and subquery
-            $parts[] = $clause->getSubqueryOperator()->value . '(' . $clause->getSql() . ')';
-        } else {
-            $parts[] = '(' . $clause->getSql() . ')';
-        }
+        $parts[] = $clause->getSubqueryOperator() !== null
+            ? "{$clause->getSubqueryOperator()->value}({$sql})" // For ANY/ALL/SOME, no space between operator and subquery
+            : "({$sql})";
 
         return implode(' ', $parts);
+    }
+
+    protected function compileColumnClause(ColumnWhereClause $clause): string
+    {
+        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
+        $compareColumn = Wrapper::column(Driver::POSTGRESQL, $clause->getCompareColumn());
+
+        return "{$column} {$clause->getOperator()->value} {$compareColumn}";
+    }
+
+    protected function compileNullClause(NullWhereClause $clause): string
+    {
+        return $this->compileCommonClause($clause);
+    }
+
+    protected function compileBooleanClause(BooleanWhereClause $clause): string
+    {
+        return $this->compileCommonClause($clause);
+    }
+
+    private function compileCommonClause(WhereClause $clause): string
+    {
+        $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
+
+        return "{$column} {$clause->getOperator()->value}";
     }
 }

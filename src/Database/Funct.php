@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Concerns\HasDriver;
 use Phenix\Database\Constants\DatabaseFunction;
 use Stringable;
 
-class Functions implements Stringable
+class Funct implements Stringable
 {
+    use HasDriver;
+
     protected string $alias;
 
     public function __construct(
@@ -16,24 +19,6 @@ class Functions implements Stringable
         protected readonly string $column
     ) {
         // ..
-    }
-
-    public function as(string $alias): self
-    {
-        $this->alias = $alias;
-
-        return $this;
-    }
-
-    public function __toString(): string
-    {
-        $function = $this->function->name . '(' . $this->column . ')';
-
-        if (isset($this->alias)) {
-            $function .= ' AS ' . $this->alias;
-        }
-
-        return $function;
     }
 
     public static function avg(string $column): self
@@ -79,5 +64,25 @@ class Functions implements Stringable
     public static function case(): SelectCase
     {
         return new SelectCase();
+    }
+
+    public function as(string $alias): self
+    {
+        $this->alias = $alias;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        $column = Wrapper::column($this->driver, $this->column);
+
+        $function = $this->function->name . '(' . $column . ')';
+
+        if (isset($this->alias)) {
+            $function .= ' AS ' . Wrapper::column($this->driver, $this->alias);
+        }
+
+        return $function;
     }
 }

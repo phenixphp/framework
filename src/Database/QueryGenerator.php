@@ -14,14 +14,13 @@ class QueryGenerator extends QueryBase
     {
         parent::__construct();
 
-        $this->driver = $driver;
+        $this->setDriver($driver);
     }
 
     public function __clone(): void
     {
         parent::__clone();
         $this->isLocked = false;
-        $this->lockType = null;
     }
 
     public function insert(array $data): array
@@ -31,7 +30,7 @@ class QueryGenerator extends QueryBase
 
     public function insertOrIgnore(array $values): array
     {
-        $this->ignore = true;
+        $this->ast->ignore = true;
 
         $this->insert($values);
 
@@ -75,14 +74,14 @@ class QueryGenerator extends QueryBase
 
     public function get(): array
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         return $this->toSql();
     }
 
     public function first(): array
     {
-        $this->action = Action::SELECT;
+        $this->ast->action = Action::SELECT;
 
         return $this->limit(1)->toSql();
     }

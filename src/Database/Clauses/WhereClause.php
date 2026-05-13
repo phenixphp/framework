@@ -21,6 +21,14 @@ abstract class WhereClause
      */
     abstract public function renderValue(): string;
 
+    /**
+     * @return array<int, mixed>
+     */
+    public function getParams(): array
+    {
+        return [];
+    }
+
     public function setConnector(LogicalConnector $connector): void
     {
         $this->connector = $connector;

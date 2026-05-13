@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\Mysql\Compilers;
 
 use Phenix\Database\Dialects\Compilers\InsertCompiler;
-use Phenix\Database\QueryAst;
 use Phenix\Util\Arr;
 
 class Insert extends InsertCompiler
@@ -15,11 +14,15 @@ class Insert extends InsertCompiler
         return 'INSERT IGNORE INTO';
     }
 
-    protected function compileUpsert(QueryAst $ast): string
+    protected function compileUpsert(): string
     {
         $columns = array_map(
-            fn (string $column): string => "{$column} = VALUES({$column})",
-            $ast->uniqueColumns
+            function (string $column): string {
+                $column = $this->wrap($column);
+
+                return "{$column} = VALUES({$column})";
+            },
+            $this->ast->uniqueColumns
         );
 
         return 'ON DUPLICATE KEY UPDATE ' . Arr::implodeDeeply($columns, ', ');

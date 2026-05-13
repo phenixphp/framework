@@ -15,7 +15,7 @@ it('generates offset pagination query', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 0');
+    expect($dml)->toBe('SELECT * FROM "users" LIMIT 15 OFFSET 0');
     expect($params)->toBeEmpty();
 });
 
@@ -28,7 +28,7 @@ it('generates offset pagination query with indicate page', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 30');
+    expect($dml)->toBe('SELECT * FROM "users" LIMIT 15 OFFSET 30');
     expect($params)->toBeEmpty();
 });
 
@@ -42,7 +42,7 @@ it('overwrites limit when pagination is called', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users LIMIT 15 OFFSET 15');
+    expect($dml)->toBe('SELECT * FROM "users" LIMIT 15 OFFSET 15');
     expect($params)->toBeEmpty();
 });
 
@@ -56,7 +56,7 @@ it('generates pagination query with where clause', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users WHERE status = $1 LIMIT 15 OFFSET 15');
+    expect($dml)->toBe('SELECT * FROM "users" WHERE "status" = $1 LIMIT 15 OFFSET 15');
     expect($params)->toBe(['active']);
 });
 
@@ -70,7 +70,7 @@ it('generates pagination query with order by', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users ORDER BY created_at ASC LIMIT 15 OFFSET 0');
+    expect($dml)->toBe('SELECT * FROM "users" ORDER BY "created_at" ASC LIMIT 15 OFFSET 0');
     expect($params)->toBeEmpty();
 });
 
@@ -83,6 +83,6 @@ it('generates pagination with custom per page', function () {
 
     [$dml, $params] = $sql;
 
-    expect($dml)->toBe('SELECT * FROM users LIMIT 25 OFFSET 25');
+    expect($dml)->toBe('SELECT * FROM "users" LIMIT 25 OFFSET 25');
     expect($params)->toBeEmpty();
 });
