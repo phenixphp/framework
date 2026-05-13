@@ -284,6 +284,28 @@ it('does not rewrite placeholders inside select-case string literals', function 
     expect($params)->toBeEmpty();
 });
 
+it('does not reset numbered placeholders inside select-case string literals in subqueries', function (): void {
+    $query = new QueryGenerator(Driver::POSTGRESQL);
+
+    $sql = $query->select(['id'])
+        ->from(function (Subquery $subquery): void {
+            $subquery->select([
+                    when_equal('status', 'draft', '$1'),
+                ])
+                ->from('tasks')
+                ->whereEqual('tenant_id', 7);
+        })
+        ->get();
+
+    [$dml, $params] = $sql;
+
+    $expected = "SELECT \"id\" FROM (SELECT CASE WHEN \"status\" = 'draft' "
+        . "THEN '$1' END FROM \"tasks\" WHERE \"tenant_id\" = $1)";
+
+    expect($dml)->toBe($expected);
+    expect($params)->toBe([7]);
+});
+
 it('generates query with select-cases with multiple conditions and string values', function () {
     $date = date('Y-m-d H:i:s');
 

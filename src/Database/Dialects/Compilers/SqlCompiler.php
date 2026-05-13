@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Constants\SqlMark;
+use Phenix\Database\Constants\SqlMode;
 use Phenix\Database\Contracts\SqlCompiler as SqlCompilerContract;
 use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\QueryAst;
@@ -21,6 +22,8 @@ abstract class SqlCompiler implements SqlCompilerContract
 
     protected HavingCompiler $havingCompiler;
 
+    protected SqlMode $sqlMode = SqlMode::Prepared;
+
     public function setAst(QueryAst $ast): static
     {
         $this->ast = $ast;
@@ -28,8 +31,19 @@ abstract class SqlCompiler implements SqlCompilerContract
         return $this;
     }
 
+    public function setSqlMode(SqlMode $sqlMode): static
+    {
+        $this->sqlMode = $sqlMode;
+
+        return $this;
+    }
+
     protected function replacePlaceholders(string $sql): string
     {
+        if ($this->sqlMode === SqlMode::Raw) {
+            return $sql;
+        }
+
         return str_replace(SqlMark::Placeholder->value, '?', $sql);
     }
 
@@ -48,7 +62,7 @@ abstract class SqlCompiler implements SqlCompilerContract
         if ($this->ast->table instanceof Subquery) {
             $this->ast->table->setDriver($this->ast->driver);
 
-            [$sql, $params] = $this->ast->table->toSql();
+            [$sql, $params] = $this->ast->table->toSql(SqlMode::Raw);
 
             return new SqlData($sql, $params);
         }

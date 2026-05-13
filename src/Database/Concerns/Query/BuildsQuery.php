@@ -7,6 +7,7 @@ namespace Phenix\Database\Concerns\Query;
 use Closure;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Order;
+use Phenix\Database\Constants\SqlMode;
 use Phenix\Database\Dialects\DialectFactory;
 use Phenix\Database\Funct;
 use Phenix\Database\Having;
@@ -119,11 +120,11 @@ trait BuildsQuery
     /**
      * @return array{0: string, 1: array<int, mixed>}
      */
-    public function toSql(): array
+    public function toSql(SqlMode $sqlMode = SqlMode::Prepared): array
     {
         $dialect = DialectFactory::fromDriver($this->driver);
 
-        return $dialect->compile($this->getAst());
+        return $dialect->compile($this->getAst(), $sqlMode);
     }
 
     protected function getAst(): QueryAst

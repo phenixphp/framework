@@ -10,7 +10,6 @@ use Phenix\Database\Dialects\Compilers\HavingCompiler;
 use Phenix\Database\Dialects\Compilers\JoinCompiler;
 use Phenix\Database\Dialects\Compilers\SelectCompiler;
 use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
-use Phenix\Database\Dialects\SqlData;
 
 class Select extends SelectCompiler
 {
@@ -21,16 +20,6 @@ class Select extends SelectCompiler
         $this->whereCompiler = new Where();
         $this->joinCompiler = new JoinCompiler(Driver::POSTGRESQL);
         $this->havingCompiler = new HavingCompiler($this->whereCompiler);
-    }
-
-    protected function compileTable(): SqlData
-    {
-        $result = parent::compileTable();
-
-        return new SqlData(
-            $this->resetPlaceholders($result->sql),
-            $result->params
-        );
     }
 
     protected function compileLock(): string

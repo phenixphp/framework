@@ -16,13 +16,10 @@ use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\SqlMark;
 use Phenix\Database\Dialects\Compilers\WhereCompiler;
-use Phenix\Database\Dialects\Postgres\Concerns\HasPlaceholders;
 use Phenix\Database\Wrapper;
 
 class Where extends WhereCompiler
 {
-    use HasPlaceholders;
-
     protected function compileBasicClause(BasicWhereClause $clause): string
     {
         $column = Wrapper::column(Driver::POSTGRESQL, $clause->getColumn());
@@ -69,7 +66,7 @@ class Where extends WhereCompiler
         }
 
         $parts[] = $clause->getOperator()->value;
-        $sql = $this->resetPlaceholders($clause->getSql());
+        $sql = $clause->getSql();
 
         $parts[] = $clause->getSubqueryOperator() !== null
             ? "{$clause->getSubqueryOperator()->value}({$sql})" // For ANY/ALL/SOME, no space between operator and subquery

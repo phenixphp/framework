@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Contracts;
 
+use Phenix\Database\Constants\SqlMode;
 use Phenix\Database\QueryAst;
 
 interface Dialect
@@ -12,5 +13,5 @@ interface Dialect
      * @param QueryAst $ast
      * @return array{0: string, 1: array<int, mixed>} A tuple of SQL string and parameters
      */
-    public function compile(QueryAst $ast): array;
+    public function compile(QueryAst $ast, SqlMode $sqlMode = SqlMode::Prepared): array;
 }

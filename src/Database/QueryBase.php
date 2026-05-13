@@ -14,6 +14,7 @@ use Phenix\Database\Constants\Driver;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
 use Phenix\Database\Constants\SqlMark;
+use Phenix\Database\Constants\SqlMode;
 use Phenix\Database\Contracts\Builder;
 use Phenix\Database\Contracts\QueryBuilder;
 
@@ -156,7 +157,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
 
         $subquery($builder);
 
-        [$dml, $arguments] = $builder->toSql();
+        [$dml, $arguments] = $builder->toSql(SqlMode::Raw);
 
         $this->ast->rawStatement = trim($dml, '()');
 

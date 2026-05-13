@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Database;
 
+use Phenix\Database\Constants\SqlMode;
+
 class Subquery extends QueryGenerator
 {
     protected string $alias;
@@ -15,9 +17,9 @@ class Subquery extends QueryGenerator
         return $this;
     }
 
-    public function toSql(): array
+    public function toSql(SqlMode $sqlMode = SqlMode::Prepared): array
     {
-        [$dml, $arguments] = parent::toSql();
+        [$dml, $arguments] = parent::toSql($sqlMode);
 
         if (isset($this->alias)) {
             $alias = Wrapper::column($this->driver, $this->alias);

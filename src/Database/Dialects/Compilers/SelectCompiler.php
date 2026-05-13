@@ -6,6 +6,7 @@ namespace Phenix\Database\Dialects\Compilers;
 
 use Phenix\Database\Alias;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SqlMode;
 use Phenix\Database\Dialects\SqlData;
 use Phenix\Database\Exceptions\QueryErrorException;
 use Phenix\Database\Funct;
@@ -178,7 +179,7 @@ abstract class SelectCompiler extends SqlCompiler
     {
         $subquery->setDriver($this->ast->driver);
 
-        [$dml, $arguments] = $subquery->toSql();
+        [$dml, $arguments] = $subquery->toSql(SqlMode::Raw);
 
         if ($requiresLimit && ! str_contains($dml, 'LIMIT 1')) {
             throw new QueryErrorException('The subquery must be limited to one record');

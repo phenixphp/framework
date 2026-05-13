@@ -17,6 +17,7 @@ use Phenix\Database\Concerns\Query\HasTransaction;
 use Phenix\Database\Constants\Action;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\Constants\SqlMode;
 
 use function is_string;
 
@@ -143,7 +144,7 @@ class QueryBuilder extends QueryBase
 
         $subquery($builder);
 
-        [$dml, $arguments] = $builder->toSql();
+        [$dml, $arguments] = $builder->toSql(SqlMode::Raw);
 
         $this->ast->rawStatement = trim($dml, '()');
 

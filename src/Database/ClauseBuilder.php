@@ -12,6 +12,7 @@ use Phenix\Database\Clauses\WhereClause;
 use Phenix\Database\Concerns\Query\HasWhereClause;
 use Phenix\Database\Constants\LogicalConnector;
 use Phenix\Database\Constants\Operator;
+use Phenix\Database\Constants\SqlMode;
 
 use function count;
 
@@ -111,7 +112,7 @@ abstract class ClauseBuilder extends Grammar
 
         $subquery($builder);
 
-        [$dml, $arguments] = $builder->toSql();
+        [$dml, $arguments] = $builder->toSql(SqlMode::Raw);
 
         $connector = $this->hasWhereClauses() ? $logicalConnector : null;
 
@@ -140,7 +141,7 @@ abstract class ClauseBuilder extends Grammar
 
         $subquery($builder);
 
-        [$dml, $arguments] = $builder->toSql();
+        [$dml, $arguments] = $builder->toSql(SqlMode::Raw);
 
         $connector = $this->hasWhereClauses() ? $logicalConnector : null;
 
