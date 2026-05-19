@@ -55,10 +55,14 @@ class RateLimiter implements Middleware
         $remaining = max(0, $perMinuteLimit - $current);
         $resetTime = time() + $this->rateLimiter->getTtl($clientIp);
 
-        $response->addHeader('x-ratelimit-limit', (string) $perMinuteLimit);
-        $response->addHeader('x-ratelimit-remaining', (string) $remaining);
-        $response->addHeader('x-ratelimit-reset', (string) $resetTime);
-        $response->addHeader('x-ratelimit-reset-after', (string) $this->rateLimiter->getTtl($clientIp));
+        if ($isCustom || ! $response->hasHeader('x-ratelimit-limit')) {
+            $response->replaceHeaders([
+                'x-ratelimit-limit' => (string) $perMinuteLimit,
+                'x-ratelimit-remaining' => (string) $remaining,
+                'x-ratelimit-reset' => (string) $resetTime,
+                'x-ratelimit-reset-after' => (string) $this->rateLimiter->getTtl($clientIp),
+            ]);
+        }
 
         return $response;
     }
