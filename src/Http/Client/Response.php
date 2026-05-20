@@ -87,6 +87,11 @@ class Response
         return $this->response->isClientError();
     }
 
+    public function serverError(): bool
+    {
+        return $this->response->isServerError();
+    }
+
     public function header(string $header): string|null
     {
         return $this->response->getHeader($header);
@@ -172,9 +177,14 @@ class Response
         return $this->hasStatus(HttpStatus::TOO_MANY_REQUESTS);
     }
 
-    public function serverError(): bool
+    public function onError(Closure $closure): self
     {
-        return $this->hasStatus(HttpStatus::INTERNAL_SERVER_ERROR);
+        if ($this->failed()) {
+            $closure($this);
+        }
+
+        return $this;
+    }
     }
 
     private function hasStatus(HttpStatus $status): bool
