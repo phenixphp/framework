@@ -8,6 +8,8 @@ use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
+use Amp\Sync\LocalSemaphore;
+use Amp\Sync\Semaphore;
 use Closure;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\HttpMethod;
@@ -15,6 +17,8 @@ use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
 use SensitiveParameter;
 
+use function Amp\async;
+use function Amp\Future\await;
 use function is_array;
 
 class HttpClient
@@ -114,6 +118,24 @@ class HttpClient
         return $this->call(HttpMethod::DELETE, $url, $data);
     }
 
+    /**
+     * @param Closure(Pool): array<array-key, Closure(HttpClient): Response> $closure
+     * @param int|null $concurrency
+     * @return array<array-key, Response>
+     */
+    public function pool(Closure $closure, int|null $concurrency = 0): array
+    {
+        $requests = $closure(new Pool());
+        $semaphore = $concurrency !== null && $concurrency > 0 ? new LocalSemaphore($concurrency) : null;
+        $futures = [];
+
+        foreach ($requests as $key => $request) {
+            $futures[$key] = async(fn (): Response => $this->executePoolRequest($request, $semaphore));
+        }
+
+        return await($futures);
+    }
+
     protected function call(
         HttpMethod $method,
         UriInterface|string $url,
@@ -147,5 +169,23 @@ class HttpClient
         }
 
         return $request;
+    }
+
+    /**
+     * @param Closure(HttpClient): Response $request
+     */
+    private function executePoolRequest(Closure $request, Semaphore|null $semaphore): Response
+    {
+        if ($semaphore === null) {
+            return $request($this);
+        }
+
+        $lock = $semaphore->acquire();
+
+        try {
+            return $request($this);
+        } finally {
+            $lock->release();
+        }
     }
 }
