@@ -118,6 +118,28 @@ class HttpClient
         return $this->call(HttpMethod::DELETE, $url, $data);
     }
 
+    public function stream(
+        UriInterface|string $url,
+        Closure|null $callback = null,
+        array|null $queryParameters = null,
+        int|null $bodySizeLimit = null,
+        float|null $transferTimeout = null
+    ): mixed {
+        $response = $this->streamCall(
+            method: HttpMethod::GET,
+            url: $url,
+            queryParameters: $queryParameters,
+            bodySizeLimit: $bodySizeLimit,
+            transferTimeout: $transferTimeout
+        );
+
+        if ($callback !== null) {
+            return $callback($response);
+        }
+
+        return $response;
+    }
+
     /**
      * @param Closure(Pool): array<array-key, Closure(HttpClient): Response> $closure
      * @param int|null $concurrency
@@ -145,7 +167,28 @@ class HttpClient
         return new Response($this->client->request($this->createRequest($method, $url, $data, $queryParameters)));
     }
 
-    private function createRequest(
+    protected function streamCall(
+        HttpMethod $method,
+        UriInterface|string $url,
+        Form|Arrayable|array|string|null $data = null,
+        array|null $queryParameters = null,
+        int|null $bodySizeLimit = null,
+        float|null $transferTimeout = null
+    ): StreamResponse {
+        $request = $this->createRequest($method, $url, $data, $queryParameters);
+
+        if ($bodySizeLimit !== null) {
+            $request->setBodySizeLimit($bodySizeLimit);
+        }
+
+        if ($transferTimeout !== null) {
+            $request->setTransferTimeout($transferTimeout);
+        }
+
+        return new StreamResponse($this->client->request($request));
+    }
+
+    protected function createRequest(
         HttpMethod $method,
         UriInterface|string $url,
         Form|Arrayable|array|string|null $data = null,
@@ -174,7 +217,7 @@ class HttpClient
     /**
      * @param Closure(HttpClient): Response $request
      */
-    private function executePoolRequest(Closure $request, Semaphore|null $semaphore): Response
+    protected function executePoolRequest(Closure $request, Semaphore|null $semaphore): Response
     {
         if ($semaphore === null) {
             return $request($this);
