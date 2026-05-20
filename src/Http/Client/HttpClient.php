@@ -8,7 +8,6 @@ use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
-use Amp\Http\Client\Response;
 use Closure;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\HttpMethod;
@@ -121,7 +120,7 @@ class HttpClient
         Form|Arrayable|array|string|null $data = null,
         array|null $queryParameters = null
     ): Response {
-        return $this->client->request($this->createRequest($method, $url, $data, $queryParameters));
+        return new Response($this->client->request($this->createRequest($method, $url, $data, $queryParameters)));
     }
 
     private function createRequest(
