@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
 use Phenix\Data\Collection;
+use Phenix\Http\Client\Exceptions\RequestException;
 use Phenix\Http\Client\Response;
 
 it('wraps amp responses and exposes response data helpers', function (): void {
@@ -53,4 +54,56 @@ it('reports common status helpers', function (): void {
         ->and((new Response(new AmpResponse('1.1', 429, null, [], '', $request)))->tooManyRequests())->toBeTrue()
         ->and((new Response(new AmpResponse('1.1', 500, null, [], '', $request)))->serverError())->toBeTrue()
         ->and((new Response(new AmpResponse('1.1', 500, null, [], '', $request)))->failed())->toBeTrue();
+});
+
+it('throws request exceptions for failed responses', function (): void {
+    $response = new Response(new AmpResponse(
+        '1.1',
+        404,
+        null,
+        [],
+        'Missing',
+        new Request('https://phenix.test')
+    ));
+
+    try {
+        $response->throw();
+    } catch (RequestException $exception) {
+        expect($exception->response())->toBe($response)
+            ->and($exception->getCode())->toBe(404)
+            ->and($exception->getMessage())->toBe('HTTP request returned status code 404.');
+
+        return;
+    }
+
+    expect(false)->toBeTrue();
+});
+
+it('does not throw for successful responses', function (): void {
+    $response = new Response(new AmpResponse(
+        '1.1',
+        200,
+        null,
+        [],
+        'Ok',
+        new Request('https://phenix.test')
+    ));
+
+    expect($response->throw())->toBe($response)
+        ->and($response->throwIf(true))->toBe($response);
+});
+
+it('throws conditionally with throw if', function (): void {
+    $response = new Response(new AmpResponse(
+        '1.1',
+        500,
+        null,
+        [],
+        'Server error',
+        new Request('https://phenix.test')
+    ));
+
+    expect($response->throwIf(false))->toBe($response)
+        ->and(fn () => $response->throwIf(fn (Response $response): bool => $response->serverError()))
+        ->toThrow(RequestException::class);
 });

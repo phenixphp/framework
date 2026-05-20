@@ -7,6 +7,7 @@ namespace Phenix\Http\Client;
 use Amp\Http\Client\Response as ClientResponse;
 use Closure;
 use Phenix\Data\Collection;
+use Phenix\Http\Client\Exceptions\RequestException;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Util\Arr;
 
@@ -185,6 +186,25 @@ class Response
 
         return $this;
     }
+
+    public function throw(): self
+    {
+        if ($this->failed()) {
+            throw new RequestException($this);
+        }
+
+        return $this;
+    }
+
+    public function throwIf(Closure|bool $condition): self
+    {
+        $condition = $condition instanceof Closure ? $condition($this) : $condition;
+
+        if ($condition) {
+            return $this->throw();
+        }
+
+        return $this;
     }
 
     private function hasStatus(HttpStatus $status): bool
