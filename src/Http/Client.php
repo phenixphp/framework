@@ -9,11 +9,14 @@ use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\HttpMethod;
+use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
 
 class Client
 {
     protected HttpClient $client;
+
+    protected HttpClientBuilder $builder;
 
     protected Request $request;
 
@@ -21,7 +24,8 @@ class Client
 
     public function __construct()
     {
-        $this->client = HttpClientBuilder::buildDefault();
+        $this->builder = new HttpClientBuilder();
+        $this->client = $this->builder->build();
         $this->headers = [];
     }
 
@@ -55,6 +59,22 @@ class Client
     public function withToken(#[SensitiveParameter] string $token, string $type = 'Bearer'): self
     {
         $this->headers['Authorization'] = "{$type} {$token}";
+
+        return $this;
+    }
+
+    public function retry(int $times, Closure|int $sleepMilliseconds = 0, callable|null $when = null): self
+    {
+        if ($times <= 0) {
+            $this->client = $this->builder->retry(2)->build();
+
+            return $this;
+        }
+
+        $this->client = $this->builder
+            ->retry(0)
+            ->intercept(new RetryRequests($times, $sleepMilliseconds, $when))
+            ->build();
 
         return $this;
     }
@@ -95,6 +115,15 @@ class Client
         Form|Arrayable|array|string|null $data = null,
         array|null $queryParameters = null
     ): Response {
+        return $this->client->request($this->createRequest($method, $url, $data, $queryParameters));
+    }
+
+    private function createRequest(
+        HttpMethod $method,
+        UriInterface|string $url,
+        Form|Arrayable|array|string|null $data = null,
+        array|null $queryParameters = null
+    ): Request {
         $request = new Request($url, $method->value);
         $request->setHeaders($this->headers);
 
@@ -112,6 +141,6 @@ class Client
             $request->setBody($body);
         }
 
-        return $this->client->request($request);
+        return $request;
     }
 }
