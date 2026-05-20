@@ -27,7 +27,34 @@ class Client
 
     public function withHeaders(array $headers): self
     {
-        $this->headers = $headers;
+        $this->headers = [...$this->headers, ...$headers];
+
+        return $this;
+    }
+
+    public function withBasicAuth(
+        string $username,
+        #[SensitiveParameter]
+        string $password
+    ): self {
+        $this->headers['Authorization'] = 'Basic ' . base64_encode("{$username}:{$password}");
+
+        return $this;
+    }
+
+    public function withDigestAuth(
+        string $username,
+        #[SensitiveParameter]
+        string $password
+    ): self {
+        $this->headers['Authorization'] = 'Digest ' . base64_encode("{$username}:{$password}");
+
+        return $this;
+    }
+
+    public function withToken(#[SensitiveParameter] string $token, string $type = 'Bearer'): self
+    {
+        $this->headers['Authorization'] = "{$type} {$token}";
 
         return $this;
     }
