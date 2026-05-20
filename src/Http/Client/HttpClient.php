@@ -2,19 +2,25 @@
 
 declare(strict_types=1);
 
+namespace Phenix\Http\Client;
+
 use Amp\Http\Client\Form;
-use Amp\Http\Client\HttpClient;
+use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
+use Closure;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
+use SensitiveParameter;
 
-class Client
+use function is_array;
+
+class HttpClient
 {
-    protected HttpClient $client;
+    protected AmpHttpClient $client;
 
     protected HttpClientBuilder $builder;
 
