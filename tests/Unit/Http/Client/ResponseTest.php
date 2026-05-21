@@ -34,6 +34,7 @@ it('reports common status helpers', function (): void {
     $request = new Request('https://phenix.test');
 
     expect((new Response(new AmpResponse('1.1', 200, null, [], '', $request)))->ok())->toBeTrue()
+        ->and((new Response(new AmpResponse('1.1', 201, null, [], '', $request)))->created())->toBeTrue()
         ->and((new Response(new AmpResponse('1.1', 202, null, [], '', $request)))->accepted())->toBeTrue()
         ->and((new Response(new AmpResponse('1.1', 204, null, [], '', $request)))->noContent())->toBeTrue()
         ->and((new Response(new AmpResponse('1.1', 301, null, [], '', $request)))->movedPermanently())->toBeTrue()
