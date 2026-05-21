@@ -65,11 +65,7 @@ final class RetryRequests implements ApplicationInterceptor
             return false;
         }
 
-        if ($this->when !== null) {
-            return (bool) ($this->when)($exception, $request, $attempt);
-        }
-
-        return true;
+        return $this->when === null || (bool) ($this->when)($exception, $request, $attempt);
     }
 
     private function delayBeforeRetry(
