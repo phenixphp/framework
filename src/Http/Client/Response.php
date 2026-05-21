@@ -46,11 +46,9 @@ class Response
             return $data;
         }
 
-        if (! is_array($data)) {
-            return value($default);
-        }
-
-        return Arr::get($data, $key, $default);
+        return is_array($data)
+            ? Arr::get($data, $key, $default)
+            : value($default);
     }
 
     public function object(): object
