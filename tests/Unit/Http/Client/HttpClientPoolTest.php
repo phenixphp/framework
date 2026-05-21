@@ -90,3 +90,73 @@ it('limits pooled request concurrency', function (): void {
     expect($responses)->toHaveCount(4)
         ->and($maxActive)->toBeLessThanOrEqual(2);
 });
+
+it('creates request callbacks for every supported http method', function (): void {
+    $client = new class () extends HttpClient {
+        public array $calls = [];
+
+        protected function call(
+            HttpMethod $method,
+            UriInterface|string $url,
+            Form|Arrayable|array|string|null $data = null,
+            array|null $queryParameters = null
+        ): Response {
+            $this->calls[] = [
+                'method' => $method,
+                'url' => (string) $url,
+                'data' => $data,
+                'query' => $queryParameters,
+            ];
+
+            return new Response(new AmpResponse(
+                '1.1',
+                200,
+                null,
+                [],
+                (string) $url,
+                new Request((string) $url)
+            ));
+        }
+    };
+
+    $pool = new Pool();
+
+    ($pool->head('https://phenix.test/head', ['status' => 'pending']))($client);
+    ($pool->post('https://phenix.test/post', ['name' => 'Phenix']))($client);
+    ($pool->put('https://phenix.test/put', ['name' => 'Framework']))($client);
+    ($pool->patch('https://phenix.test/patch', ['enabled' => true]))($client);
+    ($pool->delete('https://phenix.test/delete', ['force' => true]))($client);
+
+    expect($client->calls)->toBe([
+        [
+            'method' => HttpMethod::HEAD,
+            'url' => 'https://phenix.test/head',
+            'data' => null,
+            'query' => ['status' => 'pending'],
+        ],
+        [
+            'method' => HttpMethod::POST,
+            'url' => 'https://phenix.test/post',
+            'data' => ['name' => 'Phenix'],
+            'query' => null,
+        ],
+        [
+            'method' => HttpMethod::PUT,
+            'url' => 'https://phenix.test/put',
+            'data' => ['name' => 'Framework'],
+            'query' => null,
+        ],
+        [
+            'method' => HttpMethod::PATCH,
+            'url' => 'https://phenix.test/patch',
+            'data' => ['enabled' => true],
+            'query' => null,
+        ],
+        [
+            'method' => HttpMethod::DELETE,
+            'url' => 'https://phenix.test/delete',
+            'data' => ['force' => true],
+            'query' => null,
+        ],
+    ]);
+});
