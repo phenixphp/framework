@@ -33,6 +33,7 @@ use Phenix\Contracts\Makeable;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
+use Phenix\Http\Client\HttpClient;
 use Phenix\Http\Constants\Protocol;
 use Phenix\Http\ErrorHandler as AppErrorHandler;
 use Phenix\Http\ExceptionHandler as AppExceptionHandler;
@@ -90,6 +91,8 @@ class App implements AppContract, Makeable
             Config::getKeyName(),
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
+
+        self::$container->add(HttpClient::class)->setShared(true);
 
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
