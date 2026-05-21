@@ -160,7 +160,8 @@ class StreamResponse
     {
         try {
             File::deleteFile($temporaryPath);
-        } catch (Throwable) {
+        } catch (Throwable $th) {
+            report($th);
         }
     }
 }
