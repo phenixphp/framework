@@ -42,6 +42,10 @@ class RetryRequests implements ApplicationInterceptor
             try {
                 return $httpClient->request($request, $cancellation);
             } catch (HttpException $exception) {
+                if ($attempt >= $this->attempts) {
+                    continue;
+                }
+
                 if (! $this->shouldRetry($exception, $request, $attempt)) {
                     throw $exception;
                 }
@@ -57,10 +61,6 @@ class RetryRequests implements ApplicationInterceptor
 
     private function shouldRetry(HttpException $exception, Request $request, int $attempt): bool
     {
-        if ($attempt >= $this->attempts) {
-            return false;
-        }
-
         if (! $request->isIdempotent() && ! $request->isUnprocessed()) {
             return false;
         }
