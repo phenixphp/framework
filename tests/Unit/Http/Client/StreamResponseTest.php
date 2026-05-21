@@ -30,6 +30,37 @@ it('streams response chunks without buffering the wrapper', function (): void {
         ->and($response->read())->toBeNull();
 });
 
+it('exposes streamed response state and headers', function (): void {
+    $redirect = new StreamResponse(new AmpResponse(
+        '1.1',
+        302,
+        null,
+        ['Location' => 'https://phenix.test/next'],
+        '',
+        new Request('https://phenix.test/download')
+    ));
+
+    $clientError = new StreamResponse(new AmpResponse(
+        '1.1',
+        404,
+        null,
+        ['Content-Type' => 'application/json'],
+        '',
+        new Request('https://phenix.test/download')
+    ));
+
+    expect($redirect->redirect())->toBeTrue()
+        ->and($redirect->successful())->toBeFalse()
+        ->and($redirect->failed())->toBeFalse()
+        ->and($redirect->header('location'))->toBe('https://phenix.test/next')
+        ->and($redirect->headers())->toBe(['location' => ['https://phenix.test/next']])
+        ->and($clientError->clientError())->toBeTrue()
+        ->and($clientError->serverError())->toBeFalse()
+        ->and($clientError->failed())->toBeTrue()
+        ->and($clientError->header('content-type'))->toBe('application/json')
+        ->and($clientError->headers())->toBe(['content-type' => ['application/json']]);
+});
+
 it('iterates streamed chunks and reports bytes read', function (): void {
     $response = new StreamResponse(new AmpResponse(
         '1.1',

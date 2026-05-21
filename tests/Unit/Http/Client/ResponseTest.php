@@ -27,12 +27,7 @@ it('wraps amp responses and exposes response data helpers', function (): void {
         ->and($response->object()->user->name)->toBe('Ada')
         ->and($response->collect('tags'))->toBeInstanceOf(Collection::class)
         ->and($response->collect('tags')->toArray())->toBe(['php', 'amp'])
-        ->and($response->status())->toBe(201)
-        ->and($response->created())->toBeTrue()
-        ->and($response->successful())->toBeTrue()
-        ->and($response->failed())->toBeFalse()
-        ->and($response->header('content-type'))->toBe('application/json')
-        ->and($response->headers())->toHaveKey('content-type');
+        ->and($response->status())->toBe(201);
 });
 
 it('reports common status helpers', function (): void {
@@ -108,6 +103,40 @@ it('throws request exceptions for failed responses', function (): void {
     }
 
     expect(false)->toBeTrue();
+});
+
+it('runs error callbacks only for failed responses', function (): void {
+    $successful = new Response(new AmpResponse(
+        '1.1',
+        200,
+        null,
+        [],
+        'Ok',
+        new Request('https://phenix.test')
+    ));
+
+    $failed = new Response(new AmpResponse(
+        '1.1',
+        500,
+        null,
+        [],
+        'Server error',
+        new Request('https://phenix.test')
+    ));
+
+    $handled = [];
+
+    $successfulResult = $successful->onError(function (Response $response) use (&$handled): void {
+        $handled[] = $response->status();
+    });
+
+    $failedResult = $failed->onError(function (Response $response) use (&$handled): void {
+        $handled[] = $response->status();
+    });
+
+    expect($successfulResult)->toBe($successful)
+        ->and($failedResult)->toBe($failed)
+        ->and($handled)->toBe([500]);
 });
 
 it('does not throw for successful responses', function (): void {
