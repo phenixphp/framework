@@ -56,6 +56,37 @@ it('reports common status helpers', function (): void {
         ->and((new Response(new AmpResponse('1.1', 500, null, [], '', $request)))->failed())->toBeTrue();
 });
 
+it('exposes response state and headers', function (): void {
+    $redirect = new Response(new AmpResponse(
+        '1.1',
+        302,
+        null,
+        ['Location' => 'https://phenix.test/next'],
+        '',
+        new Request('https://phenix.test')
+    ));
+
+    $clientError = new Response(new AmpResponse(
+        '1.1',
+        404,
+        null,
+        ['Content-Type' => 'application/json'],
+        '{"message":"Not found"}',
+        new Request('https://phenix.test/missing')
+    ));
+
+    expect($redirect->redirect())->toBeTrue()
+        ->and($redirect->successful())->toBeFalse()
+        ->and($redirect->failed())->toBeFalse()
+        ->and($redirect->header('location'))->toBe('https://phenix.test/next')
+        ->and($redirect->headers())->toBe(['location' => ['https://phenix.test/next']])
+        ->and($clientError->clientError())->toBeTrue()
+        ->and($clientError->serverError())->toBeFalse()
+        ->and($clientError->failed())->toBeTrue()
+        ->and($clientError->header('content-type'))->toBe('application/json')
+        ->and($clientError->headers())->toBe(['content-type' => ['application/json']]);
+});
+
 it('throws request exceptions for failed responses', function (): void {
     $response = new Response(new AmpResponse(
         '1.1',
