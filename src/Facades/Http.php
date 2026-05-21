@@ -20,6 +20,7 @@ use Phenix\Testing\Mockery;
  * @method static \Phenix\Http\Client\Response patch(\Psr\Http\Message\UriInterface|string $url, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string $data = [])
  * @method static \Phenix\Http\Client\Response delete(\Psr\Http\Message\UriInterface|string $url, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string $data = [])
  * @method static \Phenix\Http\Client\HttpClient withHeaders(array $headers)
+ * @method static \Phenix\Http\Client\HttpClient withClient(\Amp\Http\Client\HttpClient $client)
  * @method static \Phenix\Http\Client\HttpClient withBasicAuth(string $username, string $password)
  * @method static \Phenix\Http\Client\HttpClient withDigestAuth(string $username, string $password)
  * @method static \Phenix\Http\Client\HttpClient withToken(string $token, string $type = 'Bearer')

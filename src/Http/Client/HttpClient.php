@@ -57,6 +57,13 @@ class HttpClient
         return $this;
     }
 
+    public function withClient(AmpHttpClient $client): self
+    {
+        $this->client = $client;
+
+        return $this;
+    }
+
     public function retry(int $times, Closure|int $sleepMilliseconds = 0, callable|null $when = null): self
     {
         if ($times <= 0) {

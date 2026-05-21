@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
 use Amp\Http\Client\Connection\DefaultConnectionFactory;
+use Amp\Http\Client\DelegateHttpClient;
 use Amp\Http\Client\EventListener\LogHttpArchive;
+use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
 use Amp\Socket\ClientTlsContext;
@@ -93,6 +96,24 @@ it('accepts wrapped and amp responses from fake callbacks', function (): void {
     ));
 
     expect(Http::get('https://phenix.test/users')->body())->toBe('amp');
+});
+
+it('sends requests through the amp client when no fake is configured', function (): void {
+    $client = new HttpClient();
+
+    $delegate = new class () implements DelegateHttpClient {
+        public function request(Request $request, Cancellation $cancellation): AmpResponse
+        {
+            return new AmpResponse('1.1', 200, null, [], 'amp-response', $request);
+        }
+    };
+
+    expect($client->withClient(new AmpHttpClient($delegate, [])))->toBe($client);
+
+    $response = $client->get('https://phenix.test/live', ['page' => '1']);
+
+    expect($response)->toBeInstanceOf(Response::class)
+        ->and($response->body())->toBe('amp-response');
 });
 
 it('applies mockery expectations through the http facade', function (): void {
