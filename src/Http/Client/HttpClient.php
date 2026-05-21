@@ -8,6 +8,7 @@ use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
+use Amp\Http\Client\Response as AmpResponse;
 use Amp\Sync\LocalSemaphore;
 use Amp\Sync\Semaphore;
 use Closure;
@@ -20,6 +21,7 @@ use SensitiveParameter;
 use function Amp\async;
 use function Amp\Future\await;
 use function is_array;
+use function is_string;
 
 class HttpClient
 {
@@ -30,6 +32,13 @@ class HttpClient
     protected Request $request;
 
     protected array $headers = [];
+
+    protected Closure|null $fakeResponse = null;
+
+    /**
+     * @var array<int, array{condition: Closure, response: Closure}>
+     */
+    protected array $fakeResponses = [];
 
     public function __construct()
     {
@@ -84,6 +93,23 @@ class HttpClient
             ->retry(0)
             ->intercept(new RetryRequests($times, $sleepMilliseconds, $when))
             ->build();
+
+        return $this;
+    }
+
+    public function fake(Closure|null $response = null): self
+    {
+        $this->fakeResponse = $response ?? fn (): null => null;
+
+        return $this;
+    }
+
+    public function fakeWhen(Closure $condition, Closure $response): self
+    {
+        $this->fakeResponses[] = [
+            'condition' => $condition,
+            'response' => $response,
+        ];
 
         return $this;
     }
@@ -164,7 +190,13 @@ class HttpClient
         Form|Arrayable|array|string|null $data = null,
         array|null $queryParameters = null
     ): Response {
-        return new Response($this->client->request($this->createRequest($method, $url, $data, $queryParameters)));
+        $request = $this->createRequest($method, $url, $data, $queryParameters);
+
+        if ($fake = $this->getFakeResponse($request)) {
+            return $fake;
+        }
+
+        return new Response($this->client->request($request));
     }
 
     protected function streamCall(
@@ -212,6 +244,49 @@ class HttpClient
         }
 
         return $request;
+    }
+
+    private function getFakeResponse(Request $request): Response|null
+    {
+        foreach ($this->fakeResponses as $fake) {
+            if (($fake['condition'])($request, $this)) {
+                return $this->normalizeFakeResponse(($fake['response'])($request, $this), $request);
+            }
+        }
+
+        if ($this->fakeResponse !== null) {
+            return $this->normalizeFakeResponse(($this->fakeResponse)($request, $this), $request);
+        }
+
+        return null;
+    }
+
+    private function normalizeFakeResponse(mixed $response, Request $request): Response
+    {
+        if ($response instanceof Response) {
+            return $response;
+        }
+
+        if ($response instanceof AmpResponse) {
+            return new Response($response);
+        }
+
+        $headers = [];
+        $body = $response;
+
+        if (is_array($response)) {
+            $headers['Content-Type'] = 'application/json';
+            $body = json_encode($response);
+        }
+
+        return new Response(new AmpResponse(
+            '1.1',
+            200,
+            null,
+            $headers,
+            is_string($body) ? $body : '',
+            $request
+        ));
     }
 
     /**
