@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Client;
 
+use Amp\Http\Client\EventListener;
+use Amp\Http\Client\EventListener\LogHttpArchive;
 use Amp\Http\Client\Form;
 use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
@@ -84,15 +86,32 @@ class HttpClient
     public function retry(int $times, Closure|int $sleepMilliseconds = 0, callable|null $when = null): self
     {
         if ($times <= 0) {
-            $this->client = $this->builder->retry(2)->build();
+            $this->builder = $this->builder->retry(2);
+            $this->client = $this->builder->build();
 
             return $this;
         }
 
-        $this->client = $this->builder
+        $this->builder = $this->builder
             ->retry(0)
-            ->intercept(new RetryRequests($times, $sleepMilliseconds, $when))
-            ->build();
+            ->intercept(new RetryRequests($times, $sleepMilliseconds, $when));
+
+        $this->client = $this->builder->build();
+
+        return $this;
+    }
+
+    public function listen(EventListener $eventListener): self
+    {
+        $this->builder = $this->builder->listen($eventListener);
+        $this->client = $this->builder->build();
+
+        return $this;
+    }
+
+    public function log(string $path): self
+    {
+        $this->listen(new LogHttpArchive($path));
 
         return $this;
     }

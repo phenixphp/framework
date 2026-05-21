@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Amp\Http\Client\EventListener\LogHttpArchive;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
 use Phenix\Contracts\Arrayable;
@@ -10,6 +11,15 @@ use Phenix\Http\Client\HttpClient;
 use Phenix\Http\Client\Response;
 
 use function Amp\ByteStream\buffer;
+
+function httpClientEventListeners(HttpClient $client): array
+{
+    $clientProperty = new ReflectionProperty($client, 'client');
+    $ampClient = $clientProperty->getValue($client);
+    $eventListenersProperty = new ReflectionProperty($ampClient, 'eventListeners');
+
+    return $eventListenersProperty->getValue($ampClient);
+}
 
 it('fakes all http client requests with an empty successful response', function (): void {
     Http::fake();
@@ -203,4 +213,31 @@ it('configures retry fluently for custom and default retry attempts', function (
     expect($client->retry(3))->toBe($client)
         ->and($client->retry(0))->toBe($client)
         ->and($client->retry(-1))->toBe($client);
+});
+
+it('configures http archive logging fluently', function (): void {
+    $client = new HttpClient();
+
+    expect($client->log(sys_get_temp_dir() . '/phenix-http-client.har'))->toBe($client)
+        ->and(httpClientEventListeners($client))
+        ->toHaveCount(1)
+        ->sequence(
+            fn ($listener) => $listener->toBeInstanceOf(LogHttpArchive::class)
+        );
+});
+
+it('keeps logging listeners when retry is configured before or after logging', function (): void {
+    $firstClient = new HttpClient();
+    $secondClient = new HttpClient();
+
+    $firstClient
+        ->retry(3)
+        ->log(sys_get_temp_dir() . '/phenix-http-client-retry-first.har');
+
+    $secondClient
+        ->log(sys_get_temp_dir() . '/phenix-http-client-log-first.har')
+        ->retry(3);
+
+    expect(httpClientEventListeners($firstClient))->toHaveCount(1)
+        ->and(httpClientEventListeners($secondClient))->toHaveCount(1);
 });
