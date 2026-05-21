@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Client;
 
+use Amp\Http\Client\Connection\DefaultConnectionFactory;
+use Amp\Http\Client\Connection\UnlimitedConnectionPool;
 use Amp\Http\Client\EventListener;
 use Amp\Http\Client\EventListener\LogHttpArchive;
 use Amp\Http\Client\Form;
@@ -11,6 +13,9 @@ use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
+use Amp\Socket\Certificate;
+use Amp\Socket\ClientTlsContext;
+use Amp\Socket\ConnectContext;
 use Amp\Sync\LocalSemaphore;
 use Amp\Sync\Semaphore;
 use Closure;
@@ -114,6 +119,35 @@ class HttpClient
         $this->listen(new LogHttpArchive($path));
 
         return $this;
+    }
+
+    public function withTlsContext(ClientTlsContext $tlsContext): self
+    {
+        $connectContext = (new ConnectContext())->withTlsContext($tlsContext);
+        $connectionFactory = new DefaultConnectionFactory(connectContext: $connectContext);
+
+        $this->builder = $this->builder->usingPool(new UnlimitedConnectionPool($connectionFactory));
+        $this->client = $this->builder->build();
+
+        return $this;
+    }
+
+    public function withCertificate(
+        string $certificate,
+        string|null $key = null,
+        string|null $ca = null,
+        #[SensitiveParameter]
+        string|null $passphrase = null,
+        string $peerName = ''
+    ): self {
+        $tlsContext = (new ClientTlsContext($peerName))
+            ->withCertificate(new Certificate($certificate, $key, $passphrase));
+
+        if ($ca !== null) {
+            $tlsContext = $tlsContext->withCaFile($ca);
+        }
+
+        return $this->withTlsContext($tlsContext);
     }
 
     public function fake(Closure|null $response = null): self

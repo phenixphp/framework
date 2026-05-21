@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use Amp\Http\Client\Connection\DefaultConnectionFactory;
 use Amp\Http\Client\EventListener\LogHttpArchive;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
+use Amp\Socket\ClientTlsContext;
+use Amp\Socket\ConnectContext;
 use Phenix\Contracts\Arrayable;
 use Phenix\Facades\Http;
 use Phenix\Http\Client\HttpClient;
@@ -19,6 +22,27 @@ function httpClientEventListeners(HttpClient $client): array
     $eventListenersProperty = new ReflectionProperty($ampClient, 'eventListeners');
 
     return $eventListenersProperty->getValue($ampClient);
+}
+
+function httpClientConnectContext(HttpClient $client): ConnectContext
+{
+    $builderProperty = new ReflectionProperty($client, 'builder');
+    $builder = $builderProperty->getValue($client);
+
+    $poolProperty = new ReflectionProperty($builder, 'pool');
+    $pool = $poolProperty->getValue($builder);
+
+    $innerPoolProperty = new ReflectionProperty($pool, 'pool');
+    $innerPool = $innerPoolProperty->getValue($pool);
+
+    $connectionFactoryProperty = new ReflectionProperty($innerPool, 'connectionFactory');
+    $connectionFactory = $connectionFactoryProperty->getValue($innerPool);
+
+    expect($connectionFactory)->toBeInstanceOf(DefaultConnectionFactory::class);
+
+    $connectContextProperty = new ReflectionProperty($connectionFactory, 'connectContext');
+
+    return $connectContextProperty->getValue($connectionFactory);
 }
 
 it('fakes all http client requests with an empty successful response', function (): void {
@@ -240,4 +264,35 @@ it('keeps logging listeners when retry is configured before or after logging', f
 
     expect(httpClientEventListeners($firstClient))->toHaveCount(1)
         ->and(httpClientEventListeners($secondClient))->toHaveCount(1);
+});
+
+it('configures a custom tls context fluently', function (): void {
+    $client = new HttpClient();
+    $tlsContext = (new ClientTlsContext('api.phenix.test'))
+        ->withCaFile('/tmp/phenix-ca.pem');
+
+    expect($client->withTlsContext($tlsContext))->toBe($client)
+        ->and(httpClientConnectContext($client)->getTlsContext())->toBe($tlsContext);
+});
+
+it('configures certificate based tls fluently', function (): void {
+    $client = new HttpClient();
+
+    $client->withCertificate(
+        certificate: '/tmp/client-cert.pem',
+        key: '/tmp/client-key.pem',
+        ca: '/tmp/ca.pem',
+        passphrase: 'secret',
+        peerName: 'api.phenix.test'
+    );
+
+    $tlsContext = httpClientConnectContext($client)->getTlsContext();
+    $certificate = $tlsContext?->getCertificate();
+
+    expect($tlsContext)->toBeInstanceOf(ClientTlsContext::class)
+        ->and($tlsContext?->getPeerName())->toBe('api.phenix.test')
+        ->and($tlsContext?->getCaFile())->toBe('/tmp/ca.pem')
+        ->and($certificate?->getCertFile())->toBe('/tmp/client-cert.pem')
+        ->and($certificate?->getKeyFile())->toBe('/tmp/client-key.pem')
+        ->and($certificate?->getPassphrase())->toBe('secret');
 });
