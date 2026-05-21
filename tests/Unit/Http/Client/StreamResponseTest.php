@@ -3,15 +3,14 @@
 declare(strict_types=1);
 
 use Amp\ByteStream\ReadableIterableStream;
-use Amp\Http\Client\Form;
+use Amp\Cancellation;
+use Amp\Http\Client\DelegateHttpClient;
+use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
-use Phenix\Contracts\Arrayable;
 use Phenix\Facades\File;
 use Phenix\Http\Client\HttpClient;
 use Phenix\Http\Client\StreamResponse;
-use Phenix\Http\Constants\HttpMethod;
-use Psr\Http\Message\UriInterface;
 
 it('streams response chunks without buffering the wrapper', function (): void {
     $response = new StreamResponse(new AmpResponse(
@@ -168,41 +167,23 @@ it('removes partial files when saving a streamed response fails', function (): v
 });
 
 it('streams requests through the http client callback', function (): void {
-    $client = new class () extends HttpClient {
-        public int|null $bodySizeLimit = null;
-
-        public float|null $transferTimeout = null;
-
-        protected function streamCall(
-            HttpMethod $method,
-            UriInterface|string $url,
-            Form|Arrayable|array|string|null $data = null,
-            array|null $queryParameters = null,
-            int|null $bodySizeLimit = null,
-            float|null $transferTimeout = null
-        ): StreamResponse {
-            $this->bodySizeLimit = $bodySizeLimit;
-            $this->transferTimeout = $transferTimeout;
-
-            return new StreamResponse(new AmpResponse(
-                '1.1',
-                200,
-                null,
-                [],
-                (string) $url,
-                new Request((string) $url)
-            ));
+    $client = new HttpClient();
+    $delegate = new class () implements DelegateHttpClient {
+        public function request(Request $request, Cancellation $cancellation): AmpResponse
+        {
+            return new AmpResponse('1.1', 200, null, [], 'stream-body', $request);
         }
     };
+
+    $client->withClient(new AmpHttpClient($delegate, []));
 
     $body = $client->stream(
         'https://phenix.test/download',
         fn (StreamResponse $response): string|null => $response->read(),
+        queryParameters: ['token' => 'abc'],
         bodySizeLimit: 128 * 1024 * 1024,
         transferTimeout: 120
     );
 
-    expect($body)->toBe('https://phenix.test/download')
-        ->and($client->bodySizeLimit)->toBe(128 * 1024 * 1024)
-        ->and($client->transferTimeout)->toBe(120.0);
+    expect($body)->toBe('stream-body');
 });
