@@ -12,7 +12,7 @@ use Phenix\Http\Client\Response;
 use function is_array;
 use function is_string;
 
-trait IntersectRequests
+trait CaptureRequests
 {
     protected Closure|null $fakeResponse = null;
 

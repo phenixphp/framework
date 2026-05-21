@@ -19,7 +19,7 @@ use Amp\Sync\LocalSemaphore;
 use Amp\Sync\Semaphore;
 use Closure;
 use Phenix\Contracts\Arrayable;
-use Phenix\Http\Client\Concerns\IntersectRequests;
+use Phenix\Http\Client\Concerns\CaptureRequests;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
@@ -31,7 +31,7 @@ use function is_array;
 
 class HttpClient
 {
-    use IntersectRequests;
+    use CaptureRequests;
 
     protected AmpHttpClient $client;
 
