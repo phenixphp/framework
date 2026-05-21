@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phenix\Http\Interceptors;
+namespace Phenix\Http\Client\Interceptors;
 
 use Amp\Cancellation;
 use Amp\Http\Client\ApplicationInterceptor;

@@ -21,8 +21,8 @@ use Closure;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Client\Concerns\CaptureRequests;
 use Phenix\Http\Client\Concerns\HasAuthorization;
+use Phenix\Http\Client\Interceptors\RetryRequests;
 use Phenix\Http\Constants\HttpMethod;
-use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
 use SensitiveParameter;
 

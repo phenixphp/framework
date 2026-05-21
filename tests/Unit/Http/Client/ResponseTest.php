@@ -30,6 +30,15 @@ it('wraps amp responses and exposes response data helpers', function (): void {
         ->and($response->status())->toBe(201);
 });
 
+it('returns defaults for invalid json and full decoded payloads without a key', function (): void {
+    $request = new Request('https://phenix.test');
+    $invalidJson = new Response(new AmpResponse('1.1', 200, null, [], 'invalid-json', $request));
+    $validJson = new Response(new AmpResponse('1.1', 200, null, [], '{"active":true}', $request));
+
+    expect($invalidJson->json(default: 'fallback'))->toBe('fallback')
+        ->and($validJson->json())->toBe(['active' => true]);
+});
+
 it('reports common status helpers', function (): void {
     $request = new Request('https://phenix.test');
 

@@ -9,7 +9,7 @@ use Amp\Http\Client\Internal\EventInvoker;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Amp\NullCancellation;
-use Phenix\Http\Interceptors\RetryRequests;
+use Phenix\Http\Client\Interceptors\RetryRequests;
 
 it('retries failed requests until they succeed', function (): void {
     $request = new Request('https://phenix.test');
