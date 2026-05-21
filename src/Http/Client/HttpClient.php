@@ -20,6 +20,7 @@ use Amp\Sync\Semaphore;
 use Closure;
 use Phenix\Contracts\Arrayable;
 use Phenix\Http\Client\Concerns\CaptureRequests;
+use Phenix\Http\Client\Concerns\HasAuthorization;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Http\Interceptors\RetryRequests;
 use Psr\Http\Message\UriInterface;
@@ -32,6 +33,7 @@ use function is_array;
 class HttpClient
 {
     use CaptureRequests;
+    use HasAuthorization;
 
     protected AmpHttpClient $client;
 
@@ -51,33 +53,6 @@ class HttpClient
     public function withHeaders(array $headers): self
     {
         $this->headers = [...$this->headers, ...$headers];
-
-        return $this;
-    }
-
-    public function withBasicAuth(
-        string $username,
-        #[SensitiveParameter]
-        string $password
-    ): self {
-        $this->headers['Authorization'] = 'Basic ' . base64_encode("{$username}:{$password}");
-
-        return $this;
-    }
-
-    public function withDigestAuth(
-        string $username,
-        #[SensitiveParameter]
-        string $password
-    ): self {
-        $this->headers['Authorization'] = 'Digest ' . base64_encode("{$username}:{$password}");
-
-        return $this;
-    }
-
-    public function withToken(#[SensitiveParameter] string $token, string $type = 'Bearer'): self
-    {
-        $this->headers['Authorization'] = "{$type} {$token}";
 
         return $this;
     }
