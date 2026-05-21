@@ -16,16 +16,19 @@ use Phenix\Http\Constants\HttpMethod;
 use function Amp\ByteStream\buffer;
 
 it('streams response chunks without buffering the wrapper', function (): void {
-    $response = new StreamResponse(new AmpResponse(
+    $ampResponse = new AmpResponse(
         '1.1',
         200,
         null,
         ['Content-Type' => 'application/octet-stream'],
         'phenix-stream',
         new Request('https://phenix.test/download')
-    ));
+    );
 
-    expect($response->status())->toBe(200)
+    $response = new StreamResponse($ampResponse);
+
+    expect($response->getClientResponse())->toBe($ampResponse)
+        ->and($response->status())->toBe(200)
         ->and($response->ok())->toBeTrue()
         ->and($response->header('content-type'))->toBe('application/octet-stream')
         ->and($response->read())->toBe('phenix-stream')
