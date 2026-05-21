@@ -14,7 +14,7 @@ use Closure;
 
 use function Amp\delay;
 
-final class RetryRequests implements ApplicationInterceptor
+class RetryRequests implements ApplicationInterceptor
 {
     private int $attempts;
 
