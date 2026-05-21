@@ -19,6 +19,7 @@ use Phenix\Testing\Mockery;
  * @method static \Phenix\Http\Client\Response put(\Psr\Http\Message\UriInterface|string $url, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string $data = [])
  * @method static \Phenix\Http\Client\Response patch(\Psr\Http\Message\UriInterface|string $url, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string $data = [])
  * @method static \Phenix\Http\Client\Response delete(\Psr\Http\Message\UriInterface|string $url, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string $data = [])
+ * @method static mixed stream(\Psr\Http\Message\UriInterface|string $url, \Closure|null $callback = null, array|null $queryParameters = null, int|null $bodySizeLimit = null, float|null $transferTimeout = null, \Phenix\Http\Constants\HttpMethod $method = \Phenix\Http\Constants\HttpMethod::GET, \Amp\Http\Client\Form|\Phenix\Contracts\Arrayable|array|string|null $data = null)
  * @method static \Phenix\Http\Client\HttpClient withHeaders(array $headers)
  * @method static \Phenix\Http\Client\HttpClient withClient(\Amp\Http\Client\HttpClient $client)
  * @method static \Phenix\Http\Client\HttpClient withBasicAuth(string $username, string $password)

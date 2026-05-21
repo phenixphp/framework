@@ -11,6 +11,9 @@ use Amp\Http\Client\Response as AmpResponse;
 use Phenix\Facades\File;
 use Phenix\Http\Client\HttpClient;
 use Phenix\Http\Client\StreamResponse;
+use Phenix\Http\Constants\HttpMethod;
+
+use function Amp\ByteStream\buffer;
 
 it('streams response chunks without buffering the wrapper', function (): void {
     $response = new StreamResponse(new AmpResponse(
@@ -168,9 +171,23 @@ it('removes partial files when saving a streamed response fails', function (): v
 
 it('streams requests through the http client callback', function (): void {
     $client = new HttpClient();
-    $delegate = new class () implements DelegateHttpClient {
+    $captured = [];
+
+    $delegate = new class ($captured) implements DelegateHttpClient {
+        public function __construct(private array &$captured)
+        {
+        }
+
         public function request(Request $request, Cancellation $cancellation): AmpResponse
         {
+            $this->captured[] = [
+                'method' => $request->getMethod(),
+                'uri' => (string) $request->getUri(),
+                'body' => buffer($request->getBody()->getContent()),
+                'bodySizeLimit' => $request->getBodySizeLimit(),
+                'transferTimeout' => $request->getTransferTimeout(),
+            ];
+
             return new AmpResponse('1.1', 200, null, [], 'stream-body', $request);
         }
     };
@@ -185,5 +202,29 @@ it('streams requests through the http client callback', function (): void {
         transferTimeout: 120
     );
 
-    expect($body)->toBe('stream-body');
+    $postBody = $client->stream(
+        'https://phenix.test/export',
+        fn (StreamResponse $response): string|null => $response->read(),
+        method: HttpMethod::POST,
+        data: ['format' => 'csv']
+    );
+
+    expect($body)->toBe('stream-body')
+        ->and($postBody)->toBe('stream-body')
+        ->and($captured)->toBe([
+            [
+                'method' => 'GET',
+                'uri' => 'https://phenix.test/download?token=abc',
+                'body' => '',
+                'bodySizeLimit' => 128 * 1024 * 1024,
+                'transferTimeout' => 120.0,
+            ],
+            [
+                'method' => 'POST',
+                'uri' => 'https://phenix.test/export',
+                'body' => '{"format":"csv"}',
+                'bodySizeLimit' => 10485760,
+                'transferTimeout' => 10.0,
+            ],
+        ]);
 });

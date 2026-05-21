@@ -161,11 +161,14 @@ class HttpClient
         Closure|null $callback = null,
         array|null $queryParameters = null,
         int|null $bodySizeLimit = null,
-        float|null $transferTimeout = null
+        float|null $transferTimeout = null,
+        HttpMethod $method = HttpMethod::GET,
+        Form|Arrayable|array|string|null $data = null
     ): mixed {
         $response = $this->streamCall(
-            method: HttpMethod::GET,
+            method: $method,
             url: $url,
+            data: $data,
             queryParameters: $queryParameters,
             bodySizeLimit: $bodySizeLimit,
             transferTimeout: $transferTimeout
