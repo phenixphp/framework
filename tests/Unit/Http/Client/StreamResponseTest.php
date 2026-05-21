@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Amp\ByteStream\ReadableIterableStream;
 use Amp\Http\Client\Form;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
@@ -49,6 +50,42 @@ it('iterates streamed chunks and reports bytes read', function (): void {
         ->and($chunks)->toBe([['abc', 3]]);
 });
 
+it('iterates streamed chunks and reports cumulative bytes read', function (): void {
+    $response = new StreamResponse(new AmpResponse(
+        '1.1',
+        200,
+        null,
+        [],
+        new ReadableIterableStream(['abc', 'de']),
+        new Request('https://phenix.test/download')
+    ));
+
+    $chunks = [];
+
+    $response->each(function (string $chunk, int $totalBytesRead) use (&$chunks): void {
+        $chunks[] = [$chunk, $totalBytesRead];
+    });
+
+    expect($chunks)->toBe([['abc', 3], ['de', 5]]);
+});
+
+it('prevents nested reads while iterating streamed chunks', function (): void {
+    $response = new StreamResponse(new AmpResponse(
+        '1.1',
+        200,
+        null,
+        [],
+        new ReadableIterableStream(['abc', 'de']),
+        new Request('https://phenix.test/download')
+    ));
+
+    expect(fn () => $response->each(
+        fn (string $chunk, int $bytes, StreamResponse $stream): string|null => $stream->read()
+    ))->toThrow(LogicException::class);
+
+    expect($response->read())->toBe('de');
+});
+
 it('saves streamed responses to disk', function (): void {
     $response = new StreamResponse(new AmpResponse(
         '1.1',
@@ -71,6 +108,32 @@ it('saves streamed responses to disk', function (): void {
         ->and($progress)->toBe([13]);
 
     unlink($path);
+});
+
+it('removes partial files when saving a streamed response fails', function (): void {
+    $response = new StreamResponse(new AmpResponse(
+        '1.1',
+        200,
+        null,
+        [],
+        new ReadableIterableStream(['partial', 'body']),
+        new Request('https://phenix.test/download')
+    ));
+
+    $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phenix-stream-' . bin2hex(random_bytes(8));
+    mkdir($directory);
+
+    $path = $directory . DIRECTORY_SEPARATOR . 'download.txt';
+
+    expect(fn () => $response->save(
+        $path,
+        fn (): never => throw new RuntimeException('Progress failed.')
+    ))->toThrow(RuntimeException::class, 'Progress failed.');
+
+    expect(file_exists($path))->toBeFalse()
+        ->and(glob($directory . DIRECTORY_SEPARATOR . '.phenix-stream-*.tmp'))->toBe([]);
+
+    rmdir($directory);
 });
 
 it('streams requests through the http client callback', function (): void {

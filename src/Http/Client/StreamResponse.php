@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 namespace Phenix\Http\Client;
 
+use Amp\ByteStream\Payload;
 use Amp\Http\Client\Response as ClientResponse;
 use Closure;
+use LogicException;
 use Phenix\Facades\File;
 use Phenix\Http\Constants\HttpStatus;
+use Throwable;
 
 use function strlen;
 
 class StreamResponse
 {
+    private Payload $body;
+
+    private bool $readLocked = false;
+
     public function __construct(private readonly ClientResponse $response)
     {
+        $this->body = $response->getBody();
     }
 
     public function getClientResponse(): ClientResponse
@@ -24,16 +32,27 @@ class StreamResponse
 
     public function read(): string|null
     {
-        return $this->response->getBody()->read();
+        if ($this->readLocked) {
+            throw new LogicException('The response stream cannot be read from inside a streaming callback.');
+        }
+
+        return $this->body->read();
     }
 
     public function each(Closure $closure): self
     {
-        $bytes = 0;
+        $totalBytesRead = 0;
 
         while (($chunk = $this->read()) !== null) {
-            $bytes += strlen($chunk);
-            $closure($chunk, $bytes, $this);
+            $totalBytesRead += strlen($chunk);
+
+            $this->readLocked = true;
+
+            try {
+                $closure($chunk, $totalBytesRead, $this);
+            } finally {
+                $this->readLocked = false;
+            }
         }
 
         return $this;
@@ -41,23 +60,45 @@ class StreamResponse
 
     public function save(string $path, Closure|null $progress = null): int
     {
-        $file = File::openFile($path, 'w');
-        $bytes = 0;
+        $completed = false;
+        $totalBytesWritten = 0;
+        $temporaryPath = $this->temporaryPath($path);
+        $file = File::openFile($temporaryPath, 'w');
 
         try {
             while (($chunk = $this->read()) !== null) {
                 $file->write($chunk);
-                $bytes += strlen($chunk);
+                $totalBytesWritten += strlen($chunk);
 
                 if ($progress !== null) {
-                    $progress($bytes, $chunk, $this);
+                    $this->readLocked = true;
+
+                    try {
+                        $progress($totalBytesWritten, $chunk, $this);
+                    } finally {
+                        $this->readLocked = false;
+                    }
                 }
             }
+
+            $completed = true;
         } finally {
             $file->close();
+
+            if (! $completed) {
+                $this->discardTemporaryFile($temporaryPath);
+            }
         }
 
-        return $bytes;
+        try {
+            File::move($temporaryPath, $path);
+        } catch (Throwable $exception) {
+            $this->discardTemporaryFile($temporaryPath);
+
+            throw $exception;
+        }
+
+        return $totalBytesWritten;
     }
 
     public function status(): int
@@ -108,5 +149,18 @@ class StreamResponse
     private function hasStatus(HttpStatus $status): bool
     {
         return $this->status() === $status->value;
+    }
+
+    private function temporaryPath(string $path): string
+    {
+        return dirname($path) . DIRECTORY_SEPARATOR . '.phenix-stream-' . bin2hex(random_bytes(8)) . '.tmp';
+    }
+
+    private function discardTemporaryFile(string $temporaryPath): void
+    {
+        try {
+            File::deleteFile($temporaryPath);
+        } catch (Throwable) {
+        }
     }
 }
