@@ -7,6 +7,7 @@ namespace Phenix\Http\Client\Concerns;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
 use Closure;
+use Phenix\Http\Client\Constants\ProtocolVersion;
 use Phenix\Http\Client\Response;
 
 use function is_array;
@@ -72,7 +73,7 @@ trait CaptureRequests
         }
 
         return new Response(new AmpResponse(
-            '1.1',
+            ProtocolVersion::V1_1->value,
             200,
             null,
             $headers,
