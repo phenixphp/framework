@@ -23,7 +23,6 @@ use Phenix\Testing\Mockery;
  * @method static \Phenix\Http\Client\HttpClient withHeaders(array $headers)
  * @method static \Phenix\Http\Client\HttpClient withClient(\Amp\Http\Client\HttpClient $client)
  * @method static \Phenix\Http\Client\HttpClient withBasicAuth(string $username, string $password)
- * @method static \Phenix\Http\Client\HttpClient withDigestAuth(string $username, string $password)
  * @method static \Phenix\Http\Client\HttpClient withToken(string $token, string $type = 'Bearer')
  * @method static \Phenix\Http\Client\HttpClient retry(int $times, \Closure|int $sleepMilliseconds = 0, callable|null $when = null)
  * @method static \Phenix\Http\Client\HttpClient listen(\Amp\Http\Client\EventListener $eventListener)

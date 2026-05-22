@@ -203,10 +203,6 @@ it('applies headers and authentication helpers to requests', function (): void {
         ->get('https://phenix.test/basic');
 
     $client
-        ->withDigestAuth('digest-user', 'digest-secret')
-        ->get('https://phenix.test/digest');
-
-    $client
         ->withToken('token-value', 'Token')
         ->get('https://phenix.test/token');
 
@@ -215,11 +211,6 @@ it('applies headers and authentication helpers to requests', function (): void {
             'accept' => 'application/json',
             'trace' => 'trace-1',
             'authorization' => 'Basic ' . base64_encode('phenix:secret'),
-        ],
-        [
-            'accept' => 'application/json',
-            'trace' => 'trace-1',
-            'authorization' => 'Digest ' . base64_encode('digest-user:digest-secret'),
         ],
         [
             'accept' => 'application/json',
