@@ -92,7 +92,7 @@ class App implements AppContract, Makeable
             \Phenix\Runtime\Config::build(...)
         )->setShared(true);
 
-        self::$container->add(HttpClient::class)->setShared(true);
+        self::$container->add(HttpClient::class);
 
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
