@@ -84,6 +84,7 @@ class HttpClientTestLogger
                 return true;
             }
         }
+
         return $this->faking;
     }
 
