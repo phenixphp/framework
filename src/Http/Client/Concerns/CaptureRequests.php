@@ -5,80 +5,70 @@ declare(strict_types=1);
 namespace Phenix\Http\Client\Concerns;
 
 use Amp\Http\Client\Request;
-use Amp\Http\Client\Response as AmpResponse;
 use Closure;
-use Phenix\Http\Client\Constants\ProtocolVersion;
+use Phenix\App;
+use Phenix\Data\Collection;
+use Phenix\Http\Client\HttpClientTestLogger;
 use Phenix\Http\Client\Response;
-
-use function is_array;
-use function is_string;
+use Phenix\Http\Client\StreamResponse;
 
 trait CaptureRequests
 {
-    protected Closure|null $fakeResponse = null;
+    protected HttpClientTestLogger|null $requestLogger = null;
 
-    /**
-     * @var array<int, array{condition: Closure, response: Closure}>
-     */
-    protected array $fakeResponses = [];
-
-    public function fake(Closure|null $response = null): self
+    public function fake(Closure|null $response = null): void
     {
-        $this->fakeResponse = $response ?? fn (): null => null;
+        if (App::isProduction()) {
+            return;
+        }
 
-        return $this;
+        $this->getRequestLogger()->fake($response);
     }
 
-    public function fakeWhen(Closure $condition, Closure $response): self
+    public function fakeWhen(Closure $condition, Closure $response): void
     {
-        $this->fakeResponses[] = [
-            'condition' => $condition,
-            'response' => $response,
-        ];
+        if (App::isProduction()) {
+            return;
+        }
 
-        return $this;
+        $this->getRequestLogger()->fakeWhen($condition, $response);
+    }
+
+    /**
+     * @return Collection<Request>
+     */
+    public function getRequestLog(): Collection
+    {
+        return $this->getRequestLogger()->getRequestLog();
+    }
+
+    public function resetRequestLog(): void
+    {
+        $this->getRequestLogger()->resetRequestLog();
+    }
+
+    public function resetFaking(): void
+    {
+        $this->getRequestLogger()->resetFaking();
+    }
+
+    protected function getRequestLogger(): HttpClientTestLogger
+    {
+        return $this->requestLogger ??= App::make(HttpClientTestLogger::class);
+    }
+
+    protected function recordRequest(Request $request): void
+    {
+        $this->getRequestLogger()->record($request);
     }
 
     protected function getFakeResponse(Request $request): Response|null
     {
-        foreach ($this->fakeResponses as $fake) {
-            if (($fake['condition'])($request, $this)) {
-                return $this->normalizeFakeResponse(($fake['response'])($request, $this), $request);
-            }
-        }
-
-        if ($this->fakeResponse !== null) {
-            return $this->normalizeFakeResponse(($this->fakeResponse)($request, $this), $request);
-        }
-
-        return null;
+        return $this->getRequestLogger()->getFakeResponse($request, $this);
     }
 
-    protected function normalizeFakeResponse(mixed $response, Request $request): Response
+    protected function getFakeStreamResponse(Request $request): StreamResponse|null
     {
-        if ($response instanceof Response) {
-            return $response;
-        }
-
-        if ($response instanceof AmpResponse) {
-            return new Response($response);
-        }
-
-        $headers = [];
-        $body = $response;
-
-        if (is_array($response)) {
-            $headers['Content-Type'] = 'application/json';
-            $body = json_encode($response);
-        }
-
-        return new Response(new AmpResponse(
-            ProtocolVersion::V1_1->value,
-            200,
-            null,
-            $headers,
-            is_string($body) ? $body : '',
-            $request
-        ));
+        return $this->getRequestLogger()->getFakeStreamResponse($request, $this);
     }
 }

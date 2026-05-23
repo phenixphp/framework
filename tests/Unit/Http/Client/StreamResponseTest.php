@@ -9,6 +9,7 @@ use Amp\Http\Client\HttpClient as AmpHttpClient;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response as AmpResponse;
 use Phenix\Facades\File;
+use Phenix\Facades\Http;
 use Phenix\Http\Client\HttpClient;
 use Phenix\Http\Client\StreamResponse;
 use Phenix\Http\Constants\HttpMethod;
@@ -230,4 +231,73 @@ it('streams requests through the http client callback', function (): void {
                 'transferTimeout' => 10.0,
             ],
         ]);
+});
+
+it('fakes facade streamed requests with the global fake response', function (): void {
+    Http::fake(fn (Request $request): string => 'fake stream: ' . $request->getMethod());
+
+    $response = Http::stream('https://phenix.test/download');
+
+    expect($response)->toBeInstanceOf(StreamResponse::class)
+        ->and($response->read())->toBe('fake stream: GET')
+        ->and($response->read())->toBeNull()
+        ->and(Http::getRequestLog())->toHaveCount(1)
+        ->and((string) Http::getRequestLog()->first()->getUri())->toBe('https://phenix.test/download');
+});
+
+it('prefers facade conditional fakes for streamed requests', function (): void {
+    Http::fake(fn (): string => 'fallback-stream');
+    Http::fakeWhen(
+        fn (Request $request): bool => str_contains((string) $request->getUri(), '/download'),
+        fn (): string => 'matched-stream'
+    );
+
+    $matched = Http::stream('https://phenix.test/download');
+    $fallback = Http::stream('https://phenix.test/archive');
+
+    expect($matched)->toBeInstanceOf(StreamResponse::class)
+        ->and($matched->read())->toBe('matched-stream')
+        ->and($fallback)->toBeInstanceOf(StreamResponse::class)
+        ->and($fallback->read())->toBe('fallback-stream');
+});
+
+it('fakes streamed requests before touching the amp client', function (): void {
+    $client = new HttpClient();
+
+    $delegate = new class () implements DelegateHttpClient {
+        public function request(Request $request, Cancellation $cancellation): AmpResponse
+        {
+            throw new RuntimeException('The real Amp client should not receive faked stream requests.');
+        }
+    };
+
+    $client
+        ->withClient(new AmpHttpClient($delegate, []))
+        ->fake(function (Request $request): array {
+            return [
+                'method' => $request->getMethod(),
+                'uri' => (string) $request->getUri(),
+                'body' => buffer($request->getBody()->getContent()),
+                'bodySizeLimit' => $request->getBodySizeLimit(),
+                'transferTimeout' => $request->getTransferTimeout(),
+            ];
+        });
+
+    $body = $client->stream(
+        'https://phenix.test/export',
+        fn (StreamResponse $response): string|null => $response->read(),
+        queryParameters: ['token' => 'abc'],
+        bodySizeLimit: 128 * 1024 * 1024,
+        transferTimeout: 120,
+        method: HttpMethod::POST,
+        data: ['format' => 'csv']
+    );
+
+    expect(json_decode($body, true))->toBe([
+        'method' => 'POST',
+        'uri' => 'https://phenix.test/export?token=abc',
+        'body' => '{"format":"csv"}',
+        'bodySizeLimit' => 128 * 1024 * 1024,
+        'transferTimeout' => 120,
+    ]);
 });

@@ -29,8 +29,11 @@ use Phenix\Testing\Mockery;
  * @method static \Phenix\Http\Client\HttpClient log(string $path)
  * @method static \Phenix\Http\Client\HttpClient withTlsContext(\Amp\Socket\ClientTlsContext $tlsContext)
  * @method static \Phenix\Http\Client\HttpClient withCertificate(string $certificate, string|null $key = null, string|null $ca = null, string|null $passphrase = null, string $peerName = '')
- * @method static \Phenix\Http\Client\HttpClient fake(\Closure|null $response = null)
- * @method static \Phenix\Http\Client\HttpClient fakeWhen(\Closure $condition, \Closure $response)
+ * @method static void fake(\Closure|null $response = null)
+ * @method static void fakeWhen(\Closure $condition, \Closure $response)
+ * @method static \Phenix\Data\Collection getRequestLog()
+ * @method static void resetRequestLog()
+ * @method static void resetFaking()
  *
  * @see \Phenix\Http\Client\HttpClient
  */

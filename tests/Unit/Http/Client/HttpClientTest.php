@@ -90,6 +90,7 @@ it('accepts wrapped and amp responses from fake callbacks', function (): void {
 
 it('sends requests through the amp client when no fake is configured', function (): void {
     $client = new HttpClient();
+    $client->resetFaking();
 
     $delegate = new class () implements DelegateHttpClient {
         public function request(Request $request, Cancellation $cancellation): AmpResponse
@@ -103,7 +104,8 @@ it('sends requests through the amp client when no fake is configured', function 
     $response = $client->get('https://phenix.test/live', ['page' => '1']);
 
     expect($response)->toBeInstanceOf(Response::class)
-        ->and($response->body())->toBe('amp-response');
+        ->and($response->body())->toBe('amp-response')
+        ->and($client->getRequestLog())->toBeEmpty();
 });
 
 it('applies mockery expectations through the http facade', function (): void {

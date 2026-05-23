@@ -206,6 +206,7 @@ class HttpClient
         array|null $queryParameters = null
     ): Response {
         $request = $this->createRequest($method, $url, $data, $queryParameters);
+        $this->recordRequest($request);
 
         if ($fake = $this->getFakeResponse($request)) {
             return $fake;
@@ -230,6 +231,12 @@ class HttpClient
 
         if ($transferTimeout !== null) {
             $request->setTransferTimeout($transferTimeout);
+        }
+
+        $this->recordRequest($request);
+
+        if ($fake = $this->getFakeStreamResponse($request)) {
+            return $fake;
         }
 
         return new StreamResponse($this->client->request($request));
