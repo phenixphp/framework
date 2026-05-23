@@ -159,6 +159,7 @@ it('builds write requests with the expected methods and bodies', function (): vo
         $requests[] = [
             'method' => $request->getMethod(),
             'body' => buffer($request->getBody()->getContent()),
+            'contentType' => $request->getHeader('content-type'),
         ];
 
         return 'ok';
@@ -177,11 +178,28 @@ it('builds write requests with the expected methods and bodies', function (): vo
     $client->delete('https://phenix.test/users/1', ['force' => true]);
 
     expect($requests)->toBe([
-        ['method' => 'POST', 'body' => '{"name":"Taylor"}'],
-        ['method' => 'PUT', 'body' => '{"arrayable":true}'],
-        ['method' => 'PATCH', 'body' => 'patched'],
-        ['method' => 'DELETE', 'body' => '{"force":true}'],
+        ['method' => 'POST', 'body' => '{"name":"Taylor"}', 'contentType' => 'application/json'],
+        ['method' => 'PUT', 'body' => '{"arrayable":true}', 'contentType' => 'application/json'],
+        ['method' => 'PATCH', 'body' => 'patched', 'contentType' => null],
+        ['method' => 'DELETE', 'body' => '{"force":true}', 'contentType' => 'application/json'],
     ]);
+});
+
+it('preserves explicit content type headers for json request bodies', function (): void {
+    $client = new HttpClient();
+    $contentTypes = [];
+
+    $client->fake(function (Request $request) use (&$contentTypes): string {
+        $contentTypes[] = $request->getHeader('content-type');
+
+        return 'ok';
+    });
+
+    $client
+        ->withHeaders(['Content-Type' => 'application/vnd.api+json'])
+        ->post('https://phenix.test/users', ['name' => 'Taylor']);
+
+    expect($contentTypes)->toBe(['application/vnd.api+json']);
 });
 
 it('applies headers and authentication helpers to requests', function (): void {

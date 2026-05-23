@@ -188,6 +188,7 @@ it('streams requests through the http client callback', function (): void {
                 'method' => $request->getMethod(),
                 'uri' => (string) $request->getUri(),
                 'body' => buffer($request->getBody()->getContent()),
+                'contentType' => $request->getHeader('content-type'),
                 'bodySizeLimit' => $request->getBodySizeLimit(),
                 'transferTimeout' => $request->getTransferTimeout(),
             ];
@@ -220,6 +221,7 @@ it('streams requests through the http client callback', function (): void {
                 'method' => 'GET',
                 'uri' => 'https://phenix.test/download?token=abc',
                 'body' => '',
+                'contentType' => null,
                 'bodySizeLimit' => 128 * 1024 * 1024,
                 'transferTimeout' => 120.0,
             ],
@@ -227,6 +229,7 @@ it('streams requests through the http client callback', function (): void {
                 'method' => 'POST',
                 'uri' => 'https://phenix.test/export',
                 'body' => '{"format":"csv"}',
+                'contentType' => 'application/json',
                 'bodySizeLimit' => 10485760,
                 'transferTimeout' => 10.0,
             ],
@@ -278,6 +281,7 @@ it('fakes streamed requests before touching the amp client', function (): void {
                 'method' => $request->getMethod(),
                 'uri' => (string) $request->getUri(),
                 'body' => buffer($request->getBody()->getContent()),
+                'contentType' => $request->getHeader('content-type'),
                 'bodySizeLimit' => $request->getBodySizeLimit(),
                 'transferTimeout' => $request->getTransferTimeout(),
             ];
@@ -297,6 +301,7 @@ it('fakes streamed requests before touching the amp client', function (): void {
         'method' => 'POST',
         'uri' => 'https://phenix.test/export?token=abc',
         'body' => '{"format":"csv"}',
+        'contentType' => 'application/json',
         'bodySizeLimit' => 128 * 1024 * 1024,
         'transferTimeout' => 120,
     ]);

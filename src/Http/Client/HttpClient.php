@@ -257,8 +257,8 @@ class HttpClient
 
         if ($data !== null) {
             $body = match (true) {
-                $data instanceof Arrayable => json_encode($data->toArray()),
-                is_array($data) => json_encode($data),
+                $data instanceof Arrayable => $this->jsonBody($request, $data->toArray()),
+                is_array($data) => $this->jsonBody($request, $data),
                 default => $data,
             };
 
@@ -266,6 +266,15 @@ class HttpClient
         }
 
         return $request;
+    }
+
+    protected function jsonBody(Request $request, array $data): string
+    {
+        if (! $request->hasHeader('content-type')) {
+            $request->setHeader('Content-Type', 'application/json');
+        }
+
+        return json_encode($data) ?? '';
     }
 
     /**
