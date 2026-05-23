@@ -35,8 +35,9 @@ class RetryRequests implements ApplicationInterceptor
         DelegateHttpClient $httpClient
     ): Response {
         $exception = null;
+        $attempt = 1;
 
-        for ($attempt = 1; $attempt <= $this->attempts; $attempt++) {
+        do {
             $clonedRequest = clone $request;
 
             try {
@@ -54,7 +55,7 @@ class RetryRequests implements ApplicationInterceptor
 
                 $request = $clonedRequest;
             }
-        }
+        } while (++$attempt <= $this->attempts);
 
         throw $exception;
     }
