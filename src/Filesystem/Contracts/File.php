@@ -17,4 +17,6 @@ interface File
     public function isFile(string $path): bool;
 
     public function createDirectory(string $path, int $mode = 0777): void;
+
+    public function move(string $from, string $to): void;
 }

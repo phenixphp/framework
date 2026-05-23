@@ -14,6 +14,7 @@ use Phenix\Runtime\Facade;
  * @method static bool isDirectory(string $path)
  * @method static bool isFile(string $path)
  * @method static void createDirectory(string $path, int $mode = 0755)
+ * @method static void move(string $from, string $to)
  * @method static \Amp\File\File openFile(string $path, string $mode = 'w')
  * @method static int getCreationTime(string $path)
  * @method static int getModificationTime(string $path)

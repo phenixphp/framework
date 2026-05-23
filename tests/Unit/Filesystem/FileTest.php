@@ -32,6 +32,25 @@ it('writes files successfully', function () {
     expect(file_get_contents($path))->toBe('php');
 });
 
+it('moves files successfully', function () {
+    $from = sys_get_temp_dir() . '/file.txt';
+    $to = sys_get_temp_dir() . '/moved-file.txt';
+
+    if (file_exists($to)) {
+        unlink($to);
+    }
+
+    file_put_contents($from, 'php');
+
+    $file = new File();
+    $file->move($from, $to);
+
+    expect(file_exists($from))->toBeFalse()
+        ->and(file_get_contents($to))->toBe('php');
+
+    unlink($to);
+});
+
 it('checks if file exists', function () {
     $path = sys_get_temp_dir() . '/file.txt';
 
