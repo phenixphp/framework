@@ -138,11 +138,9 @@ class HttpClientTestLogger
             return new Response($response->getClientResponse());
         }
 
-        if ($response instanceof AmpResponse) {
-            return new Response($response);
-        }
-
-        return new Response($this->makeClientResponse($response, $request));
+        return $response instanceof AmpResponse
+            ? new Response($response)
+            : new Response($this->makeClientResponse($response, $request));
     }
 
     protected function normalizeFakeStreamResponse(mixed $response, Request $request): StreamResponse
@@ -160,11 +158,9 @@ class HttpClientTestLogger
             ));
         }
 
-        if ($response instanceof AmpResponse) {
-            return new StreamResponse($response);
-        }
-
-        return new StreamResponse($this->makeClientResponse($response, $request));
+        return $response instanceof AmpResponse
+            ? new StreamResponse($response)
+            : new StreamResponse($this->makeClientResponse($response, $request));
     }
 
     /**
