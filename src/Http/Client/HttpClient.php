@@ -274,7 +274,9 @@ class HttpClient
             $request->setHeader('Content-Type', 'application/json');
         }
 
-        return json_encode($data) ?? '';
+        $encoded = json_encode($data);
+
+        return $encoded !== false ? $encoded : '';
     }
 
     /**
