@@ -51,6 +51,11 @@ class File implements FileContract
         $this->driver->createDirectory($path, $mode);
     }
 
+    public function move(string $from, string $to): void
+    {
+        $this->driver->move($from, $to);
+    }
+
     public function openFile(string $path, string $mode = 'w'): FileHandler
     {
         return $this->driver->openFile($path, $mode);

@@ -14,6 +14,7 @@ use Phenix\Console\Phenix;
 use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
 use Phenix\Facades\Event;
+use Phenix\Facades\Http;
 use Phenix\Facades\Mail;
 use Phenix\Facades\Queue;
 use Phenix\Facades\View;
@@ -65,6 +66,7 @@ abstract class TestCase extends AsyncTestCase
         Event::resetFaking();
         Queue::resetFaking();
         Mail::resetSendingLog();
+        Http::resetFaking();
 
         if (config('cache.default') === Store::FILE->value) {
             Cache::clear();

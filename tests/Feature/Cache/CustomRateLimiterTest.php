@@ -75,3 +75,32 @@ it('custom per-minute limit works independently of global config setting', funct
     $this->get(path: '/custom')
         ->assertStatusCode(HttpStatus::TOO_MANY_REQUESTS);
 });
+
+it('does not duplicate rate limit headers when global and custom limiters both run', function (): void {
+    Config::set('app.port', 14337);
+    Config::set('cache.rate_limit.enabled', true);
+    Config::set('cache.rate_limit.per_minute', 60);
+
+    Route::get('/custom-with-global', fn (): Response => response()->plain('Ok'))
+        ->middleware(RateLimiter::perMinute(10));
+
+    $this->app->run();
+
+    $responseHeaders = $this->get(path: '/custom-with-global')
+        ->assertOk()
+        ->getHeaders();
+
+    $headers = [
+        'x-ratelimit-limit',
+        'x-ratelimit-remaining',
+        'x-ratelimit-reset',
+        'x-ratelimit-reset-after',
+    ];
+
+    foreach ($headers as $header) {
+        expect($responseHeaders[$header] ?? [])->toHaveCount(1);
+    }
+
+    expect($responseHeaders['x-ratelimit-limit'])->toBe(['10']);
+    expect($responseHeaders['x-ratelimit-remaining'])->toBe(['9']);
+});
