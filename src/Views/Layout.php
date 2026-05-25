@@ -15,8 +15,6 @@ class Layout extends View
     ) {
         parent::__construct($template, $data);
 
-        foreach ($sections as $name => $value) {
-            $this->templateFactory->startSection($name, $value);
-        }
+        $this->templateFactory->inheritSections($sections);
     }
 }

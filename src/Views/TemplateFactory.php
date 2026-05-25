@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Phenix\Views;
 
 use Phenix\Views\Contracts\View as ViewContract;
+use Stringable;
 
 class TemplateFactory
 {
     protected string|null $section;
+
+    /**
+     * @var array<string, string|Stringable|null>
+     */
     protected array $sections;
+
     protected string|null $layout;
+
     protected array $data;
 
     public function __construct(
@@ -46,15 +53,17 @@ class TemplateFactory
 
     public function startSection(string $name, string|null $value = null): void
     {
-        if ($value) {
-            $this->sections[$name] = $value;
-        } else {
-            $this->section = $name;
+        if ($value !== null) {
+            $this->sections[$name] = new EscapedValue($value);
 
-            ob_start();
-
-            $this->sections[$name] = null;
+            return;
         }
+
+        $this->section = $name;
+
+        ob_start();
+
+        $this->sections[$name] = null;
     }
 
     public function endSection(): void
@@ -70,7 +79,15 @@ class TemplateFactory
 
     public function yieldSection(string $name): string
     {
-        return $this->sections[$name] ?? '';
+        return (string) ($this->sections[$name] ?? '');
+    }
+
+    /**
+     * @param array<string, string|Stringable|null> $sections
+     */
+    public function inheritSections(array $sections): void
+    {
+        $this->sections = $sections;
     }
 
     public function clear(): void
