@@ -9,11 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.9.x
 
+## [v0.9.1 (2026-05-25)](https://github.com/phenixphp/framework/compare/0.9.0...0.9.1)
+
+### Changed
+
+- Conditionally call to resetting facade methods. ([#135](https://github.com/phenixphp/framework/pull/135))
+
 ## [v0.9.0 (2026-05-25)](https://github.com/phenixphp/framework/compare/0.8.9...0.9.0)
 
 ### Added
 
 - HTTP Client. ([#132](https://github.com/phenixphp/framework/pull/132))
+
+### Fixed
+
+- Prevent duplicate rate limit headers in response. ([#131](https://github.com/phenixphp/framework/pull/131))
 
 # Release Notes for 0.8.x
 
