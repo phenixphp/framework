@@ -7,6 +7,125 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# Release Notes for 0.9.x
+
+## [v0.9.0 (2026-05-25)](https://github.com/phenixphp/framework/compare/0.8.9...0.9.0)
+
+### Added
+
+- HTTP Client. ([#132](https://github.com/phenixphp/framework/pull/132))
+
+# Release Notes for 0.8.x
+
+## [v0.8.9 (2026-05-11)](https://github.com/phenixphp/framework/compare/0.8.8...0.8.9)
+
+### Fixed
+
+- Prevent SQL injection by identifiers. ([#129](https://github.com/phenixphp/framework/pull/129))
+
+## [v0.8.8 (2026-04-20)](https://github.com/phenixphp/framework/compare/0.8.7...0.8.8)
+
+### Fixed
+
+- Security fixes of code audit. ([#128](https://github.com/phenixphp/framework/pull/128))
+
+## [v0.8.7 (2026-04-11)](https://github.com/phenixphp/framework/compare/0.8.6...0.8.7)
+
+### Added
+
+- Global error handling and reporting with JSON support. ([#126](https://github.com/phenixphp/framework/pull/126))
+- Debug level configuration for logging. ([#127](https://github.com/phenixphp/framework/pull/127))
+
+### Changed
+
+- Improve rate limit with forwarded IPs. ([#125](https://github.com/phenixphp/framework/pull/125))
+
+## [v0.8.6 (2026-04-06)](https://github.com/phenixphp/framework/compare/0.8.5...0.8.6)
+
+### Changed
+
+- Update documentation links to point to the correct Phenix website. ([#124](https://github.com/phenixphp/framework/pull/124))
+
+## [v0.8.5 (2026-04-01)](https://github.com/phenixphp/framework/compare/0.8.4...0.8.5)
+
+### Added
+
+- Cache prefix support to `RateLimit` configuration. ([#122](https://github.com/phenixphp/framework/pull/122))
+
+## [v0.8.4 (2026-03-31)](https://github.com/phenixphp/framework/compare/0.8.3...0.8.4)
+
+### Changed
+
+- Improve saving models. ([#120](https://github.com/phenixphp/framework/pull/120))
+
+## [v0.8.3 (2026-03-31)](https://github.com/phenixphp/framework/compare/0.8.2...0.8.3)
+
+### Changed
+
+- Improve insert get ID. ([#118](https://github.com/phenixphp/framework/pull/118))
+
+## [v0.8.2 (2026-03-25)](https://github.com/phenixphp/framework/compare/0.8.1...0.8.2)
+
+### Changed
+
+- Change `self` by `static` for better class resolution. ([#116](https://github.com/phenixphp/framework/pull/116))
+
+## [v0.8.1 (2026-03-25)](https://github.com/phenixphp/framework/compare/0.8.0...0.8.1)
+
+### Added
+
+- Guest middleware. ([#114](https://github.com/phenixphp/framework/pull/114))
+
+## [v0.8.0 (2026-03-24)](https://github.com/phenixphp/framework/compare/0.7.0...0.8.0)
+
+### Added
+
+- Password validation type. ([#70](https://github.com/phenixphp/framework/pull/70))
+- Environment detection methods for local and production environments. ([#71](https://github.com/phenixphp/framework/pull/71))
+- Hidden properties support for models. ([#72](https://github.com/phenixphp/framework/pull/72))
+- Command to display the registered route list. ([#73](https://github.com/phenixphp/framework/pull/73))
+- Translations support. ([#78](https://github.com/phenixphp/framework/pull/78))
+- `has` method to the configuration repository. ([#79](https://github.com/phenixphp/framework/pull/79))
+- Rule-specific error messages. ([#80](https://github.com/phenixphp/framework/pull/80))
+- Commands to generate validation types and rules. ([#81](https://github.com/phenixphp/framework/pull/81))
+- Testing utilities. ([#82](https://github.com/phenixphp/framework/pull/82))
+- HTTP testing utilities. ([#83](https://github.com/phenixphp/framework/pull/83))
+- Command to generate mail classes. ([#84](https://github.com/phenixphp/framework/pull/84))
+- Global `config` helper. ([#91](https://github.com/phenixphp/framework/pull/91))
+- Cache system. ([#93](https://github.com/phenixphp/framework/pull/93))
+- User authentication support. ([#92](https://github.com/phenixphp/framework/pull/92))
+- Rate limiter support. ([#94](https://github.com/phenixphp/framework/pull/94))
+- Security headers in responses. ([#95](https://github.com/phenixphp/framework/pull/95))
+- Task scheduler. ([#100](https://github.com/phenixphp/framework/pull/100))
+- SQLite support and AST generation per database driver. ([#101](https://github.com/phenixphp/framework/pull/101))
+- Phenix SQLite package integration. ([#102](https://github.com/phenixphp/framework/pull/102))
+- Nested transactions and migrate fresh command. ([#104](https://github.com/phenixphp/framework/pull/104))
+- Custom rate limiters. ([#106](https://github.com/phenixphp/framework/pull/106))
+- Signed routes. ([#107](https://github.com/phenixphp/framework/pull/107))
+
+### Changed
+
+- Correct uniqueness validation logic in the `Unique` rule. ([#74](https://github.com/phenixphp/framework/pull/74))
+- Allow the validator constructor to initialize rules and data. ([#75](https://github.com/phenixphp/framework/pull/75))
+- Improve validator behavior. ([#77](https://github.com/phenixphp/framework/pull/77))
+- Improve mail and task handling. ([#85](https://github.com/phenixphp/framework/pull/85))
+- Improve migrations. ([#86](https://github.com/phenixphp/framework/pull/86))
+- Automatically save migration columns on destruction. ([#87](https://github.com/phenixphp/framework/pull/87))
+- Support unique constraints in migration columns. ([#88](https://github.com/phenixphp/framework/pull/88))
+- Improve test cases and stubs. ([#89](https://github.com/phenixphp/framework/pull/89))
+- Register events through service providers. ([#90](https://github.com/phenixphp/framework/pull/90))
+- Improve IP parsing. ([#96](https://github.com/phenixphp/framework/pull/96))
+- Improve parallel queue behavior. ([#97](https://github.com/phenixphp/framework/pull/97))
+- Improve server behavior. ([#98](https://github.com/phenixphp/framework/pull/98))
+- Improve paginator behavior. ([#99](https://github.com/phenixphp/framework/pull/99))
+- Improve namespace organization. ([#103](https://github.com/phenixphp/framework/pull/103))
+- Improve model and query autocompletion. ([#105](https://github.com/phenixphp/framework/pull/105))
+- Apply general framework improvements. ([#108](https://github.com/phenixphp/framework/pull/108))
+- Update test stubs to use a class-based structure. ([#109](https://github.com/phenixphp/framework/pull/109))
+- Standardize API responses. ([#110](https://github.com/phenixphp/framework/pull/110))
+- Rename the route class to avoid collisions with the route facade. ([#111](https://github.com/phenixphp/framework/pull/111))
+- Improve testing support. ([#112](https://github.com/phenixphp/framework/pull/112))
+
 # Release Notes for 0.7.x
 
 ## [v0.7.0 (2025-09-26)](https://github.com/phenixphp/framework/compare/0.6.0...0.7.0)
