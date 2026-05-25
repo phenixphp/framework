@@ -161,6 +161,11 @@ class App implements AppContract, Makeable
         return self::$container->get($key);
     }
 
+    public static function has(string $key): bool
+    {
+        return self::$container->has($key);
+    }
+
     public static function fake(string $key, LegacyMockInterface|MockInterface $concrete): void
     {
         self::$container->extend($key)->setConcrete($concrete);
