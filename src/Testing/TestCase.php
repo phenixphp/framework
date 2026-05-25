@@ -9,16 +9,10 @@ use Amp\PHPUnit\AsyncTestCase;
 use Phenix\App;
 use Phenix\AppBuilder;
 use Phenix\AppProxy;
-use Phenix\Cache\Constants\Store;
 use Phenix\Console\Phenix;
-use Phenix\Facades\Cache;
 use Phenix\Facades\Config;
-use Phenix\Facades\Event;
-use Phenix\Facades\Http;
-use Phenix\Facades\Mail;
-use Phenix\Facades\Queue;
-use Phenix\Facades\View;
 use Phenix\Testing\Concerns\InteractWithDatabase;
+use Phenix\Testing\Concerns\InteractWithFacades;
 use Phenix\Testing\Concerns\InteractWithResponses;
 use Phenix\Testing\Concerns\RefreshDatabase;
 use Phenix\Util\Str;
@@ -30,8 +24,9 @@ use function in_array;
 
 abstract class TestCase extends AsyncTestCase
 {
-    use InteractWithResponses;
+    use InteractWithFacades;
     use InteractWithDatabase;
+    use InteractWithResponses;
 
     protected ?AppProxy $app;
     protected string $appDir;
@@ -56,21 +51,18 @@ abstract class TestCase extends AsyncTestCase
             $this->refreshDatabase();
         }
 
-        View::clearCache();
+        $this->clearViewCacheIfAvailable();
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
 
-        Event::resetFaking();
-        Queue::resetFaking();
-        Mail::resetSendingLog();
-        Http::resetFaking();
-
-        if (config('cache.default') === Store::FILE->value) {
-            Cache::clear();
-        }
+        $this->resetEventsIfAvailable();
+        $this->resetQueueIfAvailable();
+        $this->resetMailIfAvailable();
+        $this->resetHttpIfAvailable();
+        $this->clearCacheIfAvailable();
 
         if ($this->app instanceof AppProxy) {
             $this->app->stop();
