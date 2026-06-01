@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Http;
 
+use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\Http\Server\Response as ServerResponse;
 use Amp\Http\Server\Trailers;
@@ -75,6 +76,27 @@ class Response
         return $this;
     }
 
+    /**
+     * @param iterable<int, ServerSentEvent|string> $events
+     */
+    public function eventStream(
+        iterable $events,
+        HttpStatus $status = HttpStatus::OK,
+        array $headers = []
+    ): self {
+        $this->body = new ReadableIterableStream($this->formatEventStream($events));
+        $this->status = $status;
+        $this->headers = [
+            ...[
+                'content-type' => 'text/event-stream; charset=utf-8',
+                'cache-control' => 'no-cache',
+            ],
+            ...$headers,
+        ];
+
+        return $this;
+    }
+
     public function send(): ServerResponse
     {
         return new ServerResponse(
@@ -83,5 +105,27 @@ class Response
             $this->body,
             $this->trailers
         );
+    }
+
+    /**
+     * @param iterable<int, ServerSentEvent|string> $events
+     * @return iterable<int, string>
+     */
+    protected function formatEventStream(iterable $events): iterable
+    {
+        foreach ($events as $event) {
+            yield $event instanceof ServerSentEvent
+                ? $event->toString()
+                : $this->normalizeEventFrame($event);
+        }
+    }
+
+    protected function normalizeEventFrame(string $event): string
+    {
+        if (str_ends_with($event, "\n\n") || str_ends_with($event, "\r\n\r\n")) {
+            return $event;
+        }
+
+        return rtrim($event, "\r\n") . "\n\n";
     }
 }
