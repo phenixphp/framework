@@ -8,6 +8,8 @@ use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\Http\Server\Response as ServerResponse;
 use Amp\Http\Server\Trailers;
+use Closure;
+use InvalidArgumentException;
 use Phenix\Contracts\Arrayable;
 use Phenix\Facades\View;
 use Phenix\Http\Constants\HttpStatus;
@@ -77,14 +79,14 @@ class Response
     }
 
     /**
-     * @param iterable<int, ServerSentEvent|string> $events
+     * @param Closure(): iterable<int, ServerSentEvent|string>|iterable<int, ServerSentEvent|string> $events
      */
     public function eventStream(
-        iterable $events,
+        Closure|iterable $events,
         HttpStatus $status = HttpStatus::OK,
         array $headers = []
     ): self {
-        $this->body = new ReadableIterableStream($this->formatEventStream($events));
+        $this->body = new ReadableIterableStream($this->formatEventStream($this->resolveEventStream($events)));
         $this->status = $status;
         $this->headers = [
             ...[
@@ -105,6 +107,25 @@ class Response
             $this->body,
             $this->trailers
         );
+    }
+
+    /**
+     * @param Closure(): iterable<int, ServerSentEvent|string>|iterable<int, ServerSentEvent|string> $events
+     * @return iterable<int, ServerSentEvent|string>
+     */
+    protected function resolveEventStream(Closure|iterable $events): iterable
+    {
+        if (! $events instanceof Closure) {
+            return $events;
+        }
+
+        $events = $events();
+
+        if (! is_iterable($events)) {
+            throw new InvalidArgumentException('The event stream closure must return an iterable.');
+        }
+
+        return $events;
     }
 
     /**

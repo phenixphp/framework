@@ -81,3 +81,29 @@ it('responds event streams from server sent events', function () {
         . "data: Second line\n\n"
     );
 });
+
+it('responds event streams from closures', function () {
+    $response = new Response();
+
+    $serverResponse = $response->eventStream(function (): iterable {
+        yield new ServerSentEvent(
+            data: 'Event 0',
+            event: 'notification',
+            id: 'event-0'
+        );
+    })->send();
+
+    expect($serverResponse)->toBeInstanceOf(ServerResponse::class);
+    expect($serverResponse->getBody()->read())->toBe(
+        "event: notification\n"
+        . "id: event-0\n"
+        . "data: Event 0\n\n"
+    );
+});
+
+it('rejects event stream closures that do not return iterables', function () {
+    $response = new Response();
+
+    expect(fn (): Response => $response->eventStream(fn (): string => 'invalid'))
+        ->toThrow(InvalidArgumentException::class, 'The event stream closure must return an iterable.');
+});

@@ -222,14 +222,14 @@ it('can assert response is plain text', function (): void {
 
 it('can send server sent events', function (): void {
     Route::get('/events', function (): Response {
-        return response()->eventStream((function (): iterable {
+        return response()->eventStream(function (): iterable {
             for ($index = 0; $index < 3; $index++) {
                 yield new ServerSentEvent(
                     data: "Event {$index}",
                     event: 'notification'
                 );
             }
-        })());
+        });
     });
 
     $this->app->run();
@@ -248,7 +248,7 @@ it('can resume server sent events using last event id', function (): void {
         $lastEventId = $request->getHeader('Last-Event-ID');
         $start = $lastEventId === null ? 0 : ((int) str_replace('event-', '', $lastEventId)) + 1;
 
-        return response()->eventStream((function () use ($start): iterable {
+        return response()->eventStream(function () use ($start): iterable {
             for ($index = $start; $index < 4; $index++) {
                 yield new ServerSentEvent(
                     data: "Event {$index}",
@@ -256,7 +256,7 @@ it('can resume server sent events using last event id', function (): void {
                     id: "event-{$index}"
                 );
             }
-        })());
+        });
     });
 
     $this->app->run();
