@@ -136,7 +136,7 @@ class Response
     {
         foreach ($events as $event) {
             yield $event instanceof ServerSentEvent
-                ? $event->toString()
+                ? (string) $event
                 : $this->normalizeEventFrame($event);
         }
     }
