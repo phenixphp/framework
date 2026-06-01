@@ -87,4 +87,18 @@ trait InteractWithHeaders
 
         return $this;
     }
+
+    public function assertIsEventStream(): self
+    {
+        $contentType = $this->response->getHeader('content-type');
+
+        Assert::assertNotNull($contentType, $this->missingHeaderMessage);
+        Assert::assertStringContainsString(
+            'text/event-stream',
+            $contentType,
+            'Response does not have an event stream content type.'
+        );
+
+        return $this;
+    }
 }

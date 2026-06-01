@@ -13,6 +13,7 @@ use Phenix\Http\Constants\ContentType;
 use Phenix\Http\Constants\HttpStatus;
 use Phenix\Http\Request;
 use Phenix\Http\Response;
+use Phenix\Http\ServerSentEvent;
 use Phenix\Testing\TestResponse;
 use Tests\Feature\Requests\LimitedBodyRequest;
 use Tests\Feature\Requests\LimitedStreamedRequest;
@@ -217,6 +218,65 @@ it('can assert response is plain text', function (): void {
         ->assertOk()
         ->assertIsPlainText()
         ->assertBodyContains('plain text');
+});
+
+it('can send server sent events', function (): void {
+    Route::get('/events', function (): Response {
+        return response()->eventStream(function (): iterable {
+            for ($index = 0; $index < 3; $index++) {
+                yield new ServerSentEvent(
+                    data: "Event {$index}",
+                    event: 'notification'
+                );
+            }
+        });
+    });
+
+    $this->app->run();
+
+    $this->get('/events')
+        ->assertOk()
+        ->assertIsEventStream()
+        ->assertBodyContains([
+            "event: notification\ndata: Event 0\n\n",
+            "event: notification\ndata: Event 2\n\n",
+        ]);
+});
+
+it('can resume server sent events using last event id', function (): void {
+    Route::get('/resumable-events', function (Request $request): Response {
+        $lastEventId = $request->getHeader('Last-Event-ID');
+        $start = $lastEventId === null ? 0 : ((int) str_replace('event-', '', $lastEventId)) + 1;
+
+        return response()->eventStream(function () use ($start): iterable {
+            for ($index = $start; $index < 4; $index++) {
+                yield new ServerSentEvent(
+                    data: "Event {$index}",
+                    event: 'notification',
+                    id: "event-{$index}"
+                );
+            }
+        });
+    });
+
+    $this->app->run();
+
+    $response = $this->get('/resumable-events', [
+        'Last-Event-ID' => 'event-1',
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertIsEventStream()
+        ->assertBodyContains([
+            "id: event-2\n",
+            "data: Event 2\n\n",
+            "id: event-3\n",
+            "data: Event 3\n\n",
+        ]);
+
+    expect($response->getBody())->not->toContain('id: event-0')
+        ->and($response->getBody())->not->toContain('id: event-1');
 });
 
 it('can assert json contains', function (): void {
