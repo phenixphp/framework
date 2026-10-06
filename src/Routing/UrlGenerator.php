@@ -13,6 +13,7 @@ use DateTimeInterface;
 use Phenix\Crypto\Bin2Base64;
 use Phenix\Facades\Config;
 use Phenix\Routing\Exceptions\RouteNotFoundException;
+use Phenix\Util\Str;
 
 use function array_key_exists;
 
@@ -50,16 +51,13 @@ class UrlGenerator
 
     public function to(string $path, array $parameters = [], bool $secure = false): string
     {
-        $path = trim($path, '/');
-        $port = Config::get('app.port');
-
-        $url = Config::get('app.url');
+        $url = (string) Config::get('app.url');
 
         if ($secure) {
             $url = (string) preg_replace('/^http:/', 'https:', $url);
         }
 
-        $uri = "{$url}:{$port}/{$path}";
+        $uri = $this->joinUrlAndPath($url, $path);
 
         if (! empty($parameters)) {
             $uri .= '?' . http_build_query($parameters);
@@ -172,17 +170,19 @@ class UrlGenerator
      */
     protected function buildAbsoluteUrl(string $path, array $parameters = []): string
     {
-        $path = trim($path, '/');
-        $port = Config::get('app.port');
-        $url = Config::get('app.url');
-
-        $uri = "{$url}:{$port}/{$path}";
+        $url = (string) Config::get('app.url');
+        $uri = $this->joinUrlAndPath($url, $path);
 
         if (! empty($parameters)) {
             $uri .= '?' . http_build_query($parameters);
         }
 
         return $uri;
+    }
+
+    protected function joinUrlAndPath(string $url, string $path): string
+    {
+        return Str::finish(rtrim($url, '/'), '/') . trim($path, '/');
     }
 
     /**

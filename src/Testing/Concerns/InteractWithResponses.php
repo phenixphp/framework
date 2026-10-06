@@ -16,10 +16,13 @@ use Amp\Socket\DnsSocketConnector;
 use Amp\Socket\Socket;
 use Amp\Socket\SocketAddress;
 use Amp\Socket\SocketConnector;
+use League\Uri\Uri;
+use Phenix\Facades\Config;
 use Phenix\Facades\Url;
 use Phenix\Http\Constants\HttpMethod;
 use Phenix\Testing\TestResponse;
 
+use function array_key_exists;
 use function is_array;
 
 trait InteractWithResponses
@@ -40,8 +43,18 @@ trait InteractWithResponses
         Form|array|string|null $body = null,
         array $headers = []
     ): TestResponse {
+        $publicUri = Uri::new($this->isAbsoluteUri($path) ? $path : Url::to($path, $parameters));
         $uri = $this->resolveRequestUri($path, $parameters);
         $request = new Request($uri, $method->value);
+
+        if (! array_key_exists('Host', $headers) && ! array_key_exists('host', $headers)) {
+            $publicHost = $publicUri->getHost();
+            $publicPort = $publicUri->getPort();
+
+            if ($publicHost !== '') {
+                $request->setHeader('Host', $publicHost . ($publicPort === null ? '' : ":{$publicPort}"));
+            }
+        }
 
         if ($headers) {
             $request->setHeaders($headers);
@@ -150,21 +163,38 @@ trait InteractWithResponses
     private function resolveRequestUri(string $path, array $parameters = []): string
     {
         if (! $this->isAbsoluteUri($path)) {
-            return Url::to($path, $parameters);
+            $path = Url::to($path, $parameters);
+            $parameters = [];
         }
 
-        if (empty($parameters)) {
-            return $path;
+        $uri = Uri::new($path);
+        $bindHost = trim((string) Config::get('app.host', '127.0.0.1'), '[]');
+
+        if ($bindHost === '0.0.0.0') {
+            $bindHost = '127.0.0.1';
+        } elseif ($bindHost === '::') {
+            $bindHost = '::1';
         }
 
-        return $path . (str_contains($path, '?') ? '&' : '?') . http_build_query($parameters);
+        $host = str_contains($bindHost, ':') ? "[{$bindHost}]" : $bindHost;
+        $scheme = Config::get('app.cert_path') ? 'https' : 'http';
+        $port = (int) Config::get('app.port', 1337);
+        $requestPath = $uri->getPath() ?: '/';
+        $query = $uri->getQuery() ?? '';
+
+        if (! empty($parameters)) {
+            $query .= ($query === '' ? '' : '&') . http_build_query($parameters);
+        }
+
+        return "{$scheme}://{$host}:{$port}{$requestPath}" . ($query === '' ? '' : "?{$query}");
     }
 
     private function isAbsoluteUri(string $path): bool
     {
-        $scheme = parse_url($path, PHP_URL_SCHEME);
-        $host = parse_url($path, PHP_URL_HOST);
+        $uri = Uri::new($path);
+        $scheme = $uri->getScheme();
+        $host = $uri->getHost();
 
-        return is_string($scheme) && $scheme !== '' && is_string($host) && $host !== '';
+        return $scheme !== null && $scheme !== '' && $host !== null && $host !== '';
     }
 }

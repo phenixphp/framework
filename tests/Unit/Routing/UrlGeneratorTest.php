@@ -16,8 +16,7 @@ use Phenix\Routing\UrlGenerator;
 beforeEach(function (): void {
     $this->key = Crypto::generateEncodedKey();
     Config::set('app.key', $this->key);
-    Config::set('app.url', 'http://127.0.0.1');
-    Config::set('app.port', 1337);
+    Config::set('app.url', 'http://127.0.0.1:1337');
 });
 
 function createRequest(string $url): Request
@@ -75,6 +74,27 @@ it('generates a URL for a named route', function (): void {
     $url = $generator->route('users.index');
 
     expect($url)->toBe('http://127.0.0.1:1337/users');
+});
+
+it('keeps the public URL independent from the bind address', function (): void {
+    Config::set('app.url', 'https://public.example.com');
+    Config::set('app.host', '0.0.0.0');
+    Config::set('app.port', 9000);
+
+    $route = new Router();
+    $route->get('/events', fn (): Response => response()->plain('Ok'))
+        ->name('events.index');
+
+    expect((new UrlGenerator($route))->route('events.index'))
+        ->toBe('https://public.example.com/events');
+});
+
+it('preserves an explicit public port without adding the bind port', function (): void {
+    Config::set('app.url', 'https://public.example.com:8443/base///');
+    Config::set('app.port', 9000);
+
+    expect((new UrlGenerator(new Router()))->to('/events'))
+        ->toBe('https://public.example.com:8443/base/events');
 });
 
 it('generates a URL for a named route using helper', function (): void {

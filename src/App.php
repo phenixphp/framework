@@ -21,10 +21,10 @@ use Amp\Socket\Certificate;
 use Amp\Socket\ServerTlsContext;
 use Amp\Sync\LocalSemaphore;
 use League\Container\Container;
-use League\Uri\Uri;
 use Mockery\LegacyMockInterface;
 use Mockery\MockInterface;
 use Monolog\Logger;
+use Phenix\Concerns\ResolveHost;
 use Phenix\Console\Phenix;
 use Phenix\Constants\AppMode;
 use Phenix\Constants\ServerMode;
@@ -51,11 +51,13 @@ use function is_array;
 
 class App implements AppContract, Makeable
 {
+    use ResolveHost;
+
     protected static string $path;
 
     protected static Container $container;
 
-    protected string $host;
+    protected string $publicHost;
 
     protected RequestHandler $router;
 
@@ -116,7 +118,7 @@ class App implements AppContract, Makeable
 
         $this->detectProtocol();
 
-        $this->host = Uri::new(Config::get('app.url'))->getHost();
+        $this->publicHost = $this->resolvePublicHost();
 
         $this->server = $this->createServer();
 
@@ -238,7 +240,7 @@ class App implements AppContract, Makeable
         /** @var array<int, Middleware> $globalMiddlewares */
         $globalMiddlewares = array_map(fn (string $middleware) => new $middleware(), $middlewares['global']);
 
-        $globalMiddlewares[] = SessionMiddlewareFactory::make($this->host);
+        $globalMiddlewares[] = SessionMiddlewareFactory::make($this->publicHost);
 
         $this->router = Middleware\stackMiddleware($router, ...$globalMiddlewares);
     }
@@ -326,7 +328,13 @@ class App implements AppContract, Makeable
 
     protected function expose(): void
     {
-        $port = (int) Config::get('app.port');
+        $host = $this->resolveBindHost();
+        $port = $this->resolveBindPort();
+
+        $address = str_contains($host, ':') && ! str_starts_with($host, '[')
+            ? "[{$host}]:{$port}"
+            : "{$host}:{$port}";
+
         $plainBindContext = (new BindContext())->withTcpNoDelay();
 
         if ($this->protocol === Protocol::HTTPS) {
@@ -337,21 +345,19 @@ class App implements AppContract, Makeable
                 (new ServerTlsContext())->withDefaultCertificate(new Certificate($certPath))
             );
 
-            $this->server->expose("{$this->host}:{$port}", $tlsBindContext);
+            $this->server->expose($address, $tlsBindContext);
 
             return;
         }
 
-        $this->server->expose("{$this->host}:{$port}", $plainBindContext);
+        $this->server->expose($address, $plainBindContext);
     }
 
     protected function detectProtocol(): void
     {
-        $url = (string) Config::get('app.url');
-
         /** @var string|null $certPath */
         $certPath = Config::get('app.cert_path');
 
-        $this->protocol = str_starts_with($url, 'https://') && $certPath !== null ? Protocol::HTTPS : Protocol::HTTP;
+        $this->protocol = $certPath !== null && $certPath !== '' ? Protocol::HTTPS : Protocol::HTTP;
     }
 }
