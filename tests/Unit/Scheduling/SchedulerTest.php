@@ -5,13 +5,14 @@ declare(strict_types=1);
 use Phenix\Scheduling\Schedule;
 use Phenix\Scheduling\Scheduler;
 use Phenix\Util\Date;
+use Tests\Internal\FakeScheduleLock;
 
 it('executes when expression is due (every minute)', function (): void {
-    $schedule = new Schedule();
+    $schedule = new Schedule(new FakeScheduleLock());
 
     $executed = false;
 
-    $scheduler = $schedule->call(function () use (&$executed): void {
+    $scheduler = $schedule->call('schedule-' . __LINE__, function () use (&$executed): void {
         $executed = true;
     })->everyMinute();
 
@@ -22,12 +23,58 @@ it('executes when expression is due (every minute)', function (): void {
     expect($executed)->toBeTrue();
 });
 
+it('executes a named occurrence only once across scheduler instances', function (): void {
+    $lock = new FakeScheduleLock();
+    $executions = 0;
+    $now = Date::now('UTC')->startOfMinute();
+
+    $first = (new Schedule($lock))->call('reconcile-usage', function () use (&$executions): void {
+        $executions++;
+    })->everyMinute();
+    $second = (new Schedule($lock))->call('reconcile-usage', function () use (&$executions): void {
+        $executions++;
+    })->everyMinute();
+
+    $first->tick($now);
+    $second->tick($now);
+
+    expect($executions)->toBe(1);
+});
+
+it('rejects duplicate schedule names in one application', function (): void {
+    $schedule = new Schedule(new FakeScheduleLock());
+    $schedule->call('reconcile-usage', function (): void {
+    });
+
+    expect(fn () => $schedule->call('reconcile-usage', function (): void {
+    }))->toThrow(\InvalidArgumentException::class);
+});
+
+it('releases the occurrence lock when the callback throws', function (): void {
+    $lock = new FakeScheduleLock();
+    $now = Date::now('UTC')->startOfMinute();
+    $attempts = 0;
+    $scheduler = (new Schedule($lock))->call('retry-failed-dispatch', function () use (&$attempts): void {
+        $attempts++;
+
+        if ($attempts === 1) {
+            throw new RuntimeException('Dispatch failed');
+        }
+    })->everyMinute();
+
+    expect(fn () => $scheduler->tick($now))->toThrow(RuntimeException::class, 'Dispatch failed');
+
+    $scheduler->tick($now);
+
+    expect($attempts)->toBe(2);
+});
+
 it('does not execute when not due (dailyAt time mismatch)', function (): void {
-    $schedule = new Schedule();
+    $schedule = new Schedule(new FakeScheduleLock());
 
     $executed = false;
 
-    $scheduler = $schedule->call(function () use (&$executed): void {
+    $scheduler = $schedule->call('schedule-' . __LINE__, function () use (&$executed): void {
         $executed = true;
     })->dailyAt('10:15');
 
@@ -45,11 +92,11 @@ it('does not execute when not due (dailyAt time mismatch)', function (): void {
 });
 
 it('executes exactly at matching dailyAt time', function (): void {
-    $schedule = new Schedule();
+    $schedule = new Schedule(new FakeScheduleLock());
 
     $executed = false;
 
-    $scheduler = $schedule->call(function () use (&$executed): void {
+    $scheduler = $schedule->call('schedule-' . __LINE__, function () use (&$executed): void {
         $executed = true;
     })->dailyAt('10:15');
 
@@ -61,11 +108,11 @@ it('executes exactly at matching dailyAt time', function (): void {
 });
 
 it('respects timezone when evaluating due', function (): void {
-    $schedule = new Schedule();
+    $schedule = new Schedule(new FakeScheduleLock());
 
     $executed = false;
 
-    $scheduler = $schedule->call(function () use (&$executed): void {
+    $scheduler = $schedule->call('schedule-' . __LINE__, function () use (&$executed): void {
         $executed = true;
     })->dailyAt('12:00')->timezone('America/New_York');
 
@@ -79,11 +126,11 @@ it('respects timezone when evaluating due', function (): void {
 });
 
 it('supports */5 minutes schedule and only runs on multiples of five', function (): void {
-    $schedule = new Schedule();
+    $schedule = new Schedule(new FakeScheduleLock());
 
     $executed = false;
 
-    $scheduler = $schedule->call(function () use (&$executed): void {
+    $scheduler = $schedule->call('schedule-' . __LINE__, function () use (&$executed): void {
         $executed = true;
     })->everyFiveMinutes();
 
@@ -103,9 +150,9 @@ it('supports */5 minutes schedule and only runs on multiples of five', function 
 it('does nothing when no expression is set', function (): void {
     $executed = false;
 
-    $scheduler = new Scheduler(function () use (&$executed): void {
+    $scheduler = new Scheduler('no-expression', function () use (&$executed): void {
         $executed = true;
-    });
+    }, new FakeScheduleLock());
 
     $now = Date::now('UTC')->startOfDay();
 
@@ -115,7 +162,7 @@ it('does nothing when no expression is set', function (): void {
 });
 
 it('sets cron for weekly', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->weekly();
 
     $ref = new ReflectionClass($scheduler);
@@ -127,7 +174,7 @@ it('sets cron for weekly', function (): void {
 });
 
 it('sets cron for monthly', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->monthly();
 
     $ref = new ReflectionClass($scheduler);
@@ -139,7 +186,7 @@ it('sets cron for monthly', function (): void {
 });
 
 it('sets cron for every ten minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyTenMinutes();
 
     $ref = new ReflectionClass($scheduler);
@@ -151,7 +198,7 @@ it('sets cron for every ten minutes', function (): void {
 });
 
 it('sets cron for every fifteen minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyFifteenMinutes();
 
     $ref = new ReflectionClass($scheduler);
@@ -163,7 +210,7 @@ it('sets cron for every fifteen minutes', function (): void {
 });
 
 it('sets cron for every thirty minutes', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyThirtyMinutes();
 
     $ref = new ReflectionClass($scheduler);
@@ -175,7 +222,7 @@ it('sets cron for every thirty minutes', function (): void {
 });
 
 it('sets cron for every two hours', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyTwoHours();
 
     $ref = new ReflectionClass($scheduler);
@@ -187,7 +234,7 @@ it('sets cron for every two hours', function (): void {
 });
 
 it('sets cron for every two days', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyTwoDays();
 
     $ref = new ReflectionClass($scheduler);
@@ -199,7 +246,7 @@ it('sets cron for every two days', function (): void {
 });
 
 it('sets cron for every weekday', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyWeekday();
 
     $ref = new ReflectionClass($scheduler);
@@ -211,7 +258,7 @@ it('sets cron for every weekday', function (): void {
 });
 
 it('sets cron for every weekend', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->everyWeekend();
 
     $ref = new ReflectionClass($scheduler);
@@ -223,7 +270,7 @@ it('sets cron for every weekend', function (): void {
 });
 
 it('sets cron for mondays', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->mondays();
 
     $ref = new ReflectionClass($scheduler);
@@ -235,7 +282,7 @@ it('sets cron for mondays', function (): void {
 });
 
 it('sets cron for fridays', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->fridays();
 
     $ref = new ReflectionClass($scheduler);
@@ -247,7 +294,7 @@ it('sets cron for fridays', function (): void {
 });
 
 it('sets cron for weeklyAt at specific time', function (): void {
-    $scheduler = (new Schedule())->call(function (): void {
+    $scheduler = (new Schedule(new FakeScheduleLock()))->call('schedule-' . __LINE__, function (): void {
     })->weeklyAt('10:15');
 
     $ref = new ReflectionClass($scheduler);

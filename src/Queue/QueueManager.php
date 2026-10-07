@@ -129,7 +129,8 @@ class QueueManager
 
         return new RedisQueue(
             redis: $client,
-            queueName: $config['queue'] ?? 'default'
+            queueName: $config['queue'] ?? 'default',
+            reservationTimeout: (int) ($config['reservation_timeout'] ?? 60)
         );
     }
 }

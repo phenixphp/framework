@@ -6,7 +6,9 @@ namespace Phenix\Scheduling;
 
 use Closure;
 use Cron\CronExpression;
+use Phenix\Scheduling\Contracts\ScheduleLock;
 use Phenix\Util\Date;
+use Throwable;
 
 use function Amp\weakClosure;
 use function count;
@@ -20,7 +22,10 @@ class Scheduler
     protected CronExpression|null $expression = null;
 
     public function __construct(
-        Closure $closure
+        protected string $name,
+        Closure $closure,
+        protected ScheduleLock $lock,
+        protected int $lockTtl = 86400
     ) {
         $this->closure = weakClosure($closure);
     }
@@ -151,8 +156,28 @@ class Scheduler
         $now ??= Date::now();
         $localNow = $now->copy()->timezone($this->timezone);
 
-        if ($this->expression->isDue($localNow)) {
+        $occurrence = $now->copy()->utc()->format('YmdHi');
+
+        if (! $this->expression->isDue($localNow)) {
+            return;
+        }
+
+        $token = $this->lock->acquire($this->name, $occurrence, $this->lockTtl);
+
+        if ($token === null) {
+            return;
+        }
+
+        try {
             ($this->closure)();
+        } catch (Throwable $exception) {
+            try {
+                $this->lock->release($this->name, $occurrence, $token);
+            } catch (Throwable) {
+                // Preserve the callback exception if Redis is also unavailable.
+            }
+
+            throw $exception;
         }
     }
 }

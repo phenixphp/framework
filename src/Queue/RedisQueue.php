@@ -8,13 +8,15 @@ use Phenix\Queue\StateManagers\RedisTaskState;
 use Phenix\Redis\Contracts\Client;
 use Phenix\Tasks\QueuableTask;
 
+use function is_array;
 use function is_int;
 
 class RedisQueue extends Queue
 {
     public function __construct(
         protected Client $redis,
-        string|null $queueName = 'default'
+        string|null $queueName = 'default',
+        protected int $reservationTimeout = 60
     ) {
         parent::__construct($queueName);
 
@@ -23,17 +25,27 @@ class RedisQueue extends Queue
 
     public function size(): int
     {
-        $result = $this->redis->execute('LLEN', $this->getQueueKey());
+        $result = $this->redis->execute('LLEN', $this->readyKey());
 
         return is_int($result) ? $result : 0;
     }
 
     public function push(QueuableTask $task): void
     {
-        $queueKey = $this->getQueueKey($task->getQueueName());
-        $payload = $task->getPayload();
+        $queue = $task->getQueueName() ?? $this->queueName ?? 'default';
+        $task->setQueueName($queue);
 
-        $this->redis->execute('RPUSH', $queueKey, $payload);
+        $this->redis->execute(
+            'EVAL',
+            LuaScripts::push(),
+            2,
+            $this->readyKey($queue),
+            $this->taskDataKey($task->getTaskId()),
+            $task->getTaskId(),
+            $task->getPayload(),
+            $queue,
+            time()
+        );
     }
 
     public function pushOn(string $queue, QueuableTask $task): static
@@ -46,34 +58,46 @@ class RedisQueue extends Queue
 
     public function pop(string|null $queueName = null): QueuableTask|null
     {
-        $queueKey = $this->getQueueKey($queueName);
-        $failedQueueKey = "queues:failed";
-        $delayedQueueKey = "queues:delayed";
+        $queue = $queueName ?? $this->queueName ?? 'default';
+        $now = time();
+        $receipt = bin2hex(random_bytes(16));
+        $result = $this->redis->execute(
+            'EVAL',
+            LuaScripts::pop(),
+            3,
+            $this->readyKey($queue),
+            $this->reservedKey($queue),
+            $this->delayedKey($queue),
+            $now,
+            $now + $this->reservationTimeout,
+            $receipt
+        );
 
-        $payload = $this->redis->execute('EVAL', LuaScripts::pop(), 3, $queueKey, $failedQueueKey, $delayedQueueKey, time(), 60);
-
-        if ($payload === null) {
+        if (! is_array($result) || count($result) !== 3) {
             return null;
         }
 
+        [$taskId, $payload, $attempts] = $result;
         $task = $this->restoreTask($payload);
 
-        if ($task) {
-            $task->setQueueName($queueName ?? $this->queueName ?? 'default');
+        if ($task === null) {
+            $this->redis->execute('ZREM', $this->reservedKey($queue), (string) $taskId);
+            $this->redis->execute('DEL', $this->taskDataKey((string) $taskId));
 
-            if ($this->stateManager->reserve($task)) {
-                return $task;
-            }
-
-            $this->redis->execute('RPUSH', $queueKey, $payload);
+            return null;
         }
 
-        return null;
+        $task->setTaskId((string) $taskId);
+        $task->setQueueName($queue);
+        $task->setAttempts((int) $attempts);
+
+        if ($this->stateManager instanceof RedisTaskState) {
+            $this->stateManager->registerReceipt($task, $receipt);
+        }
+
+        return $task;
     }
 
-    /**
-     * @return array<int, QueuableTask>
-     */
     public function popChunk(int $limit, string|null $queueName = null): array
     {
         if ($limit <= 0) {
@@ -97,13 +121,34 @@ class RedisQueue extends Queue
 
     public function clear(): void
     {
-        $this->redis->execute('DEL', $this->getQueueKey());
+        $queue = $this->queueName ?? 'default';
+        $this->redis->execute(
+            'EVAL',
+            LuaScripts::clear(),
+            3,
+            $this->readyKey($queue),
+            $this->reservedKey($queue),
+            $this->delayedKey($queue)
+        );
     }
 
-    protected function getQueueKey(string|null $queueName = null): string
+    protected function readyKey(string|null $queueName = null): string
     {
-        $queue = $queueName ?? $this->queueName ?? 'default';
+        return 'queues:' . ($queueName ?? $this->queueName ?? 'default') . ':ready';
+    }
 
-        return "queues:{$queue}";
+    protected function reservedKey(string|null $queueName = null): string
+    {
+        return 'queues:' . ($queueName ?? $this->queueName ?? 'default') . ':reserved';
+    }
+
+    protected function delayedKey(string|null $queueName = null): string
+    {
+        return 'queues:' . ($queueName ?? $this->queueName ?? 'default') . ':delayed';
+    }
+
+    protected function taskDataKey(string $taskId): string
+    {
+        return "task:data:{$taskId}";
     }
 }
