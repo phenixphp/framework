@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Release Notes for 0.9.x
 
+## [v0.10.1 (2026-10-07)](https://github.com/phenixphp/framework/compare/0.10.0...0.10.1)
+
+### Changed
+
+- Expose public URL and listen custom host. ([#138](https://github.com/phenixphp/framework/pull/138))
+- Improve Redis implementation in queues. ([#139](https://github.com/phenixphp/framework/pull/139))
+
+### Removed
+
+- Timers in the scheduler. ([#139](https://github.com/phenixphp/framework/pull/139))
+
+## [v0.10.0 (2026-06-05)](https://github.com/phenixphp/framework/compare/0.9.2...0.10.0)
+
+### Added
+
+- Support for Server-Sent Events. ([#137](https://github.com/phenixphp/framework/pull/137))
+
+
+## [v0.9.2 (2026-05-25)](https://github.com/phenixphp/framework/compare/0.9.1...0.9.2)
+
+### Fixed
+
+- Escape inline values from template section. ([#136](https://github.com/phenixphp/framework/pull/136))
+
 ## [v0.9.1 (2026-05-25)](https://github.com/phenixphp/framework/compare/0.9.0...0.9.1)
 
 ### Changed
