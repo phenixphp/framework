@@ -44,7 +44,6 @@ class Mockery extends MockeryBase
     public function expect(callable ...$methods)
     {
         foreach ($methods as $method => $expectation) {
-            /** @phpstan-ignore-next-line */
             $method = $this->mock
                 ->shouldReceive((string) $method)
                 ->atLeast()

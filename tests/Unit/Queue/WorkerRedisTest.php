@@ -12,109 +12,36 @@ use Phenix\Redis\ClientWrapper;
 use Tests\Unit\Tasks\Internal\BadTask;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Config::set('queue.default', QueueDriver::REDIS->value);
 });
 
-it('processes a successful task', function (): void {
-    $client = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('processes and acknowledges a successful reserved task', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $task = new BasicQueuableTask();
 
-    $payload = serialize(new BasicQueuableTask());
-
-    $client->expects($this->exactly(6))
-        ->method('execute')
+    $client->expects($this->exactly(2))->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [
-                $this->equalTo('HSET'),
-                $this->stringStartsWith('task:data:'),
-                $this->isType('string'), // attempts
-                $this->isType('int'),    // 1
-                $this->isType('string'), // reserved_at
-                $this->isType('int'),    // timestamp
-                $this->isType('string'), // reserved_until
-                $this->isType('int'),    // timestamp
-                $this->isType('string'), // payload
-                $this->isType('string'), // serialized payload
-            ],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            [$this->equalTo('DEL'), $this->stringStartsWith('task:reserved:'), $this->stringStartsWith('task:data:')],
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')]
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default:ready'), $this->equalTo('queues:default:reserved'), $this->equalTo('queues:default:delayed'), $this->isType('int'), $this->isType('int'), $this->isType('string')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(2), $this->equalTo('queues:default:reserved'), $this->equalTo('task:data:' . $task->getTaskId()), $this->equalTo($task->getTaskId()), $this->isType('string')]
         )
-        ->willReturnOnConsecutiveCalls(
-            $payload, // EVAL returns payload (script handles failed task checking)
-            1,        // SETNX succeeds
-            1,        // HSET succeeds
-            1,        // EXPIRE succeeds
-            1,        // DEL succeeds
-            1         // EVAL cleanup succeeds
-        );
+        ->willReturnOnConsecutiveCalls([$task->getTaskId(), $task->getPayload(), 1], 1);
 
     $this->app->swap(Connection::redis('default'), $client);
-
-    $queueManager = new QueueManager();
-    $worker = new Worker($queueManager);
-
-    $worker->runOnce('default', 'default', new WorkerOptions(once: true, sleep: 1));
+    (new Worker(new QueueManager()))->runOnce('default', 'default', new WorkerOptions(once: true));
 });
 
-it('processes a failed task and retries', function (): void {
-    $client = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('atomically schedules retry for a failed reserved task', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $task = new BadTask();
 
-    $payload = serialize(new BadTask());
-
-    $client->expects($this->exactly(8))
-        ->method('execute')
+    $client->expects($this->exactly(2))->method('execute')
         ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [
-                $this->equalTo('HSET'),
-                $this->stringStartsWith('task:data:'),
-                $this->isType('string'), $this->isType('int'),
-                $this->isType('string'), $this->isType('int'),
-                $this->isType('string'), $this->isType('int'),
-                $this->isType('string'), $this->isType('string'),
-            ],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            // retry() - now uses Lua script
-            [
-                $this->equalTo('EVAL'),
-                $this->isType('string'), // Lua script
-                $this->equalTo(4), // number of keys
-                $this->stringStartsWith('task:reserved:'),
-                $this->stringStartsWith('task:data:'),
-                $this->equalTo('queues:default'),
-                $this->equalTo('queues:delayed'),
-                $this->isType('int'), // attempts
-                $this->isType('string'), // payload
-                $this->equalTo(0), // delay
-                $this->isType('int'), // execute_at timestamp
-            ],
-            [$this->equalTo('DEL'), $this->stringStartsWith('task:failed:')],
-            [$this->equalTo('LREM'), $this->equalTo('queues:failed'), $this->equalTo(0), $this->isType('string')],
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(0), $this->isType('int')], // cleanupExpiredReservations at end of processTask
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default:ready'), $this->equalTo('queues:default:reserved'), $this->equalTo('queues:default:delayed'), $this->isType('int'), $this->isType('int'), $this->isType('string')],
+            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(6), $this->equalTo('queues:default:reserved'), $this->equalTo('task:data:' . $task->getTaskId()), $this->equalTo('queues:default:ready'), $this->equalTo('queues:default:delayed'), $this->equalTo('task:failed:' . $task->getTaskId()), $this->equalTo('queues:failed'), $this->equalTo($task->getTaskId()), $this->isType('string'), $this->equalTo(0), $this->isType('int'), $this->isType('string')]
         )
-        ->willReturnOnConsecutiveCalls(
-            $payload, // EVAL returns payload (script handles failed task checking)
-            1,        // SETNX succeeds
-            1,        // HSET succeeds
-            1,        // EXPIRE succeeds
-            1,        // EVAL succeeds (retry Lua script)
-            1,        // DEL succeeds (cleanup failed)
-            1,        // LREM succeeds (cleanup failed queue)
-            1         // EVAL cleanup succeeds
-        );
+        ->willReturnOnConsecutiveCalls([$task->getTaskId(), $task->getPayload(), 1], 1);
 
     $this->app->swap(Connection::redis('default'), $client);
-
-    $queueManager = new QueueManager();
-    $worker = new Worker($queueManager);
-
-    $worker->runOnce('default', 'default', new WorkerOptions(once: true, sleep: 1, retryDelay: 0));
+    (new Worker(new QueueManager()))->runOnce('default', 'default', new WorkerOptions(once: true, retryDelay: 0));
 });

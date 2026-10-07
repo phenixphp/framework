@@ -2,479 +2,185 @@
 
 declare(strict_types=1);
 
-use Phenix\Database\Constants\Connection;
-use Phenix\Facades\Config;
-use Phenix\Facades\Queue;
-use Phenix\Queue\Constants\QueueDriver;
-use Phenix\Queue\QueueManager;
+use Phenix\Queue\LuaScripts;
 use Phenix\Queue\RedisQueue;
 use Phenix\Queue\StateManagers\RedisTaskState;
 use Phenix\Redis\ClientWrapper;
 use Tests\Unit\Tasks\Internal\BasicQueuableTask;
 
-beforeEach(function (): void {
-    Config::set('queue.default', QueueDriver::REDIS->value);
-});
+it('stores task data and the ready id atomically', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $task = new BasicQueuableTask();
 
-it('dispatch a task', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
+    $client->expects($this->once())
         ->method('execute')
         ->with(
-            $this->equalTo('RPUSH'),
-            $this->equalTo('queues:default'),
-            $this->isType('string') // Assuming payload is serialized to a string
-        )
-        ->willReturn(true);
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    BasicQueuableTask::dispatch();
-});
-
-it('push the task', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with(
-            $this->equalTo('RPUSH'),
-            $this->equalTo('queues:default'),
-            $this->isType('string')
-        )
-        ->willReturn(true);
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    Queue::push(new BasicQueuableTask());
-});
-
-it('enqueues the task on a custom queue', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with(
-            $this->equalTo('RPUSH'),
-            $this->equalTo('queues:custom-queue'),
-            $this->isType('string')
-        )
-        ->willReturn(true);
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    Queue::pushOn('custom-queue', new BasicQueuableTask());
-});
-
-it('returns a task', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $payload = serialize(new BasicQueuableTask());
-
-    $clientMock->expects($this->exactly(4))
-        ->method('execute')
-        ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [
-                $this->equalTo('HSET'),
-                $this->stringStartsWith('task:data:'),
-                $this->isType('string'), // attempts
-                $this->isType('int'),    // 1
-                $this->isType('string'), // reserved_at
-                $this->isType('int'),    // timestamp
-                $this->isType('string'), // reserved_until
-                $this->isType('int'),    // timestamp
-                $this->isType('string'), // payload
-                $this->isType('string'),  // serialized payload
-            ],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')]
-        )
-        ->willReturnOnConsecutiveCalls(
-            $payload,
-            1,
-            1,
-            1
-        );
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    $task = Queue::pop();
-    expect($task)->not()->toBeNull();
-    expect($task)->toBeInstanceOf(BasicQueuableTask::class);
-});
-
-it('rejects unauthorized serialized payloads', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with(
-            $this->equalTo('EVAL'),
+            'EVAL',
             $this->isType('string'),
-            $this->equalTo(3),
-            $this->equalTo('queues:default'),
-            $this->equalTo('queues:failed'),
-            $this->equalTo('queues:delayed'),
-            $this->isType('int'),
-            $this->equalTo(60)
-        )
-        ->willReturn(serialize(new stdClass()));
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    expect(Queue::pop())->toBeNull();
-});
-
-it('returns the queue size', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with($this->equalTo('LLEN'), $this->equalTo('queues:default'))
-        ->willReturn(7);
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    expect(Queue::size())->toBe(7);
-});
-
-it('clear the queue', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with($this->equalTo('DEL'), $this->equalTo('queues:default'));
-
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    Queue::clear();
-});
-
-it('gets and sets the connection name via facade', function (): void {
-    $managerMock = $this->getMockBuilder(QueueManager::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $managerMock->expects($this->once())
-        ->method('getConnectionName')
-        ->willReturn('redis-connection');
-
-    $managerMock->expects($this->once())
-        ->method('setConnectionName')
-        ->with('redis-connection');
-
-    $this->app->swap(QueueManager::class, $managerMock);
-
-    expect(Queue::getConnectionName())->toBe('redis-connection');
-
-    Queue::setConnectionName('redis-connection');
-});
-
-it('requeues the payload and returns null when reservation fails', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $payload = serialize(new BasicQueuableTask());
-
-    $clientMock->expects($this->exactly(3))
-        ->method('execute')
-        ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload)],
-        )
-        ->willReturnOnConsecutiveCalls(
-            $payload, // EVAL returns a task payload (script handles failed task checking)
-            0,        // SETNX fails -> cannot reserve
-            1         // RPUSH requeues the same payload
+            2,
+            'queues:default:ready',
+            'task:data:' . $task->getTaskId(),
+            $task->getTaskId(),
+            $this->isType('string'),
+            'default',
+            $this->isType('int')
         );
 
-    $this->app->swap(Connection::redis('default'), $clientMock);
-
-    $task = Queue::pop();
-
-    expect($task)->toBeNull();
+    (new RedisQueue($client))->push($task);
 });
 
-it('returns null when queue is empty', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with($this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60))
-        ->willReturn(null); // EVAL returns null when queue is empty or all tasks are failed
-
-    $queue = new RedisQueue($clientMock, 'default');
-
-    $task = $queue->pop();
-
-    expect($task)->toBeNull();
-});
-
-it('marks a task as failed and cleans reservation/data keys', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
+it('atomically pops and reserves a task', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
     $task = new BasicQueuableTask();
-    $task->setTaskId('task-123');
 
-    $state = new RedisTaskState($clientMock);
-
-    $clientMock->expects($this->exactly(3))
-        ->method('execute')
-        ->withConsecutive(
-            [
-                $this->equalTo('HSET'),
-                $this->equalTo('task:failed:task-123'),
-                $this->equalTo('task_id'), $this->equalTo('task-123'),
-                $this->equalTo('failed_at'), $this->isType('int'),
-                $this->equalTo('exception'), $this->isType('string'),
-                $this->equalTo('payload'), $this->isType('string'),
-            ],
-            [
-                $this->equalTo('LPUSH'),
-                $this->equalTo('queues:failed'),
-                $this->equalTo('task-123'),
-            ],
-            [
-                $this->equalTo('DEL'),
-                $this->equalTo('task:reserved:task-123'),
-                $this->equalTo('task:data:task-123'),
-            ]
-        )
-        ->willReturnOnConsecutiveCalls(1, 1, 1);
-
-    $state->fail($task, new Exception('Boom', 500));
-});
-
-it('retries a task with delay greater than zero by enqueuing into the delayed zset', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $task = new BasicQueuableTask();
-    $task->setTaskId('task-retry-1');
-
-    $clientMock->expects($this->exactly(3))
-        ->method('execute')
-        ->withConsecutive(
-            [
-                $this->equalTo('EVAL'),
-                $this->isType('string'), // Lua script
-                $this->equalTo(4), // number of keys
-                $this->equalTo('task:reserved:task-retry-1'),
-                $this->equalTo('task:data:task-retry-1'),
-                $this->equalTo('queues:'),
-                $this->equalTo('queues:delayed'),
-                $this->equalTo(1), // attempts should be 1 after increment
-                $this->callback(function ($payload) {
-                    // The payload should contain a task with attempts = 1
-                    $task = unserialize($payload);
-
-                    return $task->getAttempts() === 1;
-                }),
-                $this->equalTo(30), // delay
-                $this->isType('int'), // execute_at timestamp
-            ],
-            [
-                $this->equalTo('DEL'),
-                $this->equalTo('task:failed:task-retry-1'),
-            ],
-            [
-                $this->equalTo('LREM'),
-                $this->equalTo('queues:failed'),
-                $this->equalTo(0),
-                $this->equalTo('task-retry-1'),
-            ],
-        )
-        ->willReturnOnConsecutiveCalls(1, 1, 1);
-
-    $queue = new RedisQueue($clientMock);
-    $queue->getStateManager()->retry($task, 30);
-});
-
-it('cleans expired reservations via Lua script', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-
-    $clientMock->expects($this->once())
+    $client->expects($this->once())
         ->method('execute')
         ->with(
-            $this->equalTo('EVAL'),
-            $this->isType('string'), // Lua script
-            $this->equalTo(0),
-            $this->isType('int'),    // now timestamp
+            'EVAL',
+            $this->isType('string'),
+            3,
+            'queues:default:ready',
+            'queues:default:reserved',
+            'queues:default:delayed',
+            $this->isType('int'),
+            $this->isType('int'),
+            $this->isType('string')
         )
-        ->willReturn(1);
+        ->willReturn([$task->getTaskId(), $task->getPayload(), 2]);
 
-    $state = new RedisTaskState($clientMock);
-    $state->cleanupExpiredReservations();
+    $popped = (new RedisQueue($client))->pop();
+
+    expect($popped)->toBeInstanceOf(BasicQueuableTask::class)
+        ->and($popped->getTaskId())->toBe($task->getTaskId())
+        ->and($popped->getQueueName())->toBe('default')
+        ->and($popped->getAttempts())->toBe(2);
 });
 
-it('returns null from getTaskState when no data exists', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('returns null when the ready queue is empty', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $client->expects($this->once())->method('execute')->willReturn(null);
 
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with($this->equalTo('HGETALL'), $this->equalTo('task:data:task-nope'))
-        ->willReturn([]);
-
-    $state = new RedisTaskState($clientMock);
-    $this->assertNull($state->getTaskState('task-nope'));
+    expect((new RedisQueue($client))->pop())->toBeNull();
 });
 
-it('returns task state array from getTaskState when data exists', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('reports ready queue size', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $client->expects($this->once())->method('execute')
+        ->with('LLEN', 'queues:default:ready')->willReturn(3);
 
-    // Simulate Redis HGETALL flat array response
-    $hgetAll = [
-        'attempts', 2,
-        'reserved_at', 1700000000,
-        'available_at', 1700000100,
-        'payload', serialize(new BasicQueuableTask()),
-    ];
-
-    $clientMock->expects($this->once())
-        ->method('execute')
-        ->with($this->equalTo('HGETALL'), $this->equalTo('task:data:task-123'))
-        ->willReturn($hgetAll);
-
-    $state = new RedisTaskState($clientMock);
-    $data = $state->getTaskState('task-123');
-
-    $this->assertIsArray($data);
-    $this->assertArrayHasKey('attempts', $data);
-    $this->assertArrayHasKey('reserved_at', $data);
-    $this->assertArrayHasKey('available_at', $data);
-    $this->assertArrayHasKey('payload', $data);
-    $this->assertSame(2, $data['attempts']);
-    $this->assertSame(1700000000, $data['reserved_at']);
-    $this->assertSame(1700000100, $data['available_at']);
-    $this->assertIsString($data['payload']);
+    expect((new RedisQueue($client))->size())->toBe(3);
 });
 
-it('properly pops tasks in chunks with limited timeout', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('clears ready and delayed tasks without deleting active reservations', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $client->expects($this->once())->method('execute')->with(
+        'EVAL',
+        $this->isType('string'),
+        3,
+        'queues:default:ready',
+        'queues:default:reserved',
+        'queues:default:delayed'
+    );
 
-    $queue = new RedisQueue($clientMock, 'default');
-
-    $payloads = [
-        serialize(new BasicQueuableTask()),
-        serialize(new BasicQueuableTask()),
-        serialize(new BasicQueuableTask()),
-    ];
-
-    // Expect 12 calls to execute method with specific order
-    $clientMock->expects($this->exactly(12))
-        ->method('execute')
-        ->withConsecutive(
-            // First task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            // Second task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')],
-            // Third task
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [$this->equalTo('HSET'), $this->stringStartsWith('task:data:'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('int'), $this->isType('string'), $this->isType('string')],
-            [$this->equalTo('EXPIRE'), $this->stringStartsWith('task:data:'), $this->isType('int')]
-        )
-        ->willReturnOnConsecutiveCalls(
-            // First task returns
-            $payloads[0],
-            1,
-            1,
-            1,
-            // Second task returns
-            $payloads[1],
-            1,
-            1,
-            1,
-            // Third task returns
-            $payloads[2],
-            1,
-            1,
-            1
-        );
-
-    $task1 = $queue->pop();
-    $task2 = $queue->pop();
-    $task3 = $queue->pop();
-
-    expect($task1)->toBeInstanceOf(BasicQueuableTask::class);
-    expect($task2)->toBeInstanceOf(BasicQueuableTask::class);
-    expect($task3)->toBeInstanceOf(BasicQueuableTask::class);
+    (new RedisQueue($client))->clear();
 });
 
-it('returns empty chunk when limit is zero', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('acknowledges a reserved task atomically', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $task = new BasicQueuableTask();
+    $task->setQueueName('emails');
+    $state = new RedisTaskState($client);
+    $state->registerReceipt($task, 'receipt-1');
 
-    $clientMock->expects($this->never())->method('execute');
+    $client->expects($this->once())->method('execute')->with(
+        'EVAL',
+        $this->isType('string'),
+        2,
+        'queues:emails:reserved',
+        'task:data:' . $task->getTaskId(),
+        $task->getTaskId(),
+        'receipt-1'
+    );
 
-    $queue = new RedisQueue($clientMock);
-    $chunk = $queue->popChunk(0);
-
-    $this->assertIsArray($chunk);
-    $this->assertCount(0, $chunk);
+    $state->complete($task);
 });
 
-it('returns empty chunk when first reservation fails', function (): void {
-    $clientMock = $this->getMockBuilder(ClientWrapper::class)
-        ->disableOriginalConstructor()
-        ->getMock();
+it('retries into the queue-specific delayed set', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $task = new BasicQueuableTask();
+    $task->setQueueName('emails');
+    $task->setAttempts(2);
+    $state = new RedisTaskState($client);
+    $state->registerReceipt($task, 'receipt-2');
 
-    $payload1 = serialize(new BasicQueuableTask()); // Will fail reservation
+    $client->expects($this->once())->method('execute')->with(
+        'EVAL',
+        $this->isType('string'),
+        6,
+        'queues:emails:reserved',
+        'task:data:' . $task->getTaskId(),
+        'queues:emails:ready',
+        'queues:emails:delayed',
+        'task:failed:' . $task->getTaskId(),
+        'queues:failed',
+        $task->getTaskId(),
+        $this->callback(fn (string $payload): bool => unserialize($payload)->getAttempts() === 2),
+        30,
+        $this->isType('int'),
+        'receipt-2'
+    );
 
-    $clientMock->expects($this->exactly(3))
-        ->method('execute')
-        ->withConsecutive(
-            [$this->equalTo('EVAL'), $this->isType('string'), $this->equalTo(3), $this->equalTo('queues:default'), $this->equalTo('queues:failed'), $this->equalTo('queues:delayed'), $this->isType('int'), $this->equalTo(60)],
-            [$this->equalTo('SETNX'), $this->stringStartsWith('task:reserved:'), $this->isType('int')],
-            [$this->equalTo('RPUSH'), $this->equalTo('queues:default'), $this->identicalTo($payload1)],
-        )
-        ->willReturnOnConsecutiveCalls(
-            $payload1, // EVAL returns payload (script handles failed task checking)
-            0,        // SETNX fails
-            1,        // RPUSH requeues payload
-        );
+    $state->retry($task, 30);
+});
 
-    $queue = new RedisQueue($clientMock);
-    $chunk = $queue->popChunk(3);
+it('recovers expired reservations in bounded batches during pop', function (): void {
+    $script = LuaScripts::pop();
 
-    $this->assertIsArray($chunk);
-    $this->assertCount(0, $chunk);
+    expect($script)->toContain("redis.call('ZRANGEBYSCORE', KEYS[2], 0, now, 'LIMIT', 0, 100)")
+        ->and($script)->toContain("redis.call('RPUSH', KEYS[1], task_id)")
+        ->and($script)->not->toContain("redis.call('SCAN'");
+});
+
+it('rejects stale acknowledgements using the reservation receipt', function (): void {
+    expect(LuaScripts::complete())->toContain("'receipt') ~= ARGV[2]")
+        ->and(LuaScripts::retry())->toContain("'receipt') ~= ARGV[5]")
+        ->and(LuaScripts::fail())->toContain("'receipt') ~= ARGV[6]");
+});
+
+it('keeps queue ownership while promoting delayed tasks', function (): void {
+    $script = LuaScripts::pop();
+
+    expect($script)->toContain("redis.call('ZRANGEBYSCORE', KEYS[3]")
+        ->and($script)->toContain("redis.call('RPUSH', KEYS[1], task_id)");
+});
+
+it('associates receipts with reservation objects instead of task ids', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $first = new BasicQueuableTask();
+    $second = clone $first;
+    $state = new RedisTaskState($client);
+
+    $state->registerReceipt($first, 'receipt-1');
+    $state->registerReceipt($second, 'receipt-2');
+
+    $client->expects($this->exactly(2))->method('execute')->withConsecutive(
+        ['EVAL', $this->isType('string'), 2, 'queues:default:reserved', 'task:data:' . $first->getTaskId(), $first->getTaskId(), 'receipt-1'],
+        ['EVAL', $this->isType('string'), 2, 'queues:default:reserved', 'task:data:' . $second->getTaskId(), $second->getTaskId(), 'receipt-2']
+    );
+
+    $state->complete($first);
+    $state->complete($second);
+});
+
+it('does not report an unregistered task as reserved', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+
+    expect((new RedisTaskState($client))->reserve(new BasicQueuableTask()))->toBeFalse();
+});
+
+it('returns empty chunk for a non-positive limit', function (): void {
+    $client = $this->getMockBuilder(ClientWrapper::class)->disableOriginalConstructor()->getMock();
+    $client->expects($this->never())->method('execute');
+
+    expect((new RedisQueue($client))->popChunk(0))->toBe([]);
 });

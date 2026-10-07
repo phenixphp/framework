@@ -6,11 +6,9 @@ namespace Phenix\Facades;
 
 use Phenix\Runtime\Facade;
 use Phenix\Scheduling\Scheduler;
-use Phenix\Scheduling\Timer;
 
 /**
- * @method static Timer timer(Closure $closure)
- * @method static Scheduler call(Closure $closure)
+ * @method static Scheduler call(string $name, Closure $closure)
  * @method static void run()
  *
  * @see \Phenix\Scheduling\Schedule

@@ -4,139 +4,128 @@ declare(strict_types=1);
 
 namespace Phenix\Queue\StateManagers;
 
+use LogicException;
 use Phenix\Queue\Contracts\TaskState;
 use Phenix\Queue\LuaScripts;
 use Phenix\Redis\Contracts\Client;
 use Phenix\Tasks\QueuableTask;
 use Throwable;
+use WeakMap;
 
 class RedisTaskState implements TaskState
 {
-    public function __construct(
-        protected Client $redis
-    ) {
+    /** @var WeakMap<QueuableTask, string> */
+    protected WeakMap $receipts;
+
+    public function __construct(protected Client $redis)
+    {
+        $this->receipts = new WeakMap();
     }
 
     public function reserve(QueuableTask $task, int $timeout = 60): bool
     {
-        $taskId = $this->getTaskId($task);
-        $reservedKey = "task:reserved:{$taskId}";
-        $taskDataKey = "task:data:{$taskId}";
+        return isset($this->receipts[$task]);
+    }
 
-        $reserved = $this->redis->execute('SETNX', $reservedKey, time() + $timeout);
-
-        if ($reserved) {
-            $currentAttempts = $task->getAttempts();
-            $newAttempts = $currentAttempts === 0 ? $currentAttempts + 1 : $currentAttempts;
-
-            $taskData = [
-                'attempts' => $newAttempts,
-                'reserved_at' => time(),
-                'reserved_until' => time() + $timeout,
-                'payload' => $task->getPayload(),
-            ];
-
-            $this->redis->execute('HSET', $taskDataKey, ...$this->flattenArray($taskData));
-            $this->redis->execute('EXPIRE', $taskDataKey, $timeout + 300);
-
-            if ($currentAttempts === 0) {
-                $task->setAttempts($newAttempts);
-            }
-
-            return true;
-        }
-
-        return false;
+    public function registerReceipt(QueuableTask $task, string $receipt): void
+    {
+        $this->receipts[$task] = $receipt;
     }
 
     public function complete(QueuableTask $task): void
     {
-        $taskId = $this->getTaskId($task);
-        $reservedKey = "task:reserved:{$taskId}";
-        $taskDataKey = "task:data:{$taskId}";
+        $this->redis->execute(
+            'EVAL',
+            LuaScripts::complete(),
+            2,
+            $this->reservedKey($task),
+            $this->taskDataKey($task),
+            $task->getTaskId(),
+            $this->receipt($task)
+        );
 
-        $this->redis->execute('DEL', $reservedKey, $taskDataKey);
+        unset($this->receipts[$task]);
     }
 
     public function fail(QueuableTask $task, Throwable $exception): void
     {
-        $taskId = $this->getTaskId($task);
-        $reservedKey = "task:reserved:{$taskId}";
-        $taskDataKey = "task:data:{$taskId}";
-        $failedKey = "task:failed:{$taskId}";
-
-        $failedData = [
-            'task_id' => $taskId,
-            'failed_at' => time(),
-            'exception' => json_encode([
+        $taskId = $task->getTaskId();
+        $this->redis->execute(
+            'EVAL',
+            LuaScripts::fail(),
+            4,
+            $this->reservedKey($task),
+            $this->taskDataKey($task),
+            "task:failed:{$taskId}",
+            'queues:failed',
+            $taskId,
+            time(),
+            json_encode([
                 'message' => $exception->getMessage(),
                 'code' => $exception->getCode(),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
                 'trace' => $exception->getTraceAsString(),
             ]),
-            'payload' => $task->getPayload(),
-        ];
+            $task->getPayload(),
+            $task->getQueueName() ?? 'default',
+            $this->receipt($task)
+        );
 
-        $this->redis->execute('HSET', $failedKey, ...$this->flattenArray($failedData));
-        $this->redis->execute('LPUSH', 'queues:failed', $taskId);
-
-        $this->redis->execute('DEL', $reservedKey, $taskDataKey);
+        unset($this->receipts[$task]);
     }
 
     public function retry(QueuableTask $task, int $delay = 0): void
     {
-        $taskId = $this->getTaskId($task);
-        $reservedKey = "task:reserved:{$taskId}";
-        $taskDataKey = "task:data:{$taskId}";
-        $failedKey = "task:failed:{$taskId}";
-        $queueKey = "queues:{$task->getQueueName()}";
-        $delayedKey = "queues:delayed";
-
-        // Increment attempts before re-queuing for Redis-based queue
-        $task->setAttempts($task->getAttempts() + 1);
+        $taskId = $task->getTaskId();
+        $queue = $task->getQueueName() ?? 'default';
 
         $this->redis->execute(
             'EVAL',
             LuaScripts::retry(),
-            4, // number of keys
-            $reservedKey,
-            $taskDataKey,
-            $queueKey,
-            $delayedKey,
-            $task->getAttempts(), // ARGV[1] - now includes the incremented attempts
-            $task->getPayload(),  // ARGV[2] - updated payload with incremented attempts
-            $delay,               // ARGV[3]
-            time() + $delay       // ARGV[4]
+            6,
+            $this->reservedKey($task),
+            $this->taskDataKey($task),
+            "queues:{$queue}:ready",
+            "queues:{$queue}:delayed",
+            "task:failed:{$taskId}",
+            'queues:failed',
+            $taskId,
+            $task->getPayload(),
+            $delay,
+            time() + $delay,
+            $this->receipt($task)
         );
 
-        $this->redis->execute('DEL', $failedKey);
-        $this->redis->execute('LREM', 'queues:failed', 0, $taskId);
+        unset($this->receipts[$task]);
     }
 
     public function getTaskState(string $taskId): array|null
     {
-        $taskDataKey = "task:data:{$taskId}";
-        $data = $this->redis->execute('HGETALL', $taskDataKey);
+        $data = $this->redis->execute('HGETALL', "task:data:{$taskId}");
 
         return empty($data) ? null : $this->arrayFromRedisHash($data);
     }
 
-    protected function getTaskId(QueuableTask $task): string
+    public function cleanupExpiredReservations(): void
     {
-        return $task->getTaskId();
+        // RedisQueue::pop() recovers expired reservations for the queue being consumed.
     }
 
-    protected function flattenArray(array $data): array
+    protected function taskDataKey(QueuableTask $task): string
     {
-        $flattened = [];
+        return 'task:data:' . $task->getTaskId();
+    }
 
-        foreach ($data as $key => $value) {
-            $flattened[] = $key;
-            $flattened[] = $value;
-        }
+    protected function reservedKey(QueuableTask $task): string
+    {
+        return 'queues:' . ($task->getQueueName() ?? 'default') . ':reserved';
+    }
 
-        return $flattened;
+    protected function receipt(QueuableTask $task): string
+    {
+        return $this->receipts[$task]
+            ?? throw new LogicException('Task does not have an active Redis reservation receipt.');
     }
 
     protected function arrayFromRedisHash(array $hash): array
@@ -148,10 +137,5 @@ class RedisTaskState implements TaskState
         }
 
         return $result;
-    }
-
-    public function cleanupExpiredReservations(): void
-    {
-        $this->redis->execute('EVAL', LuaScripts::cleanupExpiredReservations(), 0, time());
     }
 }
