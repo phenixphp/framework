@@ -88,8 +88,6 @@ class PackageRegistry
 
     protected function getPublishesPath(): array
     {
-        $paths = $this->publishes ?: [[]];
-
-        return [...array_values($paths)];
+        return array_merge(...array_values($this->publishes));
     }
 }

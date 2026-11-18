@@ -117,11 +117,11 @@ class VendorPublish extends Command
 
         $directory = dirname($destination);
 
-        if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
+        if (! is_dir($directory) && ! @mkdir($directory, 0755, true) && ! is_dir($directory)) {
             throw new RuntimeException("Unable to create publish directory {$directory}.");
         }
 
-        if (! copy($source, $destination)) {
+        if (! @copy($source, $destination)) {
             throw new RuntimeException("Unable to publish {$source} to {$destination}.");
         }
 
