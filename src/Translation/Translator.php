@@ -6,9 +6,16 @@ namespace Phenix\Translation;
 
 use Adbar\Dot;
 use Countable;
+use Phenix\App;
 use Phenix\Facades\Config;
 use Phenix\Facades\File;
+use Phenix\Packages\PackageRegistry;
+use Phenix\Util\Path;
 use Resend\Contracts\Stringable;
+
+use function count;
+use function is_array;
+use function is_string;
 
 class Translator
 {
@@ -122,29 +129,57 @@ class Translator
     private static function loadCatalogues(): array
     {
         $path = base_path('lang');
-
-        if (! File::exists($path)) {
-            return [];
-        }
-
         $catalogues = [];
 
-        foreach (File::listFiles($path, false) as $localeDir) {
-            $locale = basename($localeDir);
-            $catalogues[$locale] = [];
+        if (File::exists($path)) {
+            self::loadPath($catalogues, $path);
+        }
 
-            foreach (File::listFiles($localeDir) as $file) {
-                $group = basename($file, '.php');
+        /** @var PackageRegistry $packages */
+        $packages = App::make(PackageRegistry::class);
 
-                $data = require $file;
+        foreach ($packages->translationPaths() as $namespace => $paths) {
+            foreach ($paths as $translationPath) {
+                self::loadPath($catalogues, $translationPath, $namespace);
+            }
 
-                if (is_array($data)) {
-                    $catalogues[$locale][$group] = $data;
-                }
+            $override = Path::join($path, 'vendor', $namespace);
+
+            if (File::exists($override)) {
+                self::loadPath($catalogues, $override, $namespace);
             }
         }
 
         return $catalogues;
+    }
+
+    private static function loadPath(array &$catalogues, string $path, string|null $namespace = null): void
+    {
+        foreach (File::listFiles($path, false) as $localeDir) {
+            if (! File::isDirectory($localeDir)) {
+                continue;
+            }
+
+            $locale = basename($localeDir);
+            $catalogues[$locale] ??= [];
+
+            foreach (File::listFiles($localeDir) as $file) {
+                if (! File::isFile($file) || pathinfo($file, PATHINFO_EXTENSION) !== 'php') {
+                    continue;
+                }
+
+                $group = basename($file, '.php');
+                $key = $namespace === null ? $group : "{$namespace}::{$group}";
+                $data = require $file;
+
+                if (is_array($data)) {
+                    $catalogues[$locale][$key] = array_replace_recursive(
+                        $catalogues[$locale][$key] ?? [],
+                        $data,
+                    );
+                }
+            }
+        }
     }
 
     /**

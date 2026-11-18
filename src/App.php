@@ -39,6 +39,9 @@ use Phenix\Http\Constants\Protocol;
 use Phenix\Http\ErrorHandler as AppErrorHandler;
 use Phenix\Http\ExceptionHandler as AppExceptionHandler;
 use Phenix\Logging\LoggerFactory;
+use Phenix\Packages\PackageManifest;
+use Phenix\Packages\PackageRegistry;
+use Phenix\Providers\ServiceProvider;
 use Phenix\Runtime\Log;
 use Phenix\Session\SessionMiddlewareFactory;
 
@@ -47,6 +50,7 @@ use function Amp\trapSignal;
 use function count;
 use function extension_loaded;
 use function is_array;
+use function is_string;
 
 class App implements AppContract, Makeable
 {
@@ -97,12 +101,25 @@ class App implements AppContract, Makeable
         self::$container->add(HttpClient::class);
         self::$container->add(HttpClientTestLogger::class)->setShared(true);
 
+        $manifest = new PackageManifest(self::$path);
+        self::$container->add(PackageManifest::class, $manifest)->setShared(true);
+        self::$container->add(PackageRegistry::class)->setShared(true);
+
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
         /** @var array $providers */
-        $providers = Config::get('app.providers', []);
+        $providers = array_values(array_unique([
+            ...Config::get('app.providers', []),
+            ...$manifest->providers(),
+        ]));
 
         foreach ($providers as $provider) {
+            if (! is_string($provider) || ! class_exists($provider) || ! is_subclass_of($provider, ServiceProvider::class)) {
+                $providerName = is_string($provider) ? $provider : get_debug_type($provider);
+
+                throw new RuntimeError("Service provider {$providerName} is invalid.");
+            }
+
             self::$container->addServiceProvider(new $provider());
         }
 
