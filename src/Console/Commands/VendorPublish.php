@@ -6,7 +6,7 @@ namespace Phenix\Console\Commands;
 
 use FilesystemIterator;
 use Phenix\App;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Packages\PackageRegistry;
 use Phenix\Util\Path;
 use RecursiveDirectoryIterator;
@@ -85,7 +85,7 @@ class VendorPublish extends Command
         }
 
         if (! is_dir($source)) {
-            throw new RuntimeError("Publish source {$source} does not exist.");
+            throw new RuntimeException("Publish source {$source} does not exist.");
         }
 
         $iterator = new RecursiveIteratorIterator(
@@ -118,11 +118,11 @@ class VendorPublish extends Command
         $directory = dirname($destination);
 
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
-            throw new RuntimeError("Unable to create publish directory {$directory}.");
+            throw new RuntimeException("Unable to create publish directory {$directory}.");
         }
 
         if (! copy($source, $destination)) {
-            throw new RuntimeError("Unable to publish {$source} to {$destination}.");
+            throw new RuntimeException("Unable to publish {$source} to {$destination}.");
         }
 
         return true;

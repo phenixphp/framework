@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Concerns;
 
 use League\Uri\Uri;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 
 use function in_array;
@@ -19,7 +19,7 @@ trait ResolveHost
         $host = $uri->getHost();
 
         if (! in_array($uri->getScheme(), ['http', 'https'], true) || $host === '') {
-            throw new RuntimeError('App URL must be an absolute HTTP or HTTPS URL with a host.');
+            throw new RuntimeException('App URL must be an absolute HTTP or HTTPS URL with a host.');
         }
 
         return $host;
@@ -30,7 +30,7 @@ trait ResolveHost
         $host = trim((string) Config::get('app.host'));
 
         if ($host === '') {
-            throw new RuntimeError('Bind host must not be empty.');
+            throw new RuntimeException('Bind host must not be empty.');
         }
 
         return trim($host, '[]');
@@ -41,7 +41,7 @@ trait ResolveHost
         $port = (int) Config::get('app.port');
 
         if ($port < 1 || $port > 65535) {
-            throw new RuntimeError('Bind port must be between 1 and 65535.');
+            throw new RuntimeException('Bind port must be between 1 and 65535.');
         }
 
         return $port;

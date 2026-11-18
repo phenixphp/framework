@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Amp\Log\ConsoleFormatter;
 use Monolog\Formatter\LineFormatter;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Logging\LoggerFactory;
 
 it('makes all supported logger channels', function (string $channel, string $formatter) {
@@ -22,5 +22,5 @@ it('makes all supported logger channels', function (string $channel, string $for
 it('throws error on unsupported channel', function () {
     expect(function () {
         LoggerFactory::make('unsupported');
-    })->toThrow(RuntimeError::class);
+    })->toThrow(RuntimeException::class);
 });

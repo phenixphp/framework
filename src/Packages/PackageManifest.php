@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Packages;
 
 use JsonException;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Util\Path;
 
 use function in_array;
@@ -128,7 +128,7 @@ class PackageManifest
         try {
             $installed = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new RuntimeError("Unable to read Composer package metadata at {$path}.", 0, $exception);
+            throw new RuntimeException("Unable to read Composer package metadata at {$path}.", 0, $exception);
         }
 
         if (! is_array($installed)) {
@@ -151,7 +151,7 @@ class PackageManifest
         try {
             $composer = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new RuntimeError("Unable to read the application Composer file at {$path}.", 0, $exception);
+            throw new RuntimeException("Unable to read the application Composer file at {$path}.", 0, $exception);
         }
 
         $ignored = $composer['extra']['phenix']['dont-discover'] ?? [];
@@ -164,17 +164,17 @@ class PackageManifest
         $directory = dirname($this->manifestPath);
 
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
-            throw new RuntimeError("The package cache directory {$directory} could not be created.");
+            throw new RuntimeException("The package cache directory {$directory} could not be created.");
         }
 
         if (! is_writable($directory)) {
-            throw new RuntimeError("The package cache directory {$directory} must be writable.");
+            throw new RuntimeException("The package cache directory {$directory} must be writable.");
         }
 
         $temporaryPath = tempnam($directory, 'packages-');
 
         if ($temporaryPath === false) {
-            throw new RuntimeError("Unable to create a temporary package manifest in {$directory}.");
+            throw new RuntimeException("Unable to create a temporary package manifest in {$directory}.");
         }
 
         $contents = '<?php' . PHP_EOL . PHP_EOL . 'return ' . var_export($manifest, true) . ';' . PHP_EOL;
@@ -182,7 +182,7 @@ class PackageManifest
         if (file_put_contents($temporaryPath, $contents, LOCK_EX) === false || ! rename($temporaryPath, $this->manifestPath)) {
             @unlink($temporaryPath);
 
-            throw new RuntimeError("Unable to write the package manifest at {$this->manifestPath}.");
+            throw new RuntimeException("Unable to write the package manifest at {$this->manifestPath}.");
         }
     }
 }

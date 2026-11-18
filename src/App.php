@@ -30,7 +30,7 @@ use Phenix\Constants\AppMode;
 use Phenix\Constants\ServerMode;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Client\HttpClient;
@@ -117,7 +117,7 @@ class App implements AppContract, Makeable
             if (! is_string($provider) || ! class_exists($provider) || ! is_subclass_of($provider, ServiceProvider::class)) {
                 $providerName = is_string($provider) ? $provider : get_debug_type($provider);
 
-                throw new RuntimeError("Service provider {$providerName} is invalid.");
+                throw new RuntimeException("Service provider {$providerName} is invalid.");
             }
 
             self::$container->addServiceProvider(new $provider());
@@ -270,7 +270,7 @@ class App implements AppContract, Makeable
             $trustedProxies = Config::get('app.trusted_proxies', []);
 
             if (is_array($trustedProxies) && count($trustedProxies) === 0) {
-                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+                throw new RuntimeException('Trusted proxies must be an array of IP addresses or CIDRs.');
             }
 
             return SocketHttpServer::createForBehindProxy(
@@ -303,7 +303,7 @@ class App implements AppContract, Makeable
             $trustedProxies = Config::get('app.trusted_proxies', []);
 
             if (is_array($trustedProxies) && count($trustedProxies) === 0) {
-                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+                throw new RuntimeException('Trusted proxies must be an array of IP addresses or CIDRs.');
             }
 
             $middleware[] = new Middleware\ForwardedMiddleware(ForwardedHeaderType::XForwardedFor, $trustedProxies);
