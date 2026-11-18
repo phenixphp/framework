@@ -7,7 +7,6 @@ namespace Phenix\Packages;
 use JsonException;
 use Phenix\Exceptions\RuntimeError;
 use Phenix\Util\Path;
-use RuntimeException;
 
 use function in_array;
 use function is_array;
