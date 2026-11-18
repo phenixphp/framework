@@ -57,7 +57,7 @@ class VendorPublish extends Command
             return Command::SUCCESS;
         }
 
-        $status = Command::SUCCESS;
+        $commandStatus = Command::SUCCESS;
 
         foreach ($paths as $source => $destination) {
             try {
@@ -71,11 +71,11 @@ class VendorPublish extends Command
             } catch (Throwable $exception) {
                 $output->writeln('<error>' . $exception->getMessage() . '</error>');
 
-                $status = Command::FAILURE;
+                $commandStatus = Command::FAILURE;
             }
         }
 
-        return $status;
+        return $commandStatus;
     }
 
     private function publish(string $source, string $destination, bool $force): int
