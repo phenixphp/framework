@@ -48,9 +48,9 @@ class TemplateEngine implements TemplateEngineContract
     public function compile(string $template): void
     {
         $filePath = realpath($this->cache->getSourcePath($template));
-        $basePath = realpath($this->cache->getViewPath());
+        $basePath = realpath($this->cache->getViewPath($template));
 
-        if ($filePath === false || ! str_starts_with($filePath, $basePath)) {
+        if ($filePath === false || $basePath === false || ! str_starts_with($filePath, $basePath)) {
             throw new ViewNotFoundException("Template {$template} not found.");
         }
 

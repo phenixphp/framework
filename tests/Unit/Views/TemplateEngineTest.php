@@ -2,11 +2,32 @@
 
 declare(strict_types=1);
 
+use Phenix\App;
 use Phenix\Facades\View;
+use Phenix\Packages\PackageRegistry;
 use Phenix\Views\Exceptions\ViewNotFoundException;
 use Phenix\Views\TemplateCache;
 use Phenix\Views\TemplateEngine;
 use Phenix\Views\TemplateFactory;
+
+it('renders a namespaced package view', function (): void {
+    $path = base_path('storage/framework/testing/package-views-' . uniqid());
+
+    mkdir($path, 0755, true);
+    file_put_contents("{$path}/index.php", '<h1>{{ $title }}</h1>');
+
+    /** @var PackageRegistry $packages */
+    $packages = App::make(PackageRegistry::class);
+    $packages->addViewPaths($path, 'blog');
+
+    $template = new TemplateEngine();
+    $output = $template->view('blog::index', ['title' => 'Package view'])->render();
+
+    expect($output)->toContain('Package view');
+
+    unlink("{$path}/index.php");
+    rmdir($path);
+});
 
 it('render a template successfully', function (): void {
     $template = new TemplateEngine();

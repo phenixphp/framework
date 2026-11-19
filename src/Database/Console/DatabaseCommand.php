@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Phenix\Database\Console;
 
+use Phenix\App;
 use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
+use Phenix\Packages\PackageRegistry;
 use Phinx\Config\Config as MigrationConfig;
 use Phinx\Console\Command\AbstractCommand;
 use Symfony\Component\Console\Input\InputOption;
@@ -33,9 +35,16 @@ abstract class DatabaseCommand extends AbstractCommand
             $environment['suffix'] = '';
         }
 
+        /** @var PackageRegistry $packages */
+        $packages = App::make(PackageRegistry::class);
+        $migrationPaths = array_values(array_unique([
+            ...(array) Config::get('database.paths.migrations'),
+            ...$packages->migrationPaths(),
+        ]));
+
         $this->config = new MigrationConfig([
             'paths' => [
-                'migrations' => Config::get('database.paths.migrations'),
+                'migrations' => $migrationPaths,
                 'seeds' => Config::get('database.paths.seeds'),
             ],
             'environments' => [

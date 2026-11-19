@@ -14,7 +14,7 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Phenix\Constants\ServerMode;
 use Phenix\Contracts\Makeable;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\File;
 
@@ -32,7 +32,7 @@ class LoggerFactory implements Makeable
             $logHandler = match ($key) {
                 'file' => self::fileHandler($level),
                 'stream' => self::streamHandler($level),
-                default => throw new RuntimeError("Unsupported logging channel: {$key}"),
+                default => throw new RuntimeException("Unsupported logging channel: {$key}"),
             };
         }
 

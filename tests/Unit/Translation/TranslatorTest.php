@@ -2,10 +2,32 @@
 
 declare(strict_types=1);
 
+use Phenix\App;
 use Phenix\Facades\Translator;
 use Phenix\Filesystem\Contracts\File;
+use Phenix\Packages\PackageRegistry;
 use Phenix\Testing\Mock;
 use Phenix\Translation\Translator as Trans;
+
+it('loads namespaced package translations', function (): void {
+    $path = base_path('storage/framework/testing/package-lang-' . uniqid());
+
+    mkdir("{$path}/en", 0755, true);
+
+    file_put_contents("{$path}/en/messages.php", "<?php return ['created' => 'Created by package'];");
+
+    /** @var PackageRegistry $packages */
+    $packages = App::make(PackageRegistry::class);
+    $packages->addTranslationPath($path, 'blog');
+
+    $translator = Trans::build();
+
+    expect($translator->get('blog::messages.created'))->toBe('Created by package');
+
+    unlink("{$path}/en/messages.php");
+    rmdir("{$path}/en");
+    rmdir($path);
+});
 
 it('returns key when translation missing', function (): void {
     $translator = new Trans('en', 'en');

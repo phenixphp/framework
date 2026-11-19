@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use Monolog\LogRecord;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Runtime\Log;
 
 it('can log messages successfully', function () {
@@ -42,7 +42,7 @@ it('reports an exception in logs', function () {
     $this->app->swap(Log::class, $log);
 
     try {
-        throw new RuntimeError('This is an exception');
+        throw new RuntimeException('This is an exception');
     } catch (Exception $e) {
         report($e);
     }
