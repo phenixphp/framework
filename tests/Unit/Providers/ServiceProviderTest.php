@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Phenix\App;
 use Phenix\Facades\Config;
 use Phenix\Packages\PackageRegistry;
-use Tests\Fixtures\PackageServiceProvider;
+use Tests\Unit\Providers\Internal\PackageServiceProvider;
 
 beforeEach(function (): void {
     $this->providerPath = base_path('storage/framework/testing/service-provider-' . uniqid());
