@@ -28,19 +28,6 @@ class TemplateCache
         return $this->config->cachePath($template);
     }
 
-    public function isCached(string $template): bool
-    {
-        $cacheFile = $this->getCacheFilePath($template);
-        $sourceFile = $this->getSourcePath($template);
-
-        return File::exists($cacheFile) && ! $this->isExpired($sourceFile, $cacheFile);
-    }
-
-    public function put(string $template, string $content): void
-    {
-        File::put($this->getCacheFilePath($template), $content);
-    }
-
     public function clear(): void
     {
         foreach (File::listFiles($this->config->compiledPath()) as $file) {
@@ -48,10 +35,5 @@ class TemplateCache
                 File::deleteFile($file);
             }
         }
-    }
-
-    protected function isExpired(string $sourceFile, string $cacheFile): bool
-    {
-        return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
     }
 }

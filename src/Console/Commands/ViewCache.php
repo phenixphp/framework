@@ -45,7 +45,14 @@ class ViewCache extends Command
 
         $this->compile(Config::get('view.path'));
 
-        WorkerPool::awaitAll($this->tasks);
+        foreach (WorkerPool::awaitAll($this->tasks) as $result) {
+            if ($result->isFailure()) {
+                $message = $result->message();
+                $output->writeln("<error>Unable to compile views: {$message}</error>");
+
+                return Command::FAILURE;
+            }
+        }
 
         $output->writeln('<info>All views were compiled successfully!.</info>');
 
@@ -60,7 +67,7 @@ class ViewCache extends Command
         foreach (File::listFiles($path) as $file) {
             if (File::isDirectory($file)) {
                 $directories[] = $file;
-            } else {
+            } elseif (str_ends_with($file, '.php')) {
                 $templates[] = ViewName::template($file, Config::get('view.path'));
             }
         }

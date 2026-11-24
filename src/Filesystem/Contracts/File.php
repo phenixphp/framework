@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Filesystem\Contracts;
 
+use Amp\Cancellation;
+
 interface File
 {
     public function get(string $path): string;
@@ -19,4 +21,8 @@ interface File
     public function createDirectory(string $path, int $mode = 0777): void;
 
     public function move(string $from, string $to): void;
+
+    public function realPath(string $path, Cancellation|null $cancellation = null): string|false;
+
+    public function getStatus(string $path): array|null;
 }

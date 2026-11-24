@@ -6,6 +6,7 @@ namespace Phenix\Views;
 
 use Phenix\App;
 use Phenix\Facades\Config as Configuration;
+use Phenix\Facades\File;
 use Phenix\Packages\PackageRegistry;
 use Phenix\Util\Path;
 use Phenix\Util\Str;
@@ -66,9 +67,9 @@ class ViewsConfig
 
     private function resolveNamespacedBasePath(string $namespace, string $relativePath): string
     {
-        $override = $this->path(Path::join('vendor', $namespace));
+        $override = Path::join($this->path(), 'vendor', $namespace);
 
-        if (is_file($this->buildPath($override, $relativePath))) {
+        if ($this->isSourceFile($this->buildPath($override, $relativePath))) {
             return $override;
         }
 
@@ -76,12 +77,19 @@ class ViewsConfig
         $packages = App::make(PackageRegistry::class);
 
         foreach ($packages->viewPaths($namespace) as $path) {
-            if (is_file($this->buildPath($path, $relativePath))) {
+            if ($this->isSourceFile($this->buildPath($path, $relativePath))) {
                 return $path;
             }
         }
 
         return $override;
+    }
+
+    private function isSourceFile(string $path): bool
+    {
+        $status = File::getStatus($path);
+
+        return $status !== null && ($status['mode'] & 0170000) === 0100000;
     }
 
     private function parse(string $template): array
