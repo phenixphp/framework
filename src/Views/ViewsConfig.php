@@ -49,14 +49,7 @@ class ViewsConfig
 
     public function cachePath(string $template): string
     {
-        [$namespace, $name] = $this->parse($template);
-        $relativePath = Str::finish(str_replace([DIRECTORY_SEPARATOR, '/', '\\'], '.', $name), '.php');
-
-        if ($namespace !== null) {
-            $relativePath = "vendor.{$namespace}.{$relativePath}";
-        }
-
-        return $this->compiledPath($relativePath);
+        return $this->compiledPath(hash('sha256', $template) . '.php');
     }
 
     public function compiledPath(string|null $path = null): string

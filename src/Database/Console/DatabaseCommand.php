@@ -6,11 +6,14 @@ namespace Phenix\Database\Console;
 
 use Phenix\App;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\MigrationManager;
 use Phenix\Facades\Config;
 use Phenix\Packages\PackageRegistry;
 use Phinx\Config\Config as MigrationConfig;
 use Phinx\Console\Command\AbstractCommand;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class DatabaseCommand extends AbstractCommand
 {
@@ -55,6 +58,23 @@ abstract class DatabaseCommand extends AbstractCommand
         ]);
 
         parent::__construct();
+    }
+
+    protected function loadManager(InputInterface $input, OutputInterface $output): void
+    {
+        if ($this->getManager() === null) {
+            $manager = new MigrationManager($this->getConfig(), $input, $output);
+            $manager->setVerbosityLevel($this->verbosityLevel);
+            $container = $this->getConfig()->getContainer();
+
+            if ($container !== null) {
+                $manager->setContainer($container);
+            }
+
+            $this->setManager($manager);
+        }
+
+        parent::loadManager($input, $output);
     }
 
     /**

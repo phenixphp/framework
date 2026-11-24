@@ -191,7 +191,7 @@ it('reports when a package file cannot be copied', function (): void {
         ->and($command->getDisplay())->toContain("Unable to publish {$source} to {$destination}.");
 });
 
-it('replaces package migration timestamps when publishing', function (): void {
+it('preserves package migration timestamps when publishing', function (): void {
     $source = "{$this->publishPath}/package/migrations/20240101000000_create_posts.php";
     $destination = "{$this->publishPath}/database/migrations/20240101000000_create_posts.php";
     mkdir(dirname($source), 0755, true);
@@ -209,5 +209,5 @@ it('replaces package migration timestamps when publishing', function (): void {
 
     expect($published)->toHaveCount(1)
         ->and(basename($published[0]))->toMatch('/^\d{14}_create_posts\.php$/')
-        ->not->toBe('20240101000000_create_posts.php');
+        ->toBe('20240101000000_create_posts.php');
 });

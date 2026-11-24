@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Phenix\App;
 use Phenix\Facades\View;
-use Phenix\Packages\PackageRegistry;
-use Phenix\Views\Exceptions\ViewNotFoundException;
+use Phenix\Views\ViewsConfig;
 use Phenix\Views\TemplateCache;
 use Phenix\Views\TemplateEngine;
 use Phenix\Views\TemplateFactory;
+use Phenix\Packages\PackageRegistry;
+use Phenix\Views\Exceptions\ViewNotFoundException;
 
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());
@@ -204,4 +205,11 @@ it('register custom directive using facade', function (): void {
 
     expect($output)->toBeString();
     expect($output)->toContain($action);
+});
+
+
+it('uses distinct cache files for package and application view names', function (): void {
+    $config = new ViewsConfig();
+
+    expect($config->cachePath('blog::index'))->not->toBe($config->cachePath('vendor.blog.index'));
 });

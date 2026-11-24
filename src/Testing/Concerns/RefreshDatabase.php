@@ -11,7 +11,7 @@ use Phenix\Database\Constants\Driver;
 use Phenix\Facades\Config;
 use Phenix\Packages\PackageRegistry;
 use Phinx\Config\Config as MigrationConfig;
-use Phinx\Migration\Manager;
+use Phenix\Database\MigrationManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Throwable;
@@ -76,7 +76,7 @@ trait RefreshDatabase
             ],
         ]);
 
-        $manager = new Manager($config, new ArrayInput([]), new NullOutput());
+        $manager = new MigrationManager($config, new ArrayInput([]), new NullOutput());
 
         try {
             $manager->migrate('default');

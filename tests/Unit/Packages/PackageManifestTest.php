@@ -64,3 +64,37 @@ it('honors application package discovery exclusions', function (): void {
 
     expect($manifest->providers())->toBe([]);
 });
+
+
+it('refreshes cached packages when composer metadata or exclusions change', function (): void {
+    $installed = "{$this->packageApp}/vendor/composer/installed.json";
+    $composer = "{$this->packageApp}/composer.json";
+
+    file_put_contents($composer, '{}');
+    file_put_contents($installed, json_encode(['packages' => [[
+        'name' => 'acme/blog', 'extra' => ['phenix' => ['providers' => ['BlogProvider']]],
+    ]]], JSON_THROW_ON_ERROR));
+
+    expect((new PackageManifest($this->packageApp))->providers())->toBe(['BlogProvider']);
+
+    file_put_contents($composer, json_encode(['extra' => ['phenix' => ['dont-discover' => ['acme/blog']]]], JSON_THROW_ON_ERROR));
+
+    expect((new PackageManifest($this->packageApp))->providers())->toBe([]);
+
+    file_put_contents($composer, '{}');
+    file_put_contents($installed, '{"packages":[]}');
+
+    expect((new PackageManifest($this->packageApp))->providers())->toBe([]);
+});
+
+it('rebuilds invalid and legacy manifests', function (): void {
+    $path = "{$this->packageApp}/storage/framework/cache/packages.php";
+
+    file_put_contents($path, '<?php this is invalid');
+
+    expect((new PackageManifest($this->packageApp))->providers())->toBe([]);
+
+    file_put_contents($path, "<?php return ['old' => ['providers' => ['MissingProvider']]];");
+
+    expect((new PackageManifest($this->packageApp))->providers())->toBe([]);
+});

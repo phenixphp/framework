@@ -81,7 +81,7 @@ class VendorPublish extends Command
     private function publish(string $source, string $destination, bool $force): int
     {
         if (is_file($source)) {
-            return $this->copyFile($source, $this->migrationDestination($source, $destination), $force) ? 1 : 0;
+            return $this->copyFile($source, $destination, $force) ? 1 : 0;
         }
 
         if (! is_dir($source)) {
@@ -101,7 +101,7 @@ class VendorPublish extends Command
             $relative = substr($file->getPathname(), strlen($source) + 1);
             $target = Path::join(rtrim($destination, DIRECTORY_SEPARATOR), $relative);
 
-            if ($this->copyFile($file->getPathname(), $this->migrationDestination($file->getPathname(), $target), $force)) {
+            if ($this->copyFile($file->getPathname(), $target, $force)) {
                 $published++;
             }
         }
@@ -128,15 +128,4 @@ class VendorPublish extends Command
         return true;
     }
 
-    private function migrationDestination(string $source, string $destination): string
-    {
-        $name = basename($destination);
-
-        if (! str_contains(str_replace('\\', '/', $source), '/migrations/')
-            || preg_match('/^\d{14}_/', $name) !== 1) {
-            return $destination;
-        }
-
-        return Path::join(dirname($destination), date('YmdHis') . '_' . substr($name, 15));
-    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Packages;
 
 use JsonException;
+use Throwable;
 use Phenix\Exceptions\RuntimeException;
 use Phenix\Util\Path;
 
@@ -51,20 +52,24 @@ class PackageManifest
             return $this->manifest;
         }
 
-        if (! is_file($this->manifestPath)) {
-            $this->build();
+        $cached = null;
+
+        if (is_file($this->manifestPath)) {
+            try {
+                $cached = require $this->manifestPath;
+            } catch (Throwable) {
+                $cached = null;
+            }
         }
 
-        if (! is_file($this->manifestPath)) {
-            return $this->manifest = [];
+        if ($this->needsRebuild($cached)) {
+            return $this->build();
         }
 
-        $manifest = require $this->manifestPath;
-
-        return $this->manifest = is_array($manifest) ? $manifest : [];
+        return $this->manifest = $cached['packages'];
     }
 
-    public function build(): void
+    public function build(): array
     {
         $packages = $this->installedPackages();
         $ignored = $this->packagesToIgnore();
@@ -99,8 +104,10 @@ class PackageManifest
             ARRAY_FILTER_USE_KEY,
         );
 
-        $this->write($manifest);
+        $this->write(['fingerprint' => $this->fingerprint(), 'packages' => $manifest]);
         $this->manifest = $manifest;
+
+        return $manifest;
     }
 
     public function clear(): void
@@ -115,6 +122,23 @@ class PackageManifest
     public function path(): string
     {
         return $this->manifestPath;
+    }
+
+    /**
+     * @phpstan-assert-if-false array{fingerprint: string, packages: array} $cached
+     */
+    private function needsRebuild(mixed $cached): bool
+    {
+        return ! is_array($cached) || ($cached['fingerprint'] ?? null) !== $this->fingerprint()
+            || ! is_array($cached['packages'] ?? null);
+    }
+
+    private function fingerprint(): string
+    {
+        $path = Path::join($this->vendorPath, 'composer', 'installed.json');
+        $installed = is_file($path) ? file_get_contents($path) : false;
+
+        return hash('sha256', serialize([$installed, $this->packagesToIgnore()]));
     }
 
     private function installedPackages(): array
