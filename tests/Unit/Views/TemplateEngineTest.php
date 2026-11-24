@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Phenix\App;
 use Phenix\Facades\View;
-use Phenix\Views\ViewsConfig;
+use Phenix\Packages\PackageRegistry;
+use Phenix\Views\Exceptions\ViewNotFoundException;
 use Phenix\Views\TemplateCache;
 use Phenix\Views\TemplateEngine;
 use Phenix\Views\TemplateFactory;
-use Phenix\Packages\PackageRegistry;
-use Phenix\Views\Exceptions\ViewNotFoundException;
+use Phenix\Views\ViewsConfig;
 
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());

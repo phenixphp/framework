@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Phenix\Packages;
 
 use JsonException;
-use Throwable;
 use Phenix\Exceptions\RuntimeException;
 use Phenix\Util\Path;
+use Throwable;
 
 use function in_array;
 use function is_array;

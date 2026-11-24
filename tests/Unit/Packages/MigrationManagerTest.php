@@ -26,7 +26,7 @@ it('prefers published migration files while retaining other package migrations',
     App::make(PackageRegistry::class)->addPublishPaths('MigrationProvider', [$source => $destination]);
 
     $config = new Config(['paths' => ['migrations' => [$source, $destination]], 'environments' => []]);
-    $manager = new class($config, new ArrayInput([]), new NullOutput()) extends MigrationManager {
+    $manager = new class ($config, new ArrayInput([]), new NullOutput()) extends MigrationManager {
         public function files(): array
         {
             return $this->getMigrationFiles();

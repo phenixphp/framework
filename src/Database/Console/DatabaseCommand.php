@@ -11,8 +11,8 @@ use Phenix\Facades\Config;
 use Phenix\Packages\PackageRegistry;
 use Phinx\Config\Config as MigrationConfig;
 use Phinx\Console\Command\AbstractCommand;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class DatabaseCommand extends AbstractCommand

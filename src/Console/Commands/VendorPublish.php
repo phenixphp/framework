@@ -127,5 +127,4 @@ class VendorPublish extends Command
 
         return true;
     }
-
 }
