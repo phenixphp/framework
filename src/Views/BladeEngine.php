@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
-use Amp\CancelledException;
+use Amp\Cancellation;
 use eftec\bladeone\BladeOne;
-use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\File;
 use Phenix\Views\Exceptions\ViewNotFoundException;
-use Throwable;
 
 use function func_num_args;
 
 class BladeEngine extends BladeOne
 {
+    protected Cancellation|null $cancellation = null;
+
     public function __construct(protected TemplateCache $cache)
     {
         parent::__construct($cache->getViewPath(), (new ViewsConfig())->compiledPath(), self::MODE_AUTO);
@@ -23,11 +23,16 @@ class BladeEngine extends BladeOne
         $this->echoFormat = 'e(%s)';
     }
 
+    public function setCancellation(Cancellation|null $cancellation): void
+    {
+        $this->cancellation = $cancellation;
+    }
+
     public function getTemplateFile(string|null $templateName = ''): string
     {
         $templateName = $templateName ?: $this->fileName;
-        $file = File::realPath($this->cache->getSourcePath($templateName));
-        $base = File::realPath($this->cache->getViewPath($templateName));
+        $file = File::realPath($this->cache->getSourcePath($templateName, $this->cancellation), $this->cancellation);
+        $base = File::realPath($this->cache->getViewPath($templateName, $this->cancellation), $this->cancellation);
 
         if ($this->isInvalidTemplatePath($file, $base)) {
             return '';
@@ -75,10 +80,6 @@ class BladeEngine extends BladeOne
 
             File::move($temporary, $compiled);
             $created = false;
-        } catch (CancelledException $exception) {
-            throw $exception;
-        } catch (Throwable $exception) {
-            throw new RuntimeException("Unable to save compiled view {$compiled}.", 0, $exception);
         } finally {
             if ($created) {
                 File::deleteFile($temporary);
@@ -101,14 +102,14 @@ class BladeEngine extends BladeOne
     protected function templateExist(mixed $templateName): bool
     {
         $path = $this->getTemplateFile($templateName);
-        $status = $path === '' ? null : File::getStatus($path);
+        $status = $path === '' ? null : File::getStatus($path, $this->cancellation);
 
         return $status !== null && ($status['mode'] & 0170000) === 0100000;
     }
 
     protected function evaluatePath(string $compiledFile, array $variables): string
     {
-        return $this->evaluateText(File::get($compiledFile), $variables);
+        return $this->evaluateText($this->getFile($compiledFile), $variables);
     }
 
     protected function compileIncludeFast(mixed $expression): string
@@ -147,8 +148,8 @@ class BladeEngine extends BladeOne
 
     private function isCompiledExpired(string $compiled, string $source): bool
     {
-        $compiledStatus = File::getStatus($compiled);
-        $sourceStatus = File::getStatus($source);
+        $compiledStatus = File::getStatus($compiled, $this->cancellation);
+        $sourceStatus = File::getStatus($source, $this->cancellation);
 
         return $compiledStatus === null || ($compiledStatus['mode'] & 0170000) !== 0100000
             || $sourceStatus === null || $compiledStatus['mtime'] < $sourceStatus['mtime'];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Cancellation;
 use Closure;
 use Phenix\Views\Contracts\TemplateEngine as TemplateEngineContract;
 use Phenix\Views\Contracts\View as ViewContract;
@@ -18,11 +19,11 @@ class TemplateEngine implements TemplateEngineContract
     ) {
     }
 
-    public function view(string $template, array $data = []): ViewContract
+    public function view(string $template, array $data = [], Cancellation|null $cancellation = null): ViewContract
     {
-        $this->compile($template);
+        $this->compile($template, $cancellation);
 
-        return new BladeView(fn (): BladeEngine => $this->makeBlade(), $template, $data);
+        return new BladeView(fn (): BladeEngine => $this->makeBlade(), $template, $data, $cancellation);
     }
 
     public function directive(string $name, Closure $closure): void
@@ -35,9 +36,11 @@ class TemplateEngine implements TemplateEngineContract
         $this->cache->clear();
     }
 
-    public function compile(string $template): void
+    public function compile(string $template, Cancellation|null $cancellation = null): void
     {
-        $this->makeBlade()->compile($template);
+        $blade = $this->makeBlade();
+        $blade->setCancellation($cancellation);
+        $blade->compile($template);
     }
 
     protected function makeBlade(): BladeEngine

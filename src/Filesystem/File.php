@@ -9,20 +9,15 @@ use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
 use Phenix\Facades\Worker;
 use Phenix\Filesystem\Contracts\File as FileContract;
+use Phenix\Filesystem\Tasks\GetStatus;
 use Phenix\Filesystem\Tasks\ResolvePath;
 use Phenix\Util\Str;
-use Revolt\EventLoop;
-use WeakMap;
 
-use function Amp\File\createDefaultDriver;
 use function Amp\File\filesystem;
 use function array_map;
 
 class File implements FileContract
 {
-    /** @var WeakMap<object, Filesystem>|null */
-    private static WeakMap|null $uncachedFilesystems = null;
-
     private Filesystem $driver;
 
     public function __construct()
@@ -70,13 +65,9 @@ class File implements FileContract
         return Worker::submit(new ResolvePath($path), $cancellation)->await($cancellation);
     }
 
-    public function getStatus(string $path): array|null
+    public function getStatus(string $path, Cancellation|null $cancellation = null): array|null
     {
-        self::$uncachedFilesystems ??= new WeakMap();
-        $loop = EventLoop::getDriver();
-        $filesystem = self::$uncachedFilesystems[$loop] ??= new Filesystem(createDefaultDriver());
-
-        return $filesystem->getStatus($path);
+        return Worker::submit(new GetStatus($path), $cancellation)->await($cancellation)->output();
     }
 
     public function openFile(string $path, string $mode = 'w'): FileHandler

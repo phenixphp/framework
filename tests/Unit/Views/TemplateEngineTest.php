@@ -2,9 +2,18 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
+use Amp\CancelledException;
+use Amp\DeferredCancellation;
+use Amp\DeferredFuture;
+use Amp\File\File as AmpFile;
+use Amp\File\FilesystemException;
 use Phenix\App;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\View;
+use Phenix\Filesystem\Contracts\File as FileContract;
+use Phenix\Filesystem\File;
 use Phenix\Packages\PackageRegistry;
 use Phenix\Views\Exceptions\ViewNotFoundException;
 use Phenix\Views\TemplateEngine;
@@ -43,24 +52,6 @@ it('render a template successfully', function (): void {
     expect($output)->toContain('red');
     expect($output)->toContain('green');
     expect($output)->toContain('blue');
-});
-
-it('delegates view compilation before rendering', function (): void {
-    $engine = new class () extends TemplateEngine {
-        public array $compiled = [];
-
-        public function compile(string $template): void
-        {
-            $this->compiled[] = $template;
-            parent::compile($template);
-        }
-    };
-
-    $engine->clearCache();
-    $view = $engine->view('welcome', ['title' => 'Welcome', 'colors' => []]);
-
-    expect($engine->compiled)->toBe(['welcome']);
-    expect($view->render())->toBe($view->render());
 });
 
 it('render a template in a specific directory successfully', function (): void {
@@ -327,16 +318,6 @@ BLADE);
     }
 });
 
-it('allows other fibers to advance while resolving a view', function (): void {
-    $engine = new TemplateEngine();
-    $engine->clearCache();
-    $render = \Amp\async(fn (): string => $engine->view('welcome', ['title' => 'Async', 'colors' => []])->render());
-    $other = \Amp\async(fn (): bool => ! $render->isComplete());
-
-    expect($other->await())->toBeTrue();
-    expect($render->await())->toContain('Async');
-});
-
 it('rejects views that resolve through symlinks outside their view directory', function (): void {
     $config = new ViewsConfig();
     $link = $config->path('outside-symlink');
@@ -399,43 +380,258 @@ it('reports cache write failures', function (): void {
     try {
         $engine = new TemplateEngine();
 
-        expect(fn () => $engine->compile('welcome'))->toThrow(\Phenix\Exceptions\RuntimeException::class);
+        expect(fn () => $engine->compile('welcome'))->toThrow(FilesystemException::class);
     } finally {
         Config::set('view.compiled_path', $compiledPath);
     }
 });
 
-it('cleans temporary files after a failed or cancelled cache publication', function (bool $cancelled): void {
-    $contract = \Phenix\Filesystem\Contracts\File::class;
+it('cleans temporary files after a failed cache publication', function (): void {
+    $contract = FileContract::class;
     $original = App::make($contract);
     $engine = new TemplateEngine();
     $config = new ViewsConfig();
     $engine->clearCache();
 
-    $file = new class ($cancelled) extends \Phenix\Filesystem\File {
-        public function __construct(private bool $cancelled)
+    $failure = new RuntimeException('Failed to publish cache');
+    $file = new class ($failure) extends File {
+        public function __construct(private RuntimeException $failure)
         {
             parent::__construct();
         }
 
         public function move(string $from, string $to): void
         {
-            if ($this->cancelled) {
-                throw new \Amp\CancelledException();
-            }
-
-            throw new \Phenix\Exceptions\RuntimeException('Failed to publish cache');
+            throw $this->failure;
         }
     };
 
     $this->app->swap($contract, $file);
 
     try {
-        $exception = $cancelled ? \Amp\CancelledException::class : \Phenix\Exceptions\RuntimeException::class;
+        try {
+            $engine->compile('welcome');
+            $this->fail('The filesystem exception was not propagated.');
+        } catch (RuntimeException $exception) {
+            expect($exception)->toBe($failure);
+        }
 
-        expect(fn () => $engine->compile('welcome'))->toThrow($exception);
         expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
     } finally {
         $this->app->swap($contract, $original);
     }
-})->with([false, true]);
+});
+
+it('checks cancellation before compiling or rendering', function (): void {
+    $engine = new TemplateEngine();
+    $view = $engine->view('welcome', ['title' => 'Welcome', 'colors' => []]);
+    $cancel = new DeferredCancellation();
+    $cancel->cancel();
+
+    expect(fn () => $engine->view('welcome', [], $cancel->getCancellation()))
+        ->toThrow(CancelledException::class);
+
+    expect(fn () => $view->render($cancel->getCancellation()))
+        ->toThrow(CancelledException::class);
+});
+
+it('allows nested renders and handles cancellation after a waiting child acquires the lock', function (): void {
+    $path = (new ViewsConfig())->path('nested-cancellation');
+    file_put_contents($path, <<<'BLADE'
+@php
+    echo \Phenix\Facades\View::view('welcome', ['title' => 'Nested', 'colors' => []])->render();
+    $childView = \Phenix\Facades\View::view('welcome', ['title' => 'Child', 'colors' => []]);
+    $state->child = \Amp\async(fn () => $childView->render(new \Amp\TimeoutCancellation(0.02)));
+    \Amp\delay(0.05);
+@endphp
+BLADE);
+
+    try {
+        $state = new stdClass();
+        $output = (new TemplateEngine())->view('nested-cancellation', ['state' => $state])->render();
+
+        expect($output)->toContain('Nested')->not->toContain('Child');
+        expect(fn () => $state->child->await())->toThrow(CancelledException::class);
+        expect((new TemplateEngine())->view('welcome', ['title' => 'After', 'colors' => []])->render())->toContain('After');
+    } finally {
+        unlink($path);
+        View::clearCache();
+    }
+});
+
+it('finishes compiling when cancellation occurs during a non-cancellable source read', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $engine = new TemplateEngine();
+    $engine->clearCache();
+    $config = new ViewsConfig();
+    $cancellation = new DeferredCancellation();
+    $file = new class ($cancellation) extends File {
+        public function __construct(private DeferredCancellation $cancellation)
+        {
+            parent::__construct();
+        }
+
+        public function get(string $path): string
+        {
+            $contents = parent::get($path);
+            $this->cancellation->cancel();
+
+            return $contents;
+        }
+    };
+    $this->app->swap($contract, $file);
+
+    try {
+        $engine->compile('welcome', $cancellation->getCancellation());
+        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
+        expect(is_file($config->cachePath('welcome')))->toBeTrue();
+        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
+    } finally {
+        $this->app->swap($contract, $original);
+    }
+});
+
+it('propagates cancellation during path resolution', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $started = new DeferredFuture();
+    $cancellation = new DeferredCancellation();
+    $file = new class ($started) extends File {
+        public function __construct(private DeferredFuture $started)
+        {
+            parent::__construct();
+        }
+
+        public function realPath(string $path, Cancellation|null $cancellation = null): string|false
+        {
+            $this->started->complete();
+            \Amp\delay(10, cancellation: $cancellation);
+
+            return parent::realPath($path, $cancellation);
+        }
+    };
+    $this->app->swap($contract, $file);
+
+    try {
+        $compilation = \Amp\async(fn () => (new TemplateEngine())->compile('welcome', $cancellation->getCancellation()));
+        $started->getFuture()->await();
+        $cancellation->cancel();
+        expect(fn () => $compilation->await())->toThrow(CancelledException::class);
+    } finally {
+        $this->app->swap($contract, $original);
+    }
+});
+
+it('lets another fiber run during a delayed filesystem read', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $readStarted = new DeferredFuture();
+    $resume = new DeferredFuture();
+    $file = new class ($readStarted, $resume) extends File {
+        public function __construct(private DeferredFuture $started, private DeferredFuture $resume)
+        {
+            parent::__construct();
+        }
+
+        public function get(string $path): string
+        {
+            if (! $this->started->isComplete()) {
+                $this->started->complete();
+                $this->resume->getFuture()->await();
+            }
+
+            return parent::get($path);
+        }
+    };
+    $engine = new TemplateEngine();
+    $engine->clearCache();
+    $this->app->swap($contract, $file);
+
+    try {
+        $render = \Amp\async(fn (): string => $engine->view('welcome', ['title' => 'Delayed', 'colors' => []])->render());
+        $readStarted->getFuture()->await();
+
+        expect($render->isComplete())->toBeFalse();
+
+        $resume->complete();
+
+        expect($render->await())->toContain('Delayed');
+    } finally {
+        if (! $resume->isComplete()) {
+            $resume->complete();
+        }
+
+        $this->app->swap($contract, $original);
+    }
+});
+
+it('publishes the cache when cancellation occurs after a non-cancellable write', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $engine = new TemplateEngine();
+    $engine->clearCache();
+    $config = new ViewsConfig();
+    $cancellation = new DeferredCancellation();
+    $file = new class ($cancellation) extends File {
+        public function __construct(private DeferredCancellation $cancellation)
+        {
+            parent::__construct();
+        }
+
+        public function openFile(string $path, string $mode = 'w'): AmpFile
+        {
+            $real = parent::openFile($path, $mode);
+            $mock = Mockery::mock(AmpFile::class);
+            $mock->shouldReceive('write')->once()->andReturnUsing(fn (string $content) => $real->write($content));
+            $mock->shouldReceive('close')->once()->andReturnUsing(function () use ($real): void {
+                $real->close();
+                $this->cancellation->cancel();
+            });
+
+            return $mock;
+        }
+    };
+    $this->app->swap($contract, $file);
+
+    try {
+        $engine->compile('welcome', $cancellation->getCancellation());
+        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
+        expect(is_file($config->cachePath('welcome')))->toBeTrue();
+        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
+    } finally {
+        $this->app->swap($contract, $original);
+    }
+});
+
+it('keeps a published cache file if cancellation arrives during the move', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $engine = new TemplateEngine();
+    $engine->clearCache();
+    $config = new ViewsConfig();
+    $cancellation = new DeferredCancellation();
+    $file = new class ($cancellation) extends File {
+        public function __construct(private DeferredCancellation $cancellation)
+        {
+            parent::__construct();
+        }
+
+        public function move(string $from, string $to): void
+        {
+            parent::move($from, $to);
+            $this->cancellation->cancel();
+        }
+    };
+    $this->app->swap($contract, $file);
+
+    try {
+        $engine->compile('welcome', $cancellation->getCancellation());
+        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
+        expect(is_file($config->cachePath('welcome')))->toBeTrue();
+        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
+    } finally {
+        $this->app->swap($contract, $original);
+        View::clearCache();
+    }
+});

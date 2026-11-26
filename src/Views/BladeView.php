@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Cancellation;
 use Amp\Sync\LocalMutex;
 use Closure;
 use Fiber;
@@ -20,11 +21,14 @@ class BladeView implements View
         protected Closure $bladeFactory,
         protected string $template,
         protected array $data = [],
+        protected Cancellation|null $cancellation = null,
     ) {
     }
 
-    public function render(): string
+    public function render(Cancellation|null $cancellation = null): string
     {
+        $cancellation ??= $this->cancellation;
+
         $fiber = Fiber::getCurrent();
         $nested = self::$rendering && self::$owner === $fiber;
         $lock = null;
@@ -39,7 +43,10 @@ class BladeView implements View
         $level = ob_get_level();
 
         try {
-            return ($this->bladeFactory)()->run($this->template, $this->data);
+            $blade = ($this->bladeFactory)();
+            $blade->setCancellation($cancellation);
+
+            return $blade->run($this->template, $this->data);
         } catch (Throwable $exception) {
             while (ob_get_level() > $level) {
                 ob_end_clean();

@@ -24,5 +24,5 @@ interface File
 
     public function realPath(string $path, Cancellation|null $cancellation = null): string|false;
 
-    public function getStatus(string $path): array|null;
+    public function getStatus(string $path, Cancellation|null $cancellation = null): array|null;
 }

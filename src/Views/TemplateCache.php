@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Cancellation;
 use Phenix\Facades\File;
 
 class TemplateCache
@@ -13,14 +14,14 @@ class TemplateCache
     ) {
     }
 
-    public function getViewPath(string|null $template = null): string
+    public function getViewPath(string|null $template = null, Cancellation|null $cancellation = null): string
     {
-        return $template === null ? $this->config->path() : $this->config->sourceBasePath($template);
+        return $template === null ? $this->config->path() : $this->config->sourceBasePath($template, $cancellation);
     }
 
-    public function getSourcePath(string $template): string
+    public function getSourcePath(string $template, Cancellation|null $cancellation = null): string
     {
-        return $this->config->sourcePath($template);
+        return $this->config->sourcePath($template, $cancellation);
     }
 
     public function getCacheFilePath(string $template): string
