@@ -24,7 +24,7 @@ abstract class Rule implements RuleContract
 
     public static function new(mixed ...$args): static
     {
-        return new static(...$args); // @phpstan-ignore new.static
+        return new static(...$args); // @phpstan-ignore new.static (Rule subclasses intentionally have different constructors.)
     }
 
     abstract public function passes(): bool;

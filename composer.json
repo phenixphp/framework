@@ -40,7 +40,6 @@
         "amphp/redis": "^2.0",
         "amphp/socket": "^2.1.0",
         "dragonmantank/cron-expression": "^3.6",
-        "eftec/bladeone": "^5.0",
         "egulias/email-validator": "^4.0",
         "fakerphp/faker": "^1.23",
         "kelunik/rate-limit": "^3.0",

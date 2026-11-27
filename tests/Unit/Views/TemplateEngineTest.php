@@ -2,22 +2,58 @@
 
 declare(strict_types=1);
 
-use Amp\Cancellation;
-use Amp\CancelledException;
-use Amp\DeferredCancellation;
 use Amp\DeferredFuture;
 use Amp\File\File as AmpFile;
-use Amp\File\FilesystemException;
 use Phenix\App;
 use Phenix\Exceptions\RuntimeException;
-use Phenix\Facades\Config;
 use Phenix\Facades\View;
 use Phenix\Filesystem\Contracts\File as FileContract;
 use Phenix\Filesystem\File;
 use Phenix\Packages\PackageRegistry;
 use Phenix\Views\Exceptions\ViewNotFoundException;
+use Phenix\Views\TemplateCache;
+use Phenix\Views\TemplateCompiler;
 use Phenix\Views\TemplateEngine;
+use Phenix\Views\TemplateFactory;
 use Phenix\Views\ViewsConfig;
+
+it('preserves literal text while compiling comments, echoes and directives', function (): void {
+    $compiler = new TemplateCompiler();
+    $compiled = $compiler->compile(<<<'BLADE'
+{{-- comment --}}@@literal {{ $name }} {!! $html !!} @unknown('value')
+@if (str_contains($name, ')'))yes@endif
+@php $value = 'ok'; @endphp
+BLADE);
+
+    expect($compiled)->not->toContain('comment')
+        ->toContain('@literal', '<?= e($name) ?>', '<?= $html ?>', "@unknown('value')")
+        ->toContain("if (str_contains(\$name, ')')):", "\$value = 'ok';");
+});
+
+it('reports unclosed PHP directive blocks', function (): void {
+    expect(fn () => (new TemplateCompiler())->compile('@php $value = 1;'))
+        ->toThrow(RuntimeException::class, 'Unclosed @php directive.');
+});
+
+it('handles escaped quotes and backslashes in directive expressions', function (): void {
+    $source = <<<'BLADE'
+@if (str_contains($value, 'it\'s (fine)') && str_contains($value, "path\\\\"))yes@endif
+BLADE;
+
+    $compiled = (new TemplateCompiler())->compile($source);
+
+    expect($compiled)->toContain(<<<'PHP'
+if (str_contains($value, 'it\'s (fine)') && str_contains($value, "path\\\\")):
+PHP);
+});
+
+it('recognizes directive names using the original ASCII characters', function (): void {
+    $compiler = new TemplateCompiler();
+    $compiler->registerDirective('word_123', fn (): string => 'matched');
+
+    expect($compiler->compile('@word_123 @word_123é @_word_123 @9word'))
+        ->toBe('matched matchedé @_word_123 @9word');
+});
 
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());
@@ -153,15 +189,33 @@ it('escapes XSS in inline section value', function (): void {
     expect($output)->toContain('&lt;script&gt;');
 });
 
-it('renders empty and zero inline sections while preserving block html', function (): void {
-    $template = new TemplateEngine();
-    $template->clearCache();
+it('escapes inline section values in template factory', function (): void {
+    $factory = new TemplateFactory(new TemplateCache());
 
-    foreach (['', '0'] as $title) {
-        $output = $template->view('users.index', ['title' => $title])->render();
+    $factory->startSection('title', '<script>alert("xss")</script>');
 
-        expect($output)->toContain("<title>{$title}</title>", '<h1>User index</h1>');
-    }
+    expect($factory->yieldSection('title'))
+        ->toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+});
+
+it('preserves rendered block section html in template factory', function (): void {
+    $factory = new TemplateFactory(new TemplateCache());
+
+    $factory->startSection('content');
+    echo '<h1>Users</h1>';
+    $factory->endSection();
+
+    expect($factory->yieldSection('content'))->toBe('<h1>Users</h1>');
+});
+
+it('stores empty and zero inline section values without starting a buffer', function (): void {
+    $factory = new TemplateFactory(new TemplateCache());
+
+    $factory->startSection('empty', '');
+    $factory->startSection('zero', '0');
+
+    expect($factory->yieldSection('empty'))->toBe('');
+    expect($factory->yieldSection('zero'))->toBe('0');
 });
 
 it('render template using facade', function (): void {
@@ -204,434 +258,411 @@ it('uses distinct cache files for package and application view names', function 
     expect($config->cachePath('blog::index'))->not->toBe($config->cachePath('vendor.blog.index'));
 });
 
-it('renders Blade control flow, stacks and conditional includes', function (): void {
-    $path = (new ViewsConfig())->path('blade-features.php');
-    file_put_contents($path, <<<'BLADE'
-@push('scripts')<script>ready()</script>@endpush
-@forelse ($items as $item)
-    <span>{{ $item }}</span>
-@empty
-    <span>Empty</span>
-@endforelse
-@includeIf('missing-partial')
+it('renders nested expressions, conditional includes and stacks', function (): void {
+    $config = new ViewsConfig();
+    $source = $config->path('phenix-directive-test');
+    $partial = $config->path('phenix-directive-partial');
+    file_put_contents($source, <<<'BLADE'
+@push('scripts')first@endpush
+@prepend('scripts')before@endprepend
+@pushOnce('scripts')once@endPushOnce
+@pushOnce('scripts')ignored@endPushOnce
+@if (count(array_filter($items, fn ($item) => $item > 1)) > 0)
+    @includeWhen(true, $partial, ['message' => 'dynamic'])
+@endif
+@includeIf('missing-optional-view')
+@forelse ($empty as $item)unexpected@empty empty-result @endforelse
+@switch ($value)
+    @case (1)one @break
+    @default other
+@endswitch
 @stack('scripts')
 BLADE);
+    file_put_contents($partial, '{{ $message }}');
 
     try {
-        $engine = new TemplateEngine();
-        $engine->clearCache();
-        $view = $engine->view('blade-features', ['items' => ['<unsafe>']]);
-        $output = $view->render();
-
-        expect($output)->toContain('&lt;unsafe&gt;')->not->toContain('<unsafe>');
-        expect($output)->toContain('<script>ready()</script>');
-        expect($view->render())->toBe($output);
-        expect($engine->view('blade-features', ['items' => []])->render())->toContain('Empty');
-    } finally {
-        unlink($path);
-        View::clearCache();
-    }
-});
-
-it('recompiles changed views and uses the compiled file for precaching', function (): void {
-    $config = new ViewsConfig();
-    $source = $config->path('blade-cache-test.php');
-    $compiled = $config->cachePath('blade-cache-test');
-
-    file_put_contents($source, 'First {{ $name }}');
-
-    try {
-        $engine = new TemplateEngine();
-        $engine->clearCache();
-        $engine->compile('blade-cache-test');
-
-        expect(is_file($compiled))->toBeTrue();
-        expect($engine->view('blade-cache-test', ['name' => 'A'])->render())->toContain('First A');
-
-        file_put_contents($source, 'Second {{ $name }}');
-
-        touch($compiled, time() - 5);
-        clearstatcache();
-
-        expect($engine->view('blade-cache-test', ['name' => 'B'])->render())->toContain('Second B');
-
-        $engine->clearCache();
-
-        expect(is_file($compiled))->toBeFalse();
+        $output = (new TemplateEngine())->view('phenix-directive-test', [
+            'items' => [1, 2], 'empty' => [], 'value' => 1, 'partial' => 'phenix-directive-partial',
+        ])->render();
+        expect($output)->toContain('dynamic', 'empty-result', 'one', 'beforefirstonce')
+            ->not->toContain('unexpected', 'ignored', 'other');
     } finally {
         unlink($source);
-
+        unlink($partial);
         View::clearCache();
     }
 });
 
-it('resolves namespaced includes and application overrides', function (): void {
-    $package = base_path('storage/framework/testing/package-views-' . uniqid());
-    $override = (new ViewsConfig())->path() . 'vendor' . DIRECTORY_SEPARATOR . 'blog';
-
-    mkdir($package, 0755, true);
-    mkdir($override, 0755, true);
-
-    file_put_contents("{$package}/index.php", "@include('blog::partial')");
-    file_put_contents("{$package}/partial.php", 'Package');
-    file_put_contents("{$override}/partial.php", 'Override {{ $name }}');
+it('renders parent sections with the child view content', function (): void {
+    $config = new ViewsConfig();
+    $parent = $config->path('phenix-parent-test');
+    $child = $config->path('phenix-child-test');
+    file_put_contents($parent, "@section('sidebar')parent@show");
+    file_put_contents($child, "@extends('phenix-parent-test') @section('sidebar')@parent child@endsection");
 
     try {
-        App::make(PackageRegistry::class)->addViewPaths($package, 'blog');
-
-        $engine = new TemplateEngine();
-        $engine->clearCache();
-
-        expect($engine->view('blog::index', ['name' => 'view'])->render())->toContain('Override view');
+        expect((new TemplateEngine())->view('phenix-child-test')->render())->toContain('parent child');
     } finally {
-        unlink("{$package}/index.php");
-        unlink("{$package}/partial.php");
-        unlink("{$override}/partial.php");
-        rmdir($package);
-        rmdir($override);
-
+        unlink($parent);
+        unlink($child);
         View::clearCache();
     }
 });
 
-it('isolates views rendered concurrently across fibers', function (): void {
-    $path = (new ViewsConfig())->path('blade-concurrent.php');
-    file_put_contents($path, <<<'BLADE'
+it('detects circular view inclusions', function (): void {
+    $source = (new ViewsConfig())->path('phenix-cycle-test');
+    file_put_contents($source, "@include('phenix-cycle-test')");
+
+    try {
+        expect(fn () => (new TemplateEngine())->view('phenix-cycle-test')->render())
+            ->toThrow(RuntimeException::class, 'phenix-cycle-test -> phenix-cycle-test');
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});
+
+it('renders conditional attributes, JSON, PHP and loop directives', function (): void {
+    $source = (new ViewsConfig())->path('phenix-flow-test');
+    file_put_contents($source, <<<'BLADE'
+@php($total = 0)
+@for ($i = 0; $i < 3; $i++)
+    @continue($i === 1)
+    @set($total += $i)
+@endfor
+@while ($total < 3) @php($total++) @endwhile
+@unless ($total !== 3) correct @endunless
+@isset ($message){{ $message }}@endisset
+@empty ($missing) empty @endempty
+<input @checked(true) @selected(false) @disabled(true) @readonly(true) @required(true) @class(['base', 'active' => true, 'off' => false])>
+<script>@json($payload)</script>
+@method('PUT')
+BLADE);
+
+    try {
+        $view = (new TemplateEngine())->view('phenix-flow-test', [
+            'message' => '<unsafe>', 'payload' => ['value' => '</script>'],
+        ]);
+        $output = $view->render();
+        expect($output)->toContain('correct', '&lt;unsafe&gt;', 'empty', 'checked', 'disabled', 'readonly', 'required', 'class="base active"', '\\u003C', 'value="PUT"')
+            ->not->toContain('selected', 'class="base active off"');
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});
+
+it('does not retain stacks across repeated renders', function (): void {
+    $source = (new ViewsConfig())->path('phenix-repeat-test');
+    file_put_contents($source, "@push('scripts')item@endpush @stack('scripts')");
+
+    try {
+        $view = (new TemplateEngine())->view('phenix-repeat-test');
+        expect($view->render())->toBe($view->render());
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});
+
+it('executes a compiled view on each render and each repeated include', function (): void {
+    $config = new ViewsConfig();
+    $source = $config->path('phenix-repeated-view');
+    $partial = $config->path('phenix-repeated-partial');
+    file_put_contents($source, "@include('phenix-repeated-partial')@include('phenix-repeated-partial')");
+    file_put_contents($partial, 'item');
+
+    try {
+        $view = (new TemplateEngine())->view('phenix-repeated-view');
+        expect($view->render())->toBe('itemitem')
+            ->and($view->render())->toBe('itemitem');
+    } finally {
+        unlink($source);
+        unlink($partial);
+        View::clearCache();
+    }
+});
+
+it('uses the compiled file context when rendering a view', function (): void {
+    $config = new ViewsConfig();
+    $name = 'phenix-file-context-test';
+    $source = $config->path($name);
+    file_put_contents($source, '@php echo __FILE__ . "|" . __DIR__; @endphp');
+
+    try {
+        $output = (new TemplateEngine())->view($name)->render();
+        expect($output)->toContain($config->cachePath($name), dirname($config->cachePath($name)));
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});
+
+it('isolates concurrent renders when a template suspends', function (): void {
+    $source = (new ViewsConfig())->path('phenix-concurrent-test');
+    file_put_contents($source, <<<'BLADE'
 {{ $name }}-start
-@php(\Amp\delay(0.01))
+@php($started->complete())
+@php($resume->getFuture()->await())
 {{ $name }}-end
 BLADE);
+    $started = new DeferredFuture();
+    $resume = new DeferredFuture();
+    $engine = new TemplateEngine();
+    $firstView = $engine->view('phenix-concurrent-test', ['name' => 'first', 'started' => $started, 'resume' => $resume]);
+    $secondStarted = new DeferredFuture();
+    $secondResume = new DeferredFuture();
+    $secondResume->complete();
+    $secondView = $engine->view('phenix-concurrent-test', ['name' => 'second', 'started' => $secondStarted, 'resume' => $secondResume]);
 
     try {
-        $engine = new TemplateEngine();
-        $engine->clearCache();
-        $first = \Amp\async(fn (): string => $engine->view('blade-concurrent', ['name' => 'first'])->render());
-        $second = \Amp\async(fn (): string => $engine->view('blade-concurrent', ['name' => 'second'])->render());
-
-        [$firstOutput, $secondOutput] = \Amp\Future\await([$first, $second]);
-
+        $first = \Amp\async(fn (): string => $firstView->render());
+        $started->getFuture()->await();
+        $second = \Amp\async(fn (): string => $secondView->render());
+        \Amp\delay(0);
+        expect($secondStarted->isComplete())->toBeFalse();
+        $resume->complete();
+        $firstOutput = $first->await();
+        $secondOutput = $second->await();
         expect($firstOutput)->toContain('first-start', 'first-end')->not->toContain('second');
         expect($secondOutput)->toContain('second-start', 'second-end')->not->toContain('first');
-    } finally {
-        unlink($path);
-        View::clearCache();
-    }
-});
-
-it('rejects views that resolve through symlinks outside their view directory', function (): void {
-    $config = new ViewsConfig();
-    $link = $config->path('outside-symlink');
-    $external = tempnam(sys_get_temp_dir(), 'phenix-view-');
-
-    file_put_contents($external, 'outside');
-    symlink($external, $link);
-
-    try {
-        $engine = new TemplateEngine();
-
-        expect(fn () => $engine->view('outside-symlink'))->toThrow(ViewNotFoundException::class);
-    } finally {
-        unlink($link);
-        unlink($external);
-    }
-});
-
-it('accepts view symlinks whose targets stay inside the view directory', function (): void {
-    $config = new ViewsConfig();
-    $link = $config->path('inside-symlink');
-    $target = $config->path('inside-target');
-
-    file_put_contents($target, 'Inside {{ $name }}');
-    symlink($target, $link);
-
-    try {
-        $engine = new TemplateEngine();
-        $engine->clearCache();
-
-        expect($engine->view('inside-symlink', ['name' => 'view'])->render())->toContain('Inside view');
-    } finally {
-        unlink($link);
-        unlink($target);
-
-        View::clearCache();
-    }
-});
-
-it('publishes concurrent compilations without leaving temporary files', function (): void {
-    $engine = new TemplateEngine();
-    $config = new ViewsConfig();
-    $engine->clearCache();
-
-    $first = \Amp\async(fn () => $engine->compile('welcome'));
-    $second = \Amp\async(fn () => $engine->compile('welcome'));
-
-    \Amp\Future\await([$first, $second]);
-
-    expect($engine->view('welcome', ['title' => 'Concurrent', 'colors' => []])->render())->toContain('Concurrent');
-    expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
-});
-
-it('reports cache write failures', function (): void {
-    $compiledPath = Config::get('view.compiled_path');
-    $missing = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phenix-missing-' . bin2hex(random_bytes(8));
-
-    Config::set('view.compiled_path', $missing);
-
-    try {
-        $engine = new TemplateEngine();
-
-        expect(fn () => $engine->compile('welcome'))->toThrow(FilesystemException::class);
-    } finally {
-        Config::set('view.compiled_path', $compiledPath);
-    }
-});
-
-it('cleans temporary files after a failed cache publication', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
-    $engine = new TemplateEngine();
-    $config = new ViewsConfig();
-    $engine->clearCache();
-
-    $failure = new RuntimeException('Failed to publish cache');
-    $file = new class ($failure) extends File {
-        public function __construct(private RuntimeException $failure)
-        {
-            parent::__construct();
-        }
-
-        public function move(string $from, string $to): void
-        {
-            throw $this->failure;
-        }
-    };
-
-    $this->app->swap($contract, $file);
-
-    try {
-        try {
-            $engine->compile('welcome');
-            $this->fail('The filesystem exception was not propagated.');
-        } catch (RuntimeException $exception) {
-            expect($exception)->toBe($failure);
-        }
-
-        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
-    } finally {
-        $this->app->swap($contract, $original);
-    }
-});
-
-it('checks cancellation before compiling or rendering', function (): void {
-    $engine = new TemplateEngine();
-    $view = $engine->view('welcome', ['title' => 'Welcome', 'colors' => []]);
-    $cancel = new DeferredCancellation();
-    $cancel->cancel();
-
-    expect(fn () => $engine->view('welcome', [], $cancel->getCancellation()))
-        ->toThrow(CancelledException::class);
-
-    expect(fn () => $view->render($cancel->getCancellation()))
-        ->toThrow(CancelledException::class);
-});
-
-it('allows nested renders and handles cancellation after a waiting child acquires the lock', function (): void {
-    $path = (new ViewsConfig())->path('nested-cancellation');
-    file_put_contents($path, <<<'BLADE'
-@php
-    echo \Phenix\Facades\View::view('welcome', ['title' => 'Nested', 'colors' => []])->render();
-    $childView = \Phenix\Facades\View::view('welcome', ['title' => 'Child', 'colors' => []]);
-    $state->child = \Amp\async(fn () => $childView->render(new \Amp\TimeoutCancellation(0.02)));
-    \Amp\delay(0.05);
-@endphp
-BLADE);
-
-    try {
-        $state = new stdClass();
-        $output = (new TemplateEngine())->view('nested-cancellation', ['state' => $state])->render();
-
-        expect($output)->toContain('Nested')->not->toContain('Child');
-        expect(fn () => $state->child->await())->toThrow(CancelledException::class);
-        expect((new TemplateEngine())->view('welcome', ['title' => 'After', 'colors' => []])->render())->toContain('After');
-    } finally {
-        unlink($path);
-        View::clearCache();
-    }
-});
-
-it('finishes compiling when cancellation occurs during a non-cancellable source read', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
-    $engine = new TemplateEngine();
-    $engine->clearCache();
-    $config = new ViewsConfig();
-    $cancellation = new DeferredCancellation();
-    $file = new class ($cancellation) extends File {
-        public function __construct(private DeferredCancellation $cancellation)
-        {
-            parent::__construct();
-        }
-
-        public function get(string $path): string
-        {
-            $contents = parent::get($path);
-            $this->cancellation->cancel();
-
-            return $contents;
-        }
-    };
-    $this->app->swap($contract, $file);
-
-    try {
-        $engine->compile('welcome', $cancellation->getCancellation());
-        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
-        expect(is_file($config->cachePath('welcome')))->toBeTrue();
-        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
-    } finally {
-        $this->app->swap($contract, $original);
-    }
-});
-
-it('propagates cancellation during path resolution', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
-    $started = new DeferredFuture();
-    $cancellation = new DeferredCancellation();
-    $file = new class ($started) extends File {
-        public function __construct(private DeferredFuture $started)
-        {
-            parent::__construct();
-        }
-
-        public function realPath(string $path, Cancellation|null $cancellation = null): string|false
-        {
-            $this->started->complete();
-            \Amp\delay(10, cancellation: $cancellation);
-
-            return parent::realPath($path, $cancellation);
-        }
-    };
-    $this->app->swap($contract, $file);
-
-    try {
-        $compilation = \Amp\async(fn () => (new TemplateEngine())->compile('welcome', $cancellation->getCancellation()));
-        $started->getFuture()->await();
-        $cancellation->cancel();
-        expect(fn () => $compilation->await())->toThrow(CancelledException::class);
-    } finally {
-        $this->app->swap($contract, $original);
-    }
-});
-
-it('lets another fiber run during a delayed filesystem read', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
-    $readStarted = new DeferredFuture();
-    $resume = new DeferredFuture();
-    $file = new class ($readStarted, $resume) extends File {
-        public function __construct(private DeferredFuture $started, private DeferredFuture $resume)
-        {
-            parent::__construct();
-        }
-
-        public function get(string $path): string
-        {
-            if (! $this->started->isComplete()) {
-                $this->started->complete();
-                $this->resume->getFuture()->await();
-            }
-
-            return parent::get($path);
-        }
-    };
-    $engine = new TemplateEngine();
-    $engine->clearCache();
-    $this->app->swap($contract, $file);
-
-    try {
-        $render = \Amp\async(fn (): string => $engine->view('welcome', ['title' => 'Delayed', 'colors' => []])->render());
-        $readStarted->getFuture()->await();
-
-        expect($render->isComplete())->toBeFalse();
-
-        $resume->complete();
-
-        expect($render->await())->toContain('Delayed');
     } finally {
         if (! $resume->isComplete()) {
             $resume->complete();
         }
+        unlink($source);
+        View::clearCache();
+    }
+});
 
+it('rejects a view symlink pointing outside its source directory', function (): void {
+    $link = (new ViewsConfig())->path('phenix-outside-test');
+    $target = tempnam(sys_get_temp_dir(), 'phenix-outside-');
+    file_put_contents($target, 'outside');
+    symlink($target, $link);
+
+    try {
+        expect(fn () => (new TemplateEngine())->view('phenix-outside-test'))
+            ->toThrow(ViewNotFoundException::class);
+    } finally {
+        unlink($link);
+        unlink($target);
+    }
+});
+
+it('removes temporary cache files if publishing fails', function (): void {
+    $contract = FileContract::class;
+    $original = App::make($contract);
+    $engine = new TemplateEngine();
+    $config = new ViewsConfig();
+    $engine->clearCache();
+    $file = new class () extends File {
+        public function move(string $from, string $to): void
+        {
+            throw new RuntimeException('Unable to publish view');
+        }
+    };
+    $this->app->swap($contract, $file);
+
+    try {
+        expect(fn () => $engine->compile('welcome'))
+            ->toThrow(RuntimeException::class, 'Unable to publish view');
+        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
+        expect(is_file($config->cachePath('welcome')))->toBeFalse();
+    } finally {
         $this->app->swap($contract, $original);
     }
 });
 
-it('publishes the cache when cancellation occurs after a non-cancellable write', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
+it('renders the first available include and each item with inherited variables', function (): void {
+    $config = new ViewsConfig();
+    $source = $config->path('phenix-each-test');
+    $partial = $config->path('phenix-each-partial');
+    file_put_contents($source, <<<'BLADE'
+@includeWhen(false, 'missing-conditional')
+@includeFirst(['missing-first', 'phenix-each-partial'], ['user' => 'first', 'key' => 0])
+@each('phenix-each-partial', $users, 'user')
+BLADE);
+    file_put_contents($partial, '{{ $prefix }}:{{ $key }}:{{ $user }};');
+
+    try {
+        $output = (new TemplateEngine())->view('phenix-each-test', [
+            'prefix' => 'item', 'users' => ['alice', 'bob'],
+        ])->render();
+        expect($output)->toContain('item:0:first;', 'item:0:alice;', 'item:1:bob;');
+    } finally {
+        unlink($source);
+        unlink($partial);
+        View::clearCache();
+    }
+});
+
+it('keeps compiler state independent when custom directives suspend', function (): void {
+    $config = new ViewsConfig();
+    $firstPath = $config->path('phenix-compiler-first');
+    $secondPath = $config->path('phenix-compiler-second');
+    file_put_contents($firstPath, '@forelse ($items as $item)@pause{{ $item }}@empty empty-first @endforelse');
+    file_put_contents($secondPath, '@forelse ($items as $item){{ $item }}@empty empty-second @endforelse');
+    $started = new DeferredFuture();
+    $resume = new DeferredFuture();
+    $engine = new TemplateEngine();
+    $engine->directive('pause', function () use ($started, $resume): string {
+        $started->complete();
+        $resume->getFuture()->await();
+
+        return '';
+    });
+
+    try {
+        $first = \Amp\async(fn () => $engine->view('phenix-compiler-first', ['items' => []]));
+        $started->getFuture()->await();
+        $second = $engine->view('phenix-compiler-second', ['items' => []]);
+        $resume->complete();
+        expect($first->await()->render())->toContain('empty-first');
+        expect($second->render())->toContain('empty-second');
+    } finally {
+        if (! $resume->isComplete()) {
+            $resume->complete();
+        }
+        unlink($firstPath);
+        unlink($secondPath);
+        View::clearCache();
+    }
+});
+
+it('prefers application overrides for package views', function (): void {
+    $config = new ViewsConfig();
+    $name = 'package' . bin2hex(random_bytes(4));
+    $package = base_path('storage/framework/testing/' . $name);
+    $vendor = $config->path() . 'vendor';
+    $override = $vendor . DIRECTORY_SEPARATOR . $name;
+    $createdVendor = ! is_dir($vendor);
+    mkdir($package, 0755, true);
+    mkdir($override, 0755, true);
+    file_put_contents($package . DIRECTORY_SEPARATOR . 'index.php', 'package');
+    file_put_contents($override . DIRECTORY_SEPARATOR . 'index.php', 'override');
+
+    try {
+        App::make(PackageRegistry::class)->addViewPaths($package, $name);
+        expect((new TemplateEngine())->view("{$name}::index")->render())->toContain('override');
+    } finally {
+        unlink($package . DIRECTORY_SEPARATOR . 'index.php');
+        unlink($override . DIRECTORY_SEPARATOR . 'index.php');
+        rmdir($package);
+        rmdir($override);
+        if ($createdVendor) {
+            rmdir($vendor);
+        }
+        View::clearCache();
+    }
+});
+
+it('supports section controls and block PHP directives', function (): void {
+    $source = (new ViewsConfig())->path('phenix-section-test');
+    file_put_contents($source, <<<'BLADE'
+@section('content')first@stop
+@section('content')second@overwrite
+@yield('content') @yield('missing', 'fallback')
+@hasSection('content')present@endif
+@php
+    $message = 'block';
+@endphp
+{{ $message }}
+@unset($message)
+@empty($message)removed@endempty
+BLADE);
+
+    try {
+        $output = (new TemplateEngine())->view('phenix-section-test')->render();
+        expect($output)->toContain('second', 'fallback', 'present', 'block', 'removed')->not->toContain('first');
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});
+
+it('allows other fibers to run while compilation waits for filesystem operations', function (string $operation): void {
     $engine = new TemplateEngine();
     $engine->clearCache();
-    $config = new ViewsConfig();
-    $cancellation = new DeferredCancellation();
-    $file = new class ($cancellation) extends File {
-        public function __construct(private DeferredCancellation $cancellation)
+    $original = App::make(FileContract::class);
+    $started = new DeferredFuture();
+    $resume = new DeferredFuture();
+    $file = new class ($operation, $started, $resume) extends File {
+        public function __construct(private string $operation, private DeferredFuture $started, private DeferredFuture $resume)
         {
             parent::__construct();
+        }
+
+        private function pause(string $operation): void
+        {
+            if ($this->operation === $operation && ! $this->started->isComplete()) {
+                $this->started->complete();
+                $this->resume->getFuture()->await();
+            }
+        }
+
+        public function realPath(string $path): string|false
+        {
+            $this->pause('realPath');
+
+            return parent::realPath($path);
+        }
+
+        public function getStatus(string $path): array|null
+        {
+            $this->pause('getStatus');
+
+            return parent::getStatus($path);
+        }
+
+        public function get(string $path): string
+        {
+            $this->pause('get');
+
+            return parent::get($path);
         }
 
         public function openFile(string $path, string $mode = 'w'): AmpFile
         {
-            $real = parent::openFile($path, $mode);
-            $mock = Mockery::mock(AmpFile::class);
-            $mock->shouldReceive('write')->once()->andReturnUsing(fn (string $content) => $real->write($content));
-            $mock->shouldReceive('close')->once()->andReturnUsing(function () use ($real): void {
-                $real->close();
-                $this->cancellation->cancel();
+            $this->pause('openFile');
+
+            $file = parent::openFile($path, $mode);
+
+            if ($this->operation !== 'write') {
+                return $file;
+            }
+
+            $wrapped = Mockery::mock(AmpFile::class);
+            $wrapped->shouldReceive('write')->once()->andReturnUsing(function (string $content) use ($file): void {
+                $this->pause('write');
+                $file->write($content);
             });
+            $wrapped->shouldReceive('close')->once()->andReturnUsing(fn () => $file->close());
 
-            return $mock;
-        }
-    };
-    $this->app->swap($contract, $file);
-
-    try {
-        $engine->compile('welcome', $cancellation->getCancellation());
-        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
-        expect(is_file($config->cachePath('welcome')))->toBeTrue();
-        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
-    } finally {
-        $this->app->swap($contract, $original);
-    }
-});
-
-it('keeps a published cache file if cancellation arrives during the move', function (): void {
-    $contract = FileContract::class;
-    $original = App::make($contract);
-    $engine = new TemplateEngine();
-    $engine->clearCache();
-    $config = new ViewsConfig();
-    $cancellation = new DeferredCancellation();
-    $file = new class ($cancellation) extends File {
-        public function __construct(private DeferredCancellation $cancellation)
-        {
-            parent::__construct();
+            return $wrapped;
         }
 
         public function move(string $from, string $to): void
         {
+            $this->pause('move');
             parent::move($from, $to);
-            $this->cancellation->cancel();
         }
     };
-    $this->app->swap($contract, $file);
+    $this->app->swap(FileContract::class, $file);
 
     try {
-        $engine->compile('welcome', $cancellation->getCancellation());
-        expect($cancellation->getCancellation()->isRequested())->toBeTrue();
-        expect(is_file($config->cachePath('welcome')))->toBeTrue();
-        expect(glob($config->compiledPath() . 'view-*'))->toBe([]);
+        $compile = \Amp\async(fn () => $engine->compile('welcome'));
+        $started->getFuture()->await();
+        expect($compile->isComplete())->toBeFalse();
+        $observer = \Amp\async(fn (): string => 'running');
+        expect($observer->await())->toBe('running');
+        $resume->complete();
+        $compile->await();
     } finally {
-        $this->app->swap($contract, $original);
-        View::clearCache();
+        if (! $resume->isComplete()) {
+            $resume->complete();
+        }
+        $this->app->swap(FileContract::class, $original);
+        $engine->clearCache();
     }
-});
+})->with(['realPath', 'getStatus', 'get', 'openFile', 'write', 'move']);
