@@ -11,7 +11,6 @@ use Phenix\Validation\Contracts\Rule as RuleContract;
 
 use function is_array;
 
-/** @phpstan-consistent-constructor */
 abstract class Rule implements RuleContract
 {
     protected string $field;
@@ -25,7 +24,7 @@ abstract class Rule implements RuleContract
 
     public static function new(mixed ...$args): static
     {
-        return new static(...$args);
+        return new static(...$args); // @phpstan-ignore new.static (Rule subclasses intentionally have different constructors.)
     }
 
     abstract public function passes(): bool;
