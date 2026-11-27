@@ -59,7 +59,7 @@ class View implements ViewContract
             (static function (string $__phenix_path, array $__phenix_data): void {
                 extract($__phenix_data, EXTR_SKIP);
 
-                require $__phenix_path;
+                require $__phenix_path; // NOSONAR: A view must execute on every render, including repeated partials.
             })($this->template, $data);
 
             $content = ob_get_clean();

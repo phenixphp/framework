@@ -31,7 +31,11 @@ class TemplateCompiler
         $result = '';
 
         foreach (token_get_all($content) as $token) {
-            $result .= is_array($token) && $token[0] === T_INLINE_HTML ? $this->compileText($token[1]) : (is_array($token) ? $token[1] : $token);
+            if (is_array($token)) {
+                $result .= $token[0] === T_INLINE_HTML ? $this->compileText($token[1]) : $token[1];
+            } else {
+                $result .= $token;
+            }
         }
 
         return $result;
@@ -63,7 +67,7 @@ class TemplateCompiler
             return $echo;
         }
 
-        return $text[$offset] === '@' && preg_match('/\G@([A-Za-z][A-Za-z0-9_]*)/A', $text, $match, 0, $offset)
+        return $text[$offset] === '@' && preg_match('/\G@([A-Za-z](?:(?=[\x00-\x7f])\w)*)/A', $text, $match, 0, $offset)
             ? $this->compileTextDirective($text, $offset, $match)
             : $text[$offset++];
     }

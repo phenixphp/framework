@@ -47,6 +47,14 @@ if (str_contains($value, 'it\'s (fine)') && str_contains($value, "path\\\\")):
 PHP);
 });
 
+it('recognizes directive names using the original ASCII characters', function (): void {
+    $compiler = new TemplateCompiler();
+    $compiler->registerDirective('word_123', fn (): string => 'matched');
+
+    expect($compiler->compile('@word_123 @word_123é @_word_123 @9word'))
+        ->toBe('matched matchedé @_word_123 @9word');
+});
+
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());
 
@@ -353,6 +361,24 @@ it('does not retain stacks across repeated renders', function (): void {
         expect($view->render())->toBe($view->render());
     } finally {
         unlink($source);
+        View::clearCache();
+    }
+});
+
+it('executes a compiled view on each render and each repeated include', function (): void {
+    $config = new ViewsConfig();
+    $source = $config->path('phenix-repeated-view');
+    $partial = $config->path('phenix-repeated-partial');
+    file_put_contents($source, "@include('phenix-repeated-partial')@include('phenix-repeated-partial')");
+    file_put_contents($partial, 'item');
+
+    try {
+        $view = (new TemplateEngine())->view('phenix-repeated-view');
+        expect($view->render())->toBe('itemitem')
+            ->and($view->render())->toBe('itemitem');
+    } finally {
+        unlink($source);
+        unlink($partial);
         View::clearCache();
     }
 });

@@ -6,13 +6,12 @@ namespace Phenix\Views;
 
 use Phenix\Exceptions\RuntimeException;
 use Phenix\Views\Contracts\View as ViewContract;
-use Phenix\Views\Exceptions\ViewNotFoundException;
 
 use function array_key_exists;
 use function in_array;
 use function is_int;
 
-class TemplateFactory
+class TemplateFactory extends TemplateRenderer
 {
     /** @var array<string, string|EscapedValue> */
     protected array $sections = [];
@@ -32,15 +31,6 @@ class TemplateFactory
     private array $active = [];
 
     private const PARENT_MARKER = '<!--PHENIX_PARENT_SECTION-->';
-
-    public function __construct(protected TemplateCache $cache, protected TemplateEngine|null $engine = null)
-    {
-    }
-
-    public function setEngine(TemplateEngine $engine): void
-    {
-        $this->engine = $engine;
-    }
 
     public function extends(string $layout, array $data = []): void
     {
@@ -134,50 +124,6 @@ class TemplateFactory
         $this->compiler()->compile($template);
 
         return (new View($this->cache->getCacheFilePath($template), array_merge($variables, $data), $this, false, $template))->render();
-    }
-
-    public function renderIncludeIf(array $variables, string $template, array $data = []): string
-    {
-        try {
-            $this->compiler()->compile($template);
-        } catch (ViewNotFoundException) {
-            return '';
-        }
-
-        return $this->renderInclude($variables, $template, $data);
-    }
-
-    public function renderIncludeWhen(array $variables, bool $condition, string $template, array $data = []): string
-    {
-        return $condition ? $this->renderInclude($variables, $template, $data) : '';
-    }
-
-    public function renderIncludeFirst(array $variables, array $templates, array $data = []): string
-    {
-        foreach ($templates as $template) {
-            try {
-                $this->compiler()->compile($template);
-            } catch (ViewNotFoundException) {
-                continue;
-            }
-
-            return $this->renderInclude($variables, $template, $data);
-        }
-
-        return '';
-    }
-
-    public function renderEach(array $variables, string $template, iterable $items, string $item, string|null $empty = null): string
-    {
-        $result = '';
-        $hasItems = false;
-
-        foreach ($items as $key => $value) {
-            $hasItems = true;
-            $result .= $this->renderInclude($variables, $template, [$item => $value, 'key' => $key]);
-        }
-
-        return ! $hasItems && $empty !== null ? $this->renderInclude($variables, $empty) : $result;
     }
 
     public function startStack(string $type, string $name): void
