@@ -26,13 +26,11 @@ class TemplateEngine implements TemplateEngineContract
 
     public function view(string $template, array $data = []): ViewContract
     {
-        $this->compile($template);
+        $factory = clone $this->templateFactory;
+        $factory->clear();
+        $factory->setEngine($this);
 
-        while ($this->compiler->hasTemplates()) {
-            $this->compile($this->compiler->dequeueTemplate());
-        }
-
-        return $this->templateFactory->make($template, $data);
+        return $factory->make($template, $data);
     }
 
     public function directive(string $name, Closure $closure): void
@@ -47,17 +45,18 @@ class TemplateEngine implements TemplateEngineContract
 
     public function compile(string $template): void
     {
-        $filePath = realpath($this->cache->getSourcePath($template));
-        $basePath = realpath($this->cache->getViewPath());
+        $filePath = File::realPath($this->cache->getSourcePath($template));
+        $basePath = File::realPath($this->cache->getViewPath($template));
 
-        if ($filePath === false || ! str_starts_with($filePath, $basePath)) {
+        if ($filePath === false || $basePath === false || ! str_starts_with($filePath, rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) {
             throw new ViewNotFoundException("Template {$template} not found.");
         }
 
         if (! $this->cache->isCached($template)) {
             $content = File::get($filePath);
 
-            $compiled = $this->compiler->compile($content);
+            $compiler = clone $this->compiler;
+            $compiled = $compiler->compile($content);
 
             $this->cache->put($template, $compiled);
         }

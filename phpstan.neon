@@ -6,4 +6,5 @@ parameters:
     treatPhpDocTypesAsCertain: false
     paths:
         - src
+        - tests/Unit/Testing/Internal/DatabaseTestCase.php
     tmpDir: build/phpstan

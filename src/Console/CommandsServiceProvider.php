@@ -13,6 +13,8 @@ use Phenix\Console\Commands\MakeQuery;
 use Phenix\Console\Commands\MakeRequest;
 use Phenix\Console\Commands\MakeServiceProvider;
 use Phenix\Console\Commands\MakeTest;
+use Phenix\Console\Commands\PackageDiscover;
+use Phenix\Console\Commands\VendorPublish;
 use Phenix\Console\Commands\ViewCache;
 use Phenix\Console\Commands\ViewClear;
 use Phenix\Providers\ServiceProvider;
@@ -33,6 +35,8 @@ class CommandsServiceProvider extends ServiceProvider
             GenerateKey::class,
             ViewClear::class,
             ViewCache::class,
+            PackageDiscover::class,
+            VendorPublish::class,
         ]);
     }
 }

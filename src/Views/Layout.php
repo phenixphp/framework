@@ -12,9 +12,13 @@ class Layout extends View
         string $template,
         array $data = [],
         array $sections = [],
+        TemplateFactory|null $templateFactory = null,
+        string|null $name = null,
     ) {
-        parent::__construct($template, $data);
+        parent::__construct($template, $data, $templateFactory, true, $name);
 
-        $this->templateFactory->inheritSections($sections);
+        if ($templateFactory === null) {
+            $this->templateFactory->inheritSections($sections);
+        }
     }
 }

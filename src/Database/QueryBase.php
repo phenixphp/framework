@@ -26,7 +26,7 @@ abstract class QueryBase extends Clause implements QueryBuilder, Builder
     use HasLock;
     use HasJoinClause;
 
-    protected QueryAst $ast;
+    protected QueryAst|null $ast = null;
 
     public function __construct()
     {

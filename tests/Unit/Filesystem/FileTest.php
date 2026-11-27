@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Amp\File\File as FileHandler;
 use Phenix\Filesystem\File;
+use Phenix\Filesystem\Tasks\ResolvePath;
+use Phenix\Tasks\Result;
 
 beforeEach(function () {
     $path = sys_get_temp_dir() . '/file.txt';
@@ -11,6 +13,21 @@ beforeEach(function () {
     if (file_exists($path)) {
         unlink($path);
     }
+});
+
+it('returns a result for resolved and missing paths', function (): void {
+    $path = sys_get_temp_dir();
+    $resolved = (new ResolvePath($path))->run($this->getFakeChannel(), $this->getFakeCancellation());
+    $missingPath = $path . DIRECTORY_SEPARATOR . 'phenix-missing-' . bin2hex(random_bytes(8));
+    $missing = (new ResolvePath($missingPath))->run($this->getFakeChannel(), $this->getFakeCancellation());
+
+    expect($resolved)->toBeInstanceOf(Result::class)
+        ->and($resolved->isSuccess())->toBeTrue()
+        ->and($resolved->output())->toBe(realpath($path))
+        ->and($missing->isSuccess())->toBeTrue()
+        ->and($missing->output())->toBeFalse()
+        ->and((new File())->realPath($path))->toBe(realpath($path))
+        ->and((new File())->realPath($missingPath))->toBeFalse();
 });
 
 it('reads files successfully', function () {

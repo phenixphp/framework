@@ -7,7 +7,7 @@ use Phenix\Events\Contracts\Event as EventContract;
 use Phenix\Events\Event;
 use Phenix\Events\EventEmitter;
 use Phenix\Events\Exceptions\EventException;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Event as EventFacade;
 use Phenix\Facades\Log;
@@ -336,7 +336,7 @@ it('handle listener error gracefully', function (): void {
     $emitter = new EventEmitter();
 
     $emitter->on('error.event', function (): never {
-        throw new RuntimeError('Listener error');
+        throw new RuntimeException('Listener error');
     });
 
     Log::shouldReceive('error')
@@ -350,7 +350,7 @@ it('handle listener error gracefully in async event', function (): void {
     $emitter->setEmitWarnings(true);
 
     $emitter->on('error.event', function (): never {
-        throw new RuntimeError('Listener error');
+        throw new RuntimeException('Listener error');
     });
 
     Log::shouldReceive('error')
@@ -366,7 +366,7 @@ it('handle listener error gracefully in async event without warnings', function 
     $emitter->setEmitWarnings(false);
 
     $emitter->on('error.event', function (): never {
-        throw new RuntimeError('Listener error');
+        throw new RuntimeException('Listener error');
     });
 
     Log::shouldReceive('error')->once();
@@ -760,10 +760,10 @@ it('does not fake events in production environment', function (): void {
 
 it('fakes multiple events provided sequentially', function (): void {
     EventFacade::on('list.one', function (): never {
-        throw new RuntimeError('Should not run');
+        throw new RuntimeException('Should not run');
     });
     EventFacade::on('list.two', function (): never {
-        throw new RuntimeError('Should not run');
+        throw new RuntimeException('Should not run');
     });
 
     $executedThree = false;
@@ -814,7 +814,7 @@ it('does not fake when closure throws exception', function (): void {
     });
 
     EventFacade::fakeWhen('closure.exception.event', function (Collection $log): bool {
-        throw new RuntimeError('Predicate error');
+        throw new RuntimeException('Predicate error');
     });
 
     EventFacade::emit('closure.exception.event');

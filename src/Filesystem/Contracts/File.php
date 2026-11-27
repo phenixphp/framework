@@ -19,4 +19,8 @@ interface File
     public function createDirectory(string $path, int $mode = 0777): void;
 
     public function move(string $from, string $to): void;
+
+    public function realPath(string $path): string|false;
+
+    public function getStatus(string $path): array|null;
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phenix\Views;
 
 use Phenix\Facades\File;
-use Phenix\Util\Str;
+use Throwable;
 
 class TemplateCache
 {
@@ -14,19 +14,19 @@ class TemplateCache
     ) {
     }
 
-    public function getViewPath(): string
+    public function getViewPath(string|null $template = null): string
     {
-        return $this->config->path();
+        return $template === null ? $this->config->path() : $this->config->sourceBasePath($template);
     }
 
     public function getSourcePath(string $template): string
     {
-        return $this->config->path(ViewName::ensure($template));
+        return $this->config->sourcePath($template);
     }
 
     public function getCacheFilePath(string $template): string
     {
-        return $this->config->compiledPath(Str::finish($template, '.php'));
+        return $this->config->cachePath($template);
     }
 
     public function isCached(string $template): bool
@@ -34,12 +34,32 @@ class TemplateCache
         $cacheFile = $this->getCacheFilePath($template);
         $sourceFile = $this->getSourcePath($template);
 
-        return File::exists($cacheFile) && ! $this->isExpired($sourceFile, $cacheFile);
+        $compiled = File::getStatus($cacheFile);
+        $source = File::getStatus($sourceFile);
+
+        return $compiled !== null && ($compiled['mode'] & 0170000) === 0100000
+            && $source !== null && $compiled['mtime'] >= $source['mtime'];
     }
 
     public function put(string $template, string $content): void
     {
-        File::put($this->getCacheFilePath($template), $content);
+        $compiled = $this->getCacheFilePath($template);
+        $temporary = dirname($compiled) . DIRECTORY_SEPARATOR . 'view-' . bin2hex(random_bytes(16));
+        $file = File::openFile($temporary, 'x');
+
+        try {
+            try {
+                $file->write($content);
+            } finally {
+                $file->close();
+            }
+
+            File::move($temporary, $compiled);
+        } catch (Throwable $exception) {
+            File::deleteFile($temporary);
+
+            throw $exception;
+        }
     }
 
     public function clear(): void

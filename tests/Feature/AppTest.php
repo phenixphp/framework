@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Phenix\Constants\AppMode;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
@@ -50,7 +50,7 @@ it('starts server in proxied mode with no trusted proxies', function (): void {
     Config::set('app.app_mode', AppMode::PROXIED->value);
 
     $this->app->run();
-})->throws(RuntimeError::class);
+})->throws(RuntimeException::class);
 
 it('starts server with TLS certificate', function (): void {
     Config::set('app.url', 'https://public.example.com');
@@ -72,10 +72,10 @@ it('rejects an invalid public URL', function (): void {
     Config::set('app.url', 'not-an-absolute-url');
 
     $this->app->run();
-})->throws(RuntimeError::class, 'App URL must be an absolute HTTP or HTTPS URL with a host.');
+})->throws(RuntimeException::class, 'App URL must be an absolute HTTP or HTTPS URL with a host.');
 
 it('rejects an invalid bind port', function (): void {
     Config::set('app.port', 70000);
 
     $this->app->run();
-})->throws(RuntimeError::class, 'Bind port must be between 1 and 65535.');
+})->throws(RuntimeException::class, 'Bind port must be between 1 and 65535.');

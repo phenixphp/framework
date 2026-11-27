@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Composer package discovery through `extra.phenix` metadata.
+- Package resource registration and the `package:discover` and `vendor:publish` commands.
+- Namespaced package views, translations, and package migration paths.
+
 # Release Notes for 0.9.x
 
 ## [v0.10.1 (2026-10-07)](https://github.com/phenixphp/framework/compare/0.10.0...0.10.1)

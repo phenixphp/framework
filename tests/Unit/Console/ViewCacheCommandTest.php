@@ -36,3 +36,17 @@ it('run parallel task', function (): void {
 
     expect($result->isSuccess())->toBeTruthy();
 });
+
+it('reports compilation errors from workers', function (): void {
+    $source = (new ViewsConfig())->path('invalid-compile-directive');
+    file_put_contents($source, '@if(');
+
+    try {
+        $command = $this->phenix('view:cache');
+        expect($command->getStatusCode())->toBe(1);
+        expect($command->getDisplay())->not->toContain('All views were compiled successfully');
+    } finally {
+        unlink($source);
+        View::clearCache();
+    }
+});

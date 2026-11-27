@@ -30,7 +30,7 @@ use Phenix\Constants\AppMode;
 use Phenix\Constants\ServerMode;
 use Phenix\Contracts\App as AppContract;
 use Phenix\Contracts\Makeable;
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Route;
 use Phenix\Http\Client\HttpClient;
@@ -39,6 +39,9 @@ use Phenix\Http\Constants\Protocol;
 use Phenix\Http\ErrorHandler as AppErrorHandler;
 use Phenix\Http\ExceptionHandler as AppExceptionHandler;
 use Phenix\Logging\LoggerFactory;
+use Phenix\Packages\PackageManifest;
+use Phenix\Packages\PackageRegistry;
+use Phenix\Providers\ServiceProvider;
 use Phenix\Runtime\Log;
 use Phenix\Session\SessionMiddlewareFactory;
 
@@ -47,6 +50,7 @@ use function Amp\trapSignal;
 use function count;
 use function extension_loaded;
 use function is_array;
+use function is_string;
 
 class App implements AppContract, Makeable
 {
@@ -97,12 +101,25 @@ class App implements AppContract, Makeable
         self::$container->add(HttpClient::class);
         self::$container->add(HttpClientTestLogger::class)->setShared(true);
 
+        $manifest = new PackageManifest(self::$path);
+        self::$container->add(PackageManifest::class, $manifest)->setShared(true);
+        self::$container->add(PackageRegistry::class)->setShared(true);
+
         self::$container->add(Phenix::class)->addMethodCall('registerCommands');
 
         /** @var array $providers */
-        $providers = Config::get('app.providers', []);
+        $providers = array_values(array_unique([
+            ...Config::get('app.providers', []),
+            ...$manifest->providers(),
+        ]));
 
         foreach ($providers as $provider) {
+            if (! is_string($provider) || ! class_exists($provider) || ! is_subclass_of($provider, ServiceProvider::class)) {
+                $providerName = is_string($provider) ? $provider : get_debug_type($provider);
+
+                throw new RuntimeException("Service provider {$providerName} is invalid.");
+            }
+
             self::$container->addServiceProvider(new $provider());
         }
 
@@ -253,7 +270,7 @@ class App implements AppContract, Makeable
             $trustedProxies = Config::get('app.trusted_proxies', []);
 
             if (is_array($trustedProxies) && count($trustedProxies) === 0) {
-                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+                throw new RuntimeException('Trusted proxies must be an array of IP addresses or CIDRs.');
             }
 
             return SocketHttpServer::createForBehindProxy(
@@ -286,7 +303,7 @@ class App implements AppContract, Makeable
             $trustedProxies = Config::get('app.trusted_proxies', []);
 
             if (is_array($trustedProxies) && count($trustedProxies) === 0) {
-                throw new RuntimeError('Trusted proxies must be an array of IP addresses or CIDRs.');
+                throw new RuntimeException('Trusted proxies must be an array of IP addresses or CIDRs.');
             }
 
             $middleware[] = new Middleware\ForwardedMiddleware(ForwardedHeaderType::XForwardedFor, $trustedProxies);

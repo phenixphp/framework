@@ -69,11 +69,11 @@
         "pestphp/pest-plugin-parallel": "^1.2",
         "phpmyadmin/sql-parser": "^5.7",
         "phpstan/extension-installer": "^1.2",
-        "phpstan/phpstan": "^1.9",
-        "phpstan/phpstan-deprecation-rules": "^1.1",
-        "phpstan/phpstan-phpunit": "^1.3",
+        "phpstan/phpstan": "~2.3.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^9.5",
-        "rector/rector": "^1.2"
+        "rector/rector": "^2.0"
     },
     "config": {
         "optimize-autoloader": true,

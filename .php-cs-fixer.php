@@ -37,6 +37,7 @@ $finder = Finder::create()
         __DIR__ . '/src',
         __DIR__ . '/tests',
     ])
+    ->exclude('fixtures/application/storage')
     ->name('*.php')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);

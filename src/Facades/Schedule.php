@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phenix\Facades;
 
+use Closure;
 use Phenix\Runtime\Facade;
 use Phenix\Scheduling\Scheduler;
 

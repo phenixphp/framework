@@ -4,49 +4,69 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Sync\LocalMutex;
+use Fiber;
 use Phenix\Views\Contracts\View as ViewContract;
 use Throwable;
 
 class View implements ViewContract
 {
-    protected string $template;
-    protected array $data = [];
+    private static LocalMutex|null $mutex = null;
+
+    private static Fiber|null $owner = null;
+
+    private static bool $rendering = false;
+
     protected TemplateFactory $templateFactory;
 
     public function __construct(
-        string $template,
-        array $data = [],
+        protected string $template,
+        protected array $data = [],
+        TemplateFactory|null $templateFactory = null,
+        protected bool $handleLayout = true,
+        protected string|null $name = null,
     ) {
         $this->template = $template;
         $this->data = $data;
 
-        $this->templateFactory = new TemplateFactory(new TemplateCache(new ViewsConfig()));
+        $this->templateFactory = $templateFactory ?? new TemplateFactory(new TemplateCache(new ViewsConfig()));
     }
 
     public function render(): string
     {
-        try {
-            $obLevel = ob_get_level();
+        $fiber = Fiber::getCurrent();
+        $nested = self::$rendering && self::$owner === $fiber;
+        $lock = null;
 
+        if (! $nested) {
+            self::$mutex ??= new LocalMutex();
+            $lock = self::$mutex->acquire();
+            self::$owner = $fiber;
+            self::$rendering = true;
+        }
+
+        $obLevel = ob_get_level();
+        $entered = false;
+
+        try {
+            $this->templateFactory->enter($this->template, $this->name ?? $this->template);
+            $entered = true;
             ob_start();
 
-            $path = $this->template;
             $data = $this->data;
             $data['_env'] = $this->templateFactory;
 
-            (static function () use ($path, $data): void {
-                extract($data, EXTR_SKIP);
+            (static function (string $__phenix_path, array $__phenix_data): void {
+                extract($__phenix_data, EXTR_SKIP);
 
-                require $path;
-            })();
+                require $__phenix_path; // NOSONAR: A view must execute on every render, including repeated partials.
+            })($this->template, $data);
 
             $content = ob_get_clean();
 
-            if ($this->templateFactory->hasLayout()) {
-                return $this->templateFactory->layout()->render();
+            if ($this->handleLayout && $this->templateFactory->hasLayout()) {
+                return $this->templateFactory->layout($this->data)->render();
             }
-
-            $this->templateFactory->clear();
 
             return $content;
         } catch (Throwable $th) {
@@ -55,6 +75,17 @@ class View implements ViewContract
             }
 
             throw $th;
+        } finally {
+            if ($entered) {
+                $this->templateFactory->leave();
+            }
+
+            if ($lock !== null) {
+                $this->templateFactory->clear();
+                self::$owner = null;
+                self::$rendering = false;
+                $lock->release();
+            }
         }
     }
 
