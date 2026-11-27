@@ -11,7 +11,7 @@ class Result implements ContractsResult
 {
     protected bool $status;
 
-    protected function __construct(
+    private function __construct(
         protected mixed $output = null,
         protected string|null $message = null,
         bool $status = true

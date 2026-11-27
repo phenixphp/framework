@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
-use Amp\Cancellation;
 use Phenix\App;
 use Phenix\Facades\Config as Configuration;
 use Phenix\Facades\File;
@@ -26,7 +25,7 @@ class ViewsConfig
         return $this->buildPath($this->config['path'], $path);
     }
 
-    public function sourcePath(string $template, Cancellation|null $cancellation = null): string
+    public function sourcePath(string $template): string
     {
         [$namespace, $name] = $this->parse($template);
         $relativePath = ViewName::ensure($name);
@@ -35,10 +34,10 @@ class ViewsConfig
             return $this->path($relativePath);
         }
 
-        return $this->buildPath($this->resolveNamespacedBasePath($namespace, $relativePath, $cancellation), $relativePath);
+        return $this->buildPath($this->resolveNamespacedBasePath($namespace, $relativePath), $relativePath);
     }
 
-    public function sourceBasePath(string $template, Cancellation|null $cancellation = null): string
+    public function sourceBasePath(string $template): string
     {
         [$namespace, $name] = $this->parse($template);
 
@@ -46,12 +45,12 @@ class ViewsConfig
             return $this->path();
         }
 
-        return $this->resolveNamespacedBasePath($namespace, ViewName::ensure($name), $cancellation);
+        return $this->resolveNamespacedBasePath($namespace, ViewName::ensure($name));
     }
 
     public function cachePath(string $template): string
     {
-        return $this->compiledPath(hash('sha256', $template) . '.php');
+        return $this->compiledPath(hash('sha256', "v2:{$template}") . '.php');
     }
 
     public function compiledPath(string|null $path = null): string
@@ -66,11 +65,11 @@ class ViewsConfig
         return Str::finish($base, DIRECTORY_SEPARATOR) . $path;
     }
 
-    private function resolveNamespacedBasePath(string $namespace, string $relativePath, Cancellation|null $cancellation): string
+    private function resolveNamespacedBasePath(string $namespace, string $relativePath): string
     {
         $override = Path::join($this->path(), 'vendor', $namespace);
 
-        if ($this->isSourceFile($this->buildPath($override, $relativePath), $cancellation)) {
+        if ($this->isSourceFile($this->buildPath($override, $relativePath))) {
             return $override;
         }
 
@@ -78,7 +77,7 @@ class ViewsConfig
         $packages = App::make(PackageRegistry::class);
 
         foreach ($packages->viewPaths($namespace) as $path) {
-            if ($this->isSourceFile($this->buildPath($path, $relativePath), $cancellation)) {
+            if ($this->isSourceFile($this->buildPath($path, $relativePath))) {
                 return $path;
             }
         }
@@ -86,9 +85,9 @@ class ViewsConfig
         return $override;
     }
 
-    private function isSourceFile(string $path, Cancellation|null $cancellation): bool
+    private function isSourceFile(string $path): bool
     {
-        $status = File::getStatus($path, $cancellation);
+        $status = File::getStatus($path);
 
         return $status !== null && ($status['mode'] & 0170000) === 0100000;
     }

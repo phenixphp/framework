@@ -10,10 +10,10 @@ use Phenix\Views\Contracts\TemplateEngine;
 use Phenix\Views\Contracts\View as ViewContract;
 
 /**
- * @method static ViewContract view(string $template, array $data = [], \Amp\Cancellation|null $cancellation = null)
+ * @method static ViewContract view(string $template, array $data = [])
  * @method static void directive(string $name, Closure $closure)
  * @method static void clearCache()
- * @method static void compile(string $template, \Amp\Cancellation|null $cancellation = null)
+ * @method static void compile(string $template)
  *
  * @see \Phenix\Views\TemplateEngine
  */

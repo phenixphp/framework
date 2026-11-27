@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Filesystem;
 
-use Amp\Cancellation;
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
 use Phenix\Facades\Worker;
@@ -60,14 +59,14 @@ class File implements FileContract
         $this->driver->move($from, $to);
     }
 
-    public function realPath(string $path, Cancellation|null $cancellation = null): string|false
+    public function realPath(string $path): string|false
     {
-        return Worker::submit(new ResolvePath($path), $cancellation)->await($cancellation);
+        return Worker::submit(new ResolvePath($path))->await()->output();
     }
 
-    public function getStatus(string $path, Cancellation|null $cancellation = null): array|null
+    public function getStatus(string $path): array|null
     {
-        return Worker::submit(new GetStatus($path), $cancellation)->await($cancellation)->output();
+        return Worker::submit(new GetStatus($path))->await()->output();
     }
 
     public function openFile(string $path, string $mode = 'w'): FileHandler

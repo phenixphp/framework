@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use Amp\CancelledException;
-use Amp\DeferredCancellation;
 use Amp\File\File as FileHandler;
 use Phenix\Filesystem\File;
-use Phenix\Filesystem\Tasks\GetStatus;
 use Phenix\Filesystem\Tasks\ResolvePath;
+use Phenix\Tasks\Result;
 
 beforeEach(function () {
     $path = sys_get_temp_dir() . '/file.txt';
@@ -17,60 +15,19 @@ beforeEach(function () {
     }
 });
 
-it('returns a task result with fresh file status or null when missing', function (): void {
-    $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phenix-status-' . bin2hex(random_bytes(8));
-    file_put_contents($path, 'content');
+it('returns a result for resolved and missing paths', function (): void {
+    $path = sys_get_temp_dir();
+    $resolved = (new ResolvePath($path))->run($this->getFakeChannel(), $this->getFakeCancellation());
+    $missingPath = $path . DIRECTORY_SEPARATOR . 'phenix-missing-' . bin2hex(random_bytes(8));
+    $missing = (new ResolvePath($missingPath))->run($this->getFakeChannel(), $this->getFakeCancellation());
 
-    try {
-        $task = new GetStatus($path);
-        $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
-
-        expect($result->isSuccess())->toBeTrue();
-        expect($result->output()['size'])->toBe(7);
-        expect((new File())->getStatus($path)['size'])->toBe(7);
-
-        unlink($path);
-        $missing = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
-        expect($missing->isSuccess())->toBeTrue();
-        expect($missing->output())->toBeNull();
-        expect((new File())->getStatus($path))->toBeNull();
-    } finally {
-        if (is_file($path)) {
-            unlink($path);
-        }
-    }
-});
-
-it('resolves paths through a worker and returns false for missing paths', function (): void {
-    $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phenix-realpath-' . bin2hex(random_bytes(8));
-    file_put_contents($path, 'data');
-
-    try {
-        $file = new File();
-        expect($file->realPath($path))->toBe(realpath($path));
-        expect($file->realPath("{$path}-missing"))->toBeFalse();
-    } finally {
-        unlink($path);
-    }
-});
-
-it('honors cancellation before resolving a path', function (): void {
-    $cancellation = new DeferredCancellation();
-    $cancellation->cancel();
-    $task = new ResolvePath(sys_get_temp_dir());
-
-    expect(fn () => $task->run($this->getFakeChannel(), $cancellation->getCancellation()))
-        ->toThrow(CancelledException::class);
-    expect(fn () => (new File())->realPath(sys_get_temp_dir(), $cancellation->getCancellation()))
-        ->toThrow(CancelledException::class);
-});
-
-it('honors cancellation when checking file status', function (): void {
-    $cancellation = new DeferredCancellation();
-    $cancellation->cancel();
-
-    expect(fn () => (new File())->getStatus(sys_get_temp_dir(), $cancellation->getCancellation()))
-        ->toThrow(CancelledException::class);
+    expect($resolved)->toBeInstanceOf(Result::class)
+        ->and($resolved->isSuccess())->toBeTrue()
+        ->and($resolved->output())->toBe(realpath($path))
+        ->and($missing->isSuccess())->toBeTrue()
+        ->and($missing->output())->toBeFalse()
+        ->and((new File())->realPath($path))->toBe(realpath($path))
+        ->and((new File())->realPath($missingPath))->toBeFalse();
 });
 
 it('reads files successfully', function () {

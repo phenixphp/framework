@@ -47,8 +47,7 @@ class ViewCache extends Command
 
         foreach (WorkerPool::awaitAll($this->tasks) as $result) {
             if ($result->isFailure()) {
-                $message = $result->message();
-                $output->writeln("<error>Unable to compile views: {$message}</error>");
+                $output->writeln("<error>{$result->message()}</error>");
 
                 return Command::FAILURE;
             }

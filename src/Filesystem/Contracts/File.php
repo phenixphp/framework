@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Phenix\Filesystem\Contracts;
 
-use Amp\Cancellation;
-
 interface File
 {
     public function get(string $path): string;
@@ -22,7 +20,7 @@ interface File
 
     public function move(string $from, string $to): void;
 
-    public function realPath(string $path, Cancellation|null $cancellation = null): string|false;
+    public function realPath(string $path): string|false;
 
-    public function getStatus(string $path, Cancellation|null $cancellation = null): array|null;
+    public function getStatus(string $path): array|null;
 }
