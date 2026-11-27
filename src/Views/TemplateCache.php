@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Cancellation;
 use Phenix\Facades\File;
-use Phenix\Util\Str;
 
 class TemplateCache
 {
@@ -14,32 +14,19 @@ class TemplateCache
     ) {
     }
 
-    public function getViewPath(): string
+    public function getViewPath(string|null $template = null, Cancellation|null $cancellation = null): string
     {
-        return $this->config->path();
+        return $template === null ? $this->config->path() : $this->config->sourceBasePath($template, $cancellation);
     }
 
-    public function getSourcePath(string $template): string
+    public function getSourcePath(string $template, Cancellation|null $cancellation = null): string
     {
-        return $this->config->path(ViewName::ensure($template));
+        return $this->config->sourcePath($template, $cancellation);
     }
 
     public function getCacheFilePath(string $template): string
     {
-        return $this->config->compiledPath(Str::finish($template, '.php'));
-    }
-
-    public function isCached(string $template): bool
-    {
-        $cacheFile = $this->getCacheFilePath($template);
-        $sourceFile = $this->getSourcePath($template);
-
-        return File::exists($cacheFile) && ! $this->isExpired($sourceFile, $cacheFile);
-    }
-
-    public function put(string $template, string $content): void
-    {
-        File::put($this->getCacheFilePath($template), $content);
+        return $this->config->cachePath($template);
     }
 
     public function clear(): void
@@ -49,10 +36,5 @@ class TemplateCache
                 File::deleteFile($file);
             }
         }
-    }
-
-    protected function isExpired(string $sourceFile, string $cacheFile): bool
-    {
-        return File::getModificationTime($sourceFile) > File::getModificationTime($cacheFile);
     }
 }

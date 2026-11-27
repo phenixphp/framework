@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Phenix\Filesystem;
 
+use Amp\Cancellation;
 use Amp\File\File as FileHandler;
 use Amp\File\Filesystem;
+use Phenix\Facades\Worker;
 use Phenix\Filesystem\Contracts\File as FileContract;
+use Phenix\Filesystem\Tasks\GetStatus;
+use Phenix\Filesystem\Tasks\ResolvePath;
 use Phenix\Util\Str;
 
 use function Amp\File\filesystem;
@@ -54,6 +58,16 @@ class File implements FileContract
     public function move(string $from, string $to): void
     {
         $this->driver->move($from, $to);
+    }
+
+    public function realPath(string $path, Cancellation|null $cancellation = null): string|false
+    {
+        return Worker::submit(new ResolvePath($path), $cancellation)->await($cancellation);
+    }
+
+    public function getStatus(string $path, Cancellation|null $cancellation = null): array|null
+    {
+        return Worker::submit(new GetStatus($path), $cancellation)->await($cancellation)->output();
     }
 
     public function openFile(string $path, string $mode = 'w'): FileHandler

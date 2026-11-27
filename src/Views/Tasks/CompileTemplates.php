@@ -24,7 +24,7 @@ class CompileTemplates extends Task
         foreach ($this->paths as $path) {
             $template = ViewName::template($path, Config::get('view.path'));
 
-            View::compile($template);
+            View::compile($template, $cancellation);
         }
 
         return Result::success();

@@ -4,40 +4,31 @@ declare(strict_types=1);
 
 namespace Phenix\Views;
 
+use Amp\Cancellation;
 use Closure;
-use Phenix\Facades\File;
 use Phenix\Views\Contracts\TemplateEngine as TemplateEngineContract;
 use Phenix\Views\Contracts\View as ViewContract;
-use Phenix\Views\Exceptions\ViewNotFoundException;
 
 class TemplateEngine implements TemplateEngineContract
 {
-    protected TemplateFactory $templateFactory;
-
-    protected array $sections = [];
+    /** @var array<string, Closure> */
+    protected array $directives = [];
 
     public function __construct(
-        protected TemplateCompiler $compiler = new TemplateCompiler(),
         protected TemplateCache $cache = new TemplateCache(),
-        TemplateFactory|null $templateFactory = null
     ) {
-        $this->templateFactory = $templateFactory ?? new TemplateFactory($this->cache);
     }
 
-    public function view(string $template, array $data = []): ViewContract
+    public function view(string $template, array $data = [], Cancellation|null $cancellation = null): ViewContract
     {
-        $this->compile($template);
+        $this->compile($template, $cancellation);
 
-        while ($this->compiler->hasTemplates()) {
-            $this->compile($this->compiler->dequeueTemplate());
-        }
-
-        return $this->templateFactory->make($template, $data);
+        return new BladeView(fn (): BladeEngine => $this->makeBlade(), $template, $data, $cancellation);
     }
 
     public function directive(string $name, Closure $closure): void
     {
-        $this->compiler->registerDirective($name, $closure);
+        $this->directives[$name] = $closure;
     }
 
     public function clearCache(): void
@@ -45,21 +36,21 @@ class TemplateEngine implements TemplateEngineContract
         $this->cache->clear();
     }
 
-    public function compile(string $template): void
+    public function compile(string $template, Cancellation|null $cancellation = null): void
     {
-        $filePath = realpath($this->cache->getSourcePath($template));
-        $basePath = realpath($this->cache->getViewPath());
+        $blade = $this->makeBlade();
+        $blade->setCancellation($cancellation);
+        $blade->compile($template);
+    }
 
-        if ($filePath === false || ! str_starts_with($filePath, $basePath)) {
-            throw new ViewNotFoundException("Template {$template} not found.");
+    protected function makeBlade(): BladeEngine
+    {
+        $blade = new BladeEngine($this->cache);
+
+        foreach ($this->directives as $name => $directive) {
+            $blade->directive($name, $directive);
         }
 
-        if (! $this->cache->isCached($template)) {
-            $content = File::get($filePath);
-
-            $compiled = $this->compiler->compile($content);
-
-            $this->cache->put($template, $compiled);
-        }
+        return $blade;
     }
 }

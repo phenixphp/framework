@@ -8,9 +8,10 @@ use Amp\Sql\SqlConnection;
 use Phenix\App;
 use Phenix\Database\Constants\Connection;
 use Phenix\Database\Constants\Driver;
+use Phenix\Database\MigrationManager;
 use Phenix\Facades\Config;
+use Phenix\Packages\PackageRegistry;
 use Phinx\Config\Config as MigrationConfig;
-use Phinx\Migration\Manager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Throwable;
@@ -56,9 +57,16 @@ trait RefreshDatabase
             $environment['suffix'] = '.sqlite3';
         }
 
+        /** @var PackageRegistry $packages */
+        $packages = App::make(PackageRegistry::class);
+        $migrationPaths = array_values(array_unique([
+            ...(array) Config::get('database.paths.migrations'),
+            ...$packages->migrationPaths(),
+        ]));
+
         $config = new MigrationConfig([
             'paths' => [
-                'migrations' => Config::get('database.paths.migrations'),
+                'migrations' => $migrationPaths,
                 'seeds' => Config::get('database.paths.seeds'),
             ],
             'environments' => [
@@ -68,7 +76,7 @@ trait RefreshDatabase
             ],
         ]);
 
-        $manager = new Manager($config, new ArrayInput([]), new NullOutput());
+        $manager = new MigrationManager($config, new ArrayInput([]), new NullOutput());
 
         try {
             $manager->migrate('default');

@@ -8,7 +8,7 @@ use Symfony\Component\Console\Application;
 
 class Phenix extends Application
 {
-    private static array $commands;
+    private static array $commands = [];
 
     public function __construct()
     {

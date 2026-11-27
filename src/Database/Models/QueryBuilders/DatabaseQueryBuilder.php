@@ -35,7 +35,7 @@ class DatabaseQueryBuilder extends QueryBuilder
     protected DatabaseModel $model;
 
     /**
-     * @var array<int, Relationship>
+     * @var array<int, array{Relationship, Closure}>
      */
     protected array $relationships;
 

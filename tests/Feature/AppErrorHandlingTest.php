@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Phenix\Exceptions\RuntimeError;
+use Phenix\Exceptions\RuntimeException;
 use Phenix\Facades\Config;
 use Phenix\Facades\Crypto;
 use Phenix\Facades\Route;
@@ -17,7 +17,7 @@ it('returns sanitized JSON for server errors when debug is disabled', function (
     Config::set('app.debug', false);
 
     Route::get('/fails', function (): Response {
-        throw new RuntimeError('Sensitive failure');
+        throw new RuntimeException('Sensitive failure');
     });
 
     $this->app->run();
@@ -38,7 +38,7 @@ it('returns debug JSON for server errors when debug is enabled', function (): vo
     Config::set('app.debug', true);
 
     Route::get('/debug-fails', function (): Response {
-        throw new RuntimeError('Visible local failure');
+        throw new RuntimeException('Visible local failure');
     });
 
     $this->app->run();
@@ -48,7 +48,7 @@ it('returns debug JSON for server errors when debug is enabled', function (): vo
         ->assertJsonPath('success', false)
         ->assertJsonPath('error', 'Visible local failure')
         ->assertJsonPath('status', HttpStatus::INTERNAL_SERVER_ERROR->value)
-        ->assertJsonPath('debug.exception', RuntimeError::class)
+        ->assertJsonPath('debug.exception', RuntimeException::class)
         ->assertJsonPath('debug.path', '/debug-fails');
 });
 
@@ -56,7 +56,7 @@ it('returns debug JSON outside local when debug is enabled', function (): void {
     Config::set('app.debug', true);
 
     Route::get('/production-fails', function (): Response {
-        throw new RuntimeError('Production secret');
+        throw new RuntimeException('Production secret');
     });
 
     $this->app->run();
@@ -67,7 +67,7 @@ it('returns debug JSON outside local when debug is enabled', function (): void {
         ->assertStatusCode(HttpStatus::INTERNAL_SERVER_ERROR)
         ->assertJsonPath('success', false)
         ->assertJsonPath('error', 'Production secret')
-        ->assertJsonPath('debug.exception', RuntimeError::class)
+        ->assertJsonPath('debug.exception', RuntimeException::class)
         ->assertJsonPath('debug.path', '/production-fails');
 });
 

@@ -36,3 +36,13 @@ it('run parallel task', function (): void {
 
     expect($result->isSuccess())->toBeTruthy();
 });
+
+it('reports a failed compilation from a worker', function (): void {
+    $task = new CompileTemplates(['missing-view']);
+
+    /** @var Result $result */
+    $result = $task->run($this->getFakeChannel(), $this->getFakeCancellation());
+
+    expect($result->isFailure())->toBeTrue();
+    expect($result->message())->toContain('missing-view');
+});
