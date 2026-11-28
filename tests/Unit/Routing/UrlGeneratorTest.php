@@ -287,6 +287,24 @@ it('generates a temporary signed URL with DateTimeInterface expiration', functio
     expect($expires)->toBe($futureTime->getTimestamp());
 });
 
+it('preserves literal parameter text when signing a route', function (): void {
+    $routes = new Router();
+    $routes->get('/labels/{name}', fn (): Response => response()->plain('Ok'))->name('labels');
+    $generator = new UrlGenerator($routes);
+    $url = $generator->signedRoute('labels', ['name' => 'Q1 50%?#', 'page' => 2]);
+
+    expect($url)->toContain('/labels/Q1%2050%25%3F%23?page=2&signature=')
+        ->and($generator->hasValidSignature(createRequest($url)))->toBeTrue();
+});
+
+it('requires a single segment for a named route parameter', function (string $name): void {
+    $routes = new Router();
+    $routes->get('/labels/{name}', fn (): Response => response()->plain('Ok'))->name('labels');
+
+    expect(fn () => (new UrlGenerator($routes))->route('labels', ['name' => $name]))
+        ->toThrow(InvalidArgumentException::class);
+})->with(['a/b', '.', '..']);
+
 it('validates a correctly signed URL', function (): void {
     $route = new Router();
     $route->get('/verify/{token}', fn (): Response => response()->plain('Ok'))

@@ -10,6 +10,7 @@ use Closure;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
+use InvalidArgumentException;
 use Phenix\Crypto\Bin2Base64;
 use Phenix\Facades\Config;
 use Phenix\Routing\Exceptions\RouteNotFoundException;
@@ -158,7 +159,11 @@ class UrlGenerator
                 $value = (string) $parameters[$key];
                 unset($parameters[$key]);
 
-                return $value;
+                if ($value === '.' || $value === '..' || str_contains($value, '/')) {
+                    throw new InvalidArgumentException("Route parameter [{$key}] must be a single path segment.");
+                }
+
+                return rawurlencode($value);
             }
 
             return $matches[0];

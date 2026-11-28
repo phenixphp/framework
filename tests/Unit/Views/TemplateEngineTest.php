@@ -15,6 +15,7 @@ use Phenix\Views\TemplateCache;
 use Phenix\Views\TemplateCompiler;
 use Phenix\Views\TemplateEngine;
 use Phenix\Views\TemplateFactory;
+use Phenix\Views\ViewName;
 use Phenix\Views\ViewsConfig;
 
 it('preserves literal text while compiling comments, echoes and directives', function (): void {
@@ -54,6 +55,16 @@ it('recognizes directive names using the original ASCII characters', function ()
     expect($compiler->compile('@word_123 @word_123é @_word_123 @9word'))
         ->toBe('matched matchedé @_word_123 @9word');
 });
+
+it('uses the same segment checks for template names', function (): void {
+    expect(ViewName::ensure('users.profile'))->toBe('users' . DIRECTORY_SEPARATOR . 'profile.php')
+        ->and(fn () => ViewName::ensure('users//profile'))->toThrow(ViewNotFoundException::class);
+});
+
+it('rejects ambiguous view namespaces before looking up a directory', function (string $namespace): void {
+    expect(fn () => (new ViewsConfig())->sourcePath($namespace . '::index'))
+        ->toThrow(ViewNotFoundException::class);
+})->with(['', '.', '..', 'group//blog', 'group\\blog']);
 
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());
