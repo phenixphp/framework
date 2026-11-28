@@ -55,6 +55,11 @@ it('recognizes directive names using the original ASCII characters', function ()
         ->toBe('matched matchedé @_word_123 @9word');
 });
 
+it('rejects ambiguous view namespaces before looking up a directory', function (string $namespace): void {
+    expect(fn () => (new ViewsConfig())->sourcePath($namespace . '::index'))
+        ->toThrow(ViewNotFoundException::class);
+})->with(['', '.', '..', 'group//blog', 'group\\blog']);
+
 it('renders a namespaced package view', function (): void {
     $path = base_path('storage/framework/testing/package-views-' . uniqid());
 
