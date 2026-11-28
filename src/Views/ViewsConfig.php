@@ -10,7 +10,6 @@ use Phenix\Facades\File;
 use Phenix\Packages\PackageRegistry;
 use Phenix\Util\Path;
 use Phenix\Util\Str;
-use Phenix\Views\Exceptions\ViewNotFoundException;
 
 class ViewsConfig
 {
@@ -101,13 +100,6 @@ class ViewsConfig
 
         [$namespace, $name] = explode('::', $template, 2);
 
-        foreach (explode('/', $namespace) as $segment) {
-            if ($segment === '' || str_ends_with($segment, '.') || str_ends_with($segment, ' ')
-                || strpbrk($segment, "\\:\0") !== false) {
-                throw new ViewNotFoundException("Invalid view namespace [{$namespace}].");
-            }
-        }
-
-        return [$namespace, $name];
+        return [ViewName::clean($namespace), $name];
     }
 }
