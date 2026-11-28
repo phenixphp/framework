@@ -17,9 +17,14 @@ class ViewName extends Utility
 
     public static function clean(string $name): string
     {
-        foreach (explode('/', $name) as $segment) {
-            if ($segment === '' || str_ends_with($segment, '.') || str_ends_with($segment, ' ')
-                || strpbrk($segment, "\\:\0") !== false) {
+        if (strpbrk($name, "\\:\0") !== false) {
+            throw new ViewNotFoundException("Invalid view name [{$name}].");
+        }
+
+        $path = str_replace('/', DIRECTORY_SEPARATOR, $name);
+
+        foreach (explode(DIRECTORY_SEPARATOR, $path) as $segment) {
+            if ($segment === '' || str_ends_with($segment, '.') || str_ends_with($segment, ' ')) {
                 throw new ViewNotFoundException("Invalid view name [{$name}].");
             }
         }
