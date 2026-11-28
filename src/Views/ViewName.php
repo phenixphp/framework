@@ -6,6 +6,7 @@ namespace Phenix\Views;
 
 use Phenix\Util\Str;
 use Phenix\Util\Utility;
+use Phenix\Views\Exceptions\ViewNotFoundException;
 
 class ViewName extends Utility
 {
@@ -16,7 +17,19 @@ class ViewName extends Utility
 
     public static function clean(string $name): string
     {
-        return str_replace(['..', '//'], '', $name);
+        if (strpbrk($name, "\\:\0") !== false) {
+            throw new ViewNotFoundException("Invalid view name [{$name}].");
+        }
+
+        $path = str_replace('/', DIRECTORY_SEPARATOR, $name);
+
+        foreach (explode(DIRECTORY_SEPARATOR, $path) as $segment) {
+            if ($segment === '' || str_ends_with($segment, '.') || str_ends_with($segment, ' ')) {
+                throw new ViewNotFoundException("Invalid view name [{$name}].");
+            }
+        }
+
+        return $name;
     }
 
     public static function ensure(string $name): string
